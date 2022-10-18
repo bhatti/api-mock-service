@@ -27,30 +27,30 @@ func NewRootController(
 
 // ********************************* HTTP Handlers ***********************************
 
-// swagger:route POST /_proxy mock-proxy postRoot
-// Records scenario from POST request
-// responses: returns original response based on API
+// swagger:route POST /{path} mock-play postRoot
+// Play scenario from POST request
+// responses: returns stubbed response based on API
 func (r *RootController) postRoot(c web.APIContext) (err error) {
 	return r.player.Handle(c)
 }
 
-// swagger:route PUT /_proxy mock-proxy putRoot
-// Records scenario from PUT request
-// responses: returns original response based on API
+// swagger:route PUT /{path} mock-play putRoot
+// Play scenario from PUT request
+// responses: returns stubbed response based on API
 func (r *RootController) putRoot(c web.APIContext) (err error) {
 	return r.player.Handle(c)
 }
 
-// swagger:route GET /_proxy mock-proxy getRoot
-// Records scenario from GET request
-// responses: returns original response based on API
+// swagger:route GET /{path} mock-play getRoot
+// Play scenario from GET request
+// responses: returns stubbed response based on API
 func (r *RootController) getRoot(c web.APIContext) (err error) {
 	return r.player.Handle(c)
 }
 
-// swagger:route DELETE /_proxy mock-proxy deleteRoot
-// Records scenario from DELETE request
-// responses: returns original response based on API
+// swagger:route DELETE /{path} mock-play deleteRoot
+// Play scenario from DELETE request
+// responses: returns stubbed response based on API
 func (r *RootController) deleteRoot(c web.APIContext) (err error) {
 	return r.player.Handle(c)
 }

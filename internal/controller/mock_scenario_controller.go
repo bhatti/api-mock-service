@@ -155,15 +155,12 @@ func (msc *MockScenarioController) deleteMockScenario(c web.APIContext) error {
 // swagger:parameters postMockScenario
 // The params for mock-scenario
 type mockScenarioCreateParams struct {
-	// in:body
-	Body types.MockScenario
-}
-
-// swagger:parameters putMockScenario
-// The params for mock-scenario
-type mockScenarioUpdateParams struct {
+	// in:path
+	Method string `json:"method"`
 	// in:path
 	Name string `json:"name"`
+	// in:path
+	Path string `json:"path"`
 	// in:body
 	Body types.MockScenario
 }
@@ -183,10 +180,12 @@ type mockNamesResponseBody struct {
 }
 
 // swagger:parameters deleteMockScenario getMockScenario
-// The parameters for finding mock-scenario by path, method and name
+// The parameters for finding mock-scenario by method, path and name
 type mockScenarioIDParams struct {
 	// in:path
-	Name string `json:"nam"`
+	Method string `json:"method"`
+	// in:path
+	Name string `json:"name"`
 	// in:path
 	Path string `json:"path"`
 }
@@ -194,6 +193,8 @@ type mockScenarioIDParams struct {
 // swagger:parameters getMockNames
 // The parameters for finding mock-scenario names by path and method
 type mockNamesParams struct {
+	// in:path
+	Method string `json:"method"`
 	// in:path
 	Path string `json:"path"`
 }

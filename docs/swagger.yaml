@@ -144,6 +144,21 @@ paths:
     post:
       operationId: postMockFixture
       parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
       - in: body
         name: Body
         schema:
@@ -180,52 +195,43 @@ paths:
   /_proxy:
     delete:
       description: Records scenario from DELETE request
-      operationId: deleteRoot
-      parameters:
-      - in: path
-        name: path
-        required: true
-        type: string
-        x-go-name: Path
+      operationId: deleteMockProxy
       tags:
       - mock-proxy
     get:
       description: Records scenario from GET request
-      operationId: getRoot
-      parameters:
-      - in: path
-        name: path
-        required: true
-        type: string
-        x-go-name: Path
+      operationId: getMockProxy
       tags:
       - mock-proxy
     post:
       description: Records scenario from POST request
-      operationId: postRoot
-      parameters:
-      - in: path
-        name: path
-        required: true
-        type: string
-        x-go-name: Path
+      operationId: postMockProxy
       tags:
       - mock-proxy
     put:
       description: Records scenario from PUT request
-      operationId: putRoot
-      parameters:
-      - in: path
-        name: path
-        required: true
-        type: string
-        x-go-name: Path
+      operationId: putMockProxy
       tags:
       - mock-proxy
   /_scenarios:
     post:
       operationId: postMockScenario
       parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
       - in: body
         name: Body
         schema:
@@ -241,7 +247,12 @@ paths:
       operationId: getMockScenario
       parameters:
       - in: path
-        name: nam
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
         required: true
         type: string
         x-go-name: Name
@@ -260,7 +271,12 @@ paths:
       operationId: getMockScenario
       parameters:
       - in: path
-        name: nam
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
         required: true
         type: string
         x-go-name: Name
@@ -281,6 +297,11 @@ paths:
       operationId: getMockNames
       parameters:
       - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
         name: path
         required: true
         type: string
@@ -290,6 +311,51 @@ paths:
           $ref: '#/responses/mockNamesResponse'
       tags:
       - mock-scenarios
+  /{path}:
+    delete:
+      description: Play scenario from DELETE request
+      operationId: deleteRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-play
+    get:
+      description: Play scenario from GET request
+      operationId: getRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-play
+    post:
+      description: Play scenario from POST request
+      operationId: postRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-play
+    put:
+      description: Play scenario from PUT request
+      operationId: putRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-play
 responses:
   mockFixtureNamesResponse:
     description: MockFixture names

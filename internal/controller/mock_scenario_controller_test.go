@@ -19,7 +19,6 @@ func Test_InitializeSwaggerStructsForMockScenarioController(t *testing.T) {
 	_ = mockNamesResponseBody{}
 	_ = mockNamesParams{}
 	_ = mockScenarioCreateParams{}
-	_ = mockScenarioUpdateParams{}
 	_ = mockScenarioResponseBody{}
 	_ = mockScenarioIDParams{}
 }

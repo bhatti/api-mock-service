@@ -156,6 +156,12 @@ func (msc *MockFixtureController) deleteMockFixture(c web.APIContext) error {
 // swagger:parameters postMockFixture
 // The params for mock-fixture
 type mockFixtureCreateParams struct {
+	// in:path
+	Method string `json:"method"`
+	// in:path
+	Name string `json:"name"`
+	// in:path
+	Path string `json:"path"`
 	// in:body
 	Body []byte
 }
