@@ -1,0 +1,20 @@
+method: POST
+name: post-todo
+path: /todos/2
+request:
+    query_params: ""
+    headers:
+        Mock-Url:
+            - https://jsonplaceholder.typicode.com/todos/2
+    content_type: ""
+    contents: '{"id": 202, "userId": 505, "title": "Buy milk", "completed": False}'
+response:
+    headers: {}
+    content_type: ""
+    contents: |-
+        {
+          "{\"id\": 202, \"userId\": 505, \"title\": \"Buy milk\", \"completed\": False}": "",
+          "id": 2
+        }
+    status_code: 200
+wait_before_reply: 1s

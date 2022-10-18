@@ -1,0 +1,67 @@
+method: POST
+name: get_devices
+path: /devices
+description: ""
+request:
+    query_params: a=1&b=2
+    headers:
+        CTag:
+            - {{.ETag}}
+            - {{.Nonce}}
+    content_type: "application/json; charset=utf-8"
+    contents: ""
+response:
+    headers:
+        ETag:
+            - {{.ETag}}
+        "Transfer-Encoding": 
+            - "chunked"
+        "Server": 
+            - "SampleAPI"
+        "Connection": 
+            - "keep-alive"
+    content_type: application/json
+    contents: >
+     {
+     "Devices": [
+{{- range $val := Iterate .PageSize }}
+      {
+        "Udid": "{{SeededUdid $val}}",
+        "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
+        "SerialNumber": "{{Udid}}",
+        "MacAddress": "{{Udid}}",
+        "Imei": "{{Udid}}",
+        "AssetNumber": "{{RandString 20}}",
+        "LocationGroupId": {
+         "Id": {
+           "Value": {{RandNumMax 1000}},
+         },
+         "Name": "{{SeededCity $val}}",
+         "Udid": "{{Udid}}"
+        },
+        "DeviceFriendlyName": "Device for {{SeededName $val}}",
+        "LastSeen": "{{Time}}",
+        "EnrollmentStatus": "Enrolled",
+        "ComplianceStatus": "NonCompliant",
+        "BatteryLevel": "{{RandNumMax 100}}%",
+        "ProcessorArchitecture": {{RandNumMax 1000}},
+        "TotalPhysicalMemory": {{RandNumMax 1000000}},
+        "VirtualMemory": {{RandNumMax 1000000}},
+        "AvailablePhysicalMemory": {{RandNumMax 1000000}},
+        "CompromisedStatus": {{RandBool}}
+      }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
+{{ end }}
+     ],
+     "Page": {{.Page}},
+     "PageSize": {{.PageSize}},
+     "Total": {{.PageSize}}
+     }
+    {{if lt .Nonce 10 }}
+    status_code: 200
+    {{else}}
+    status_code: 400
+    {{end}}
+wait_before_reply: {{.SleepSecs}}s
+
+
+

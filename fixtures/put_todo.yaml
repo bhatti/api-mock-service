@@ -1,0 +1,20 @@
+method: PUT
+name: put-todo
+path: /todos/202
+request:
+    query_params: ""
+    headers:
+        Mock-Url:
+            - https://jsonplaceholder.typicode.com/todos/202
+    content_type: ""
+    contents: '{"userId": 101, "title": "Buy milk", "completed": False}'
+response:
+    headers: {}
+    content_type: ""
+    contents: |-
+        {
+          "{\"userId\": 101, \"title\": \"Buy milk\", \"completed\": False}": "",
+          "id": 201
+        }
+    status_code: 200
+wait_before_reply: 1s

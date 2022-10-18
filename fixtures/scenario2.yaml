@@ -1,0 +1,59 @@
+method: GET
+name: get_groups
+path: /groups
+description: ""
+request:
+    query_params: a=1&b=2
+    headers:
+        CTag:
+            - {{.ETag}}
+            - {{.Nonce}}
+    content_type: "application/json; charset=utf-8"
+    contents: ""
+response:
+    headers:
+        ETag:
+            - {{.ETag}}
+        "Transfer-Encoding": 
+            - "chunked"
+        "Server": 
+            - "SampleAPI"
+        "Connection": 
+            - "keep-alive"
+    content_type: application/json
+    contents: >
+     {
+     "AppGroups": [
+{{- range $val := Iterate .PageSize }}
+      {
+        "ApplicationGroupID": "{{SeededUdid $val}}",
+        "Name": "{{SeededName $val}}",
+        "Platform": "Apple",
+        "AppGroupType": "Whitelist",
+        "ManagedByOrganizationGroupID": "{{RandNumMax 1000}}",
+        "OrganizationGroups": {
+         "Id": {
+           "Value": {{RandNumMax 1000}},
+         },
+         "Name": "{{SeededCity $val}}",
+         "Udid": "{{Udid}}"
+        },
+        "UserGroups": [],
+        "LastSeen": "{{Time}}",
+        "DeviceOwnership": "Any",
+        "IsActive": {{RandBool}}
+        "AppCount": {{RandNumMax 100}},
+        "Applications": []
+      }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
+{{ end }}
+     ],
+     "Page": {{.Page}},
+     "PageSize": {{.PageSize}},
+     "Total": {{.PageSize}}
+     }
+    {{if lt .Nonce 10 }}
+    status_code: 200
+    {{else}}
+    status_code: 400
+    {{end}}
+wait_before_reply: {{.SleepSecs}}s

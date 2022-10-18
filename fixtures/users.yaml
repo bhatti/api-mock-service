@@ -1,0 +1,19 @@
+method: GET
+name: users_scenario
+path: /users
+description: ""
+request:
+    query_params: a=1&b=2
+    headers:
+        CTag:
+            - "981"
+    content_type: ""
+    contents: ""
+response:
+    headers:
+        ETag:
+            - "123"
+    content_type: application/json
+    contents: test body
+    status_code: 200
+wait_before_reply: 1s

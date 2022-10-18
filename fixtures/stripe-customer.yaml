@@ -1,0 +1,51 @@
+method: GET
+name: stripe-cash-balance
+path: /v1/customers/:customer/cash_balance
+request:
+    headers:
+        Accept:
+            - '*/*'
+        Authorization:
+            - Bearer sk_test
+        User-Agent:
+            - curl/7.65.2
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Access-Control-Allow-Methods:
+            - GET, POST, HEAD, OPTIONS, DELETE
+        Access-Control-Allow-Origin:
+            - '*'
+        Access-Control-Expose-Headers:
+            - Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required
+        Access-Control-Max-Age:
+            - "300"
+        Cache-Control:
+            - no-cache, no-store
+        Content-Type:
+            - application/json
+        Request-Id:
+            - req_2
+        Server:
+            - nginx
+        Strict-Transport-Security:
+            - max-age=63072000; includeSubDomains; preload
+        Stripe-Version:
+            - "2018-09-06"
+    content_type: application/json
+    contents: |-
+        {
+          "object": "cash_balance",
+          "available": null,
+          "customer": {{.customer}}
+          "livemode": false,
+          "page": {{.page}}
+          "pageSize": {{.pageSize}}
+          "settings": {
+            "reconciliation_mode": "automatic"
+          }
+        }
+    status_code: 200
+wait_before_reply: 1s
+

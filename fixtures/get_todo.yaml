@@ -1,0 +1,22 @@
+method: GET
+name: todo-get
+path: /todos/10
+request:
+    query_params: ""
+    headers:
+        Mock-Url:
+            - https://jsonplaceholder.typicode.com/todos/10
+    content_type: ""
+    contents: ""
+response:
+    headers: {}
+    content_type: ""
+    contents: |-
+        {
+        		"userId": 1,
+        		"id": 10,
+        		"title": "illo est ratione doloremque quia maiores aut",
+        		"completed": true
+        	  }
+    status_code: 200
+wait_before_reply: 1s

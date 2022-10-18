@@ -1,0 +1,15 @@
+method: GET
+name: stripe-customer-failure
+path: /v1/customers/:customer/cash_balance
+request:
+    headers:
+        Authorization:
+            - Bearer sk_test
+response:
+    headers:
+        Stripe-Version:
+            - "2018-09-06"
+    content_type: application/json
+    contents: My custom error
+    status_code: 500
+wait_before_reply: 1s

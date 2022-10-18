@@ -1,0 +1,67 @@
+method: GET
+name: test-stripe-get-balance
+path: /v1/balance
+request:
+    headers:
+        Accept:
+            - '*/*'
+        Authorization:
+            - Bearer sk_test
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Access-Control-Allow-Methods:
+            - GET, POST, HEAD, OPTIONS, DELETE
+        Access-Control-Allow-Origin:
+            - '*'
+        Access-Control-Expose-Headers:
+            - Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required
+        Access-Control-Max-Age:
+            - "300"
+        Cache-Control:
+            - no-cache, no-store
+        Content-Length:
+            - "384"
+        Content-Type:
+            - application/json
+        Request-Id:
+            - req_1
+        Server:
+            - nginx
+        Strict-Transport-Security:
+            - max-age=63072000; includeSubDomains; preload
+        Stripe-Version:
+            - "2018-09-06"
+    content_type: application/json
+    contents: |-
+        {
+          "object": "balance",
+          "available": [
+            {
+              "amount": 0,
+              "currency": "usd",
+              "source_types": {
+                "card": 0
+              }
+            }
+          ],
+          "connect_reserved": [
+            {
+              "amount": 0,
+              "currency": "usd"
+            }
+          ],
+          "livemode": false,
+          "pending": [
+            {
+              "amount": 0,
+              "currency": "usd",
+              "source_types": {
+                "card": 0
+              }
+            }
+          ]
+        }
+    status_code: 200
+wait_before_reply: 1s
