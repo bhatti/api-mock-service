@@ -357,6 +357,8 @@ paths:
       tags:
       - mock-play
 responses:
+  emptyResponse:
+    description: ""
   mockFixtureNamesResponse:
     description: MockFixture names
     schema:
