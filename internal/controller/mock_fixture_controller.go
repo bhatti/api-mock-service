@@ -2,9 +2,10 @@ package controller
 
 import (
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types"
 	"io"
 	"net/http"
+
+	"github.com/bhatti/api-mock-service/internal/types"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/web"
@@ -198,4 +199,9 @@ type mockFixtureNamesParams struct {
 	Method string `json:"method"`
 	// in:path
 	Path string `json:"path"`
+}
+
+// swagger:parameters emptyResponse
+// Empty response
+type emptyResponse struct {
 }

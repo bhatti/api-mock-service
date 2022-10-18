@@ -448,12 +448,3 @@ The mock service can serve any static assets from a user-defined folder and then
 cp static-file default_assets
 curl http://localhost:8080/_assets/default_assets
 ```
-
-## Summary
-Building and testing distributed systems often requires deploying a deep stack of dependent services, which makes development 
-hard on a local environment with limited resources. Ideally, you should be able to deploy and test entire stack without 
-using network or requiring remote access so that you can spend more time on building features instead of configuring 
-your local environment.
-Above examples show how you use the api-mock-service to mock APIs for testing purpose and define test scenarios 
-for simulating both happy and error cases as well as inject faults or network delays in your testing processes 
-so that you can test for fault tolerance.
