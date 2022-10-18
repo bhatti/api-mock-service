@@ -1,0 +1,317 @@
+definitions:
+  Duration:
+    description: |-
+      A Duration represents the elapsed time between two instants
+      as an int64 nanosecond count. The representation limits the
+      largest representable duration to approximately 290 years.
+    format: int64
+    type: integer
+    x-go-package: time
+  MethodType:
+    description: MethodType for HTTP
+    type: string
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  MockHTTPRequest:
+    description: MockHTTPRequest defines mock request for APIs
+    properties:
+      content_type:
+        description: ContentType for the response
+        type: string
+        x-go-name: ContentType
+      contents:
+        description: Contents for request optionally
+        type: string
+        x-go-name: Contents
+      headers:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        description: Headers for mock response
+        type: object
+        x-go-name: Headers
+      query_params:
+        description: QueryParams for the API
+        type: string
+        x-go-name: QueryParams
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  MockHTTPResponse:
+    description: MockHTTPResponse defines mock respons for APIs
+    properties:
+      content_type:
+        description: ContentType for the response
+        type: string
+        x-go-name: ContentType
+      contents:
+        description: Contents for request
+        type: string
+        x-go-name: Contents
+      contents_file:
+        description: ContentsFile for request
+        type: string
+        x-go-name: ContentsFile
+      headers:
+        additionalProperties:
+          items:
+            type: string
+          type: array
+        description: Headers for mock response
+        type: object
+        x-go-name: Headers
+      status_code:
+        description: StatusCode for response
+        format: int64
+        type: integer
+        x-go-name: StatusCode
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  MockScenario:
+    description: MockScenario defines mock scenario for APIs
+    properties:
+      description:
+        description: Description of scenario
+        type: string
+        x-go-name: Description
+      method:
+        $ref: '#/definitions/MethodType'
+      name:
+        description: Name to uniquely identify the scenario
+        type: string
+        x-go-name: Name
+      path:
+        description: Path for the API (excluding query params)
+        type: string
+        x-go-name: Path
+      request:
+        $ref: '#/definitions/MockHTTPRequest'
+      response:
+        $ref: '#/definitions/MockHTTPResponse'
+      wait_before_reply:
+        $ref: '#/definitions/Duration'
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+paths:
+  /_fixtures/{method}/{name}/{path}:
+    delete:
+      operationId: getMockFixture
+      parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      responses:
+        "200":
+          $ref: '#/responses/emptyResponse'
+      summary: Deletes an existing mock fixtures based on name and path.
+      tags:
+      - mock-fixtures
+    get:
+      operationId: getMockFixture
+      parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      responses:
+        "200":
+          $ref: '#/responses/emptyResponse'
+      summary: Deletes an existing mock fixtures based on name and path.
+      tags:
+      - mock-fixtures
+    post:
+      operationId: postMockFixture
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          items:
+            format: uint8
+            type: integer
+          type: array
+      responses:
+        "200":
+          $ref: '#/responses/mockFixtureResponse'
+      summary: Creates new mock fixtures based on request body.
+      tags:
+      - mock-fixtures
+  /_fixtures/{method}/fixtures/{path}:
+    get:
+      description: Returns mock fixture names
+      operationId: getMockFixtureNames
+      parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      responses:
+        "200":
+          $ref: '#/responses/mockFixtureNamesResponse'
+      tags:
+      - mock-fixtures
+  /_proxy:
+    delete:
+      description: Records scenario from DELETE request
+      operationId: deleteRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-proxy
+    get:
+      description: Records scenario from GET request
+      operationId: getRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-proxy
+    post:
+      description: Records scenario from POST request
+      operationId: postRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-proxy
+    put:
+      description: Records scenario from PUT request
+      operationId: putRoot
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      tags:
+      - mock-proxy
+  /_scenarios:
+    post:
+      operationId: postMockScenario
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/MockScenario'
+      responses:
+        "200":
+          $ref: '#/responses/mockScenarioResponse'
+      summary: Creates new mock scenario based on request body.
+      tags:
+      - mock-scenarios
+  /_scenarios/{method}/{name}/{path}:
+    delete:
+      operationId: getMockScenario
+      parameters:
+      - in: path
+        name: nam
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      responses:
+        "200":
+          $ref: '#/responses/emptyResponse'
+      summary: Deletes an existing mock scenario based on id.
+      tags:
+      - mock-scenarios
+    get:
+      operationId: getMockScenario
+      parameters:
+      - in: path
+        name: nam
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      responses:
+        "200":
+          $ref: '#/responses/emptyResponse'
+      summary: Deletes an existing mock scenario based on id.
+      tags:
+      - mock-scenarios
+  /_scenarios/{method}/scenarios/{path}:
+    get:
+      description: Returns mock scenario names
+      operationId: getMockNames
+      parameters:
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
+      responses:
+        "200":
+          $ref: '#/responses/mockNamesResponse'
+      tags:
+      - mock-scenarios
+responses:
+  mockFixtureNamesResponse:
+    description: MockFixture names
+    schema:
+      items:
+        type: string
+      type: array
+  mockFixtureResponse:
+    description: MockFixture body for update
+    schema:
+      items:
+        format: uint8
+        type: integer
+      type: array
+  mockNamesResponse:
+    description: MockScenario names
+    schema:
+      items:
+        type: string
+      type: array
+  mockScenarioResponse:
+    description: MockScenario body for update
+    schema:
+      $ref: '#/definitions/MockScenario'
+swagger: "2.0"

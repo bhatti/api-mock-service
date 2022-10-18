@@ -51,6 +51,9 @@ Flags:
 Use "api-mock-service [command] --help" for more information about a command
 ```
 
+## API Docs
+See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
+
 ## Recording a Mock API Scenario
 Once you have the API mock service running, you can use as a proxy service to invoke a remote API so that you can automatically record API behavior and play it back later, e.g.
 ```bash
@@ -147,7 +150,7 @@ Which will return captured response such as:
   "settings": {
     "reconciliation_mode": "automatic"
   }
-}%
+}
 
 ```
 
@@ -230,7 +233,7 @@ and it will generate:
 }
 
 ```
-As you can see, the values of customer, page and pageSize are dynamically updated. You can upload multiple mock scenarios for the same API and the mock API service will play it back sequentially. For example, you can upload another scenario with above API as follows:
+As you can see, the values of customer, page and pageSize are dynamically updated. You can upload multiple mock scenarios for the same API and the mock API service will play it back sequentially. For example, you can upload another scenario for above API as follows:
 ```yaml
 method: GET
 name: stripe-customer-failure
@@ -252,7 +255,7 @@ And then play it back:
 ```bash
 curl -v "http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
-with following error response
+which will return response with following error response
 ```json
 * Mark bundle as not supporting multiuse
 < HTTP/1.1 500 Internal Server Error
@@ -324,15 +327,25 @@ wait_before_reply: {{.page}}s
 ```
 Above example includes a number of template primitives and custom functions to generate dynamic contents such as:
 ### Loops
-GO template support loops that can be used to generate multiple data entries in the respons, e.g.
+GO template support loops that can be used to generate multiple data entries in the response, e.g.
 ```yaml
 {{- range $val := Iterate .pageSize }}
 ```
+
+### Artificial Delays
+You can specify artificial delay for the API request as follows:
+```yaml
+wait_before_reply: {{.page}}s
+```
+Above example shows delay based on page number but you can use any parameter to customize this behavior.
+
 ### Custom functions
+Go template allows custom functions that can provide customized behavior for generating test data, e.g.:
 ```yaml
 "SerialNumber": "{{Udid}}",
 "Name": "{{SeededCity $val}}",
 "TotalPhysicalMemory": {{RandNumMax 1000000}},
+wait_before_reply: {{.page}}s
 ```
 
 ### Conditional Logic
@@ -344,6 +357,7 @@ The template syntax allows you to define a conditional logic such as:
     status_code: 400
 {{end}}
 ```
+You can use conditional syntax to simulate different error status or customize response.
 ### Test fixtures
 The mock service allows you to upload a test fixture that you can refer in your template, e.g. 
 ```bash
@@ -436,4 +450,10 @@ curl http://localhost:8080/_assets/default_assets
 ```
 
 ## Summary
-Building and testing distributed systems often requires deploying a deep stack of dependent services, which makes development hard on a local environment with limited resources. Ideally, you should be able to deploy and test entire stack without using network or requiring remote access so that you can spend more time on building features instead of configuring your local environment. Above examples show how you use a https://github.com/bhatti/api-mock-service to mock APIs for testing purpose and define test scenarios for simulating both happy and error handling as well as inject fault tolerance or network delays in your testing processes. I have found a great use of tools like this when developing micro services and hopefully you find it useful. Feel free to connect with your feedback or suggestions.
+Building and testing distributed systems often requires deploying a deep stack of dependent services, which makes development 
+hard on a local environment with limited resources. Ideally, you should be able to deploy and test entire stack without 
+using network or requiring remote access so that you can spend more time on building features instead of configuring 
+your local environment.
+Above examples show how you use the api-mock-service to mock APIs for testing purpose and define test scenarios 
+for simulating both happy and error cases as well as inject faults or network delays in your testing processes 
+so that you can test for fault tolerance.

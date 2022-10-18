@@ -16,6 +16,7 @@ import (
 
 func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
+	_ = rootPathParams{}
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})

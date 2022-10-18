@@ -54,3 +54,10 @@ func (r *RootController) getRoot(c web.APIContext) (err error) {
 func (r *RootController) deleteRoot(c web.APIContext) (err error) {
 	return r.player.Handle(c)
 }
+
+// swagger:parameters postRoot putRoot getRoot deleteRoot
+// The parameters for playing APIs by path
+type rootPathParams struct {
+	// in:path
+	Path string `json:"path"`
+}
