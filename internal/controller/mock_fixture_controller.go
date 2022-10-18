@@ -201,7 +201,7 @@ type mockFixtureNamesParams struct {
 	Path string `json:"path"`
 }
 
-// swagger:parameters emptyResponse
+// swagger:response emptyResponse
 // Empty response
 type emptyResponse struct {
 }
