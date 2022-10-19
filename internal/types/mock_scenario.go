@@ -169,6 +169,9 @@ func (ms *MockScenario) Validate() error {
 	if len(ms.Response.Contents) > 1024*1024*1024 {
 		return fmt.Errorf("contents is too long %d", len(ms.Response.Contents))
 	}
+	if ms.Response.StatusCode == 0 {
+		return fmt.Errorf("response status is not specified")
+	}
 	return nil
 }
 

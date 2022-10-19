@@ -87,7 +87,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 
 	scenario := &types.MockScenario{
 		Method: types.MethodType(c.Request().Method),
-		Name:   c.Request().Header.Get("MOCK_NAME"),
+		Name:   c.Request().Header.Get(MockScenarioName),
 		Path:   u.Path,
 		Request: types.MockHTTPRequest{
 			QueryParams: u.RawQuery,

@@ -154,6 +154,9 @@ Which will return captured response such as:
 
 ```
 
+Though, you can customize your template with dynamic properties or conditional logic but you can also send HTTP headers 
+for Mock-Response-Status to override HTTP status to return or Mock-Wait-Before-Reply to add artificial latency using duration syntax. 
+
 ## Upload Mock API Scenario
 You can customize the recorded scenario, e.g. you can add path variables to above API as follows:
 ```yaml

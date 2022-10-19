@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
@@ -11,6 +12,12 @@ import (
 
 // MockScenarioName header
 const MockScenarioName = "Mock-Scenario"
+
+// MockResponseStatus header
+const MockResponseStatus = "Mock-Response-Status"
+
+// MockWaitBeforeReply header
+const MockWaitBeforeReply = "Mock-Wait-Before-Reply"
 
 // Player structure
 type Player struct {
@@ -60,9 +67,21 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 		}
 	}
 	c.Response().Header().Add(MockScenarioName, matchedScenario.Name)
+	// Override wait time from request header
+	if c.Request().Header.Get(MockWaitBeforeReply) != "" {
+		matchedScenario.WaitBeforeReply, _ = time.ParseDuration(c.Request().Header.Get(MockWaitBeforeReply))
+	}
 	if matchedScenario.WaitBeforeReply > 0 {
 		time.Sleep(matchedScenario.WaitBeforeReply)
 	}
+	// Override response status from request header
+	if c.Request().Header.Get(MockResponseStatus) != "" {
+		matchedScenario.Response.StatusCode, _ = strconv.Atoi(c.Request().Header.Get(MockResponseStatus))
+	} else if matchedScenario.Response.StatusCode == 0 {
+		matchedScenario.Response.StatusCode = 200
+	}
+
+	// Build output from contents-file or contents property
 	var respBody []byte
 	if matchedScenario.Response.ContentsFile != "" {
 		respBody, err = p.fixtureRepository.Get(
