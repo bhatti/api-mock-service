@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"io"
 	"strconv"
 	"time"
@@ -12,6 +13,9 @@ import (
 
 // MockScenarioName header
 const MockScenarioName = "Mock-Scenario"
+
+// MockRequestCount header
+const MockRequestCount = "Mock-Request-Count"
 
 // MockResponseStatus header
 const MockResponseStatus = "Mock-Response-Status"
@@ -67,6 +71,7 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 		}
 	}
 	c.Response().Header().Add(MockScenarioName, matchedScenario.Name)
+	c.Response().Header().Add(MockRequestCount, fmt.Sprintf("%d", matchedScenario.RequestCount))
 	// Override wait time from request header
 	if c.Request().Header.Get(MockWaitBeforeReply) != "" {
 		matchedScenario.WaitBeforeReply, _ = time.ParseDuration(c.Request().Header.Get(MockWaitBeforeReply))

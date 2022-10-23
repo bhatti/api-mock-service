@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -167,19 +168,21 @@ func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyDat
 }
 
 // Lookup finds top matching scenario
-func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) (*types.MockScenario, error) {
+func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) (scenario *types.MockScenario, err error) {
 	matched := sr.LookupAll(target)
 	if len(matched) == 0 {
 		return nil, fmt.Errorf("could not lookup matching API %s", target.Path)
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
+	_ = atomic.AddUint64(&matched[0].RequestCount, 1)
 
 	log.WithFields(log.Fields{
-		"Path":      matched[0].Path,
-		"Name":      matched[0].Name,
-		"Method":    matched[0].Method,
-		"Timestamp": matched[0].LastUsageTime,
-		"Matched":   len(matched),
+		"Path":         matched[0].Path,
+		"Name":         matched[0].Name,
+		"Method":       matched[0].Method,
+		"RequestCount": matched[0].RequestCount,
+		"Timestamp":    matched[0].LastUsageTime,
+		"Matched":      len(matched),
 	}).Infof("API template found...")
 
 	// Read template file
@@ -198,8 +201,11 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	if target.QueryParams != "" {
 		addQueryParams(target.QueryParams, params)
 	}
+	params[types.RequestCount] = fmt.Sprintf("%d", matched[0].RequestCount)
 
-	return unmarshalMockScenario(b, dir, params)
+	scenario, err = unmarshalMockScenario(b, dir, params)
+	scenario.RequestCount = matched[0].RequestCount
+	return
 }
 
 func unmarshalMockScenario(

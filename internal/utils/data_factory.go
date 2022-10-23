@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -180,10 +181,17 @@ func SeededCity(seed int64) string {
 	return randomArrayElement(cities, seed)
 }
 
-// AnySubString selects substring
-func AnySubString(str string) string {
+// AnySubstring selects substring
+func AnySubstring(str string) string {
 	parts := strings.Split(str, " ")
 	return randomArrayElement(parts, 0)
+}
+
+// AnyInt selects numeric
+func AnyInt(str string) (n int64) {
+	parts := strings.Split(str, " ")
+	n, _ = strconv.ParseInt(randomArrayElement(parts, 0), 10, 64)
+	return
 }
 
 // RandName name generator

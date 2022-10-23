@@ -41,14 +41,20 @@ response:
         },
         "DeviceFriendlyName": "Device for {{SeededName $val}}",
         "LastSeen": "{{Time}}",
-        "EnrollmentStatus": "Enrolled",
+        "EnrollmentStatus": {{SeededBool $val}}
         "ComplianceStatus": "NonCompliant",
+        "Group": {{RandCity}},
+        "Date": {{TimeFormat "3:04PM"}},
         "BatteryLevel": "{{RandNumMax 100}}%",
+        "StrEnum": {{AnySubstring "ONE TWO THREE"}},
+        "IntEnum": {{AnyInt 10 20 30}},
         "ProcessorArchitecture": {{RandNumMax 1000}},
         "TotalPhysicalMemory": {{RandNumMax 1000000}},
         "VirtualMemory": {{RandNumMax 1000000}},
         "AvailablePhysicalMemory": {{RandNumMax 1000000}},
-        "CompromisedStatus": {{RandBool}}
+        "CompromisedStatus": {{RandBool}},
+        "Add": {{Add 2 1}},
+        "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
       }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
 {{ end }}
      ],
@@ -56,10 +62,10 @@ response:
      "PageSize": {{.PageSize}},
      "Total": {{.PageSize}}
      }
-    {{if lt .Nonce 10 }}
-    status_code: 200
+    {{if NthRequest 10 }}
+    status_code: 500
     {{else}}
-    status_code: 400
+    status_code: 200
     {{end}}
 wait_before_reply: {{.SleepSecs}}s
 

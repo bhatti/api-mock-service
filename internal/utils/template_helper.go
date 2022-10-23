@@ -25,7 +25,7 @@ func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	t, err := template.New("").Funcs(TemplateFuncs(dir)).Parse(body)
+	t, err := template.New("").Funcs(TemplateFuncs(dir, data)).Parse(body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template due to %s", err)
 	}
@@ -47,7 +47,7 @@ func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error
 }
 
 // TemplateFuncs returns template functions
-func TemplateFuncs(dir string) template.FuncMap {
+func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 	return template.FuncMap{
 		"Dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
@@ -121,19 +121,35 @@ func TemplateFuncs(dir string) template.FuncMap {
 			return toFloat64(num)
 		},
 		"LT": func(a interface{}, b interface{}) bool {
-			return toInt64(a) < toInt64(b)
+			return toFloat64(a) < toFloat64(b)
 		},
 		"LE": func(a interface{}, b interface{}) bool {
-			return toInt64(a) <= toInt64(b)
+			return toFloat64(a) <= toFloat64(b)
 		},
 		"EQ": func(a interface{}, b interface{}) bool {
-			return toInt64(a) == toInt64(b)
+			return toFloat64(a) == toFloat64(b)
 		},
 		"GT": func(a interface{}, b interface{}) bool {
-			return toInt64(a) > toInt64(b)
+			return toFloat64(a) > toFloat64(b)
 		},
 		"GE": func(a interface{}, b interface{}) bool {
-			return toInt64(a) >= toInt64(b)
+			return toFloat64(a) >= toFloat64(b)
+		},
+		"Nth": func(a interface{}, b interface{}) bool {
+			return toInt(a)%toInt(b) == 0
+		},
+		"NthRequest": func(n interface{}) bool {
+			switch data.(type) {
+			case map[string]interface{}:
+				params := data.(map[string]interface{})
+				count := params[types.RequestCount]
+				if count == nil {
+					return false
+				}
+				return toInt(count)%toInt(n) == 0
+			default:
+				return false
+			}
 		},
 		"RandFileLine": func(fileName string) template.HTML {
 			return randFileLine(dir, fileName+types.MockDataExt, 0)
@@ -147,8 +163,18 @@ func TemplateFuncs(dir string) template.FuncMap {
 		"TimeFormat": func(format string) string {
 			return time.Now().Format(format)
 		},
-		"AnySubString": func(str string) string {
-			return AnySubString(str)
+		"AnySubstring": func(str string) string {
+			return AnySubstring(str)
+		},
+		"AnyInt": func(vals ...interface{}) int64 {
+			var str strings.Builder
+			for _, val := range vals {
+				if str.Len() > 0 {
+					str.WriteRune(' ')
+				}
+				str.WriteString(fmt.Sprintf("%v", val))
+			}
+			return AnyInt(str.String())
 		},
 	}
 }

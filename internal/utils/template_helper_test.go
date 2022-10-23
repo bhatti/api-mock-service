@@ -84,6 +84,7 @@ func Test_ShouldParseScenarioTemplate(t *testing.T) {
 		// WHEN parsing YAML for contents tag
 		body, err := ParseTemplate("../../fixtures", b,
 			map[string]interface{}{"ETag": "abc", "Page": 1, "PageSize": 10, "Nonce": 1, "SleepSecs": 5})
+
 		// THEN it should not fail
 		require.NoError(t, err)
 		scenario := types.MockScenario{}

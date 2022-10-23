@@ -18,6 +18,9 @@ const MockDataExt = ".dat"
 // ScenarioExt extension
 const ScenarioExt = ".scr"
 
+// RequestCount name
+const RequestCount = "_RequestCount"
+
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
 	// QueryParams for the API
@@ -60,6 +63,8 @@ type MockScenario struct {
 	Response MockHTTPResponse `yaml:"response" json:"response"`
 	// WaitMillisBeforeReply for response
 	WaitBeforeReply time.Duration `yaml:"wait_before_reply" json:"wait_before_reply"`
+	// RequestCount of request
+	RequestCount uint64 `yaml:"-" json:"-"`
 }
 
 // ToKeyData converts scenario to key data
@@ -198,6 +203,8 @@ type MockScenarioKeyData struct {
 	Contents string
 	// LastUsageTime of key data
 	LastUsageTime int64
+	// RequestCount for the API
+	RequestCount uint64
 }
 
 // Equals compares path and query path
