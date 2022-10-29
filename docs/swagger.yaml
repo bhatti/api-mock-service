@@ -14,38 +14,26 @@ definitions:
   MockHTTPRequest:
     description: MockHTTPRequest defines mock request for APIs
     properties:
-      content_type:
-        description: ContentType for the response
+      match_content_type:
+        description: MatchContentType for the response
         type: string
-        x-go-name: ContentType
-      contents:
-        description: Contents for request optionally
+        x-go-name: MatchContentType
+      match_contents:
+        description: MatchContents for request optionally
         type: string
-        x-go-name: Contents
-      headers:
+        x-go-name: MatchContents
+      match_headers:
         additionalProperties:
-          items:
-            type: string
-          type: array
-        description: Headers for mock response
+          type: string
+        description: MatchHeaders for mock response
         type: object
-        x-go-name: Headers
-      query_params:
-        description: QueryParams for the API
-        type: string
-        x-go-name: QueryParams
-      validate_contents:
-        description: ValidateContents for request
-        type: string
-        x-go-name: ValidateContents
-      validate_path_params:
-        description: ValidatePathParams for the API
-        type: string
-        x-go-name: ValidatePathParams
-      validate_query_params:
-        description: ValidateQueryParams for the API
-        type: string
-        x-go-name: ValidateQueryParams
+        x-go-name: MatchHeaders
+      match_query_params:
+        additionalProperties:
+          type: string
+        description: MatchQueryParams for the API
+        type: object
+        x-go-name: MatchQueryParams
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
   MockHTTPResponse:
@@ -101,6 +89,49 @@ definitions:
         $ref: '#/definitions/MockHTTPResponse'
       wait_before_reply:
         $ref: '#/definitions/Duration'
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  MockScenarioKeyData:
+    description: MockScenarioKeyData defines keys of mock scenario for in-memory store
+    properties:
+      LastUsageTime:
+        description: LastUsageTime of key data
+        format: int64
+        type: integer
+      RequestCount:
+        description: RequestCount for the API
+        format: uint64
+        type: integer
+      match_content_type:
+        description: MatchContentType for the response
+        type: string
+        x-go-name: MatchContentType
+      match_contents:
+        description: MatchContents for request optionally
+        type: string
+        x-go-name: MatchContents
+      match_headers:
+        additionalProperties:
+          type: string
+        description: MatchHeaders for mock response
+        type: object
+        x-go-name: MatchHeaders
+      match_query_params:
+        additionalProperties:
+          type: string
+        description: MatchQueryParams for the API
+        type: object
+        x-go-name: MatchQueryParams
+      method:
+        $ref: '#/definitions/MethodType'
+      name:
+        description: Name to uniquely identify the scenario
+        type: string
+        x-go-name: Name
+      path:
+        description: Path for the API (excluding query params)
+        type: string
+        x-go-name: Path
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
 paths:
@@ -243,6 +274,14 @@ paths:
       tags:
       - mock-proxy
   /_scenarios:
+    get:
+      description: List paths of all scenarios
+      operationId: listMockScenario
+      responses:
+        "200":
+          $ref: '#/responses/mockScenarioPathsResponse'
+      tags:
+      - mock-scenarios
     post:
       operationId: postMockScenario
       parameters:
@@ -320,7 +359,7 @@ paths:
       summary: Deletes an existing mock scenario based on id.
       tags:
       - mock-scenarios
-  /_scenarios/{method}/scenarios/{path}:
+  /_scenarios/{method}/names/{path}:
     get:
       description: Returns mock scenario names
       operationId: getMockNames
@@ -361,6 +400,21 @@ paths:
         required: true
         type: string
         x-go-name: Path
+      tags:
+      - mock-play
+    head:
+      description: Play scenario from HEAD request
+      operationId: headRoot
+      tags:
+      - mock-play
+    options:
+      description: Play scenario from OPTIONS request
+      operationId: optionsRoot
+      tags:
+      - mock-play
+    patch:
+      description: Play scenario from PATCH request
+      operationId: patchRoot
       tags:
       - mock-play
     post:
@@ -411,6 +465,12 @@ responses:
     description: MockScenario body for update
     schema:
       $ref: '#/definitions/MockScenario'
+  mockScenarioPathsResponse:
+    description: MockScenario summary and paths
+    schema:
+      additionalProperties:
+        $ref: '#/definitions/MockScenarioKeyData'
+      type: object
   mockScenarioResponse:
     description: MockScenario body for update
     schema:
