@@ -15,36 +15,114 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 	require.Equal(t, "path1/test1/abc", scenario.NormalPath('/'))
 }
 
-func Test_ShouldValidateBuildMockScenarioKeyData(t *testing.T) {
+func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
 	// GIVEN a valid mock scenario
 	scenario := buildScenario()
-	// WHEN creating key data
+	scenario.Path = "/2/openapi.json"
+	// WHEN validating scenario
 	// THEN it should succeed
-	keyData := scenario.ToKeyData()
-
-	require.Equal(t, "", keyData.PathPrefix(0))
-	require.Equal(t, "/path1", keyData.PathPrefix(1))
-	require.Equal(t, "/path1/test1", keyData.PathPrefix(2))
-	require.Equal(t, "/path1/test1/abc", keyData.PathPrefix(3))
-	require.Equal(t, "/path1/test1/abc", keyData.PathPrefix(4))
+	require.NoError(t, scenario.Validate())
+	require.Equal(t, "2/openapi.json", scenario.NormalPath('/'))
+	scenario.Path = "/2018-06-01/runtime/invocation/next"
+	require.NoError(t, scenario.Validate())
 }
 
 func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
-	// GIVEN a empty mock scenario repository
+	// GIVEN a empty mock scenario
 	scenario := &MockScenario{}
 	// WHEN validating scenario
 	// THEN it should fail
 	require.Error(t, scenario.Validate())
 	scenario.Method = Get
-	scenario.Path = "/path1//\\\\//test1/2///"
+	require.Error(t, scenario.Validate())
+	scenario.Path = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Faucibus ornare suspendisse sed nisi lacus sed viverra tellus in. Lacus vel facilisis volutpat est velit egestas dui. Neque egestas congue quisque egestas diam in arcu. Risus pretium quam vulputate dignissim suspendisse. Iaculis urna id volutpat lacus laoreet. Viverra mauris in aliquam sem fringilla. Risus ultricies tristique nulla aliquet enim tortor at auctor urna. Feugiat nibh sed pulvinar proin gravida hendrerit lectus. Tempus imperdiet nulla malesuada pellentesque elit eget gravida cum sociis. Integer quis auctor elit sed vulputate mi sit amet mauris. Proin libero nunc consequat interdum varius sit amet mattis vulputate. Arcu ac tortor dignissim convallis aenean."
+	require.Error(t, scenario.Validate())
+	scenario.Path = "/path1****//\\\\//test1/2///:id"
+	require.Error(t, scenario.Validate())
+	scenario.Path = "/path1//\\\\//test1/2///:id"
+	require.Error(t, scenario.Validate())
+	scenario.Name = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Faucibus ornare suspendisse sed nisi lacus sed viverra tellus in. Lacus vel facilisis volutpat est velit egestas dui. Neque egestas congue quisque egestas diam in arcu. Risus pretium quam vulputate dignissim suspendisse. Iaculis urna id volutpat lacus laoreet. Viverra mauris in aliquam sem fringilla. Risus ultricies tristique nulla aliquet enim tortor at auctor urna. Feugiat nibh sed pulvinar proin gravida hendrerit lectus. Tempus imperdiet nulla malesuada pellentesque elit eget gravida cum sociis. Integer quis auctor elit sed vulputate mi sit amet mauris. Proin libero nunc consequat interdum varius sit amet mattis vulputate. Arcu ac tortor dignissim convallis aenean."
+	require.Error(t, scenario.Validate())
+	scenario.Name = "test1****"
 	require.Error(t, scenario.Validate())
 	scenario.Name = "test1"
 	require.Error(t, scenario.Validate())
 	scenario.Response.Contents = "test"
-	require.Error(t, scenario.Validate())
-	scenario.Response.StatusCode = 200
 	require.NoError(t, scenario.Validate())
-	require.Equal(t, "path1/test1/2", scenario.NormalPath('/'))
+	require.Equal(t, "path1/test1/2/:id", scenario.NormalPath('/'))
+	require.True(t, scenario.Digest() != "")
+	require.Equal(t, "/path1/test1/2/:id", scenario.ToKeyData().Path)
+}
+
+func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
+	// GIVEN a empty mock scenario
+	scenario := MockScenario{
+		Path: "/v1/category/{cat}/books/{id}",
+	}
+	keyData := scenario.ToKeyData()
+	groups := keyData.MatchGroups("/v1/category/history/books/101")
+	require.Equal(t, 2, len(groups))
+	require.Equal(t, "history", groups["cat"])
+	require.Equal(t, "101", groups["id"])
+	require.Equal(t, "/v1/category/{cat}/books/{id}", scenario.String())
+}
+
+func Test_ShouldMatchGroupsInMockScenarioKeyDataWithColon(t *testing.T) {
+	// GIVEN a empty mock scenario
+	scenario := MockScenario{
+		Path: "/v1/category/:cat/books/:id",
+	}
+	keyData := scenario.ToKeyData()
+	groups := keyData.MatchGroups("/v1/category/history/books/101")
+	require.Equal(t, 2, len(groups))
+	require.Equal(t, "history", groups["cat"])
+	require.Equal(t, "101", groups["id"])
+	require.Equal(t, "/v1/category/:cat/books/:id", scenario.String())
+}
+
+func Test_ShouldMatchRegex(t *testing.T) {
+	require.True(t, reMatch("abc", "abc"))
+	require.True(t, reMatch("\\d+", "3"))
+}
+
+func Test_ShouldNormalizeDirPath(t *testing.T) {
+	require.Equal(t, "/path1/id/:id", "/path1/id/:id")
+	require.Equal(t, "/path1/id/{id}", "/path1/id/{id}")
+}
+
+func Test_ToMethodShouldValidateMethod(t *testing.T) {
+	m, err := ToMethod("get")
+	require.NoError(t, err)
+	require.Equal(t, Get, m)
+	m, err = ToMethod("post")
+	require.NoError(t, err)
+	require.Equal(t, Post, m)
+	m, err = ToMethod("put")
+	require.NoError(t, err)
+	require.Equal(t, Put, m)
+	m, err = ToMethod("delete")
+	require.NoError(t, err)
+	require.Equal(t, Delete, m)
+	m, err = ToMethod("option")
+	require.NoError(t, err)
+	require.Equal(t, Option, m)
+	m, err = ToMethod("head")
+	require.NoError(t, err)
+	require.Equal(t, Head, m)
+	m, err = ToMethod("patch")
+	require.NoError(t, err)
+	require.Equal(t, Patch, m)
+	m, err = ToMethod("connect")
+	require.NoError(t, err)
+	require.Equal(t, Connect, m)
+	m, err = ToMethod("trace")
+	require.NoError(t, err)
+	require.Equal(t, Trace, m)
+	m, err = ToMethod("options")
+	require.NoError(t, err)
+	require.Equal(t, Options, m)
+	_, err = ToMethod("error")
+	require.Error(t, err)
 }
 
 func buildScenario() *MockScenario {
@@ -54,9 +132,12 @@ func buildScenario() *MockScenario {
 		Path:        "/path1/\\\\//test1//abc////",
 		Description: "",
 		Request: MockHTTPRequest{
-			QueryParams: "a=1&b=2",
-			Headers: map[string][]string{
-				"CTag": {"981"},
+			MatchQueryParams: map[string]string{
+				"a": "1",
+				"b": "2",
+			},
+			MatchHeaders: map[string]string{
+				"CTag": "981",
 			},
 		},
 		Response: MockHTTPResponse{

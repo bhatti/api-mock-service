@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -57,7 +58,10 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	recorder := proxy.NewRecorder(client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
+		URL:    u,
 		Method: "GET",
 		Header: map[string][]string{
 			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/10"},
@@ -82,8 +86,11 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	recorder := proxy.NewRecorder(client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "DELETE",
+		URL:    u,
 		Header: map[string][]string{
 			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
 		},
@@ -115,8 +122,11 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "PUT",
+		URL:    u,
 		Header: map[string][]string{
 			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
 		},
@@ -149,8 +159,11 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "POST",
+		URL:    u,
 		Header: map[string][]string{
 			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},
 		},

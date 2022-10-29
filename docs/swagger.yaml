@@ -34,6 +34,18 @@ definitions:
         description: QueryParams for the API
         type: string
         x-go-name: QueryParams
+      validate_contents:
+        description: ValidateContents for request
+        type: string
+        x-go-name: ValidateContents
+      validate_path_params:
+        description: ValidatePathParams for the API
+        type: string
+        x-go-name: ValidatePathParams
+      validate_query_params:
+        description: ValidateQueryParams for the API
+        type: string
+        x-go-name: ValidateQueryParams
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
   MockHTTPResponse:
@@ -192,6 +204,23 @@ paths:
           $ref: '#/responses/mockFixtureNamesResponse'
       tags:
       - mock-fixtures
+  /_oapi:
+    post:
+      description: Creates new mock scenarios based on Open API v3
+      operationId: postMockOAPIScenario
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          items:
+            format: uint8
+            type: integer
+          type: array
+      responses:
+        "200":
+          $ref: '#/responses/mockScenarioOAPIResponse'
+      tags:
+      - mock-scenarios
   /_proxy:
     delete:
       description: Records scenario from DELETE request
@@ -378,6 +407,10 @@ responses:
       items:
         type: string
       type: array
+  mockScenarioOAPIResponse:
+    description: MockScenario body for update
+    schema:
+      $ref: '#/definitions/MockScenario'
   mockScenarioResponse:
     description: MockScenario body for update
     schema:

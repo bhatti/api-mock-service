@@ -3,7 +3,6 @@ package web
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -62,6 +61,31 @@ func (w *stubWebServer) PUT(string, HandlerFunc, ...echo.MiddlewareFunc) *echo.R
 }
 
 func (w *stubWebServer) DELETE(string, HandlerFunc, ...echo.MiddlewareFunc) *echo.Route {
+	return &echo.Route{}
+}
+
+// CONNECT calls HTTP CONNECT method
+func (w *stubWebServer) CONNECT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return &echo.Route{}
+}
+
+// HEAD calls HTTP HEAD method
+func (w *stubWebServer) HEAD(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return &echo.Route{}
+}
+
+// OPTIONS calls HTTP OPTIONS method
+func (w *stubWebServer) OPTIONS(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return &echo.Route{}
+}
+
+// PATCH calls HTTP PATCH method
+func (w *stubWebServer) PATCH(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return &echo.Route{}
+}
+
+// TRACE calls HTTP TRACE method
+func (w *stubWebServer) TRACE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return &echo.Route{}
 }
 
@@ -139,11 +163,17 @@ func (c *stubContext) QueryParam(name string) string {
 	return c.Params[name]
 }
 
-func (c *stubContext) QueryParams() url.Values {
-	if c.request.URL != nil {
-		return c.request.URL.Query()
+func (c *stubContext) QueryParams() (res url.Values) {
+	res = make(url.Values)
+	for k, v := range c.Params {
+		res[k] = []string{v}
 	}
-	return make(url.Values)
+	if c.request.URL != nil {
+		for k, v := range c.request.URL.Query() {
+			res[k] = v
+		}
+	}
+	return
 }
 
 func (c *stubContext) QueryString() string {
@@ -299,7 +329,7 @@ func (c *stubContext) Blob(code int, _ string, j []byte) (err error) {
 }
 
 func (c *stubContext) Stream(code int, _ string, r io.Reader) (err error) {
-	c.Result, _ = ioutil.ReadAll(r)
+	c.Result, _ = io.ReadAll(r)
 	if code >= 300 {
 		return fmt.Errorf("%d - %v", code, r)
 	}

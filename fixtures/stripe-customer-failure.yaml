@@ -2,9 +2,8 @@ method: GET
 name: stripe-customer-failure
 path: /v1/customers/:customer/cash_balance
 request:
-    headers:
-        Authorization:
-            - Bearer sk_test
+    match_headers:
+        Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
 response:
     headers:
         Stripe-Version:

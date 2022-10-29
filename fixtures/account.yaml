@@ -1,0 +1,24 @@
+method: POST
+name: UpdateAuthTokenPromotion-9e6017b8883bca6ccf478e109e9784f5296d2c12f335dd9ceefb7b5d32340f91
+path: /v1/AuthTokens/Promote
+description: Promote the secondary Auth Token to primary. After promoting the new token, all requests to Twilio using your old primary Auth Token will result in an error.
+request:
+    match_headers: 
+        CTag: {{.ETag}}
+    match_content_type: ""
+    match_contents: ""
+response:
+    headers:
+        ETag:
+            - {{.ETag}}
+        "Transfer-Encoding":
+            - "chunked"
+        "Server":
+            - "SampleAPI"
+        "Connection":
+            - "keep-alive"
+    content_type: application/json
+    contents: '{"account_sid":"{{RandRegex `^AC[0-9a-fA-F]{32}$`}}","auth_token":"{{RandStringMinMax 0 0}}","date_created":"{{Time}}","date_updated":"{{Time}}","url":"https://{{RandName}}.com"}'
+    contents_file: ""
+    status_code: 200
+wait_before_reply: 0s

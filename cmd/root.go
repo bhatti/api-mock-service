@@ -150,6 +150,7 @@ func buildControllers(
 ) (err error) {
 	recorder := proxy.NewRecorder(httpClient, scenarioRepo)
 	player := proxy.NewPlayer(scenarioRepo, fixtureRepo)
+	_ = controller.NewMockOAPIController(scenarioRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, webServer)
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
 	_ = controller.NewMockProxyController(recorder, webServer)

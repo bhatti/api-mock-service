@@ -25,7 +25,8 @@ func NewMockScenarioController(
 		mockScenarioRepository: mockScenarioRepository,
 	}
 
-	webserver.GET("/_scenarios/:method/scenarios/:path", ctrl.getMockNames)
+	webserver.GET("/_scenarios", ctrl.listMockScenarioPaths)
+	webserver.GET("/_scenarios/:method/names/:path", ctrl.getMockNames)
 	webserver.GET("/_scenarios/:method/:name/:path", ctrl.getMockScenario)
 	webserver.POST("/_scenarios", ctrl.postMockScenario)
 	webserver.DELETE("/_scenarios/:method/:name/:path", ctrl.deleteMockScenario)
@@ -54,6 +55,19 @@ func (msc *MockScenarioController) postMockScenario(c web.APIContext) (err error
 	return c.JSON(http.StatusOK, scenario)
 }
 
+// swagger:route GET /_scenarios mock-scenarios listMockScenario
+// List paths of all scenarios
+// responses:
+//
+//	200: mockScenarioPathsResponse
+func (msc *MockScenarioController) listMockScenarioPaths(c web.APIContext) error {
+	res := make(map[string]*types.MockScenarioKeyData)
+	for _, next := range msc.mockScenarioRepository.ListScenarioKeyData() {
+		res[fmt.Sprintf("/_scenarios/%s/%s%s", next.Method, next.Name, next.Path)] = next
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
 // swagger:route GET /_scenarios/{method}/{name}/{path} mock-scenarios getMockScenario
 // Finds an existing mock scenario based on method, name and path
 // responses:
@@ -72,16 +86,19 @@ func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
 	if path == "" {
 		return fmt.Errorf("path not specified")
 	}
+	keyData, err := web.BuildMockScenarioKeyData(c)
+	if err != nil {
+		return err
+	}
+	keyData.Method = method
+	keyData.Name = name
+	keyData.Path = path
 	log.WithFields(log.Fields{
 		"Method": method,
 		"Name":   name,
 		"Path":   path,
-	}).Infof("getting mock scenario...")
-	scenario, err := msc.mockScenarioRepository.Get(
-		method,
-		name,
-		path,
-		nil)
+	}).Debugf("getting mock scenario...")
+	scenario, err := msc.mockScenarioRepository.Lookup(keyData)
 	if err != nil {
 		return err
 	}
@@ -95,7 +112,7 @@ func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
 	return c.JSON(http.StatusOK, scenario)
 }
 
-// swagger:route GET /_scenarios/{method}/scenarios/{path} mock-scenarios getMockNames
+// swagger:route GET /_scenarios/{method}/names/{path} mock-scenarios getMockNames
 // Returns mock scenario names
 // responses:
 //
@@ -177,6 +194,13 @@ type mockScenarioResponseBody struct {
 type mockNamesResponseBody struct {
 	// in:body
 	Body []string
+}
+
+// MockScenario summary and paths
+// swagger:response mockScenarioPathsResponse
+type mockScenarioPathsResponseBody struct {
+	// in:body
+	Body map[string]*types.MockScenarioKeyData
 }
 
 // swagger:parameters deleteMockScenario getMockScenario

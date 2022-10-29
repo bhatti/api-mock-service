@@ -3,8 +3,7 @@ name: get_devices
 path: /devices
 description: ""
 request:
-    query_params: 
-    content_type: "application/json; charset=utf-8"
+    match_content_type: "application/json; charset=utf-8"
 response:
     headers:
         "Server": 
@@ -32,14 +31,20 @@ response:
         },
         "DeviceFriendlyName": "Device for {{SeededName $val}}",
         "LastSeen": "{{Time}}",
-        "EnrollmentStatus": "Enrolled",
-        "ComplianceStatus": "NonCompliant",
+        "EnrollmentStatus": {{SeededBool $val}}
+        "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
+        "Group": {{RandCity}},
+        "Date": {{TimeFormat "3:04PM"}},
         "BatteryLevel": "{{RandNumMax 100}}%",
+        "StrEnum": {{EnumString "ONE TWO THREE"}},
+        "IntEnum": {{EnumInt 10 20 30}},
         "ProcessorArchitecture": {{RandNumMax 1000}},
         "TotalPhysicalMemory": {{RandNumMax 1000000}},
         "VirtualMemory": {{RandNumMax 1000000}},
         "AvailablePhysicalMemory": {{RandNumMax 1000000}},
-        "CompromisedStatus": {{RandBool}}
+        "CompromisedStatus": {{RandBool}},
+        "Add": {{Add 2 1}},
+        "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
       }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
 {{ end }}
      ],
@@ -47,12 +52,10 @@ response:
      "PageSize": {{.pageSize}},
      "Total": {{.pageSize}}
      }
-    {{if LT .page 10 }}
-    status_code: 200
+    {{if NthRequest 10 }}
+    status_code: {{EnumInt 500 501}}
     {{else}}
-    status_code: 400
+    status_code: {{EnumInt 200 400}}
     {{end}}
 wait_before_reply: {{.page}}s
-
-
 

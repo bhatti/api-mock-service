@@ -1,0 +1,500 @@
+openapi: 3.0.0
+info:
+  title: AWS Lambda API
+  description: All API endpoints exposed by AWS Lambda, combined together for implementing custom runtimes faster
+  version: 1.1.1
+  license:
+    name: CC BY-SA 4.0
+    url: https://creativecommons.org/licenses/by-sa/4.0/
+externalDocs:
+    description: Check out on GitHub!
+    url: https://github.com/phuntime/aws-lambda-openapi
+tags:
+  - name: runtime
+    description: AWS Lambda Runtime API
+  - name: extension
+    description: AWS Lambda Extension API
+paths:
+  /2018-06-01/runtime/init/error:
+    post:
+      tags:
+        - runtime
+      summary: >
+        Non-recoverable initialization error. Runtime should exit after reporting
+        the error. Error will be served in response to the first invoke.
+      parameters:
+        - in: header
+          name: Lambda-Runtime-Function-Error-Type
+          schema:
+            type: string
+      requestBody:
+        content:
+          '*/*':
+            schema: {}
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Runtime should exit promptly.
+  /2018-06-01/runtime/invocation/next:
+    get:
+      tags:
+        - runtime
+      summary: >
+        Runtime makes this HTTP request when it is ready to receive and process a
+        new invoke.
+      responses:
+        '200':
+          description: >
+            This is an iterator-style blocking API call. Response contains
+            event JSON document, specific to the invoking service.
+          headers:
+            Lambda-Runtime-Aws-Request-Id:
+              description: AWS request ID associated with the request.
+              schema:
+                type: string
+            Lambda-Runtime-Trace-Id:
+              description: X-Ray tracing header.
+              schema:
+                type: string
+            Lambda-Runtime-Client-Context:
+              description: >
+                Information about the client application and device when invoked
+                through the AWS Mobile SDK.
+              schema:
+                type: string
+            Lambda-Runtime-Cognito-Identity:
+              description: >
+                Information about the Amazon Cognito identity provider when invoked
+                through the AWS Mobile SDK.
+              schema:
+                type: string
+            Lambda-Runtime-Deadline-Ms:
+              description: >
+                Function execution deadline counted in milliseconds since the Unix epoch.
+              schema:
+                type: string
+            Lambda-Runtime-Invoked-Function-Arn:
+              description: >
+                The ARN requested. This can be different in each invoke that
+                executes the same version.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Runtime should exit promptly.
+  /2018-06-01/runtime/invocation/{AwsRequestId}/response:
+    post:
+      tags:
+        - runtime
+      summary: Runtime makes this request in order to submit a response.
+      parameters:
+        - in: path
+          name: AwsRequestId
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          '*/*':
+            schema: {}
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Payload Too Large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Runtime should exit promptly.
+  /2018-06-01/runtime/invocation/{AwsRequestId}/error:
+    post:
+      tags:
+        - runtime
+      summary: >
+        Runtime makes this request in order to submit an error response. It can
+        be either a function error, or a runtime error. Error will be served in
+        response to the invoke.
+      parameters:
+        - in: path
+          name: AwsRequestId
+          schema:
+            type: string
+          required: true
+        - in: header
+          name: Lambda-Runtime-Function-Error-Type
+          schema:
+            type: string
+      requestBody:
+        content:
+          '*/*':
+            schema: {}
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Runtime should exit promptly.
+  /2020-01-01/extension/register:
+    post:
+      tags:
+        - extension
+      summary: >
+        Register an extension with the given name.
+      parameters:
+        - in: header
+          name: Lambda-Extension-Name
+          required: true
+          description: Public extension name.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/vnd.aws.lambda.extension+json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: >
+            Response contains generated unique extension identifier that is required for all subsequent requests.
+          headers:
+            Lambda-Extension-Identifier:
+              description: Generated unique identifier for public extension name.
+              schema:
+                type: string
+          content:
+            application/vnd.aws.lambda.extension+json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Extension should exit promptly.
+  /2020-01-01/extension/event/next:
+    get:
+      tags:
+        - extension
+      summary: >
+        Extension makes this HTTP request when it is ready to receive and process a new event.
+      parameters:
+        - in: header
+          name: Lambda-Extension-Identifier
+          required: true
+          description: Unique identifier for extension.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            This is an iterator-style blocking API call. Response contains
+            event JSON document.
+          headers:
+            Lambda-Extension-Event-Identifier:
+              description: Event UUID.
+              schema:
+                type: string
+          content:
+            application/vnd.aws.lambda.extensionevent+json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/EventInvoke'
+                - $ref: '#/components/schemas/EventShutdown'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Extension should exit promptly.
+  /2020-01-01/extension/init/error:
+    post:
+      tags:
+       - extension
+      summary: >
+        This allows the extension to report an initialization error to the platform.
+        Call it when you registered but failed to initialize. Once error has been
+        accepted by the platform, no further API calls will succeed, extension should
+        exit.
+      parameters:
+        - in: header
+          name: Lambda-Extension-Identifier
+          required: true
+          description: Unique identifier for extension.
+          schema:
+            type: string
+        - in: header
+          name: Lambda-Extension-Function-Error-Type
+          required: true
+          description: Extension.ErrorEnum
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/vnd.aws.lambda.error+json:
+            schema:
+              $ref: '#/components/schemas/ErrorRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Extension should exit promptly.
+  /2020-01-01/extension/exit/error:
+    post:
+      tags:
+       - extension
+      summary: >
+        This allows the extension to report an error to the platform before exiting.
+        Call it when you encounter an unexpected failure. Once error has been
+        accepted by the platform, no further API calls will succeed, extension should
+        exit.
+      parameters:
+        - in: header
+          name: Lambda-Extension-Identifier
+          required: true
+          description: Unique identifier for extension.
+          schema:
+            type: string
+        - in: header
+          name: Lambda-Extension-Function-Error-Type
+          required: true
+          description: Extension.ErrorEnum
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/vnd.aws.lambda.error+json:
+            schema:
+              $ref: '#/components/schemas/ErrorRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: >
+            Container error. Non-recoverable state. Extension should exit promptly.
+
+components:
+  schemas:
+    EventResponse:
+      type: object
+    RegisterRequest:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            type: string
+      example:
+        {
+          'events': [ 'INVOKE', 'SHUTDOWN']
+        }
+    RegisterResponse:
+      type: object
+      properties:
+        functionName:
+          type: string
+        functionVersion:
+          type: string
+        handler:
+          type: string
+      example:
+        {
+          functionName: 'my-function',
+          functionVersion: '$LATEST',
+          handler: 'lambda_handler'
+        }
+    ErrorResponse:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+        errorType:
+          type: string
+      example:
+        {
+          errorMessage: 'human readable error message',
+          errorType: 'Platform.ErrorEnum',
+        }
+    ErrorRequest:
+      type: object
+      properties:
+        errorMessage:
+          type: string
+        errorType:
+          type: string
+        stackTrace:
+          type: array
+          items:
+            type: string
+      example:
+        {
+          errorType: 'Extension.ErrorEnum',
+          errorMessage: 'human readable error message',
+          stackTrace: []
+        }
+    EventInvoke:
+      type: object
+      properties:
+        eventType:
+          type: string
+        deadlineMs:
+          type: integer
+          description: The date that the function times out in Unix time milliseconds.
+        requestId:
+          type: string
+        invokedFunctionArn:
+          type: string
+        tracing:
+          oneOf:
+            - $ref: '#/components/schemas/XRayTracingInfo'
+      example:
+        {
+          eventType: 'INVOKE',
+          deadlineMs: 1581512138111,
+          requestId: 'aws-request-ID',
+          invokedFunctionArn: 'invoked-function-arn',
+          tracing: {
+            type: 'X-Amzn-Trace-Id',
+            value: 'Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1'
+          }
+        }
+    EventShutdown:
+      type: object
+      properties:
+        eventType:
+          type: string
+        shutdownReason:
+          type: string
+          enum: [spindown, timeout, failure]
+        deadlineMs:
+          type: integer
+          description: The date that the function times out in Unix time milliseconds.
+      example:
+        {
+          eventType: 'SHUTDOWN',
+          shutdownReason: 'spindown',
+          deadlineMs: 1581512138111
+        }
+    StatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+      example:
+        {
+          status: "Accepted"
+        }
+    XRayTracingInfo:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [X-Amzn-Trace-Id]
+        value:
+          type: string
+      example:
+        {
+          type: 'X-Amzn-Trace-Id',
+          value: 'Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1'
+        }

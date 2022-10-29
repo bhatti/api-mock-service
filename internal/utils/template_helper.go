@@ -3,13 +3,15 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types"
 	"html/template"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bhatti/api-mock-service/internal/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // UnescapeHTML flag
@@ -82,7 +84,7 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			return template.HTML(s)
 		},
 		"RandNumMinMax": func(min interface{}, max interface{}) int {
-			return RandomMinMax(toInt(min), toInt(max))
+			return RandNumMinMax(toInt(min), toInt(max))
 		},
 		"RandNumMax": func(max interface{}) int {
 			return Random(toInt(max))
@@ -105,6 +107,18 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"SeededBool": func(seed interface{}) bool {
 			return SeededBool(toInt64(seed))
 		},
+		"RandCountry": func() string {
+			return RandCountry()
+		},
+		"SeededCountry": func(seed interface{}) string {
+			return SeededCountry(toInt64(seed))
+		},
+		"RandCountryCode": func() string {
+			return RandCountryCode()
+		},
+		"SeededCountryCode": func(seed interface{}) string {
+			return SeededCountryCode(toInt64(seed))
+		},
 		"RandName": func() string {
 			return RandName()
 		},
@@ -112,28 +126,40 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			return SeededName(toInt64(seed))
 		},
 		"RandString": func(max interface{}) string {
-			return RandomString(toInt(max))
+			return RandString(toInt(max))
+		},
+		"RandStringMinMax": func(min interface{}, max interface{}) string {
+			return RandStringMinMax(toInt(min), toInt(max))
+		},
+		"RandStringArrayMinMax": func(min interface{}, max interface{}) []string {
+			return RandStringArrayMinMax(toInt(min), toInt(max))
+		},
+		"RandIntArrayMinMax": func(min interface{}, max interface{}) []int {
+			return RandIntArrayMinMax(toInt(min), toInt(max))
+		},
+		"RandRegex": func(re string) string {
+			return RandRegex(re)
 		},
 		"Int": func(num interface{}) int64 {
 			return toInt64(num)
 		},
 		"Float": func(num interface{}) float64 {
-			return toFloat64(num)
+			return ToFloat64(num)
 		},
 		"LT": func(a interface{}, b interface{}) bool {
-			return toFloat64(a) < toFloat64(b)
+			return ToFloat64(a) < ToFloat64(b)
 		},
 		"LE": func(a interface{}, b interface{}) bool {
-			return toFloat64(a) <= toFloat64(b)
+			return ToFloat64(a) <= ToFloat64(b)
 		},
 		"EQ": func(a interface{}, b interface{}) bool {
-			return toFloat64(a) == toFloat64(b)
+			return ToFloat64(a) == ToFloat64(b)
 		},
 		"GT": func(a interface{}, b interface{}) bool {
-			return toFloat64(a) > toFloat64(b)
+			return ToFloat64(a) > ToFloat64(b)
 		},
 		"GE": func(a interface{}, b interface{}) bool {
-			return toFloat64(a) >= toFloat64(b)
+			return ToFloat64(a) >= ToFloat64(b)
 		},
 		"Nth": func(a interface{}, b interface{}) bool {
 			return toInt(a)%toInt(b) == 0
@@ -157,24 +183,20 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"SeededFileLine": func(fileName string, seed interface{}) template.HTML {
 			return randFileLine(dir, fileName+types.MockDataExt, toInt64(seed))
 		},
+		"Date": func() string {
+			return time.Now().Format("2006-01-02")
+		},
 		"Time": func() string {
 			return time.Now().Format(time.RFC3339)
 		},
 		"TimeFormat": func(format string) string {
 			return time.Now().Format(format)
 		},
-		"AnySubstring": func(str string) string {
-			return AnySubstring(str)
+		"EnumString": func(str ...interface{}) string {
+			return EnumString(str...)
 		},
-		"AnyInt": func(vals ...interface{}) int64 {
-			var str strings.Builder
-			for _, val := range vals {
-				if str.Len() > 0 {
-					str.WriteRune(' ')
-				}
-				str.WriteString(fmt.Sprintf("%v", val))
-			}
-			return AnyInt(str.String())
+		"EnumInt": func(vals ...interface{}) int64 {
+			return EnumInt(vals...)
 		},
 	}
 }
@@ -192,6 +214,9 @@ func randFileLine(dir string, fileName string, seed int64) template.HTML {
 }
 
 func toInt(input interface{}) (res int) {
+	if input == nil {
+		return 0
+	}
 	switch input.(type) {
 	case int:
 		res = input.(int)
@@ -207,7 +232,10 @@ func toInt(input interface{}) (res int) {
 	return
 }
 
-func toFloat64(input interface{}) (res float64) {
+func ToFloat64(input interface{}) (res float64) {
+	if input == nil {
+		return 0
+	}
 	switch input.(type) {
 	case int:
 		res = float64(input.(int))
@@ -221,13 +249,44 @@ func toFloat64(input interface{}) (res float64) {
 		res = float64(input.(float32))
 	case float64:
 		res = input.(float64)
+	case *float64:
+		f := input.(*float64)
+		if f != nil {
+			res = *f
+		}
+	case *float32:
+		f := input.(*float32)
+		if f != nil {
+			res = float64(*f)
+		}
+	case *uint64:
+		f := input.(*uint64)
+		if f != nil {
+			res = float64(*f)
+		}
+	case *int64:
+		f := input.(*int64)
+		if f != nil {
+			res = float64(*f)
+		}
 	default:
-		res, _ = strconv.ParseFloat(fmt.Sprintf("%v", input), 64)
+		var err error
+		res, err = strconv.ParseFloat(fmt.Sprintf("%v", input), 64)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"Component": "ToFloat64",
+				"Error":     err,
+				"Input":     input}).Warn("failed to parse float")
+
+		}
 	}
 	return
 }
 
 func toInt64(input interface{}) (res int64) {
+	if input == nil {
+		return 0
+	}
 	switch input.(type) {
 	case int:
 		res = int64(input.(int))

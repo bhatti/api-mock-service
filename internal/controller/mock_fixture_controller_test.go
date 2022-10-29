@@ -62,10 +62,15 @@ func Test_ShouldFailGetFixtureWithoutNameOrPath(t *testing.T) {
 
 	// WHEN getting mock fixture without name and path
 	err = ctrl.getMockFixture(ctx)
-
 	// THEN it should fail
 	require.Error(t, err)
+
+	// AND it should fail given method but without name
 	ctx.Params["method"] = "GET"
+	err = ctrl.getMockFixture(ctx)
+	require.Error(t, err)
+
+	// AND it should fail to post given method but without name
 	err = ctrl.postMockFixture(ctx)
 	require.Error(t, err)
 

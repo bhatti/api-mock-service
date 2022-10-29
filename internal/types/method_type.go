@@ -23,6 +23,12 @@ const (
 	Head MethodType = "HEAD"
 	// Patch HTTP request
 	Patch MethodType = "PATCH"
+	// Connect HTTP request
+	Connect MethodType = "CONNECT"
+	// Options HTTP request
+	Options MethodType = "OPTIONS"
+	// Trace HTTP request
+	Trace MethodType = "TRACE"
 )
 
 // ToMethod converts string to method
@@ -43,6 +49,12 @@ func ToMethod(val string) (MethodType, error) {
 		return Head, nil
 	case val == string(Patch):
 		return Patch, nil
+	case val == string(Connect):
+		return Connect, nil
+	case val == string(Options):
+		return Options, nil
+	case val == string(Trace):
+		return Trace, nil
 	default:
 		return MethodType(val), fmt.Errorf("invalid method '%s'", val)
 	}

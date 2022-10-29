@@ -2,13 +2,8 @@ method: GET
 name: stripe-cash-balance
 path: /v1/customers/:customer/cash_balance
 request:
-    headers:
-        Accept:
-            - '*/*'
-        Authorization:
-            - Bearer sk_test
-        User-Agent:
-            - curl/7.65.2
+    match_headers:
+        Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
 response:
     headers:
         Access-Control-Allow-Credentials:

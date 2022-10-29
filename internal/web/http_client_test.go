@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -47,7 +46,7 @@ func Test_ShouldRealDelete(t *testing.T) {
 
 func Test_ShouldRealDeleteBody(t *testing.T) {
 	w := newTest()
-	body := io.ReadCloser(ioutil.NopCloser(bytes.NewReader([]byte("hello"))))
+	body := io.ReadCloser(io.NopCloser(bytes.NewReader([]byte("hello"))))
 	_, _, _, err := w.Handle(
 		context.Background(),
 		"DELETE",
@@ -104,7 +103,7 @@ func Test_ShouldRealPostForm(t *testing.T) {
 
 func Test_ShouldRealPostBody(t *testing.T) {
 	w := newTest()
-	body := io.ReadCloser(ioutil.NopCloser(bytes.NewReader([]byte("hello"))))
+	body := io.ReadCloser(io.NopCloser(bytes.NewReader([]byte("hello"))))
 	_, _, _, err := w.Handle(
 		context.Background(),
 		"POST",

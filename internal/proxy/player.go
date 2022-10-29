@@ -1,18 +1,15 @@
 package proxy
 
 import (
+	"errors"
 	"fmt"
-	"io"
+	"github.com/bhatti/api-mock-service/internal/types"
 	"strconv"
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
-	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
 )
-
-// MockScenarioName header
-const MockScenarioName = "Mock-Scenario"
 
 // MockRequestCount header
 const MockRequestCount = "Mock-Request-Count"
@@ -42,26 +39,20 @@ func NewPlayer(
 
 // Handle request and replays stubbed response
 func (p *Player) Handle(c web.APIContext) (err error) {
-	reqBody := []byte{}
-
-	if c.Request().Body != nil {
-		reqBody, err = io.ReadAll(c.Request().Body)
-		if err != nil {
-			return err
-		}
-	}
-
-	key := &types.MockScenarioKeyData{
-		Method:      types.MethodType(c.Request().Method),
-		Name:        c.Request().Header.Get(MockScenarioName),
-		Path:        c.Request().URL.Path,
-		QueryParams: c.Request().URL.RawQuery,
-		ContentType: c.Request().Header.Get(types.ContentTypeHeader),
-		Contents:    string(reqBody),
+	key, err := web.BuildMockScenarioKeyData(c)
+	if err != nil {
+		return err
 	}
 
 	matchedScenario, err := p.scenarioRepository.Lookup(key)
 	if err != nil {
+		var validationErr *types.ValidationError
+		var notFoundErr *types.NotFoundError
+		if errors.As(err, &validationErr) {
+			return c.String(400, err.Error())
+		} else if errors.As(err, &notFoundErr) {
+			return c.String(404, err.Error())
+		}
 		return err
 	}
 
@@ -70,7 +61,7 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 			c.Response().Header().Add(k, val)
 		}
 	}
-	c.Response().Header().Add(MockScenarioName, matchedScenario.Name)
+	c.Response().Header().Add(types.MockScenarioName, matchedScenario.Name)
 	c.Response().Header().Add(MockRequestCount, fmt.Sprintf("%d", matchedScenario.RequestCount))
 	// Override wait time from request header
 	if c.Request().Header.Get(MockWaitBeforeReply) != "" {
@@ -82,7 +73,8 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 	// Override response status from request header
 	if c.Request().Header.Get(MockResponseStatus) != "" {
 		matchedScenario.Response.StatusCode, _ = strconv.Atoi(c.Request().Header.Get(MockResponseStatus))
-	} else if matchedScenario.Response.StatusCode == 0 {
+	}
+	if matchedScenario.Response.StatusCode == 0 {
 		matchedScenario.Response.StatusCode = 200
 	}
 

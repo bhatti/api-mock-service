@@ -1,15 +1,12 @@
 package repository
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -58,25 +55,6 @@ func NewFileMockScenarioRepository(
 	return
 }
 
-// Get MockScenario by Method, Path and Scenario name
-func (sr *FileMockScenarioRepository) Get(
-	method types.MethodType,
-	scenarioName string,
-	path string,
-	params interface{}) (scenario *types.MockScenario, err error) {
-	var b []byte
-	fileName := sr.buildFileName(method, scenarioName, path)
-	if b, err = os.ReadFile(fileName); err != nil {
-		return nil, err
-	}
-	keyData, err := unmarshalScenarioKeyData(b)
-	if err != nil {
-		return nil, err
-	}
-	dir := sr.buildDir(keyData.Method, keyData.Path)
-	return unmarshalMockScenario(b, dir, params)
-}
-
 // GetScenariosNames returns mock scenarios for given Method and Path
 func (sr *FileMockScenarioRepository) GetScenariosNames(
 	method types.MethodType,
@@ -116,7 +94,7 @@ func (sr *FileMockScenarioRepository) SaveRaw(input io.ReadCloser) (err error) {
 	if err != nil {
 		return err
 	}
-	input.Close()
+	_ = input.Close()
 	keyData, err := unmarshalScenarioKeyData(data)
 	if err != nil {
 		return err
@@ -145,17 +123,50 @@ func (sr *FileMockScenarioRepository) Delete(
 	return os.Remove(fileName)
 }
 
-// LookupAll finds matching scenarios
-func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyData) []*types.MockScenarioKeyData {
+// ListScenarioKeyData returns keys for all scenarios
+func (sr *FileMockScenarioRepository) ListScenarioKeyData() []*types.MockScenarioKeyData {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
 	res := make([]*types.MockScenarioKeyData, 0)
+	for _, keyDataMap := range sr.keysByMethodPath {
+		for _, keyData := range keyDataMap {
+			res = append(res, keyData)
+		}
+	}
+	sort.Slice(res, func(i, j int) bool {
+		if res[i].Path == res[j].Path {
+			return res[i].Method < res[j].Method
+		}
+		return res[i].Path < res[j].Path
+	})
+	return res
+
+}
+
+// LookupAll finds matching scenarios
+func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyData) (res []*types.MockScenarioKeyData, paramMismatchErrors int) {
+	sr.mutex.RLock()
+	defer func() {
+		sr.mutex.RUnlock()
+	}()
+	res = make([]*types.MockScenarioKeyData, 0)
 	keyDataMap := sr.keysByMethodPath[target.PartialMethodPathKey()]
 	for _, keyData := range keyDataMap {
-		if keyData.Equals(target) == nil {
+		if err := keyData.Equals(target); err == nil {
 			res = append(res, keyData)
+		} else {
+			var mockScenarioMismatchError *types.ValidationError
+			if errors.As(err, &mockScenarioMismatchError) {
+				paramMismatchErrors++
+				log.WithFields(log.Fields{
+					"Target":         target.String(),
+					"Actual":         keyData.String(),
+					"MismatchParams": paramMismatchErrors,
+					"Error":          err,
+				}).Infof("didn't match for lookup...")
+			}
 		}
 	}
 	sort.Slice(res, func(i, j int) bool {
@@ -164,14 +175,17 @@ func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyDat
 		}
 		return res[i].LastUsageTime < res[j].LastUsageTime
 	})
-	return res
+	return
 }
 
 // Lookup finds top matching scenario
 func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) (scenario *types.MockScenario, err error) {
-	matched := sr.LookupAll(target)
+	matched, paramMismatchErrors := sr.LookupAll(target)
 	if len(matched) == 0 {
-		return nil, fmt.Errorf("could not lookup matching API %s", target.Path)
+		if paramMismatchErrors > 0 {
+			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", target.String()))
+		}
+		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API %s", target.String()))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)
@@ -195,15 +209,14 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 
 	// Find any params for query params and path variables
 	params := matched[0].MatchGroups(target.Path)
-	if matched[0].QueryParams != "" {
-		addQueryParams(matched[0].QueryParams, params)
-	}
-	if target.QueryParams != "" {
-		addQueryParams(target.QueryParams, params)
-	}
+	addQueryParams(matched[0].MatchQueryParams, params)
+	addQueryParams(target.MatchQueryParams, params)
 	params[types.RequestCount] = fmt.Sprintf("%d", matched[0].RequestCount)
 
 	scenario, err = unmarshalMockScenario(b, dir, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load '%s' due to '%s'", fileName, err)
+	}
 	scenario.RequestCount = matched[0].RequestCount
 	return
 }
@@ -250,7 +263,7 @@ func (sr *FileMockScenarioRepository) visit(
 
 		keyData, err := unmarshalScenarioKeyData(content)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to load '%s' due to '%s'", path, err)
 		}
 		if callback(keyData) {
 			return errStop
@@ -288,6 +301,7 @@ func (sr *FileMockScenarioRepository) addKeyData(keyData *types.MockScenarioKeyD
 	keyMap[keyData.MethodNamePathPrefixKey()] = keyData
 	log.WithFields(log.Fields{
 		"Name":    keyData.Name,
+		"Method":  keyData.Method,
 		"Path":    keyData.Path,
 		"AllSize": len(sr.keysByMethodPath),
 		"Size":    len(keyMap),
@@ -322,47 +336,24 @@ func buildDir(
 	return filepath.Join(dir, types.NormalizeDirPath(path), string(method))
 }
 
-func addQueryParams(queryParams string, params map[string]string) {
-	if dict, err := url.ParseQuery(queryParams); err == nil {
-		for k, vals := range dict {
-			if len(vals) > 0 {
-				params[k] = vals[0]
-			}
-		}
+func addQueryParams(queryParams map[string]string, params map[string]string) {
+	for k, v := range queryParams {
+		params[k] = v
 	}
 }
 
-func unmarshalScenarioKeyData(data []byte) (*types.MockScenarioKeyData, error) {
-	scanner := bufio.NewScanner(bytes.NewReader(data))
-	keyData := &types.MockScenarioKeyData{}
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "response:") {
-			break
-		}
-		if !strings.Contains(line, ":") {
-			continue
-		}
-		ndx := strings.Index(line, ":")
-		if ndx == -1 {
-			continue
-		}
-		name := strings.TrimSpace(line[0:ndx])
-		val := strings.TrimSpace(line[ndx+1:])
-		if name == "method" {
-			keyData.Method = types.MethodType(val)
-		} else if name == "name" {
-			keyData.Name = val
-		} else if name == "path" {
-			keyData.Path = val
-		} else if name == "query_params" {
-			keyData.QueryParams = val
-		} else if name == "content_type" {
-			keyData.ContentType = val
-		} else if name == "contents" {
-			keyData.Contents = val
-		}
+func unmarshalScenarioKeyData(data []byte) (keyData *types.MockScenarioKeyData, err error) {
+	rawYaml := string(data)
+	ndx := strings.Index(rawYaml, "response:")
+	if ndx != -1 {
+		rawYaml = rawYaml[0:ndx]
 	}
+	mockScenario := &types.MockScenario{}
+	err = yaml.Unmarshal([]byte(rawYaml), mockScenario)
+	if err != nil {
+		return nil, err
+	}
+	keyData = mockScenario.ToKeyData()
 	if err := keyData.Validate(); err != nil {
 		return nil, err
 	}

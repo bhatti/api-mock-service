@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
 
@@ -57,9 +58,9 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 	}
 	webServer := web.NewStubWebServer()
 	ctrl := NewRootController(player, webServer)
-	u, err := url.Parse("https://books.com/api/books/topic/business/202")
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
 	require.NoError(t, err)
-	// WHEN looking up todos by PUT with different query param
+	// WHEN looking up todos by GET with different query param
 	ctx := web.NewStubContext(&http.Request{
 		Method: "GET",
 		URL:    u,
@@ -68,7 +69,14 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 
 	// WHEN invoking GET proxy API
 	err = ctrl.getRoot(ctx)
+	// THEN it should fail without headers
+	require.Error(t, err)
 
+	// WHEN looking up todos by GET with header
+	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+
+	// WHEN invoking GET proxy API
+	err = ctrl.getRoot(ctx)
 	// THEN it should return stubbed response
 	require.NoError(t, err)
 	saved := ctx.Result.([]byte)
@@ -88,7 +96,7 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 	}
 	webServer := web.NewStubWebServer()
 	ctrl := NewRootController(player, webServer)
-	u, err := url.Parse("https://books.com/api/books/topic/business/202")
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
 	require.NoError(t, err)
 	// WHEN looking up todos by PUT with different query param
 	ctx := web.NewStubContext(&http.Request{
@@ -96,6 +104,7 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 		URL:    u,
 		Header: make(http.Header),
 	})
+	ctx.Request().Header = map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}}
 
 	// WHEN invoking DELETE proxy API
 	err = ctrl.deleteRoot(ctx)
@@ -119,13 +128,13 @@ func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 	}
 	webServer := web.NewStubWebServer()
 	ctrl := NewRootController(player, webServer)
-	u, err := url.Parse("https://books.com/api/books/topic/business")
+	u, err := url.Parse("https://books.com/api/books/topic/business?a=12&b=abc")
 	require.NoError(t, err)
 	// WHEN looking up todos by POST with different query param
 	ctx := web.NewStubContext(&http.Request{
 		Method: "POST",
 		URL:    u,
-		Header: make(http.Header),
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
 	})
 
 	// WHEN invoking POST proxy API
@@ -150,17 +159,172 @@ func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 	}
 	webServer := web.NewStubWebServer()
 	ctrl := NewRootController(player, webServer)
-	u, err := url.Parse("https://books.com/api/books/topic/business/202")
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=12&b=abc")
 	require.NoError(t, err)
 	// WHEN looking up todos by PUT with different query param
 	ctx := web.NewStubContext(&http.Request{
 		Method: "PUT",
 		URL:    u,
-		Header: make(http.Header),
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
 	})
 
 	// WHEN invoking PUT proxy API
 	err = ctrl.putRoot(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
+	// GIVEN repository, player and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	// AND a set of mock scenarios
+	for i := 0; i < 3; i++ {
+		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Connect, fmt.Sprintf("books_Connect_%d", i), "/api/books/:topic/:id", i)))
+	}
+	webServer := web.NewStubWebServer()
+	ctrl := NewRootController(player, webServer)
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by Connect with different query param
+	ctx := web.NewStubContext(&http.Request{
+		Method: "Connect",
+		URL:    u,
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+	})
+
+	// WHEN invoking Connect proxy API
+	err = ctrl.connectRoot(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
+	// GIVEN repository, player and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	// AND a set of mock scenarios
+	for i := 0; i < 3; i++ {
+		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Head, fmt.Sprintf("books_Head_%d", i), "/api/books/:topic/:id", i)))
+	}
+	webServer := web.NewStubWebServer()
+	ctrl := NewRootController(player, webServer)
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by Head with different query param
+	ctx := web.NewStubContext(&http.Request{
+		Method: "Head",
+		URL:    u,
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+	})
+
+	// WHEN invoking Head proxy API
+	err = ctrl.headRoot(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
+	// GIVEN repository, player and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	// AND a set of mock scenarios
+	for i := 0; i < 3; i++ {
+		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Options, fmt.Sprintf("books_Options_%d", i), "/api/books/:topic/:id", i)))
+	}
+	webServer := web.NewStubWebServer()
+	ctrl := NewRootController(player, webServer)
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by Options with different query param
+	ctx := web.NewStubContext(&http.Request{
+		Method: "Options",
+		URL:    u,
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+	})
+
+	// WHEN invoking Options proxy API
+	err = ctrl.optionsRoot(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
+	// GIVEN repository, player and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	// AND a set of mock scenarios
+	for i := 0; i < 3; i++ {
+		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Patch, fmt.Sprintf("books_Patch_%d", i), "/api/books/:topic/:id", i)))
+	}
+	webServer := web.NewStubWebServer()
+	ctrl := NewRootController(player, webServer)
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by Patch with different query param
+	ctx := web.NewStubContext(&http.Request{
+		Method: "Patch",
+		URL:    u,
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+	})
+
+	// WHEN invoking Patch proxy API
+	err = ctrl.patchRoot(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
+	// GIVEN repository, player and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	// AND a set of mock scenarios
+	for i := 0; i < 3; i++ {
+		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Trace, fmt.Sprintf("books_Trace_%d", i), "/api/books/:topic/:id", i)))
+	}
+	webServer := web.NewStubWebServer()
+	ctrl := NewRootController(player, webServer)
+	u, err := url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by Trace with different query param
+	ctx := web.NewStubContext(&http.Request{
+		Method: "Trace",
+		URL:    u,
+		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+	})
+
+	// WHEN invoking Trace proxy API
+	err = ctrl.traceRoot(ctx)
 
 	// THEN it should return stubbed response
 	require.NoError(t, err)
@@ -175,17 +339,17 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		Path:        path,
 		Description: name,
 		Request: types.MockHTTPRequest{
-			QueryParams: fmt.Sprintf("a=1&b=2&n=%d", n),
-			ContentType: "application/json",
-			Headers: map[string][]string{
-				"ETag": {"981"},
+			MatchQueryParams: map[string]string{"a": `\d+`, "b": "abc"},
+			MatchContentType: "application/(json|yaml)",
+			MatchHeaders: map[string]string{
+				"Auth": "[0-9a-z]{10}",
 			},
 		},
 		Response: types.MockHTTPResponse{
 			Headers: map[string][]string{
-				"ETag": {"123"},
+				"ETag": {strconv.Itoa(n)},
 			},
-			ContentType: "application/json",
+			ContentType: "application/json)",
 			Contents:    "test body",
 			StatusCode:  200,
 		},

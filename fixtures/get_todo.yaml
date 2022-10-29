@@ -2,12 +2,10 @@ method: GET
 name: todo-get
 path: /todos/10
 request:
-    query_params: ""
-    headers:
-        Mock-Url:
-            - https://jsonplaceholder.typicode.com/todos/10
-    content_type: ""
-    contents: ""
+    match_headers:
+        Mock-Url: https://jsonplaceholder.typicode.com/todos/10
+    match_content_type: ""
+    match_contents: ""
 response:
     headers: {}
     content_type: ""

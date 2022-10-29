@@ -27,6 +27,11 @@ type Server interface {
 	POST(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
 	PUT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
 	DELETE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	CONNECT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	HEAD(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	OPTIONS(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	PATCH(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
+	TRACE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
 	AddMiddleware(m echo.MiddlewareFunc)
 	Start(address string)
 	Static(dir string)
@@ -93,6 +98,41 @@ func (w *DefaultWebServer) PUT(path string, h HandlerFunc, m ...echo.MiddlewareF
 // DELETE calls HTTP DELETE method
 func (w *DefaultWebServer) DELETE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.DELETE(path, func(context echo.Context) error {
+		return h(context)
+	}, m...)
+}
+
+// CONNECT calls HTTP CONNECT method
+func (w *DefaultWebServer) CONNECT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return w.e.CONNECT(path, func(context echo.Context) error {
+		return h(context)
+	}, m...)
+}
+
+// HEAD calls HTTP HEAD method
+func (w *DefaultWebServer) HEAD(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return w.e.HEAD(path, func(context echo.Context) error {
+		return h(context)
+	}, m...)
+}
+
+// OPTIONS calls HTTP OPTIONS method
+func (w *DefaultWebServer) OPTIONS(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return w.e.OPTIONS(path, func(context echo.Context) error {
+		return h(context)
+	}, m...)
+}
+
+// PATCH calls HTTP PATCH method
+func (w *DefaultWebServer) PATCH(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return w.e.PATCH(path, func(context echo.Context) error {
+		return h(context)
+	}, m...)
+}
+
+// TRACE calls HTTP TRACE method
+func (w *DefaultWebServer) TRACE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	return w.e.TRACE(path, func(context echo.Context) error {
 		return h(context)
 	}, m...)
 }

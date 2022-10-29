@@ -1,0 +1,230 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Swagger Petstore
+  license:
+    name: MIT
+servers:
+  - url: http://petstore.swagger.io/v2
+paths:
+  /pet:
+    post:
+      operationId: addPet
+      summary: Add a new pet to the store
+      description: |
+        Add a new pet to the store by making a `POST` request to the
+        `/pet` endpoint with the data about the new pet.
+      parameters:
+        - $ref: "#/components/parameters/jsonContentTypeHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pets'
+            example:
+              id: 0
+              category:
+                id: 0
+                name: Fluffy Pup
+              name: Fluffy Pup
+              photoUrls: []
+              tags:
+                - id: 0
+                  name: Dog
+              status: available
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pets"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: updatePet
+      summary: Update a pet in the store
+      description: |
+        Update information for a pet in the store by making a `PUT`
+        request to the `/pet` endpoint with the updated data about the
+        pet.
+      parameters:
+        - $ref: "#/components/parameters/jsonContentTypeHeader"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pets'
+            example:
+              id: 0
+              category:
+                id: 0
+                name: Fluffy Pup
+              name: Fluffy Pup
+              photoUrls: []
+              tags:
+                - id: 0
+                  name: Dog
+              status: available
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pets"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # Find pet by ID
+  # - uses path parameters that auto-populate in Assertible
+  # - has GET and POST request examples
+  /pet/{petId}:
+    get:
+      summary: Find information about a pet by ID
+      description: |
+        Find information about a pet by making a `GET` request to the
+        `/pet/{petId}` endpoint with the ID of the pet. The `{petId}`
+        is the only required parameter in this request.
+      operationId: showPetById
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: ID of pet to return
+          schema:
+            type: string
+            example: 1010
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pets"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      summary: Updates a pet in the store with form data
+      description: |
+        Update information a pet in the store by making a `POST`
+        request to the `/pet/{petId}` endpoint. The path parameter
+        should be the **id** of the pet, and the request body should
+        contain the updated information about the pet.
+      operationId: showPetById
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: The id of the pet to retrieve
+          schema:
+            type: string
+            example: 1010
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pets'
+            example:
+              id: 0
+              name: "Fluffy Pup"
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pets"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # Find pets by status
+  # - uses query parameters that auto-populate in Assertible
+  /pet/findByStatus:
+    get:
+      summary: Find Pets by status
+      description: |
+        Find pets available under a specific status. Multiple
+        statuses can be specified with multiple `status`
+        parameters. In this example, we request pets that have a
+        **sold** status.
+      operationId: findByStatus
+      parameters:
+        - name: status
+          in: query
+          required: true
+          description: Status values that need to be considered for filter
+          schema:
+            type: string
+            example: sold
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pets"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    Pet:
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        tag:
+          type: string
+    Pets:
+      type: array
+      items:
+        $ref: "#/components/schemas/Pet"
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+  parameters:
+    jsonContentTypeHeader:
+      name: Content-Type
+      in: header
+      description: |
+        An application/json Content-Type header that can be applied to
+        an endpoint/method request.
+      schema:
+        type: string
+        default: application/json

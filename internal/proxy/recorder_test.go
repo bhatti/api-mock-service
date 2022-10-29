@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -51,8 +52,11 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	`)
 	client.AddMapping("GET", "https://jsonplaceholder.typicode.com/todos/10", web.NewStubHTTPResponse(200, body))
 	recorder := NewRecorder(client, mockScenarioRepository)
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "GET",
+		URL:    u,
 		Header: map[string][]string{
 			MockURL: {"https://jsonplaceholder.typicode.com/todos/10"},
 		},
@@ -74,8 +78,11 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	client := web.NewStubHTTPClient()
 	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
 	recorder := NewRecorder(client, mockScenarioRepository)
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "DELETE",
+		URL:    u,
 		Header: map[string][]string{
 			MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
 		},
@@ -105,8 +112,11 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 	client.AddMapping("PUT", "https://jsonplaceholder.typicode.com/todos/202", web.NewStubHTTPResponse(200, resBody))
 	recorder := NewRecorder(client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "PUT",
+		URL:    u,
 		Header: map[string][]string{
 			MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
 		},
@@ -137,8 +147,11 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 	client.AddMapping("POST", "https://jsonplaceholder.typicode.com/todos/2", web.NewStubHTTPResponse(200, resBody))
 	recorder := NewRecorder(client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Method: "POST",
+		URL:    u,
 		Header: map[string][]string{
 			MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},
 		},

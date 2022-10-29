@@ -3,12 +3,13 @@ name: users_scenario
 path: /users
 description: ""
 request:
-    query_params: a=1&b=2
-    headers:
-        CTag:
-            - "981"
-    content_type: ""
-    contents: ""
+    match_query_params:
+      a: 1
+      b: 2
+    match_headers:
+        Authorization: Bearer sk_test
+    match_content_type: ""
+    match_contents: ""
 response:
     headers:
         ETag:

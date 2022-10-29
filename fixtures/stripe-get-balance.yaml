@@ -2,11 +2,8 @@ method: GET
 name: test-stripe-get-balance
 path: /v1/balance
 request:
-    headers:
-        Accept:
-            - '*/*'
-        Authorization:
-            - Bearer sk_test
+    match_headers:
+        Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
 response:
     headers:
         Access-Control-Allow-Credentials:

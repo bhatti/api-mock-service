@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"time"
 
@@ -59,7 +58,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		c.Request().Method,
 		c.Request().Header,
 		nil,
-		io.ReadCloser(io.NopCloser(bytes.NewReader(reqBody))),
+		io.NopCloser(bytes.NewReader(reqBody)),
 	)
 	if err != nil {
 		return err
@@ -70,7 +69,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 
 	var resBytes []byte
 	if resBody != nil {
-		resBytes, err = ioutil.ReadAll(resBody)
+		resBytes, err = io.ReadAll(resBody)
 		if err != nil {
 			return err
 		}
@@ -87,13 +86,13 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 
 	scenario := &types.MockScenario{
 		Method: types.MethodType(c.Request().Method),
-		Name:   c.Request().Header.Get(MockScenarioName),
+		Name:   c.Request().Header.Get(types.MockScenarioName),
 		Path:   u.Path,
 		Request: types.MockHTTPRequest{
-			QueryParams: u.RawQuery,
-			Headers:     c.Request().Header,
-			ContentType: c.Request().Header.Get(types.ContentTypeHeader),
-			Contents:    string(reqBody),
+			MatchQueryParams: make(map[string]string),
+			MatchHeaders:     make(map[string]string),
+			MatchContentType: c.Request().Header.Get(types.ContentTypeHeader),
+			MatchContents:    string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
 			Headers:     resHeaders,
@@ -102,8 +101,18 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 			StatusCode:  status,
 		},
 	}
+	for k, v := range c.Request().URL.Query() {
+		if len(v) > 0 {
+			scenario.Request.MatchQueryParams[k] = v[0]
+		}
+	}
+	for k, v := range c.Request().Header {
+		if len(v) > 0 {
+			scenario.Request.MatchHeaders[k] = v[0]
+		}
+	}
 	if scenario.Name == "" {
-		scenario.Name = fmt.Sprintf("recorded-scenario-%s", scenario.Digest())
+		scenario.Name = fmt.Sprintf("recorded-%s-%s", scenario.NormalName(), scenario.Digest())
 	}
 	scenario.Description = fmt.Sprintf("recorded at %v", time.Now().UTC())
 	if err = r.mockScenarioRepository.Save(scenario); err != nil {

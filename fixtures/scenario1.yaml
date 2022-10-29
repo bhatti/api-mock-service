@@ -1,15 +1,14 @@
 method: POST
 name: get_devices
 path: /devices
-description: ""
+description: "sample scenario"
 request:
-    query_params: a=1&b=2
-    headers:
-        CTag:
-            - {{.ETag}}
-            - {{.Nonce}}
-    content_type: "application/json; charset=utf-8"
-    contents: ""
+    match_query_params:
+      id: '\d+'
+    match_headers:
+      Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
+    match_content_type: ".*json"
+    match_contents: ""
 response:
     headers:
         ETag:
@@ -42,12 +41,12 @@ response:
         "DeviceFriendlyName": "Device for {{SeededName $val}}",
         "LastSeen": "{{Time}}",
         "EnrollmentStatus": {{SeededBool $val}}
-        "ComplianceStatus": "NonCompliant",
+        "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
         "Group": {{RandCity}},
         "Date": {{TimeFormat "3:04PM"}},
         "BatteryLevel": "{{RandNumMax 100}}%",
-        "StrEnum": {{AnySubstring "ONE TWO THREE"}},
-        "IntEnum": {{AnyInt 10 20 30}},
+        "StrEnum": {{EnumString "ONE TWO THREE"}},
+        "IntEnum": {{EnumInt 10 20 30}},
         "ProcessorArchitecture": {{RandNumMax 1000}},
         "TotalPhysicalMemory": {{RandNumMax 1000000}},
         "VirtualMemory": {{RandNumMax 1000000}},
@@ -68,6 +67,4 @@ response:
     status_code: 200
     {{end}}
 wait_before_reply: {{.SleepSecs}}s
-
-
 
