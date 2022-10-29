@@ -30,7 +30,7 @@ func NewMockOAPIController(
 
 // ********************************* HTTP Handlers ***********************************
 
-// swagger:route POST /_oapi mock-scenarios postMockOAPIScenario
+// swagger:route POST /_oapi open-api postMockOAPIScenario
 // Creates new mock scenarios based on Open API v3
 // responses:
 //
@@ -63,7 +63,7 @@ func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error
 // ********************************* Swagger types ***********************************
 
 // swagger:parameters postMockOAPIScenario
-// The params for mock-scenario
+// The params for mock-scenario based on OpenAPI v3
 type mockScenarioOAPICreateParams struct {
 	// in:body
 	Body []byte

@@ -251,7 +251,7 @@ paths:
         "200":
           $ref: '#/responses/mockScenarioOAPIResponse'
       tags:
-      - mock-scenarios
+      - open-api
   /_proxy:
     delete:
       description: Records scenario from DELETE request
