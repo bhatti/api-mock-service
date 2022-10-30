@@ -387,16 +387,11 @@ Go template allows custom functions that can provide customized behavior for gen
 ### Conditional Logic
 The template syntax allows you to define a conditional logic such as:
 ```yaml
-        "SerialNumber": "{{Udid}}",
-        "AssetNumber": "{{RandString 20}}",
-        "LastSeen": "{{Time}}",
-        "EnrollmentStatus": {{SeededBool $val}}
-        "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
-        "Group": {{RandCity}},
-        "Date": {{TimeFormat "3:04PM"}},
-        "BatteryLevel": "{{RandNumMax 100}}%",
-        "StrEnum": {{EnumString "ONE TWO THREE"}},
-        "IntEnum": {{EnumInt 10 20 30}},
+    {{if NthRequest 10 }}
+    status_code: {{AnyInt 500 501}}
+    {{else}}
+    status_code: {{AnyInt 200 400}}
+    {{end}}
 ```
 In above example, the mock API will return HTTP status 500 or 501 for every 10th request and 200 or 400 for other requests. You can use conditional syntax to simulate different error status or customize response.
 
