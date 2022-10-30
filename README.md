@@ -450,6 +450,9 @@ curl -v -H "Mock-Scenario: stripe-cash-balance" -H "Authorization: Bearer sk_tes
 	"http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
 
+You can also customize response status by overriding the request header with `Mock-Response-Status` and delay before return by
+overriding `Mock-Wait-Before-Reply` header.
+
 ## Using Test Fixtures
 You can define a test data in your test fixtures and then upload as follows:
 ```bash
@@ -493,65 +496,75 @@ curl -v "http://localhost:8080/images/mock_image"
 ### Numeric Random Data
 
 Following functions can be used to generate numeric data within a range or with a seed to always generate deterministic test data:
-    - Random
-    - SeededRandom
-    - RandNumMinMax
-    - RandIntArrayMinMax
+
+- Random
+- SeededRandom
+- RandNumMinMax
+- RandIntArrayMinMax
 
 ### Text Random Data
 
 Following functions can be used to generate numeric data within a range or with a seed to always generate deterministic test data:
-    - RandStringMinMax
-    - RandStringArrayMinMax
-    - RandRegex
+
+- RandStringMinMax
+- RandStringArrayMinMax
+- RandRegex
 
 ### Boolean
 
 Following functions can be used to generate boolean data:
-    - RandBool
-    - SeededBool
+
+- RandBool
+- SeededBool
 
 ### UDID
 
 Following functions can be used to generate UDIDs:
-    - Udid
-    - SeededUdid
+
+- Udid
+- SeededUdid
 
 ### String Enums
 
 Following functions can be used to generate a string from a set of Enum values:
-    - EnumString
+
+- EnumString
 
 ### Integer Enums
 
 Following functions can be used to generate an integer from a set of Enum values:
-   -  EnumInt
+
+-  EnumInt
 
 ### Random Names
 
 Following functions can be used to generate random names:
-    - RandName
-    - SeededName
+
+- RandName
+- SeededName
 
 ### City Names
 
 Following functions can be used to generate random city names:
-    - RandCity
-    - SeededCity
+
+- RandCity
+- SeededCity
 
 ### Country Names or Codes
 
 Following functions can be used to generate random country names or codes:
-    - RandCountry
-    - SeededCountry
-    - RandCountryCode
-    - SeededCountryCode
+
+- RandCountry
+- SeededCountry
+- RandCountryCode
+- SeededCountryCode
 
 ### File Fixture
 
 Following functions can be used to generate random data from a fixture file:
-    - RandFileLine
-    - SeededFileLine
+
+- RandFileLine
+- SeededFileLine
 
 ## Generate Mock API Behavior from OpenAPI or Swagger Specifications
 If you are using Open API (https://www.openapis.org/) or Swagger for API specifications, you can simply upload a YAML based API specification. For example, here is a sample Open API specification from Twilio:
@@ -722,6 +735,3 @@ make && ./out/bin/api-mock-service
 # access assets
 curl http://localhost:8080/_assets/default_assets
 ```
-
-## API Reference
-https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
