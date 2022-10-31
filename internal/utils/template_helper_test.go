@@ -210,6 +210,24 @@ func Test_ShouldParseRandRegex(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldParseRandRegexPhone(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandPhone}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandRegexEmail(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandEmail}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
 func Test_ShouldParseInt(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{Int 3}}`)

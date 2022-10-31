@@ -140,6 +140,12 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"RandRegex": func(re string) string {
 			return RandRegex(re)
 		},
+		"RandPhone": func() string {
+			return RandPhone()
+		},
+		"RandEmail": func() string {
+			return RandEmail()
+		},
 		"Int": func(num interface{}) int64 {
 			return toInt64(num)
 		},

@@ -375,6 +375,8 @@ Go template allows custom functions that can provide customized behavior for gen
         "SerialNumber": "{{Udid}}",
         "AssetNumber": "{{RandString 20}}",
         "LastSeen": "{{Time}}",
+        "Email": "{{RandEmail}}",
+        "Phone": "{{RandPhone}}",
         "EnrollmentStatus": {{SeededBool $val}}
         "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
         "Group": {{RandCity}},
@@ -420,6 +422,8 @@ data. (More examples of test fixtures are described below.) This template file w
    },
    "DeviceFriendlyName": "Device for Alexander",
    "LastSeen": "2022-10-29T11:25:25-07:00",
+   "Email": "john.smith@abc.com",
+   "Phone": "1-408-454-1507",
    "EnrollmentStatus": true
    "ComplianceStatus": ACa3E07B0F2cA00d0fbFe88f5c6DbC6a9e
    "Group": Chicago,
@@ -504,6 +508,8 @@ Following functions can be used to generate numeric data within a range or with 
 - RandStringMinMax
 - RandStringArrayMinMax
 - RandRegex
+- RandEmail
+- RandPhone
 
 ### Boolean
 

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -73,6 +74,15 @@ func Test_ShouldGetRandIntArrayMinMax(t *testing.T) {
 
 func Test_ShouldGetRandRegex(t *testing.T) {
 	require.Equal(t, "abc", RandRegex("abc"))
+}
+
+func Test_ShouldGetRandPhone(t *testing.T) {
+	require.Contains(t, RandPhone(), "1-")
+}
+
+func Test_ShouldGetRandEmail(t *testing.T) {
+	fmt.Printf("%s\n", RandEmail())
+	require.Contains(t, RandEmail(), "@")
 }
 
 func Test_ShouldGetRandFileLine(t *testing.T) {

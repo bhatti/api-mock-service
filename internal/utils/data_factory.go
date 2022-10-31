@@ -773,6 +773,24 @@ func RandRegex(re string) string {
 	return out
 }
 
+// RandEmail generator
+func RandEmail() string {
+	out, err := regen.Generate(`@[a-z]{10}\.(com|org|net|io|gov|edu)`)
+	if err != nil {
+		return err.Error()
+	}
+	return strings.ToLower(RandName() + "." + RandName() + out)
+}
+
+// RandPhone generator
+func RandPhone() string {
+	out, err := regen.Generate(`1-[0-9]{3}-[0-9]{3}-[0-9]{4}`)
+	if err != nil {
+		return err.Error()
+	}
+	return out
+}
+
 // RandIntArrayMinMax generator
 func RandIntArrayMinMax(min int, max int) []int {
 	if max == 0 {
@@ -850,6 +868,6 @@ func fileLines(fileName string) ([]string, error) {
 	for fileScanner.Scan() {
 		lines = append(lines, fileScanner.Text())
 	}
-	readFile.Close()
+	_ = readFile.Close()
 	return lines, nil
 }
