@@ -327,6 +327,8 @@ response:
         },
         "DeviceFriendlyName": "Device for {{SeededName $val}}",
         "LastSeen": "{{Time}}",
+        "Email": "{{RandEmail}}",
+        "Phone": "{{RandPhone}}",
         "EnrollmentStatus": {{SeededBool $val}}
         "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
         "Group": {{RandCity}},
