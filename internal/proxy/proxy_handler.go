@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -42,13 +43,14 @@ func (h *Handler) Start() error {
 }
 
 func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+	var validationErr *types.ValidationError
 	req, res, err := h.doHandleRequest(req, ctx)
-	if err != nil {
+	if err != nil && errors.As(err, &validationErr) {
 		log.WithFields(log.Fields{
 			"Path":   req.URL,
 			"Method": req.Method,
 			"Error":  err,
-		}).Warnf("failed to handle mock scenario")
+		}).Warnf("proxy server failed to handle mock scenario")
 	}
 	return req, res
 }
@@ -90,14 +92,13 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 			"Path":   resp.Request.URL,
 			"Method": resp.Request.Method,
 			"Error":  err,
-		}).Warnf("failed to record mock scenario")
+		}).Warnf("proxy server failed to record mock scenario")
 	}
 	return resp
 }
 
 func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
-	recordMode := resp.Request.Header.Get(types.MockRecordMode)
-	if recordMode == types.MockRecordModeDisabled {
+	if len(resp.Request.Header) > 0 && resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		return resp, nil
 	}
 	var reqBody []byte
