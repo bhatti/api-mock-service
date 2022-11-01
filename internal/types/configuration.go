@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -11,6 +12,8 @@ import (
 type Configuration struct {
 	// HTTPPort for server
 	HTTPPort int `yaml:"http_port" mapstructure:"http_port" env:"HTTP_PORT"`
+	// ProxyPort for server
+	ProxyPort int `yaml:"proxy_port" mapstructure:"proxy_port" env:"PROXY_PORT"`
 	// ConnectionTimeout for remote server
 	ConnectionTimeout int `yaml:"connection_timeout" mapstructure:"connection_timeout"`
 	// DataDir for storing mock responses
@@ -26,14 +29,16 @@ type Configuration struct {
 
 // NewConfiguration -- Initializes the default config
 func NewConfiguration(
-	port int,
+	httpPort int,
+	proxyPort int,
 	dataDir string,
 	assetDir string,
 	version *Version) (config *Configuration, err error) {
 	viper.SetDefault("log_level", "info")
-	viper.SetDefault("http_port", "7000")
+	viper.SetDefault("http_port", "8080")
+	viper.SetDefault("proxy_port", "8081")
 	viper.SetDefault("data_dir", "default_mocks_data")
-	viper.SetDefault("asset_dir", "default_assets")
+	viper.SetDefault("asset_dir", "")
 	viper.SetEnvPrefix("")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
@@ -46,13 +51,18 @@ func NewConfiguration(
 			"UsedConfig": viper.ConfigFileUsed(),
 		}).Debugf("failed to load config file")
 	}
-
 	if err = viper.Unmarshal(&config); err != nil {
 		return nil, err
 	}
 
-	if port > 0 {
-		config.HTTPPort = port
+	if httpPort > 0 {
+		config.HTTPPort = httpPort
+	}
+	if proxyPort > 0 {
+		config.ProxyPort = proxyPort
+	}
+	if config.HTTPPort == config.ProxyPort {
+		return nil, fmt.Errorf("http-port %d cannot be same as proxy-port %d", config.HTTPPort, config.ProxyPort)
 	}
 	if dataDir != "" {
 		config.DataDir = dataDir
@@ -63,10 +73,6 @@ func NewConfiguration(
 
 	if config.DataDir == "" {
 		config.DataDir = "default_mocks_data"
-	}
-
-	if config.AssetDir == "" {
-		config.AssetDir = "default_assets"
 	}
 
 	config.Version = version

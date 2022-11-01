@@ -86,7 +86,7 @@ func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
 	if path == "" {
 		return fmt.Errorf("path not specified")
 	}
-	keyData, err := web.BuildMockScenarioKeyData(c)
+	keyData, err := web.BuildMockScenarioKeyData(c.Request())
 	if err != nil {
 		return err
 	}

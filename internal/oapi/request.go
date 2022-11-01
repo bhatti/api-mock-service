@@ -9,16 +9,8 @@ type Request struct {
 	ContentType string
 	PathParams  []Property
 	QueryParams []Property
-	Headers     map[string]string
+	Headers     []Property
 	Body        []Property
-}
-
-func (req *Request) queryParamsMap() map[string]string {
-	res := make(map[string]string)
-	for _, param := range req.QueryParams {
-		res[param.Name] = param.ValuesFor(param.Name)
-	}
-	return res
 }
 
 func (req *Request) buildMockHTTPRequest() (_ types.MockHTTPRequest, err error) {
@@ -30,8 +22,8 @@ func (req *Request) buildMockHTTPRequest() (_ types.MockHTTPRequest, err error) 
 	// ignore req.PathParams
 	return types.MockHTTPRequest{
 		MatchContentType: req.ContentType,
-		MatchHeaders:     req.Headers,
-		MatchQueryParams: req.queryParamsMap(),
+		MatchHeaders:     propsToMap(req.Headers),
+		MatchQueryParams: propsToMap(req.QueryParams),
 		MatchContents:    string(contents),
 	}, nil
 }

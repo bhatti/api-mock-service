@@ -1,7 +1,7 @@
 # api-mock-service
 ## Mocking Distributed Micro services with Record/Play, Templates and OpenAPI Specifications
 API mock service for REST/HTTP based services with following goals:
-- Record API request/response by working as a proxy server between client and remote service.
+- Record API request/response by working as a proxy server (native http/https or via API) between client and remote service.
 - Playback API response that were previously recorded based on request parameters.
 - Define API behavior manually by specifying request parameters and response contents.
 - Generate API behavior from open standards such as Open API or Swagger.
@@ -20,7 +20,7 @@ If you haven't installed docker, you can download the community version from htt
 or find installer for your OS on https://docs.docker.com/get-docker/.
 ```bash
 docker build -t api-mock-service .
-docker run -p 8000:8080 -e HTTP_PORT=8080 -e DATA_DIR=/tmp/mocks \
+docker run -p 8000:8080 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
 	-e ASSET_DIR=/tmp/assets api-mock-service
 ```
 
@@ -49,7 +49,8 @@ Flags:
       --config string     config file
       --dataDir string    data dir to store mock scenarios
   -h, --help              help for api-mock-service
-      --port int          HTTP port to listen
+      --httpPort int      HTTP API port to listen
+      --proxyPort int     proxy port to listen
 
 Use "api-mock-service [command] --help" for more information about a command
 ```
@@ -57,14 +58,27 @@ Use "api-mock-service [command] --help" for more information about a command
 ## API Docs
 See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
 
-## Recording a Mock API Scenario
+## Recording a Mock Scenario via HTTP/HTTPS Proxy
+The mock service will start two ports on startup, first port (default 8080) will be used to record/play mock scenarios, updating templates
+or uploading OpenAPIs. The second port (default 8081) will setup an HTTP/HTTPS proxy server that you can point to record your scenarios, e.g.
+```shell
+export http_proxy="http://localhost:8081"
+export https_proxy="http://localhost:8081"
+
+curl -k -v -H "Authorization: Bearer sk_test_xxxx" https://api.stripe.com/v1/customers/cus_xxx/cash_balance
+```
+
+Above curl command will automatically record all requests and responses and create mock scenario to play it back. For example, if you call the same 
+API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `"X-Mock-Record: true`  header to your request.
+
+## Recording a Mock Scenario via API 
 Once you have the API mock service running, you can use as a proxy service to invoke a remote API so that you can automatically record API behavior and play it back later, e.g.
 ```bash
-curl -H "Mock-Url: https://api.stripe.com/v1/customers/cus_**/cash_balance" \
+curl -H "X-Mock-Url: https://api.stripe.com/v1/customers/cus_**/cash_balance" \
 	-H "Authorization: Bearer sk_test_***" http://localhost:8080/_proxy
 ```
 
-In above example, the curl command is passing the URL of real service as an HTTP header Mock-Url. In addition, you can pass other authorization headers as needed. The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For example, you may see a file under:
+In above example, the curl command is passing the URL of real service as an HTTP header ``X-Mock-Url``. In addition, you can pass other authorization headers as needed. The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For example, you may see a file under:
 
 ```bash
 default_mocks_data/v1/customers/cus_***/cash_balance/GET/recorded-scenario-***.scr
@@ -169,7 +183,7 @@ Which will return captured response such as:
 ```
 
 Though, you can customize your template with dynamic properties or conditional logic but you can also send HTTP headers 
-for Mock-Response-Status to override HTTP status to return or Mock-Wait-Before-Reply to add artificial latency using duration syntax. 
+for X-Mock-Response-Status to override HTTP status to return or X-Mock-Wait-Before-Reply to add artificial latency using duration syntax. 
 
 ## Upload Mock API Scenario
 You can customize the recorded scenario, e.g. you can add path variables to above API as follows:
@@ -445,14 +459,14 @@ data. (More examples of test fixtures are described below.) This template file w
 ```
 
 ## Playing back a specific mock scenario
-You can pass a header for Mock-Scenario to specify the name of scenario if you have multiple scenarios for the same API, e.g. 
+You can pass a header for ``X-Mock-Scenario`` to specify the name of scenario if you have multiple scenarios for the same API, e.g. 
 ```bash
-curl -v -H "Mock-Scenario: stripe-cash-balance" -H "Authorization: Bearer sk_test_0123456789" \
+curl -v -H "X-Mock-Scenario: stripe-cash-balance" -H "Authorization: Bearer sk_test_0123456789" \
 	"http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
 
-You can also customize response status by overriding the request header with `Mock-Response-Status` and delay before return by
-overriding `Mock-Wait-Before-Reply` header.
+You can also customize response status by overriding the request header with `X-Mock-Response-Status` and delay before return by
+overriding `X-Mock-Wait-Before-Reply` header.
 
 ## Using Test Fixtures
 You can define a test data in your test fixtures and then upload as follows:

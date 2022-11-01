@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -81,7 +80,6 @@ func Test_ShouldGetRandPhone(t *testing.T) {
 }
 
 func Test_ShouldGetRandEmail(t *testing.T) {
-	fmt.Printf("%s\n", RandEmail())
 	require.Contains(t, RandEmail(), "@")
 }
 

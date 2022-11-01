@@ -185,7 +185,9 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 		if paramMismatchErrors > 0 {
 			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", target.String()))
 		}
-		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API %s", target.String()))
+		fileName := sr.buildFileName(target.Method, target.Name, target.Path)
+		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API %s [Path %s]",
+			target.String(), fileName))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)
@@ -197,7 +199,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 		"RequestCount": matched[0].RequestCount,
 		"Timestamp":    matched[0].LastUsageTime,
 		"Matched":      len(matched),
-	}).Infof("API template found...")
+	}).Infof("API mock scenario found...")
 
 	// Read template file
 	dir := sr.buildDir(target.Method, target.Path)

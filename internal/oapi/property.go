@@ -52,7 +52,7 @@ func (prop *Property) Value() interface{} {
 		}
 	}
 }
-func (prop *Property) ValuesFor(name string) string {
+func (prop *Property) mapValue() string {
 	val := prop.Value()
 	if val == nil {
 		return ""
@@ -60,13 +60,13 @@ func (prop *Property) ValuesFor(name string) string {
 	switch val.(type) {
 	case map[string]string:
 		m := val.(map[string]string)
-		if len(m[name]) > 0 {
-			return m[name]
+		if len(m[prop.Name]) > 0 {
+			return m[prop.Name]
 		}
 	case map[string]interface{}:
 		m := val.(map[string]interface{})
-		if m[name] != nil {
-			return fmt.Sprintf("%v", m[name])
+		if m[prop.Name] != nil {
+			return fmt.Sprintf("%v", m[prop.Name])
 		}
 	}
 	return ""
@@ -157,4 +157,26 @@ func (prop *Property) arrayValue() interface{} {
 	return map[string]interface{}{
 		prop.Name: childArr,
 	}
+}
+
+func propsToMap(props []Property) (res map[string]string) {
+	res = make(map[string]string)
+	for _, prop := range props {
+		val := prop.mapValue()
+		if val != "" {
+			res[prop.Name] = prop.mapValue()
+		}
+	}
+	return
+}
+
+func propsToMapArray(props []Property) (res map[string][]string) {
+	res = make(map[string][]string)
+	for _, prop := range props {
+		val := prop.mapValue()
+		if val != "" {
+			res[prop.Name] = []string{prop.mapValue()}
+		}
+	}
+	return res
 }

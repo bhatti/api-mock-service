@@ -28,7 +28,7 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 	if op.RequestBody != nil && op.RequestBody.Value != nil {
 		reqContent = op.RequestBody.Value.Content
 	}
-	reqHeaders := make(map[string]string)
+	reqHeaders := make([]Property, 0)
 	queryParams := make([]Property, 0)
 	pathParams := make([]Property, 0)
 	for _, param := range op.Parameters {
@@ -40,10 +40,7 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 			if param.Value.In == "path" {
 				pathParams = append(pathParams, property)
 			} else if param.Value.In == "header" {
-				val := property.ValuesFor(property.Name)
-				if val != "" {
-					reqHeaders[property.Name] = val
-				}
+				reqHeaders = append(reqHeaders, property)
 			} else {
 				queryParams = append(queryParams, property)
 			}
@@ -197,8 +194,7 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 	return property
 }
 
-func extractHeaders(headers openapi3.Headers) map[string][]string {
-	respHeaders := make(map[string][]string)
+func extractHeaders(headers openapi3.Headers) (res []Property) {
 	for k, header := range headers {
 		if header.Value.Schema == nil {
 			continue
@@ -207,12 +203,9 @@ func extractHeaders(headers openapi3.Headers) map[string][]string {
 			header.Value.Name = k
 		}
 		property := schemaToProperty(header.Value.Name, false, header.Value.In, header.Value.Schema.Value)
-		val := property.ValuesFor(property.Name)
-		if val != "" {
-			respHeaders[property.Name] = []string{val}
-		}
+		res = append(res, property)
 	}
-	return respHeaders
+	return
 }
 
 func parseResponseStatus(status string) int {

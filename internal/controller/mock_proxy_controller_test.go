@@ -64,7 +64,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 		URL:    u,
 		Method: "GET",
 		Header: map[string][]string{
-			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/10"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/10"},
 		},
 	})
 
@@ -92,7 +92,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 		Method: "DELETE",
 		URL:    u,
 		Header: map[string][]string{
-			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
 		},
 	})
 
@@ -128,7 +128,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 		Method: "PUT",
 		URL:    u,
 		Header: map[string][]string{
-			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
 		},
 		Body: reader,
 	})
@@ -165,7 +165,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 		Method: "POST",
 		URL:    u,
 		Header: map[string][]string{
-			proxy.MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},
 		},
 		Body: reader,
 	})

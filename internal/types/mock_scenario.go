@@ -9,11 +9,28 @@ import (
 	"time"
 )
 
+// MockRecordMode header
+const MockRecordMode = "X-Mock-Record"
+const MockRecordModeEnabled = "true"
+const MockRecordModeDisabled = "false"
+
+// MockURL header
+const MockURL = "X-Mock-Url"
+
 // MockScenarioName header
-const MockScenarioName = "Mock-Scenario"
+const MockScenarioName = "X-Mock-Scenario"
 
 // ContentTypeHeader header
 const ContentTypeHeader = "Content-Type"
+
+// MockRequestCount header
+const MockRequestCount = "X-Mock-Request-Count"
+
+// MockResponseStatus header
+const MockResponseStatus = "X-Mock-Response-Status"
+
+// MockWaitBeforeReply header
+const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 
 // MockDataExt extension
 const MockDataExt = ".dat"

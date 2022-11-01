@@ -6,7 +6,7 @@ import "github.com/bhatti/api-mock-service/internal/types"
 type Response struct {
 	ContentType string
 	StatusCode  int
-	Headers     map[string][]string
+	Headers     []Property
 	Body        []Property
 }
 
@@ -18,7 +18,7 @@ func (res *Response) buildMockHTTPResponse() (_ types.MockHTTPResponse, err erro
 	}
 	return types.MockHTTPResponse{
 		StatusCode:  res.StatusCode,
-		Headers:     res.Headers,
+		Headers:     propsToMapArray(res.Headers),
 		ContentType: res.ContentType,
 		Contents:    string(contents),
 	}, nil

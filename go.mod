@@ -3,6 +3,7 @@ module github.com/bhatti/api-mock-service
 go 1.19
 
 require (
+	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819
 	github.com/getkin/kin-openapi v0.106.0
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/mitchellh/go-homedir v1.1.0

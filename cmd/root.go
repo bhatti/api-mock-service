@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -21,7 +22,8 @@ import (
 var cfgFile string
 var dataDir string
 var assetDir string
-var port int
+var httpPort int
+var proxyPort int
 
 // Version of the queen server
 var Version string
@@ -57,20 +59,21 @@ func Execute(version string, commit string, date string) {
 // RunServer starts queen server for formicary
 func RunServer(_ *cobra.Command, args []string) {
 	log.WithFields(log.Fields{
-		"Args":     args,
-		"DataDir":  dataDir,
-		"AssetDir": assetDir,
-		"Port":     port}).
-		Infof("starting Mock API-server...")
+		"Args":      args,
+		"DataDir":   dataDir,
+		"AssetDir":  assetDir,
+		"HTTPPort":  httpPort,
+		"ProxyPort": proxyPort,
+	}).Infof("starting Mock API-server...")
 
-	serverConfig, err := types.NewConfiguration(port, dataDir, assetDir, types.NewVersion(Version, Commit, Date))
+	serverConfig, err := types.NewConfiguration(httpPort, proxyPort, dataDir, assetDir, types.NewVersion(Version, Commit, Date))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Error": err}).
 			Errorf("Failed to parse config...")
 		os.Exit(1)
 	}
-	scenarioRepo, contentsRepo, err := buildRepos(serverConfig)
+	scenarioRepo, fixturesRepo, err := buildRepos(serverConfig)
 	if err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup repositories...")
@@ -78,12 +81,16 @@ func RunServer(_ *cobra.Command, args []string) {
 	}
 	webServer := web.NewDefaultWebServer(serverConfig)
 	httpClient := web.NewHTTPClient(serverConfig)
-	if err = buildControllers(serverConfig, scenarioRepo, contentsRepo, httpClient, webServer); err != nil {
+	if err = buildControllers(serverConfig, scenarioRepo, fixturesRepo, httpClient, webServer); err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup controller...")
 		os.Exit(3)
-
 	}
+	go func() {
+		fmt.Printf("⇨ http proxy started on \x1b[32m[::]:%d\033[0m\n", serverConfig.ProxyPort)
+		log.Fatal(proxy.NewProxyHandler(serverConfig.ProxyPort, scenarioRepo, fixturesRepo).Start())
+	}()
+
 	webServer.Start(":" + strconv.Itoa(serverConfig.HTTPPort))
 }
 
@@ -94,7 +101,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
 	rootCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
-	rootCmd.Flags().IntVar(&port, "port", 0, "HTTP port to listen")
+	rootCmd.Flags().IntVar(&httpPort, "httpPort", 0, "HTTP port to listen")
+	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 0, "Proxy port to listen")
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: false,
@@ -155,6 +163,9 @@ func buildControllers(
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
 	_ = controller.NewMockProxyController(recorder, webServer)
 	_ = controller.NewRootController(player, webServer)
-	webServer.Static(serverConfig.AssetDir)
+	if serverConfig.AssetDir != "" {
+		webServer.Static(serverConfig.AssetDir)
+	}
+
 	return nil
 }

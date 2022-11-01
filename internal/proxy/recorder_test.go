@@ -58,7 +58,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 		Method: "GET",
 		URL:    u,
 		Header: map[string][]string{
-			MockURL: {"https://jsonplaceholder.typicode.com/todos/10"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/10"},
 		},
 	})
 
@@ -84,7 +84,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 		Method: "DELETE",
 		URL:    u,
 		Header: map[string][]string{
-			MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
 		},
 	})
 
@@ -118,7 +118,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 		Method: "PUT",
 		URL:    u,
 		Header: map[string][]string{
-			MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
 		},
 		Body: reader,
 	})
@@ -153,7 +153,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 		Method: "POST",
 		URL:    u,
 		Header: map[string][]string{
-			MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},
 		},
 		Body: reader,
 	})
@@ -165,4 +165,21 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	saved := ctx.Result.([]byte)
 	require.Equal(t, resBody, string(saved))
+}
+
+func Test_ShouldSaveMockResponse(t *testing.T) {
+	// GIVEN a mock scenario repository
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	u, err := url.Parse("http://localhost:8080/path?a=b")
+	require.NoError(t, err)
+
+	resHeaders := http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}}
+	req := &http.Request{
+		URL:    u,
+		Method: "POST",
+	}
+	_, _, err = saveMockResponse(
+		u, req, []byte("test"), io.NopCloser(bytes.NewReader([]byte("test"))), resHeaders, 404, mockScenarioRepository)
+	require.NoError(t, err)
 }

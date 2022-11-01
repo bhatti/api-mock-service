@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -12,9 +13,6 @@ import (
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
 )
-
-// MockURL header
-const MockURL = "Mock-Url"
 
 // Recorder structure
 type Recorder struct {
@@ -34,16 +32,16 @@ func NewRecorder(
 
 // Handle records request
 func (r *Recorder) Handle(c web.APIContext) (err error) {
-	mockURL := c.Request().Header.Get(MockURL)
+	mockURL := c.Request().Header.Get(types.MockURL)
 	if mockURL == "" {
-		return fmt.Errorf("header for %s is not defined to connect to remote url", MockURL)
+		return fmt.Errorf("header for %s is not defined to connect to remote url", types.MockURL)
 	}
 	u, err := url.Parse(mockURL)
 	if err != nil {
 		return err
 	}
 
-	reqBody := []byte{}
+	var reqBody []byte
 
 	if c.Request().Body != nil {
 		reqBody, err = io.ReadAll(c.Request().Body)
@@ -67,15 +65,30 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		_ = resBody.Close()
 	}()
 
-	var resBytes []byte
+	resBytes, resContentType, err := saveMockResponse(
+		u, c.Request(), reqBody, resBody, resHeaders, status, r.mockScenarioRepository)
+	if err != nil {
+		return err
+	}
+
+	return c.Blob(status, resContentType, resBytes)
+}
+
+func saveMockResponse(
+	u *url.URL,
+	req *http.Request,
+	reqBody []byte,
+	resBody io.ReadCloser,
+	resHeaders map[string][]string,
+	status int,
+	mockScenarioRepository repository.MockScenarioRepository) (resBytes []byte, resContentType string, err error) {
 	if resBody != nil {
 		resBytes, err = io.ReadAll(resBody)
 		if err != nil {
-			return err
+			return nil, "", err
 		}
 	}
 
-	var resContentType string
 	if resHeaders != nil {
 		val := resHeaders[types.ContentTypeHeader]
 		if len(val) > 0 {
@@ -85,13 +98,13 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	}
 
 	scenario := &types.MockScenario{
-		Method: types.MethodType(c.Request().Method),
-		Name:   c.Request().Header.Get(types.MockScenarioName),
+		Method: types.MethodType(req.Method),
+		Name:   req.Header.Get(types.MockScenarioName),
 		Path:   u.Path,
 		Request: types.MockHTTPRequest{
 			MatchQueryParams: make(map[string]string),
 			MatchHeaders:     make(map[string]string),
-			MatchContentType: c.Request().Header.Get(types.ContentTypeHeader),
+			MatchContentType: req.Header.Get(types.ContentTypeHeader),
 			MatchContents:    string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
@@ -101,12 +114,12 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 			StatusCode:  status,
 		},
 	}
-	for k, v := range c.Request().URL.Query() {
+	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
 			scenario.Request.MatchQueryParams[k] = v[0]
 		}
 	}
-	for k, v := range c.Request().Header {
+	for k, v := range req.Header {
 		if len(v) > 0 {
 			scenario.Request.MatchHeaders[k] = v[0]
 		}
@@ -115,9 +128,8 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		scenario.Name = fmt.Sprintf("recorded-%s-%s", scenario.NormalName(), scenario.Digest())
 	}
 	scenario.Description = fmt.Sprintf("recorded at %v", time.Now().UTC())
-	if err = r.mockScenarioRepository.Save(scenario); err != nil {
-		return err
+	if err = mockScenarioRepository.Save(scenario); err != nil {
+		return nil, "", err
 	}
-
-	return c.Blob(status, resContentType, resBytes)
+	return
 }

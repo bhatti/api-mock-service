@@ -4,21 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/types"
+	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/web"
 )
-
-// MockRequestCount header
-const MockRequestCount = "Mock-Request-Count"
-
-// MockResponseStatus header
-const MockResponseStatus = "Mock-Response-Status"
-
-// MockWaitBeforeReply header
-const MockWaitBeforeReply = "Mock-Wait-Before-Reply"
 
 // Player structure
 type Player struct {
@@ -39,7 +31,7 @@ func NewPlayer(
 
 // Handle request and replays stubbed response
 func (p *Player) Handle(c web.APIContext) (err error) {
-	key, err := web.BuildMockScenarioKeyData(c)
+	key, err := web.BuildMockScenarioKeyData(c.Request())
 	if err != nil {
 		return err
 	}
@@ -56,43 +48,49 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 		return err
 	}
 
-	for k, vals := range matchedScenario.Response.Headers {
-		for _, val := range vals {
-			c.Response().Header().Add(k, val)
-		}
-	}
-	c.Response().Header().Add(types.MockScenarioName, matchedScenario.Name)
-	c.Response().Header().Add(MockRequestCount, fmt.Sprintf("%d", matchedScenario.RequestCount))
-	// Override wait time from request header
-	if c.Request().Header.Get(MockWaitBeforeReply) != "" {
-		matchedScenario.WaitBeforeReply, _ = time.ParseDuration(c.Request().Header.Get(MockWaitBeforeReply))
-	}
-	if matchedScenario.WaitBeforeReply > 0 {
-		time.Sleep(matchedScenario.WaitBeforeReply)
-	}
-	// Override response status from request header
-	if c.Request().Header.Get(MockResponseStatus) != "" {
-		matchedScenario.Response.StatusCode, _ = strconv.Atoi(c.Request().Header.Get(MockResponseStatus))
-	}
-	if matchedScenario.Response.StatusCode == 0 {
-		matchedScenario.Response.StatusCode = 200
-	}
-
-	// Build output from contents-file or contents property
-	var respBody []byte
-	if matchedScenario.Response.ContentsFile != "" {
-		respBody, err = p.fixtureRepository.Get(
-			matchedScenario.Method,
-			matchedScenario.Response.ContentsFile,
-			matchedScenario.Path)
-		if err != nil {
-			return err
-		}
-	} else {
-		respBody = []byte(matchedScenario.Response.Contents)
+	respBody, err := addMockResponse(c.Request().Header, c.Response().Header(), matchedScenario, p.fixtureRepository)
+	if err != nil {
+		return err
 	}
 	return c.Blob(
 		matchedScenario.Response.StatusCode,
 		matchedScenario.Response.ContentType,
 		respBody)
+}
+
+func addMockResponse(
+	reqHeader http.Header,
+	respHeader http.Header,
+	matchedScenario *types.MockScenario,
+	fixtureRepository repository.MockFixtureRepository) (respBody []byte, err error) {
+	for k, vals := range matchedScenario.Response.Headers {
+		for _, val := range vals {
+			respHeader.Add(k, val)
+		}
+	}
+	respHeader.Add(types.MockScenarioName, matchedScenario.Name)
+	respHeader.Add(types.MockRequestCount, fmt.Sprintf("%d", matchedScenario.RequestCount))
+	// Override wait time from request header
+	if reqHeader.Get(types.MockWaitBeforeReply) != "" {
+		matchedScenario.WaitBeforeReply, _ = time.ParseDuration(reqHeader.Get(types.MockWaitBeforeReply))
+	}
+	if matchedScenario.WaitBeforeReply > 0 {
+		time.Sleep(matchedScenario.WaitBeforeReply)
+	}
+	// Override response status from request header
+	if reqHeader.Get(types.MockResponseStatus) != "" {
+		matchedScenario.Response.StatusCode, _ = strconv.Atoi(reqHeader.Get(types.MockResponseStatus))
+	}
+	if matchedScenario.Response.StatusCode == 0 {
+		matchedScenario.Response.StatusCode = 200
+	}
+	// Build output from contents-file or contents property
+	respBody = []byte(matchedScenario.Response.Contents)
+	if matchedScenario.Response.ContentsFile != "" {
+		respBody, err = fixtureRepository.Get(
+			matchedScenario.Method,
+			matchedScenario.Response.ContentsFile,
+			matchedScenario.Path)
+	}
+	return
 }

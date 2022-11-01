@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -31,7 +32,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		&http.Request{
 			Method: "PUT",
 			URL:    u,
-			Header: http.Header{MockWaitBeforeReply: []string{"1"}, MockResponseStatus: []string{"0"}},
+			Header: http.Header{types.MockWaitBeforeReply: []string{"1"}, types.MockResponseStatus: []string{"0"}},
 		},
 	)
 	// THEN it should not find it
@@ -44,7 +45,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "PUT",
 		URL:    u,
-		Header: http.Header{MockWaitBeforeReply: []string{"1"}, MockResponseStatus: []string{"0"}},
+		Header: http.Header{types.MockWaitBeforeReply: []string{"1"}, types.MockResponseStatus: []string{"0"}},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -227,6 +228,20 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldAddMockResponse(t *testing.T) {
+	// GIVEN a mock fixture repository
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	reqHeader := http.Header{"X1": []string{"val1"}}
+	resHeader := http.Header{"X1": []string{"val1"}}
+	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario.Response.ContentsFile = "lines.txt"
+	_ = os.MkdirAll("../../mock_tests/path/POST", 0755)
+	os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
+	_, err = addMockResponse(reqHeader, resHeader, matchedScenario, fixtureRepository)
+	require.NoError(t, err)
 }
 
 func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {

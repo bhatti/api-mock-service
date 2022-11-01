@@ -9,6 +9,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type Response interface {
+}
+
 // APIContext interface
 type APIContext interface { //nolint
 	// Path Request path
