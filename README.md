@@ -20,7 +20,7 @@ If you haven't installed docker, you can download the community version from htt
 or find installer for your OS on https://docs.docker.com/get-docker/.
 ```bash
 docker build -t api-mock-service .
-docker run -p 8000:8080 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
+docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
 	-e ASSET_DIR=/tmp/assets api-mock-service
 ```
 
