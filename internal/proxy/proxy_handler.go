@@ -56,6 +56,10 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 }
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+	log.WithFields(log.Fields{
+		"Path":   req.URL,
+		"Method": req.Method,
+	}).Infof("proxy server request received")
 	key, err := web.BuildMockScenarioKeyData(req)
 	if err != nil {
 		return req, nil, err
@@ -98,6 +102,9 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 }
 
 func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
+	log.WithFields(log.Fields{
+		"Response": resp,
+	}).Infof("proxy server response received")
 	if resp == nil || resp.Request == nil || len(resp.Request.Header) == 0 ||
 		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		return resp, nil
