@@ -190,6 +190,9 @@ func NormalizeDirPath(path string) string {
 
 // NormalizePath normalizes path
 func NormalizePath(path string, sepChar uint8) string {
+	if len(path) < 2 {
+		return path
+	}
 	sep := fmt.Sprintf("%c", sepChar)
 	if regexp, err := regexp.Compile(`[\/\\]+`); err == nil {
 		path = regexp.ReplaceAllString(path, sep)

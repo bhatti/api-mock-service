@@ -59,8 +59,9 @@ Use "api-mock-service [command] --help" for more information about a command
 See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
 
 ## Recording a Mock Scenario via HTTP/HTTPS Proxy
-The mock service will start two ports on startup, first port (default 8080) will be used to record/play mock scenarios, updating templates
-or uploading OpenAPIs. The second port (default 8081) will setup an HTTP/HTTPS proxy server that you can point to record your scenarios, e.g.
+Once you have the API mock service running, the mock service will start two ports on startup, first port
+(default 8080) will be used to record/play mock scenarios, updating templates or uploading OpenAPIs. The second
+port (default 8081) will setup an HTTP/HTTPS proxy server that you can point to record your scenarios, e.g.
 ```shell
 export http_proxy="http://localhost:8081"
 export https_proxy="http://localhost:8081"
@@ -72,7 +73,9 @@ Above curl command will automatically record all requests and responses and crea
 API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `"X-Mock-Record: true`  header to your request.
 
 ## Recording a Mock Scenario via API 
-Once you have the API mock service running, you can use as a proxy service to invoke a remote API so that you can automatically record API behavior and play it back later, e.g.
+Alternatively, you can use invoke an internal API as a pass through to invoke a remote API so that you can 
+automatically record API behavior and play it back later, e.g.
+
 ```bash
 curl -H "X-Mock-Url: https://api.stripe.com/v1/customers/cus_**/cash_balance" \
 	-H "Authorization: Bearer sk_test_***" http://localhost:8080/_proxy

@@ -13,6 +13,7 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 	// THEN it should succeed
 	require.NoError(t, scenario.Validate())
 	require.Equal(t, "path1/test1/abc", scenario.NormalPath('/'))
+	require.Equal(t, "a", NormalizePath("a", '_'))
 }
 
 func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
