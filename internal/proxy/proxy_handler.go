@@ -98,7 +98,8 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 }
 
 func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
-	if len(resp.Request.Header) > 0 && resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
+	if resp.Request == nil || len(resp.Request.Header) == 0 ||
+		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		return resp, nil
 	}
 	var reqBody []byte
