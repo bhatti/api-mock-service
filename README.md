@@ -78,7 +78,11 @@ curl -H "X-Mock-Url: https://api.stripe.com/v1/customers/cus_**/cash_balance" \
 	-H "Authorization: Bearer sk_test_***" http://localhost:8080/_proxy
 ```
 
-In above example, the curl command is passing the URL of real service as an HTTP header ``X-Mock-Url``. In addition, you can pass other authorization headers as needed. The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For example, you may see a file under:
+In above example, the curl command is passing the URL of real service as an HTTP header ``X-Mock-Url``. In addition, you can pass 
+other authorization headers as needed. 
+
+## Viewing the Recorded Mock Scenario
+The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For example, you may see a file under:
 
 ```bash
 default_mocks_data/v1/customers/cus_***/cash_balance/GET/recorded-scenario-***.scr
