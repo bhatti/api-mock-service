@@ -85,6 +85,17 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 	require.NotNil(t, res)
 }
 
+func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
+	// GIVEN a mock scenario repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+
+	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	require.Nil(t, handler.handleResponse(nil, nil))
+}
+
 func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
