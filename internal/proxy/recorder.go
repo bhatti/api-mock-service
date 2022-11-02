@@ -102,10 +102,12 @@ func saveMockResponse(
 		Name:   req.Header.Get(types.MockScenarioName),
 		Path:   u.Path,
 		Request: types.MockHTTPRequest{
-			MatchQueryParams: make(map[string]string),
-			MatchHeaders:     make(map[string]string),
-			MatchContentType: req.Header.Get(types.ContentTypeHeader),
-			MatchContents:    string(reqBody),
+			MatchQueryParams:   make(map[string]string),
+			MatchHeaders:       make(map[string]string),
+			MatchContentType:   req.Header.Get(types.ContentTypeHeader),
+			ExampleQueryParams: make(map[string]string),
+			ExampleHeaders:     make(map[string]string),
+			ExampleContents:    string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
 			Headers:     resHeaders,
@@ -116,18 +118,18 @@ func saveMockResponse(
 	}
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
-			scenario.Request.MatchQueryParams[k] = v[0]
+			scenario.Request.ExampleQueryParams[k] = v[0]
 		}
 	}
 	for k, v := range req.Header {
 		if len(v) > 0 {
-			scenario.Request.MatchHeaders[k] = v[0]
+			scenario.Request.ExampleHeaders[k] = v[0]
 		}
 	}
 	if scenario.Name == "" {
 		scenario.Name = fmt.Sprintf("recorded-%s-%s", scenario.NormalName(), scenario.Digest())
 	}
-	scenario.Description = fmt.Sprintf("recorded at %v", time.Now().UTC())
+	scenario.Description = fmt.Sprintf("recorded at %v for %s", time.Now().UTC(), u)
 	if err = mockScenarioRepository.Save(scenario); err != nil {
 		return nil, "", err
 	}

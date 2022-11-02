@@ -136,7 +136,7 @@ func (msd *MockScenarioKeyData) Validate() error {
 
 // String
 func (msd *MockScenarioKeyData) String() string {
-	return string(msd.Method) + " " + msd.Path + " " + msd.Name
+	return string(msd.Method) + "|" + msd.Path + "|" + msd.Name
 }
 
 // MethodNamePathPrefixKey returns full key for the scenario

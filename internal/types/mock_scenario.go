@@ -51,6 +51,14 @@ type MockHTTPRequest struct {
 	MatchContentType string `yaml:"match_content_type" json:"match_content_type"`
 	// MatchContents for request optionally
 	MatchContents string `yaml:"match_contents" json:"match_contents"`
+	// ExamplePathParams sample for the API
+	ExamplePathParams map[string]string `yaml:"example_path_params" json:"example_path_params"`
+	// ExampleQueryParams sample for the API
+	ExampleQueryParams map[string]string `yaml:"example_query_params" json:"example_query_params"`
+	// ExampleHeaders for mock response
+	ExampleHeaders map[string]string `yaml:"example_headers" json:"example_headers"`
+	// ExampleContents sample for request optionally
+	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 }
 
 // MockHTTPResponse defines mock respons for APIs
@@ -89,7 +97,10 @@ type MockScenario struct {
 
 // ToKeyData converts scenario to key data
 func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
-	rawPath := "/" + NormalizePath(ms.Path, '/')
+	rawPath := NormalizePath(ms.Path, '/')
+	if !strings.HasPrefix(rawPath, "/") {
+		rawPath = "/" + rawPath
+	}
 	rePath := rawPath
 	if strings.Contains(rePath, ":") {
 		re := regexp.MustCompile(`:[\w\d-_]+`)
@@ -146,7 +157,10 @@ func (ms *MockScenario) Validate() error {
 	if matched, err := regexp.Match(`^[\w\d\.\-_\/\\:{}]+$`, []byte(ms.Path)); err == nil && !matched {
 		return fmt.Errorf("path is invalid with special characters '%s'", ms.Path)
 	}
-	ms.Path = "/" + NormalizePath(ms.Path, '/')
+	ms.Path = NormalizePath(ms.Path, '/')
+	if !strings.HasPrefix(ms.Path, "/") {
+		ms.Path = "/" + ms.Path
+	}
 	if ms.Name == "" {
 		return fmt.Errorf("scenario name is not specified")
 	}
@@ -190,12 +204,12 @@ func NormalizeDirPath(path string) string {
 
 // NormalizePath normalizes path
 func NormalizePath(path string, sepChar uint8) string {
-	if len(path) < 2 {
-		return path
-	}
 	sep := fmt.Sprintf("%c", sepChar)
 	if regexp, err := regexp.Compile(`[\/\\]+`); err == nil {
 		path = regexp.ReplaceAllString(path, sep)
+	}
+	if len(path) < 2 {
+		return path
 	}
 
 	from := 0

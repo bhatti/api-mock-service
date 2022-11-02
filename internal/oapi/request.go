@@ -19,11 +19,11 @@ func (req *Request) buildMockHTTPRequest() (_ types.MockHTTPRequest, err error) 
 	if err != nil {
 		return
 	}
-	// ignore req.PathParams
 	return types.MockHTTPRequest{
-		MatchContentType: req.ContentType,
-		MatchHeaders:     propsToMap(req.Headers),
-		MatchQueryParams: propsToMap(req.QueryParams),
-		MatchContents:    string(contents),
+		MatchContentType:   req.ContentType,
+		ExampleHeaders:     propsToMap(req.Headers),
+		ExamplePathParams:  propsToMap(req.PathParams),
+		ExampleQueryParams: propsToMap(req.QueryParams),
+		ExampleContents:    string(contents),
 	}, nil
 }

@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -43,14 +42,13 @@ func (h *Handler) Start() error {
 }
 
 func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-	var validationErr *types.ValidationError
 	req, res, err := h.doHandleRequest(req, ctx)
-	if err != nil && errors.As(err, &validationErr) {
+	if err != nil {
 		log.WithFields(log.Fields{
 			"Path":   req.URL,
 			"Method": req.Method,
 			"Error":  err,
-		}).Warnf("proxy server failed to handle mock scenario")
+		}).Warnf("proxy server failed to match existing mock scenario")
 	}
 	return req, res
 }

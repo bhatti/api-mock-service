@@ -186,7 +186,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", target.String()))
 		}
 		fileName := sr.buildFileName(target.Method, target.Name, target.Path)
-		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API %s [Path %s]",
+		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s']",
 			target.String(), fileName))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()

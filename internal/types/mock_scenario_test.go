@@ -14,6 +14,8 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 	require.NoError(t, scenario.Validate())
 	require.Equal(t, "path1/test1/abc", scenario.NormalPath('/'))
 	require.Equal(t, "a", NormalizePath("a", '_'))
+	require.Equal(t, "_", NormalizePath("/", '_'))
+	require.True(t, scenario.Digest() != "")
 }
 
 func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
@@ -86,9 +88,14 @@ func Test_ShouldMatchRegex(t *testing.T) {
 	require.True(t, reMatch("\\d+", "3"))
 }
 
+func Test_ShouldNormalizePath(t *testing.T) {
+	require.Equal(t, "path1_id_:id", NormalizePath("/path1/id/:id", '_'))
+	require.Equal(t, "path1_id_{id}", NormalizePath("/path1/id/{id}", '_'))
+}
+
 func Test_ShouldNormalizeDirPath(t *testing.T) {
-	require.Equal(t, "/path1/id/:id", "/path1/id/:id")
-	require.Equal(t, "/path1/id/{id}", "/path1/id/{id}")
+	require.Equal(t, "path1/id", NormalizeDirPath("/path1/id/:id"))
+	require.Equal(t, "path1/id", NormalizeDirPath("/path1/id/{id}"))
 }
 
 func Test_ToMethodShouldValidateMethod(t *testing.T) {
