@@ -55,7 +55,7 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 	return req, res
 }
 
-func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
 	key, err := web.BuildMockScenarioKeyData(req)
 	if err != nil {
 		return req, nil, err
@@ -65,6 +65,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	log.WithFields(log.Fields{
 		"Path":            req.URL,
 		"Method":          req.Method,
+		"Ctx":             ctx,
 		"MatchedScenario": matchedScenario,
 	}).Infof("proxy server request received")
 	if err != nil {
@@ -102,7 +103,11 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 	return resp
 }
 
-func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
+func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (*http.Response, error) {
+	log.WithFields(log.Fields{
+		"Ctx":      ctx,
+		"Response": resp,
+	}).Infof("proxy server response received")
 	if resp == nil || resp.Request == nil || len(resp.Request.Header) == 0 ||
 		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		return resp, nil
@@ -127,7 +132,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 		"Response": resp,
 		"Length":   len(resBytes),
 		"Headers":  resp.Header,
-	}).Infof("proxy server response received")
+	}).Infof("proxy server recorded response")
 	return resp, nil
 }
 
