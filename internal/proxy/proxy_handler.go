@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -43,7 +44,8 @@ func (h *Handler) Start() error {
 
 func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	req, res, err := h.doHandleRequest(req, ctx)
-	if err != nil {
+	var validationError *types.ValidationError
+	if err != nil && errors.As(err, &validationError) {
 		log.WithFields(log.Fields{
 			"Path":   req.URL,
 			"Method": req.Method,
@@ -54,16 +56,17 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 }
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
-	log.WithFields(log.Fields{
-		"Path":   req.URL,
-		"Method": req.Method,
-	}).Infof("proxy server request received")
 	key, err := web.BuildMockScenarioKeyData(req)
 	if err != nil {
 		return req, nil, err
 	}
 
 	matchedScenario, err := h.mockScenarioRepository.Lookup(key)
+	log.WithFields(log.Fields{
+		"Path":            req.URL,
+		"Method":          req.Method,
+		"MatchedScenario": matchedScenario,
+	}).Infof("proxy server request received")
 	if err != nil {
 		return req, nil, err
 	}

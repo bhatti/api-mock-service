@@ -157,8 +157,8 @@ func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyDat
 		if err := keyData.Equals(target); err == nil {
 			res = append(res, keyData)
 		} else {
-			var mockScenarioMismatchError *types.ValidationError
-			if errors.As(err, &mockScenarioMismatchError) {
+			var validationError *types.ValidationError
+			if errors.As(err, &validationError) {
 				paramMismatchErrors++
 				log.WithFields(log.Fields{
 					"Target":         target.String(),
