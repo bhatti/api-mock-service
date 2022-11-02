@@ -319,8 +319,8 @@ which will return response with following error response
 * Mark bundle as not supporting multiuse
 < HTTP/1.1 500 Internal Server Error
 < Content-Type: application/json
-< Mock-Request-Count: 1
-< Mock-Scenario: stripe-customer-failure
+< X-Mock-Request-Count: 1
+< X-Mock-Scenario: stripe-customer-failure
 < Stripe-Version: 2018-09-06
 < Vary: Origin
 < Date: Sat, 29 Oct 2022 17:29:15 GMT
