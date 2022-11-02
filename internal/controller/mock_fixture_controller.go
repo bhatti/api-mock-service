@@ -2,7 +2,7 @@ package controller
 
 import (
 	"fmt"
-	"io"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"net/http"
 
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -41,7 +41,8 @@ func NewMockFixtureController(
 //
 //	200: mockFixtureResponse
 func (msc *MockFixtureController) postMockFixture(c web.APIContext) (err error) {
-	data, err := io.ReadAll(c.Request().Body)
+	var data []byte
+	data, c.Request().Body, err = utils.ReadAll(c.Request().Body)
 	if err != nil {
 		return err
 	}

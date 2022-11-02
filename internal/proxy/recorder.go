@@ -1,10 +1,9 @@
 package proxy
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"net/http"
 	"net/url"
 	"time"
@@ -42,12 +41,9 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	}
 
 	var reqBody []byte
-
-	if c.Request().Body != nil {
-		reqBody, err = io.ReadAll(c.Request().Body)
-		if err != nil {
-			return err
-		}
+	reqBody, c.Request().Body, err = utils.ReadAll(c.Request().Body)
+	if err != nil {
+		return err
 	}
 
 	status, resBody, resHeaders, err := r.client.Handle(
@@ -56,17 +52,19 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		c.Request().Method,
 		c.Request().Header,
 		nil,
-		io.NopCloser(bytes.NewReader(reqBody)),
+		c.Request().Body,
 	)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = resBody.Close()
-	}()
+	var resBytes []byte
+	resBytes, resBody, err = utils.ReadAll(resBody)
+	if err != nil {
+		return err
+	}
 
-	resBytes, resContentType, err := saveMockResponse(
-		u, c.Request(), reqBody, resBody, resHeaders, status, r.mockScenarioRepository)
+	resContentType, err := saveMockResponse(
+		u, c.Request(), reqBody, resBytes, resHeaders, status, r.mockScenarioRepository)
 	if err != nil {
 		return err
 	}
@@ -78,16 +76,10 @@ func saveMockResponse(
 	u *url.URL,
 	req *http.Request,
 	reqBody []byte,
-	resBody io.ReadCloser,
+	resBytes []byte,
 	resHeaders map[string][]string,
 	status int,
-	mockScenarioRepository repository.MockScenarioRepository) (resBytes []byte, resContentType string, err error) {
-	if resBody != nil {
-		resBytes, err = io.ReadAll(resBody)
-		if err != nil {
-			return nil, "", err
-		}
-	}
+	mockScenarioRepository repository.MockScenarioRepository) (resContentType string, err error) {
 
 	if resHeaders != nil {
 		val := resHeaders[types.ContentTypeHeader]
@@ -131,7 +123,7 @@ func saveMockResponse(
 	}
 	scenario.Description = fmt.Sprintf("recorded at %v for %s", time.Now().UTC(), u)
 	if err = mockScenarioRepository.Save(scenario); err != nil {
-		return nil, "", err
+		return "", err
 	}
 	return
 }

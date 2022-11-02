@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 	"github.com/bhatti/api-mock-service/internal/oapi"
-	"io"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"net/http"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
@@ -36,11 +36,11 @@ func NewMockOAPIController(
 //
 //	200: mockScenarioOAPIResponse
 func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
-	data, err := io.ReadAll(c.Request().Body)
+	var data []byte
+	data, c.Request().Body, err = utils.ReadAll(c.Request().Body)
 	if err != nil {
 		return err
 	}
-	_ = c.Request().Body.Close()
 	specs, err := oapi.Parse(context.Background(), data)
 	if err != nil {
 		return err

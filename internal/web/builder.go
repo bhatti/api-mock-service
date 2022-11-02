@@ -2,18 +2,15 @@ package web
 
 import (
 	"github.com/bhatti/api-mock-service/internal/types"
-	"io"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"net/http"
 )
 
 func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKeyData, err error) {
-	reqBody := []byte{}
-
-	if req.Body != nil {
-		reqBody, err = io.ReadAll(req.Body)
-		if err != nil {
-			return nil, err
-		}
+	var reqBytes []byte
+	reqBytes, req.Body, err = utils.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
 	}
 
 	method, err := types.ToMethod(req.Method)
@@ -28,7 +25,7 @@ func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKey
 		MatchQueryParams: make(map[string]string),
 		MatchHeaders:     make(map[string]string),
 		MatchContentType: req.Header.Get(types.ContentTypeHeader),
-		MatchContents:    string(reqBody),
+		MatchContents:    string(reqBytes),
 	}
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {

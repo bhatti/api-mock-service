@@ -179,7 +179,7 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 		URL:    u,
 		Method: "POST",
 	}
-	_, _, err = saveMockResponse(
-		u, req, []byte("test"), io.NopCloser(bytes.NewReader([]byte("test"))), resHeaders, 404, mockScenarioRepository)
+	_, err = saveMockResponse(
+		u, req, []byte("test"), []byte("test"), resHeaders, 404, mockScenarioRepository)
 	require.NoError(t, err)
 }

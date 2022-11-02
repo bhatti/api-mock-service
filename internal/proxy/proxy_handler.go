@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"github.com/elazarl/goproxy"
 	log "github.com/sirupsen/logrus"
@@ -112,17 +113,21 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		return resp, nil
 	}
-	var reqBody []byte
+	var reqBytes []byte
 	var err error
-	if resp.Request.Body != nil {
-		reqBody, err = io.ReadAll(resp.Request.Body)
-		if err != nil {
-			return resp, err
-		}
+	reqBytes, resp.Request.Body, err = utils.ReadAll(resp.Request.Body)
+	if err != nil {
+		return resp, err
 	}
 
-	resBytes, resContentType, err := saveMockResponse(
-		resp.Request.URL, resp.Request, reqBody, resp.Body, resp.Header, resp.StatusCode, h.mockScenarioRepository)
+	var resBytes []byte
+	resBytes, resp.Body, err = utils.ReadAll(resp.Body)
+	if err != nil {
+		return resp, err
+	}
+
+	resContentType, err := saveMockResponse(
+		resp.Request.URL, resp.Request, reqBytes, resBytes, resp.Header, resp.StatusCode, h.mockScenarioRepository)
 	if err != nil {
 		return resp, err
 	}

@@ -90,11 +90,10 @@ func (sr *FileMockScenarioRepository) Save(
 
 // SaveRaw saves raw data assuming to be yaml format
 func (sr *FileMockScenarioRepository) SaveRaw(input io.ReadCloser) (err error) {
-	data, err := io.ReadAll(input)
+	data, _, err := utils.ReadAll(input)
 	if err != nil {
 		return err
 	}
-	_ = input.Close()
 	keyData, err := unmarshalScenarioKeyData(data)
 	if err != nil {
 		return err
