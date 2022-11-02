@@ -277,12 +277,13 @@ and it will generate:
 {
   "object": "cash_balance",
   "available": null,
-  "customer": 123
+  "customer": 123,
   "livemode": false,
-  "page": 2
-  "pageSize": 55
+  "page": 2,
+  "pageSize": 55,
   "settings": {
     "reconciliation_mode": "automatic"
+  }
 }
 
 ```
@@ -309,7 +310,7 @@ And then play it back:
 curl -v "http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
 which will return response with following error response
-```json
+```
 > GET /v1/customers/123/cash_balance?page=2&pageSize=55 HTTP/1.1
 > Host: localhost:8080
 > User-Agent: curl/7.65.2
@@ -453,7 +454,7 @@ data. (More examples of test fixtures are described below.) This template file w
    "AssetNumber": "9z0CZSA03ZbUNiQw2aiF",
    "LocationGroupId": {
     "Id": {
-      "Value": 980,
+      "Value": 980
     },
     "Name": "Houston",
     "Udid": "3bde6570-c0d4-488f-8407-10f35902cd99"
@@ -462,19 +463,19 @@ data. (More examples of test fixtures are described below.) This template file w
    "LastSeen": "2022-10-29T11:25:25-07:00",
    "Email": "john.smith@abc.com",
    "Phone": "1-408-454-1507",
-   "EnrollmentStatus": true
-   "ComplianceStatus": ACa3E07B0F2cA00d0fbFe88f5c6DbC6a9e
-   "Group": Chicago,
-   "Date": 11:25AM,
+   "EnrollmentStatus": true,
+   "ComplianceStatus": "ACa3E07B0F2cA00d0fbFe88f5c6DbC6a9e",
+   "Group": "Chicago",
+   "Date": "11:25AM",
    "BatteryLevel": "43%",
-   "StrEnum": ONE,
+   "StrEnum": "ONE",
    "IntEnum": 20,
    "ProcessorArchitecture": 243,
    "TotalPhysicalMemory": 320177,
    "VirtualMemory": 768345,
    "AvailablePhysicalMemory": 596326,
    "CompromisedStatus": false,
-   "Add": 3,
+   "Add": 3
  },
 ...
  ], "Page": 2, "PageSize": 55, "Total": 55 }  
