@@ -70,7 +70,7 @@ curl -k -v -H "Authorization: Bearer sk_test_xxxx" https://api.stripe.com/v1/cus
 ```
 
 Above curl command will automatically record all requests and responses and create mock scenario to play it back. For example, if you call the same 
-API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `"X-Mock-Record: true`  header to your request.
+API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `X-Mock-Record: true`  header to your request.
 
 ## Recording a Mock Scenario via API 
 Alternatively, you can use invoke an internal API as a pass through to invoke a remote API so that you can 
@@ -132,7 +132,7 @@ response:
         Date:
             - Sat, 29 Oct 2022 04:26:17 GMT
         Request-Id:
-            - req_lOP4bCsPIi5hQC
+            - req_xxx
         Server:
             - nginx
         Strict-Transport-Security:
@@ -205,7 +205,7 @@ Which will return captured response such as:
 ```
 
 Though, you can customize your template with dynamic properties or conditional logic but you can also send HTTP headers 
-for X-Mock-Response-Status to override HTTP status to return or X-Mock-Wait-Before-Reply to add artificial latency using duration syntax. 
+for `X-Mock-Response-Status` to override HTTP status to return or `X-Mock-Wait-Before-Reply` to add artificial latency using duration syntax. 
 
 ## Upload Mock API Scenario
 You can customize the recorded scenario, e.g. you can add path variables to above API as follows:
