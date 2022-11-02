@@ -20,10 +20,10 @@ func (req *Request) buildMockHTTPRequest() (_ types.MockHTTPRequest, err error) 
 		return
 	}
 	return types.MockHTTPRequest{
-		MatchContentType:   req.ContentType,
-		ExampleHeaders:     propsToMap(req.Headers),
-		ExamplePathParams:  propsToMap(req.PathParams),
-		ExampleQueryParams: propsToMap(req.QueryParams),
-		ExampleContents:    string(contents),
+		MatchContentType:  req.ContentType,
+		MatchHeaders:      propsToMap(req.Headers),
+		MatchQueryParams:  propsToMap(req.QueryParams),
+		MatchContents:     string(contents),
+		ExamplePathParams: propsToMap(req.PathParams),
 	}, nil
 }

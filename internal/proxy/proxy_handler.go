@@ -100,9 +100,6 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 }
 
 func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
-	log.WithFields(log.Fields{
-		"Response": resp,
-	}).Infof("proxy server response received")
 	if resp == nil || resp.Request == nil || len(resp.Request.Header) == 0 ||
 		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		return resp, nil
@@ -123,6 +120,11 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	}
 	resp.Body = io.NopCloser(bytes.NewReader(resBytes))
 	resp.Header["Content-Type"] = []string{resContentType}
+	log.WithFields(log.Fields{
+		"Response": resp,
+		"Length":   len(resBytes),
+		"Headers":  resp.Header,
+	}).Infof("proxy server response received")
 	return resp, nil
 }
 
