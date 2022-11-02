@@ -15,6 +15,6 @@ func ReadAll(body io.ReadCloser) (b []byte, copy io.ReadCloser, err error) {
 		return nil, body, err
 	}
 	_ = body.Close()
-	body = io.NopCloser(bytes.NewReader(b))
+	copy = io.NopCloser(bytes.NewReader(b))
 	return
 }
