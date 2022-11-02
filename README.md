@@ -100,12 +100,17 @@ path: /v1/customers/cus_**/cash_balance
 description: recorded at 2022-10-29 04:26:17.24776 +0000 UTC
 request:
     match_query_params: {}
-    match_headers:
-        Accept: '*/*'
-        Authorization: Bearer sk_test
-        Mock-Url: https://api.stripe.com/v1/customers/cus_/cash_balance
+    match_headers: {}
     match_content_type: ""
     match_contents: ""
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        Authorization: Bearer sk_test_xxx
+        User-Agent: curl/7.65.2
+        X-Mock-Url: https://api.stripe.com/v1/customers/cus_/cash_balance
+    example_contents: ""
 response:
     headers:
         Access-Control-Allow-Credentials:
@@ -154,6 +159,15 @@ Above example defines a mock scenario for testing /v1/customers/cus_**/cash_bala
 ### Request Matching Parameters:
 
 The matching request parameters will be used to select the mock scenario to execute and you can use regular expressions to validate:
+
+    - URL Query Parameters
+    - URL Request Headers
+    - Request Body
+
+### Example Request Parameters:
+
+The example request parameters show the contents captured from the record/play so that you can use and customize to define matching parameters.
+
     - URL Query Parameters
     - URL Request Headers
     - Request Body
@@ -161,6 +175,7 @@ The matching request parameters will be used to select the mock scenario to exec
 ### Response Properties
 
 The response properties will include:
+
     - Response Headers
     - Response Body statically defined or loaded from a test fixture
 
