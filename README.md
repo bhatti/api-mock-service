@@ -504,9 +504,14 @@ You can define a test data in your test fixtures and then upload as follows:
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/lines.txt \
 	http://localhost:8080/_fixtures/GET/lines.txt/devices
+	
+curl -v -H "Content-Type: application/yaml" --data-binary @fixtures/props.yaml \
+    http://localhost:8080/_fixtures/GET/props.yaml/devices	
 ```
 
-In above example, a test fixture for lines.txt will be uploaded and will be available for all GET requests under /devices URL path. You can then refer to above fixture in your templates. You can also use this to serve any binary files, e.g. you can define an image template file as follows:
+In above example, test fixtures for `lines.txt` and `props.yaml` will be uploaded and will be available for all `GET` requests 
+under `/devices` URL path. You can then refer to above fixture in your templates. You can also use this to serve any binary files, 
+e.g. you can define an image template file as follows:
 
 ```yaml
 method: GET
