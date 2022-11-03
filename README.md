@@ -441,8 +441,10 @@ In above example, the mock API will return HTTP status 500 or 501 for every 10th
 The mock service allows you to upload a test fixture that you can refer in your template, e.g. 
 ```bash
 "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
-Above example loads a random line from a lines.txt fixture. As you may need to generate a deterministic random data in some cases, you can use Seeded functions to generate predictable data so that the service returns same data. Following example will read a text fixture to load a property from a file:
 ```
+Above example loads a random line from a lines.txt fixture. As you may need to generate a deterministic random data in some cases, 
+you can use Seeded functions to generate predictable data so that the service returns same data. Following example will read a 
+text fixture to load a property from a file:
 ```bash
         "Amount": {{JSONFileProperty "props.yaml" "amount"}},
 ```
