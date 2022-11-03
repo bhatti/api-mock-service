@@ -46,8 +46,8 @@ func (h *Handler) Start() error {
 
 func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	req, res, err := h.doHandleRequest(req, ctx)
-	var validationError *types.ValidationError
-	if err != nil && errors.As(err, &validationError) {
+	var notFoundError *types.NotFoundError
+	if err != nil && !errors.As(err, &notFoundError) {
 		log.WithFields(log.Fields{
 			"Path":   req.URL,
 			"Method": req.Method,
