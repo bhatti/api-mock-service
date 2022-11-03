@@ -18,6 +18,8 @@ response:
       {
         "Udid": "{{SeededUdid $val}}",
         "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
+        "Token": "{{FileProperty "props.yaml" "token"}}",
+        "Amount": {{JSONFileProperty "props.yaml" "amount"}},
         "SerialNumber": "{{Udid}}",
         "MacAddress": "{{Udid}}",
         "Imei": "{{Udid}}",

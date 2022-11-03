@@ -1,0 +1,7 @@
+name: get_devices
+method: POST
+amount: 
+  value: 100
+  currency: $
+url: http://localhost:8080
+token: "sample token"

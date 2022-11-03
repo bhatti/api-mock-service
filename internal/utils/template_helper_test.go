@@ -147,6 +147,15 @@ func Test_ShouldParseRandCountries(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldParseSeededCountries(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededCountry 1}}{{SeededCountryCode 1}}`)
+	// WHEN parsing name
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
 func Test_ShouldParseRandName(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{RandName}}`)
@@ -190,6 +199,13 @@ func Test_ShouldParseRandStringArrayMinMax(t *testing.T) {
 	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
 	// THEN it should succeed
 	require.NoError(t, err)
+
+	// GIVEN a template string with 0 max
+	b = []byte(`{{RandStringArrayMinMax 1 0}}`)
+	// WHEN parsing string array
+	_, err = ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
 }
 
 func Test_ShouldParseRandIntArrayMinMax(t *testing.T) {
@@ -197,6 +213,13 @@ func Test_ShouldParseRandIntArrayMinMax(t *testing.T) {
 	b := []byte(`{{RandIntArrayMinMax 1 10}}`)
 	// WHEN parsing string array
 	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+
+	// GIVEN a template string with 0 max
+	b = []byte(`{{RandIntArrayMinMax 1 0}}`)
+	// WHEN parsing string array
+	_, err = ParseTemplate("../../fixtures", b, map[string]interface{}{})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -294,6 +317,33 @@ func Test_ShouldParseGE(t *testing.T) {
 func Test_ShouldParseNth(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{Nth 3 5}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseYAMLFileProperty(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{YAMLFileProperty "../../fixtures/props.yaml" "token"}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseFilePropertyJson(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{JSONFileProperty "../../fixtures/props.yaml" "token"}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseFileProperty(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{FileProperty "../../fixtures/props.yaml" "token"}}`)
 	// WHEN parsing int
 	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
 	// THEN it should succeed
@@ -489,6 +539,7 @@ func Test_ShouldConvertToInt64(t *testing.T) {
 	require.Equal(t, int64(10), toInt64(int32(10)))
 	require.Equal(t, int64(10), toInt64(int(10)))
 	require.Equal(t, int64(10), toInt64(uint(10)))
+	require.Equal(t, int64(10), toInt64("10"))
 }
 
 func Test_ShouldConvertToInt(t *testing.T) {

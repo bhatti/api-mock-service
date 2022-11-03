@@ -86,3 +86,7 @@ func Test_ShouldGetRandEmail(t *testing.T) {
 func Test_ShouldGetRandFileLine(t *testing.T) {
 	require.True(t, RandFileLine("../../fixtures/lines.txt") != "")
 }
+
+func Test_ShouldGetRandPropertyLine(t *testing.T) {
+	require.Equal(t, "sample token", FileProperty("../../fixtures/props.yaml", "token"))
+}

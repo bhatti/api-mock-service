@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"math/rand"
 	"os"
 	"strconv"
@@ -832,6 +833,22 @@ func RandString(n int) string {
 		s[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(s)
+}
+
+// FileProperty generator
+func FileProperty(fileName string, name string) interface{} {
+	file, err := os.ReadFile(fileName)
+	if err != nil {
+		return err.Error()
+	}
+
+	data := make(map[string]interface{})
+
+	err = yaml.Unmarshal(file, &data)
+	if err != nil {
+		return err.Error()
+	}
+	return data[name]
 }
 
 // RandFileLine generator

@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"html/template"
 	"path/filepath"
 	"regexp"
@@ -11,7 +13,6 @@ import (
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/types"
-	log "github.com/sirupsen/logrus"
 )
 
 // UnescapeHTML flag
@@ -183,6 +184,15 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 				return false
 			}
 		},
+		"JSONFileProperty": func(fileName string, name string) template.HTML {
+			return toJson(fileProperty(dir, fileName+types.MockDataExt, name))
+		},
+		"YAMLFileProperty": func(fileName string, name string) template.HTML {
+			return toYaml(fileProperty(dir, fileName+types.MockDataExt, name))
+		},
+		"FileProperty": func(fileName string, name string) interface{} {
+			return fileProperty(dir, fileName+types.MockDataExt, name)
+		},
 		"RandFileLine": func(fileName string) template.HTML {
 			return randFileLine(dir, fileName+types.MockDataExt, 0)
 		},
@@ -208,6 +218,30 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 }
 
 // PRIVATE FUNCTIONS
+
+func toJson(val interface{}) template.HTML {
+	str, err := json.Marshal(val)
+	if err != nil {
+		str = []byte(err.Error())
+	}
+	return template.HTML(strings.TrimSpace(string(str)))
+}
+
+func toYaml(val interface{}) template.HTML {
+	str, err := yaml.Marshal(val)
+	if err != nil {
+		str = []byte(err.Error())
+	}
+	return template.HTML(strings.TrimSpace(string(str)))
+}
+
+func fileProperty(dir string, fileName string, name string) interface{} {
+	if validFileName(fileName) {
+		return FileProperty(filepath.Join(dir, fileName), name)
+	} else {
+		return fmt.Sprintf("invalid file-name '%s'", fileName)
+	}
+}
 
 func randFileLine(dir string, fileName string, seed int64) template.HTML {
 	var line string
@@ -276,15 +310,7 @@ func ToFloat64(input interface{}) (res float64) {
 			res = float64(*f)
 		}
 	default:
-		var err error
-		res, err = strconv.ParseFloat(fmt.Sprintf("%v", input), 64)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"Component": "ToFloat64",
-				"Error":     err,
-				"Input":     input}).Warn("failed to parse float")
-
-		}
+		res, _ = strconv.ParseFloat(fmt.Sprintf("%v", input), 64)
 	}
 	return
 }

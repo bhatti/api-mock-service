@@ -351,6 +351,7 @@ response:
       {
         "Udid": "{{SeededUdid $val}}",
         "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
+        "Amount": {{JSONFileProperty "props.yaml" "amount"}},
         "SerialNumber": "{{Udid}}",
         "MacAddress": "{{Udid}}",
         "Imei": "{{Udid}}",
@@ -440,14 +441,19 @@ In above example, the mock API will return HTTP status 500 or 501 for every 10th
 The mock service allows you to upload a test fixture that you can refer in your template, e.g. 
 ```bash
 "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
+Above example loads a random line from a lines.txt fixture. As you may need to generate a deterministic random data in some cases, you can use Seeded functions to generate predictable data so that the service returns same data. Following example will read a text fixture to load a property from a file:
 ```
-Above example loads a random line from a lines.txt fixture. As you may need to generate a deterministic random data in some cases, you can use Seeded functions to generate predictable data so that the service returns same 
-data. (More examples of test fixtures are described below.) This template file will generate content as follows:
+```bash
+        "Amount": {{JSONFileProperty "props.yaml" "amount"}},
+```
+
+This template file will generate content as follows:
 ```json
 { "Devices": [
  {
    "Udid": "fe49b338-4593-43c9-b1e9-67581d000000",
    "Line": { "ApplicationName": "Chase", "Version": "3.80", "ApplicationIdentifier": "com.chase.sig.android", "Type": "Public", "IsManaged": false },
+   "Amount": {"currency":"$","value":100},
    "SerialNumber": "47c2d7c3-c930-4194-b560-f7b89b33bc2a",
    "MacAddress": "1e015eac-68d2-42ee-9e8f-73fb80958019",
    "Imei": "5f8cae1b-c5e3-4234-a238-1c38d296f73a",
@@ -605,6 +611,9 @@ Following functions can be used to generate random data from a fixture file:
 
 - RandFileLine
 - SeededFileLine
+- FileProperty
+- JSONFileProperty
+- YAMLFileProperty
 
 ## Generate Mock API Behavior from OpenAPI or Swagger Specifications
 If you are using Open API (https://www.openapis.org/) or Swagger for API specifications, you can simply upload a YAML based API specification. For example, here is a sample Open API specification from Twilio:
