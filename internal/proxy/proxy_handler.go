@@ -68,7 +68,6 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		"Path":            req.URL,
 		"Method":          req.Method,
 		"Headers":         req.Header,
-		"Ctx":             ctx,
 		"MatchedScenario": matchedScenario,
 	}).Infof("proxy server request received")
 	if err != nil {

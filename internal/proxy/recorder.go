@@ -100,7 +100,6 @@ func saveMockResponse(
 		Request: types.MockHTTPRequest{
 			MatchQueryParams:   make(map[string]string),
 			MatchHeaders:       make(map[string]string),
-			MatchContents:      string(reqBody),
 			MatchContentType:   req.Header.Get(types.ContentTypeHeader),
 			ExampleQueryParams: make(map[string]string),
 			ExampleHeaders:     make(map[string]string),

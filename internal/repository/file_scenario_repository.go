@@ -164,7 +164,7 @@ func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyDat
 					"Actual":         keyData.String(),
 					"MismatchParams": paramMismatchErrors,
 					"Error":          err,
-				}).Infof("didn't match for lookup...")
+				}).Infof("mock scenario didn't match for lookup...")
 			}
 		}
 	}
