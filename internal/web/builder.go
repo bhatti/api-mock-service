@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// BuildMockScenarioKeyData creates mock-scenario key from HTTP request
 func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKeyData, err error) {
 	var reqBytes []byte
 	reqBytes, req.Body, err = utils.ReadAll(req.Body)

@@ -35,6 +35,7 @@ func (prop *Property) String() string {
 	return sb.String()
 }
 
+// Value of the property
 func (prop *Property) Value() interface{} {
 	if prop.Type == "integer" {
 		return map[string]string{
@@ -150,9 +151,8 @@ func (prop *Property) arrayValue() interface{} {
 				arr[i] = res
 			}
 			return arr
-		} else {
-			return res
 		}
+		return res
 	}
 	return map[string]interface{}{
 		prop.Name: childArr,

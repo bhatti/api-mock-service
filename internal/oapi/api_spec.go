@@ -19,6 +19,7 @@ type APISpec struct {
 	Response    Response
 }
 
+// ParseAPISpec converts open-api operation to API specs
 func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) (specs []*APISpec) {
 	specs = make([]*APISpec, 0)
 	if op == nil {
@@ -106,6 +107,7 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 	return
 }
 
+// BuildMockScenario builds mock scenario from API spec
 func (api *APISpec) BuildMockScenario() (*types.MockScenario, error) {
 	req, err := api.Request.buildMockHTTPRequest()
 	if err != nil {

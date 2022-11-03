@@ -29,7 +29,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 		"completed": true
 	  }
 	`))
-	recorder := proxy.NewRecorder(client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	ctx := web.NewStubContext(&http.Request{Method: "GET"})
@@ -55,7 +55,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	  }
 	`)
 	client.AddMapping("GET", "https://jsonplaceholder.typicode.com/todos/10", web.NewStubHTTPResponse(200, body))
-	recorder := proxy.NewRecorder(client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	u, err := url.Parse("http://localhost:8080")
@@ -83,7 +83,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
-	recorder := proxy.NewRecorder(client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	u, err := url.Parse("http://localhost:8080")
@@ -118,7 +118,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 }
 	`)
 	client.AddMapping("PUT", "https://jsonplaceholder.typicode.com/todos/202", web.NewStubHTTPResponse(200, resBody))
-	recorder := proxy.NewRecorder(client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
@@ -155,7 +155,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 }
 	`)
 	client.AddMapping("POST", "https://jsonplaceholder.typicode.com/todos/2", web.NewStubHTTPResponse(200, resBody))
-	recorder := proxy.NewRecorder(client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	reader := io.NopCloser(bytes.NewReader(reqBody))

@@ -16,31 +16,32 @@ import (
 
 // Handler structure
 type Handler struct {
+	config                 *types.Configuration
 	mockScenarioRepository repository.MockScenarioRepository
 	fixtureRepository      repository.MockFixtureRepository
-	proxyPort              int
 }
 
 // NewProxyHandler instantiates controller for updating mock-scenarios
 func NewProxyHandler(
-	proxyPort int,
+	config *types.Configuration,
 	mockScenarioRepository repository.MockScenarioRepository,
 	fixtureRepository repository.MockFixtureRepository,
 ) *Handler {
 	return &Handler{
-		proxyPort:              proxyPort,
+		config:                 config,
 		mockScenarioRepository: mockScenarioRepository,
 		fixtureRepository:      fixtureRepository,
 	}
 }
 
+// Start runs the proxy server on a given port
 func (h *Handler) Start() error {
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest(proxyCondition()).HandleConnect(goproxy.AlwaysMitm)
 	proxy.OnRequest(proxyCondition()).DoFunc(h.handleRequest)
 	proxy.OnResponse(proxyCondition()).DoFunc(h.handleResponse)
 	proxy.Verbose = true
-	return http.ListenAndServe(fmt.Sprintf(":%d", h.proxyPort), proxy)
+	return http.ListenAndServe(fmt.Sprintf(":%d", h.config.ProxyPort), proxy)
 }
 
 func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
@@ -66,6 +67,7 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 	log.WithFields(log.Fields{
 		"Path":            req.URL,
 		"Method":          req.Method,
+		"Headers":         req.Header,
 		"Ctx":             ctx,
 		"MatchedScenario": matchedScenario,
 	}).Infof("proxy server request received")
@@ -115,6 +117,10 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 	}
 	var reqBytes []byte
 	var err error
+	switch resp.Request.Body.(type) {
+	case utils.ResetReader:
+		_ = resp.Request.Body.(utils.ResetReader).Reset()
+	}
 	reqBytes, resp.Request.Body, err = utils.ReadAll(resp.Request.Body)
 	if err != nil {
 		return resp, err
@@ -127,7 +133,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 	}
 
 	resContentType, err := saveMockResponse(
-		resp.Request.URL, resp.Request, reqBytes, resBytes, resp.Header, resp.StatusCode, h.mockScenarioRepository)
+		h.config, resp.Request.URL, resp.Request, reqBytes, resBytes, resp.Header, resp.StatusCode, h.mockScenarioRepository)
 	if err != nil {
 		return resp, err
 	}

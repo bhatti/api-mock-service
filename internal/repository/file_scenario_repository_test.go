@@ -1,7 +1,10 @@
 package repository
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/utils"
+	"gopkg.in/yaml.v3"
 	"strconv"
 	"testing"
 	"time"
@@ -13,6 +16,25 @@ import (
 )
 
 const mockPath = "//abc//\\def/123/"
+
+func Test_ShouldRawSaveAndGetMockScenarios(t *testing.T) {
+	// GIVEN a mock scenario repository
+	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	// AND mock scenario
+	scenario := buildScenario(types.Post, "test1", mockPath, 10)
+	b, err := yaml.Marshal(scenario)
+	require.NoError(t, err)
+	// WHEN saving scenario
+	err = repo.SaveRaw(utils.NopCloser(bytes.NewReader(b)))
+	// THEN it should succeed
+	require.NoError(t, err)
+
+	// AND should return saved scenario
+	saved, err := repo.Lookup(scenario.ToKeyData())
+	require.NoError(t, err)
+	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
+}
 
 func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository

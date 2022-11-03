@@ -18,7 +18,7 @@ func Test_ShouldNotStartProxyServer(t *testing.T) {
 	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 
-	handler := NewProxyHandler(-1, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: -1}, scenarioRepository, fixtureRepository)
 	require.Error(t, handler.Start())
 }
 
@@ -36,7 +36,7 @@ func Test_ShouldNotHandleProxyRequest(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	_, res := handler.handleRequest(req, nil)
 	require.Nil(t, res)
 }
@@ -58,7 +58,7 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	_, res := handler.handleRequest(req, nil)
 	require.NotNil(t, res)
 }
@@ -80,7 +80,7 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 	res := &http.Response{
 		Request: req,
 	}
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
@@ -92,7 +92,7 @@ func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
 	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	require.Nil(t, handler.handleResponse(nil, nil))
 }
 
@@ -104,7 +104,7 @@ func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	res := &http.Response{}
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
@@ -127,7 +127,7 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 	res := &http.Response{
 		Request: req,
 	}
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
@@ -152,7 +152,7 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 		Body:    io.NopCloser(bytes.NewReader([]byte("test"))),
 		Header:  http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(8081, scenarioRepository, fixtureRepository)
+	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository)
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}

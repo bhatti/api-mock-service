@@ -185,10 +185,10 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			}
 		},
 		"JSONFileProperty": func(fileName string, name string) template.HTML {
-			return toJson(fileProperty(dir, fileName+types.MockDataExt, name))
+			return toJSON(fileProperty(dir, fileName+types.MockDataExt, name))
 		},
 		"YAMLFileProperty": func(fileName string, name string) template.HTML {
-			return toYaml(fileProperty(dir, fileName+types.MockDataExt, name))
+			return toYAML(fileProperty(dir, fileName+types.MockDataExt, name))
 		},
 		"FileProperty": func(fileName string, name string) interface{} {
 			return fileProperty(dir, fileName+types.MockDataExt, name)
@@ -219,7 +219,7 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 
 // PRIVATE FUNCTIONS
 
-func toJson(val interface{}) template.HTML {
+func toJSON(val interface{}) template.HTML {
 	str, err := json.Marshal(val)
 	if err != nil {
 		str = []byte(err.Error())
@@ -227,7 +227,7 @@ func toJson(val interface{}) template.HTML {
 	return template.HTML(strings.TrimSpace(string(str)))
 }
 
-func toYaml(val interface{}) template.HTML {
+func toYAML(val interface{}) template.HTML {
 	str, err := yaml.Marshal(val)
 	if err != nil {
 		str = []byte(err.Error())
@@ -238,9 +238,8 @@ func toYaml(val interface{}) template.HTML {
 func fileProperty(dir string, fileName string, name string) interface{} {
 	if validFileName(fileName) {
 		return FileProperty(filepath.Join(dir, fileName), name)
-	} else {
-		return fmt.Sprintf("invalid file-name '%s'", fileName)
 	}
+	return fmt.Sprintf("invalid file-name '%s'", fileName)
 }
 
 func randFileLine(dir string, fileName string, seed int64) template.HTML {
@@ -272,6 +271,7 @@ func toInt(input interface{}) (res int) {
 	return
 }
 
+// ToFloat64 converter
 func ToFloat64(input interface{}) (res float64) {
 	if input == nil {
 		return 0

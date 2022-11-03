@@ -27,7 +27,8 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 		"completed": true
 	  }
 	`))
-	recorder := NewRecorder(client, mockScenarioRepository)
+
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	ctx := web.NewStubContext(&http.Request{Method: "GET"})
 
 	// WHEN invoking Handle without MockUrl
@@ -51,7 +52,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	  }
 	`)
 	client.AddMapping("GET", "https://jsonplaceholder.typicode.com/todos/10", web.NewStubHTTPResponse(200, body))
-	recorder := NewRecorder(client, mockScenarioRepository)
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	u, err := url.Parse("http://localhost:8080")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
@@ -77,7 +78,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
-	recorder := NewRecorder(client, mockScenarioRepository)
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	u, err := url.Parse("http://localhost:8080")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
@@ -110,7 +111,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 }
 	`)
 	client.AddMapping("PUT", "https://jsonplaceholder.typicode.com/todos/202", web.NewStubHTTPResponse(200, resBody))
-	recorder := NewRecorder(client, mockScenarioRepository)
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
 	u, err := url.Parse("http://localhost:8080")
 	require.NoError(t, err)
@@ -145,7 +146,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 }
 	`)
 	client.AddMapping("POST", "https://jsonplaceholder.typicode.com/todos/2", web.NewStubHTTPResponse(200, resBody))
-	recorder := NewRecorder(client, mockScenarioRepository)
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
 	u, err := url.Parse("http://localhost:8080")
 	require.NoError(t, err)
@@ -180,6 +181,7 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 		Method: "POST",
 	}
 	_, err = saveMockResponse(
-		u, req, []byte("test"), []byte("test"), resHeaders, 404, mockScenarioRepository)
+		&types.Configuration{ProxyPort: 8081}, u, req, []byte("test"), []byte("test"),
+		resHeaders, 404, mockScenarioRepository)
 	require.NoError(t, err)
 }

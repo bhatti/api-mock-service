@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -23,8 +24,11 @@ type Configuration struct {
 	// UserAgent for mock server
 	UserAgent string `yaml:"user_agent" mapstructure:"user_agent" env:"USER_AGENT"`
 	// ProxyURL for mock server
-	ProxyURL string   `yaml:"proxy_url" mapstructure:"proxy_url" env:"PROXY_URL"`
-	Version  *Version `yaml:"-" mapstructure:"-" json:"-"`
+	ProxyURL string `yaml:"proxy_url" mapstructure:"proxy_url" env:"PROXY_URL"`
+	// ProxyURL for mock server
+	MatchHeaderRegex string `yaml:"match_header_regex" mapstructure:"match_header_regex" env:"MATCH_HEADER_REGEX"`
+	// Version of API
+	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 }
 
 // NewConfiguration -- Initializes the default config
@@ -38,6 +42,7 @@ func NewConfiguration(
 	viper.SetDefault("http_port", "8080")
 	viper.SetDefault("proxy_port", "8081")
 	viper.SetDefault("data_dir", "default_mocks_data")
+	viper.SetDefault("match_header_regex", "Target")
 	viper.SetDefault("asset_dir", "")
 	viper.SetEnvPrefix("")
 	viper.AutomaticEnv()
@@ -85,4 +90,13 @@ func NewConfiguration(
 		"UsedConfig": viper.ConfigFileUsed(),
 	}).Infof("loaded config file...")
 	return config, nil
+}
+
+// MatchHeader match header
+func (c *Configuration) MatchHeader(h string) bool {
+	if c.MatchHeaderRegex == "" || h == "" {
+		return false
+	}
+	match, err := regexp.Match(c.MatchHeaderRegex, []byte(h))
+	return err == nil && match
 }

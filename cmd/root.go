@@ -88,7 +88,7 @@ func RunServer(_ *cobra.Command, args []string) {
 	}
 	go func() {
 		fmt.Printf("⇨ http proxy started on \x1b[32m[::]:%d\033[0m\n", serverConfig.ProxyPort)
-		log.Fatal(proxy.NewProxyHandler(serverConfig.ProxyPort, scenarioRepo, fixturesRepo).Start())
+		log.Fatal(proxy.NewProxyHandler(serverConfig, scenarioRepo, fixturesRepo).Start())
 	}()
 
 	webServer.Start(":" + strconv.Itoa(serverConfig.HTTPPort))
@@ -156,7 +156,7 @@ func buildControllers(
 	httpClient web.HTTPClient,
 	webServer web.Server,
 ) (err error) {
-	recorder := proxy.NewRecorder(httpClient, scenarioRepo)
+	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 	player := proxy.NewPlayer(scenarioRepo, fixtureRepo)
 	_ = controller.NewMockOAPIController(scenarioRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, webServer)

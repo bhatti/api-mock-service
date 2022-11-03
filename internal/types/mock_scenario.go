@@ -11,7 +11,8 @@ import (
 
 // MockRecordMode header
 const MockRecordMode = "X-Mock-Record"
-const MockRecordModeEnabled = "true"
+
+// MockRecordModeDisabled disabled value
 const MockRecordModeDisabled = "false"
 
 // MockURL header

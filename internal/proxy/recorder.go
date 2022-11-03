@@ -15,15 +15,18 @@ import (
 
 // Recorder structure
 type Recorder struct {
+	config                 *types.Configuration
 	client                 web.HTTPClient
 	mockScenarioRepository repository.MockScenarioRepository
 }
 
 // NewRecorder instantiates controller for updating mock-scenarios
 func NewRecorder(
+	config *types.Configuration,
 	client web.HTTPClient,
 	mockScenarioRepository repository.MockScenarioRepository) *Recorder {
 	return &Recorder{
+		config:                 config,
 		client:                 client,
 		mockScenarioRepository: mockScenarioRepository,
 	}
@@ -64,7 +67,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	}
 
 	resContentType, err := saveMockResponse(
-		u, c.Request(), reqBody, resBytes, resHeaders, status, r.mockScenarioRepository)
+		r.config, u, c.Request(), reqBody, resBytes, resHeaders, status, r.mockScenarioRepository)
 	if err != nil {
 		return err
 	}
@@ -73,6 +76,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 }
 
 func saveMockResponse(
+	config *types.Configuration,
 	u *url.URL,
 	req *http.Request,
 	reqBody []byte,
@@ -96,6 +100,7 @@ func saveMockResponse(
 		Request: types.MockHTTPRequest{
 			MatchQueryParams:   make(map[string]string),
 			MatchHeaders:       make(map[string]string),
+			MatchContents:      string(reqBody),
 			MatchContentType:   req.Header.Get(types.ContentTypeHeader),
 			ExampleQueryParams: make(map[string]string),
 			ExampleHeaders:     make(map[string]string),
@@ -116,6 +121,9 @@ func saveMockResponse(
 	for k, v := range req.Header {
 		if len(v) > 0 {
 			scenario.Request.ExampleHeaders[k] = v[0]
+			if config.MatchHeader(k) {
+				scenario.Request.MatchHeaders[k] = v[0]
+			}
 		}
 	}
 	if scenario.Name == "" {
