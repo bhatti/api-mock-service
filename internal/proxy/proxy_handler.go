@@ -57,7 +57,7 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 	return req, res
 }
 
-func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
 	key, err := web.BuildMockScenarioKeyData(req)
 	if err != nil {
 		return req, nil, err

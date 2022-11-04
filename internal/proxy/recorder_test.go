@@ -172,16 +172,17 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 	// GIVEN a mock scenario repository
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
-	u, err := url.Parse("http://localhost:8080/path?a=b")
+	u, err := url.Parse("http://localhost:8080/path?a=b&target=2")
 	require.NoError(t, err)
 
-	resHeaders := http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}}
+	resHeaders := http.Header{"target": []string{"val1"}, types.ContentTypeHeader: []string{"json"}}
 	req := &http.Request{
 		URL:    u,
 		Method: "POST",
+		Header: resHeaders,
 	}
 	_, err = saveMockResponse(
-		&types.Configuration{ProxyPort: 8081}, u, req, []byte("test"), []byte("test"),
+		&types.Configuration{ProxyPort: 8081, MatchQueryRegex: "target", MatchHeaderRegex: "target"}, u, req, []byte("test"), []byte("test"),
 		resHeaders, 404, mockScenarioRepository)
 	require.NoError(t, err)
 }

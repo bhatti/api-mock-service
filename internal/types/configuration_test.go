@@ -40,3 +40,23 @@ func Test_ShouldMatchHeader(t *testing.T) {
 	// THEN it should not match
 	require.True(t, c.MatchHeader("test1"))
 }
+
+func Test_ShouldMatchQueryParameters(t *testing.T) {
+	// GIVEN a configuration
+	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", &Version{})
+	require.NoError(t, err)
+	// WHEN matching query params with empty regex
+	// THEN it should not match
+	require.False(t, c.MatchQueryParams("test"))
+	c.MatchQueryRegex = "test\\d"
+	// WHEN matching query params with empty input
+	// THEN it should not match
+	require.False(t, c.MatchQueryParams(""))
+	// WHEN matching query params with non matching input
+	// THEN it should not match
+	require.False(t, c.MatchQueryParams("test"))
+	// WHEN matching query params with matching input
+	// THEN it should not match
+	require.True(t, c.MatchQueryParams("test1"))
+	require.True(t, c.MatchQueryParams("Test1"))
+}

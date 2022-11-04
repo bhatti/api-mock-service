@@ -115,6 +115,9 @@ func saveMockResponse(
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
 			scenario.Request.ExampleQueryParams[k] = v[0]
+			if config.MatchQueryParams(k) {
+				scenario.Request.MatchQueryParams[k] = v[0]
+			}
 		}
 	}
 	for k, v := range req.Header {

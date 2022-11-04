@@ -25,8 +25,10 @@ type Configuration struct {
 	UserAgent string `yaml:"user_agent" mapstructure:"user_agent" env:"USER_AGENT"`
 	// ProxyURL for mock server
 	ProxyURL string `yaml:"proxy_url" mapstructure:"proxy_url" env:"PROXY_URL"`
-	// ProxyURL for mock server
+	// MatchHeaderRegex to always match HTTP headers and store them in match-header property of mock scenario
 	MatchHeaderRegex string `yaml:"match_header_regex" mapstructure:"match_header_regex" env:"MATCH_HEADER_REGEX"`
+	// MatchQueryRegex to always match HTTP query params and store them in match-query parameters of mock scenario
+	MatchQueryRegex string `yaml:"match_query_regex" mapstructure:"match_query_regex" env:"MATCH_QUERY_REGEX"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 }
@@ -43,6 +45,7 @@ func NewConfiguration(
 	viper.SetDefault("proxy_port", "8081")
 	viper.SetDefault("data_dir", "default_mocks_data")
 	viper.SetDefault("match_header_regex", "Target")
+	viper.SetDefault("match_query_regex", "Target")
 	viper.SetDefault("asset_dir", "")
 	viper.SetEnvPrefix("")
 	viper.AutomaticEnv()
@@ -94,9 +97,18 @@ func NewConfiguration(
 
 // MatchHeader match header
 func (c *Configuration) MatchHeader(h string) bool {
-	if c.MatchHeaderRegex == "" || h == "" {
+	return matchRegex(c.MatchHeaderRegex, h)
+}
+
+// MatchQueryParams match query params
+func (c *Configuration) MatchQueryParams(p string) bool {
+	return matchRegex(c.MatchQueryRegex, p)
+}
+
+func matchRegex(re string, str string) bool {
+	if re == "" || str == "" {
 		return false
 	}
-	match, err := regexp.Match(c.MatchHeaderRegex, []byte(h))
+	match, err := regexp.Match("(?i)"+re, []byte(str))
 	return err == nil && match
 }
