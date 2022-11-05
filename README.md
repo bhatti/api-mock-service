@@ -24,7 +24,14 @@ docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_D
 	-e ASSET_DIR=/tmp/assets api-mock-service
 ```
 
-or if you have GO environment then
+or pull an image from docker hub (https://hub.docker.com/r/plexobject/api-mock-service), e.g.
+```bash
+docker pull plexobject/api-mock-service:latest
+docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
+	-e ASSET_DIR=/tmp/assets plexobject/api-mock-service:latest
+```
+
+Alternatively, you can run it locally with GO environment, e.g.,
 
 ```bash
 make && ./out/bin/api-mock-service
