@@ -9,11 +9,6 @@ type StubResponseWriter struct {
 	size   int
 }
 
-// func NewMyResponseWriter(res http.ResponseWriter) *MyResponseWriter {
-// 	// Default the status code to 200
-// 	return &MyResponseWriter{200, res}
-// }
-
 // Status provides an easy way to retrieve the status code
 func (w *StubResponseWriter) Status() int {
 	return w.status

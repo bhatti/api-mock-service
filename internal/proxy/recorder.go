@@ -36,7 +36,7 @@ func NewRecorder(
 func (r *Recorder) Handle(c web.APIContext) (err error) {
 	mockURL := c.Request().Header.Get(types.MockURL)
 	if mockURL == "" {
-		return fmt.Errorf("header for %s is not defined to connect to remote url", types.MockURL)
+		return fmt.Errorf("header for %s is not defined to connect to remote url '%s'", types.MockURL, c.Request().URL)
 	}
 	u, err := url.Parse(mockURL)
 	if err != nil {

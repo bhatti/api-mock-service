@@ -19,6 +19,7 @@ type Handler struct {
 	config                 *types.Configuration
 	mockScenarioRepository repository.MockScenarioRepository
 	fixtureRepository      repository.MockFixtureRepository
+	adapter                web.Adapter
 }
 
 // NewProxyHandler instantiates controller for updating mock-scenarios
@@ -26,11 +27,13 @@ func NewProxyHandler(
 	config *types.Configuration,
 	mockScenarioRepository repository.MockScenarioRepository,
 	fixtureRepository repository.MockFixtureRepository,
+	adapter web.Adapter,
 ) *Handler {
 	return &Handler{
 		config:                 config,
 		mockScenarioRepository: mockScenarioRepository,
 		fixtureRepository:      fixtureRepository,
+		adapter:                adapter,
 	}
 }
 
@@ -40,7 +43,7 @@ func (h *Handler) Start() error {
 	proxy.OnRequest(proxyCondition()).HandleConnect(goproxy.AlwaysMitm)
 	proxy.OnRequest(proxyCondition()).DoFunc(h.handleRequest)
 	proxy.OnResponse(proxyCondition()).DoFunc(h.handleResponse)
-	proxy.Verbose = true
+	proxy.Verbose = false
 	return http.ListenAndServe(fmt.Sprintf(":%d", h.config.ProxyPort), proxy)
 }
 
@@ -58,6 +61,16 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 }
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+	res, err := h.adapter.Invoke(req)
+	if err == nil && res != nil {
+		log.WithFields(log.Fields{
+			"Path":    req.URL,
+			"Method":  req.Method,
+			"Headers": req.Header,
+		}).Infof("proxy server redirected request to internal controllers")
+		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
+		return req, res, nil
+	}
 	key, err := web.BuildMockScenarioKeyData(req)
 	if err != nil {
 		return req, nil, err
@@ -105,21 +118,25 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 	return resp
 }
 
-func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (*http.Response, error) {
-	log.WithFields(log.Fields{
-		"Ctx":      ctx,
-		"Response": resp,
-	}).Infof("proxy server response received")
+func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
 	if resp == nil || resp.Request == nil || len(resp.Request.Header) == 0 ||
 		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
+		log.WithFields(log.Fields{}).Debugf("proxy server returning canned response")
+
 		return resp, nil
 	}
+
+	log.WithFields(log.Fields{
+		"Response": resp,
+	}).Infof("proxy server response received")
+
 	var reqBytes []byte
 	var err error
 	switch resp.Request.Body.(type) {
 	case utils.ResetReader:
 		_ = resp.Request.Body.(utils.ResetReader).Reset()
 	}
+
 	reqBytes, resp.Request.Body, err = utils.ReadAll(resp.Request.Body)
 	if err != nil {
 		return resp, err

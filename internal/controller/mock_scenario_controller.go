@@ -25,22 +25,23 @@ func NewMockScenarioController(
 		mockScenarioRepository: mockScenarioRepository,
 	}
 
-	webserver.GET("/_scenarios", ctrl.listMockScenarioPaths)
+	webserver.GET("/_scenarios", ctrl.ListMockScenarioPaths)
 	webserver.GET("/_scenarios/:method/names/:path", ctrl.getMockNames)
-	webserver.GET("/_scenarios/:method/:name/:path", ctrl.getMockScenario)
-	webserver.POST("/_scenarios", ctrl.postMockScenario)
-	webserver.DELETE("/_scenarios/:method/:name/:path", ctrl.deleteMockScenario)
+	webserver.GET("/_scenarios/:method/:name/:path", ctrl.GetMockScenario)
+	webserver.POST("/_scenarios", ctrl.PostMockScenario)
+	webserver.DELETE("/_scenarios/:method/:name/:path", ctrl.DeleteMockScenario)
 	return ctrl
 }
 
 // ********************************* HTTP Handlers ***********************************
 
-// swagger:route POST /_scenarios mock-scenarios postMockScenario
+// PostMockScenario handler
+// swagger:route POST /_scenarios mock-scenarios PostMockScenario
 // Creates new mock scenario based on request body.
 // responses:
 //
 //	200: mockScenarioResponse
-func (msc *MockScenarioController) postMockScenario(c web.APIContext) (err error) {
+func (msc *MockScenarioController) PostMockScenario(c web.APIContext) (err error) {
 	scenario := &types.MockScenario{}
 	if c.Request().Header.Get(types.ContentTypeHeader) == "application/yaml" {
 		if err = msc.mockScenarioRepository.SaveRaw(c.Request().Body); err != nil {
@@ -55,12 +56,13 @@ func (msc *MockScenarioController) postMockScenario(c web.APIContext) (err error
 	return c.JSON(http.StatusOK, scenario)
 }
 
+// ListMockScenarioPaths handler
 // swagger:route GET /_scenarios mock-scenarios listMockScenario
 // List paths of all scenarios
 // responses:
 //
 //	200: mockScenarioPathsResponse
-func (msc *MockScenarioController) listMockScenarioPaths(c web.APIContext) error {
+func (msc *MockScenarioController) ListMockScenarioPaths(c web.APIContext) error {
 	res := make(map[string]*types.MockScenarioKeyData)
 	for _, next := range msc.mockScenarioRepository.ListScenarioKeyData() {
 		res[fmt.Sprintf("/_scenarios/%s/%s%s", next.Method, next.Name, next.Path)] = next
@@ -68,12 +70,13 @@ func (msc *MockScenarioController) listMockScenarioPaths(c web.APIContext) error
 	return c.JSON(http.StatusOK, res)
 }
 
-// swagger:route GET /_scenarios/{method}/{name}/{path} mock-scenarios getMockScenario
+// GetMockScenario handler
+// swagger:route GET /_scenarios/{method}/{name}/{path} mock-scenarios GetMockScenario
 // Finds an existing mock scenario based on method, name and path
 // responses:
 //
 //	200: mockScenarioResponse
-func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
+func (msc *MockScenarioController) GetMockScenario(c web.APIContext) error {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return err
@@ -137,12 +140,13 @@ func (msc *MockScenarioController) getMockNames(c web.APIContext) error {
 	return c.JSON(http.StatusOK, names)
 }
 
-// swagger:route DELETE /_scenarios/{method}/{name}/{path} mock-scenarios getMockScenario
+// DeleteMockScenario handler
+// swagger:route DELETE /_scenarios/{method}/{name}/{path} mock-scenarios GetMockScenario
 // Deletes an existing mock scenario based on id.
 // responses:
 //
 //	200: emptyResponse
-func (msc *MockScenarioController) deleteMockScenario(c web.APIContext) error {
+func (msc *MockScenarioController) DeleteMockScenario(c web.APIContext) error {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return err
@@ -169,7 +173,7 @@ func (msc *MockScenarioController) deleteMockScenario(c web.APIContext) error {
 
 // ********************************* Swagger types ***********************************
 
-// swagger:parameters postMockScenario
+// swagger:parameters PostMockScenario
 // The params for mock-scenario
 type mockScenarioCreateParams struct {
 	// in:path
@@ -203,7 +207,7 @@ type mockScenarioPathsResponseBody struct {
 	Body map[string]*types.MockScenarioKeyData
 }
 
-// swagger:parameters deleteMockScenario getMockScenario
+// swagger:parameters DeleteMockScenario GetMockScenario
 // The parameters for finding mock-scenario by method, path and name
 type mockScenarioIDParams struct {
 	// in:path

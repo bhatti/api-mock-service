@@ -102,18 +102,9 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 	if !strings.HasPrefix(rawPath, "/") {
 		rawPath = "/" + rawPath
 	}
-	rePath := rawPath
-	if strings.Contains(rePath, ":") {
-		re := regexp.MustCompile(`:[\w\d-_]+`)
-		rePath = re.ReplaceAllString(rawPath, `(.*)`)
-	} else if strings.Contains(rePath, "{") && strings.Contains(rePath, "}") {
-		re := regexp.MustCompile(`{[\w\d-_]+}`)
-		rePath = re.ReplaceAllString(rawPath, `(.*)`)
-	}
 	return &MockScenarioKeyData{
 		Method:           ms.Method,
 		Name:             ms.Name,
-		rePath:           rePath,
 		Path:             rawPath,
 		MatchQueryParams: ms.Request.MatchQueryParams,
 		MatchContentType: ms.Request.MatchContentType,
@@ -170,9 +161,6 @@ func (ms *MockScenario) Validate() error {
 	}
 	if matched, err := regexp.Match(`^[\w\d-_]+\.?[\w\d-_]+$`, []byte(ms.Name)); err == nil && !matched {
 		return fmt.Errorf("scenario name is invalid with special characters %s", ms.Name)
-	}
-	if ms.Response.Contents == "" {
-		return fmt.Errorf("contents is not specified")
 	}
 	if len(ms.Response.Contents) > 1024*1024*1024 {
 		return fmt.Errorf("contents is too long %d", len(ms.Response.Contents))

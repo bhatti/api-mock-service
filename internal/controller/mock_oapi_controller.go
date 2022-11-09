@@ -24,18 +24,19 @@ func NewMockOAPIController(
 		mockScenarioRepository: mockScenarioRepository,
 	}
 
-	webserver.POST("/_oapi", ctrl.postMockOAPIScenario)
+	webserver.POST("/_oapi", ctrl.PostMockOAPIScenario)
 	return ctrl
 }
 
 // ********************************* HTTP Handlers ***********************************
 
-// swagger:route POST /_oapi open-api postMockOAPIScenario
+// PostMockOAPIScenario handler
+// swagger:route POST /_oapi open-api PostMockOAPIScenario
 // Creates new mock scenarios based on Open API v3
 // responses:
 //
 //	200: mockScenarioOAPIResponse
-func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
+func (moc *MockOAPIController) PostMockOAPIScenario(c web.APIContext) (err error) {
 	var data []byte
 	data, c.Request().Body, err = utils.ReadAll(c.Request().Body)
 	if err != nil {
@@ -62,7 +63,7 @@ func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error
 
 // ********************************* Swagger types ***********************************
 
-// swagger:parameters postMockOAPIScenario
+// swagger:parameters PostMockOAPIScenario
 // The params for mock-scenario based on OpenAPI v3
 type mockScenarioOAPICreateParams struct {
 	// in:body

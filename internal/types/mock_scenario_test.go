@@ -49,7 +49,6 @@ func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 	scenario.Name = "test1****"
 	require.Error(t, scenario.Validate())
 	scenario.Name = "test1"
-	require.Error(t, scenario.Validate())
 	scenario.Response.Contents = "test"
 	require.NoError(t, scenario.Validate())
 	require.Equal(t, "path1/test1/2/:id", scenario.NormalPath('/'))

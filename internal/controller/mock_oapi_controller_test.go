@@ -31,7 +31,7 @@ func Test_ShouldFailPostScenarioWithBadOAPIInput(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.postMockOAPIScenario(ctx)
+	err = ctrl.PostMockOAPIScenario(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
@@ -49,7 +49,7 @@ func Test_ShouldCreateTwitterMockScenarioFromOAPI(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock scenario from Open API
-	err = ctrl.postMockOAPIScenario(ctx)
+	err = ctrl.PostMockOAPIScenario(ctx)
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
@@ -69,7 +69,7 @@ func Test_ShouldCreatePetsMockScenarioFromOAPI(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock scenario from Open API
-	err = ctrl.postMockOAPIScenario(ctx)
+	err = ctrl.PostMockOAPIScenario(ctx)
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)

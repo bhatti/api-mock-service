@@ -94,7 +94,7 @@ func (w *StubHTTPClient) Handle(
 		time.Sleep(resp.sleepDuration)
 	}
 	if len(resp.Bytes) > 0 {
-		return resp.Status, io.ReadCloser(io.NopCloser(bytes.NewReader(resp.Bytes))), nil, resp.Error
+		return resp.Status, io.NopCloser(bytes.NewReader(resp.Bytes)), nil, resp.Error
 	}
 	if resp.Error != nil {
 		return resp.Status, nil, nil, resp.Error
@@ -103,5 +103,5 @@ func (w *StubHTTPClient) Handle(
 	if err != nil {
 		return 404, nil, nil, fmt.Errorf("error reading file=%v for url=%v error=%v", resp.Filename, url, err)
 	}
-	return resp.Status, io.ReadCloser(io.NopCloser(bytes.NewReader(b))), nil, resp.Error
+	return resp.Status, io.NopCloser(bytes.NewReader(b)), nil, resp.Error
 }

@@ -33,10 +33,10 @@ response:
         {
           "object": "cash_balance",
           "available": null,
-          "customer": {{.customer}}
+          "customer": {{.customer}},
           "livemode": false,
-          "page": {{.page}}
-          "pageSize": {{.pageSize}}
+          "page": {{.page}},
+          "pageSize": {{.pageSize}},
           "settings": {
             "reconciliation_mode": "automatic"
           }

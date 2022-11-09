@@ -14,8 +14,6 @@ type MockScenarioKeyData struct {
 	Name string `yaml:"name" json:"name"`
 	// Path for the API (excluding query params)
 	Path string `yaml:"path" json:"path"`
-	// rePath for the API modified with Regexp
-	rePath string
 	// MatchQueryParams for the API
 	MatchQueryParams map[string]string `yaml:"match_query_params" json:"match_query_params"`
 	// MatchHeaders for mock response
@@ -35,7 +33,8 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	if msd.Method != target.Method {
 		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", msd.Method, target.Method))
 	}
-	matched, err := regexp.Match(msd.rePath, []byte(target.Path))
+	rePath := rePath(msd.Path)
+	matched, err := regexp.Match(rePath, []byte(target.Path))
 	if err != nil {
 		return err
 	}
@@ -81,23 +80,38 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 }
 
 // MatchGroups return match groups for dynamic params in path
-func (msd *MockScenarioKeyData) MatchGroups(path string) (res map[string]string) {
+func (msd *MockScenarioKeyData) MatchGroups(path string) map[string]string {
+	return MatchPathGroups(msd.Path, path)
+}
+
+// MatchPathGroups return match groups for dynamic params in path
+func MatchPathGroups(rawPath string, targetPath string) (res map[string]string) {
+	rePath := rePath(rawPath)
+	matched, err := regexp.Match(rePath, []byte(targetPath))
+	if err != nil {
+		return
+	}
+	if !matched {
+		return
+	}
+
 	res = make(map[string]string)
+
 	// extract dynamic properties using :id or {id} format
 	var rawParts [][]string
-	if strings.Contains(msd.Path, ":") {
+	if strings.Contains(rawPath, ":") {
 		rawRe := regexp.MustCompile(`(:[\d\w-_]+)`)
-		rawParts = rawRe.FindAllStringSubmatch(msd.Path, -1)
-	} else if strings.Contains(msd.Path, "{") && strings.Contains(msd.Path, "}") {
+		rawParts = rawRe.FindAllStringSubmatch(rawPath, -1)
+	} else if strings.Contains(rawPath, "{") && strings.Contains(rawPath, "}") {
 		rawRe := regexp.MustCompile(`(\{[\d\w-_]+)`)
-		rawParts = rawRe.FindAllStringSubmatch(msd.Path, -1)
+		rawParts = rawRe.FindAllStringSubmatch(rawPath, -1)
 	} else {
 		return
 	}
 
 	// extract values
-	re := regexp.MustCompile(msd.rePath)
-	parts := re.FindStringSubmatch(path)
+	re := regexp.MustCompile(rePath)
+	parts := re.FindStringSubmatch(targetPath)
 
 	for i := 1; i < len(parts); i++ {
 		if len(rawParts[i-1]) > 0 && len(rawParts[i-1][0]) > 0 {
@@ -165,4 +179,21 @@ func (msd *MockScenarioKeyData) PathPrefix(max int) string {
 		}
 	}
 	return buf.String()
+}
+
+func rePath(rawPath string) (rePath string) {
+	targetPattern := `([^/]*)`
+	rePath = rawPath
+	if strings.Contains(rePath, ":") {
+		re := regexp.MustCompile(`:[\w\d-_]+`)
+		rePath = re.ReplaceAllString(rawPath, targetPattern)
+	} else if strings.Contains(rePath, "{") && strings.Contains(rePath, "}") {
+		re := regexp.MustCompile(`{[\w\d-_]+}`)
+		rePath = re.ReplaceAllString(rawPath, targetPattern)
+	}
+	ndx := strings.LastIndex(rePath, targetPattern)
+	if ndx != -1 {
+		rePath = fmt.Sprintf("%s(.*)%s", rePath[0:ndx], rePath[ndx+len(targetPattern):])
+	}
+	return
 }

@@ -43,6 +43,8 @@ func Test_ShouldCompareNotEqualsMockScenarioKeyData(t *testing.T) {
 	keyData.Method = Post
 	require.Error(t, keyData.Equals(buildScenario().ToKeyData()))
 	keyData.Name = "scenario"
+	require.Error(t, keyData.Equals(buildScenario().ToKeyData()))
+	keyData.Path = "/path1/test1/abc"
 	require.NoError(t, keyData.Equals(buildScenario().ToKeyData()))
 }
 

@@ -33,7 +33,7 @@ type DefaultHTTPClient struct {
 }
 
 // NewHTTPClient creates structure for HTTPClient
-func NewHTTPClient(config *types.Configuration) HTTPClient {
+func NewHTTPClient(config *types.Configuration) *DefaultHTTPClient {
 	return &DefaultHTTPClient{config: config}
 }
 
@@ -51,7 +51,7 @@ func (w *DefaultHTTPClient) Handle(
 		"Component": "DefaultHTTPClient",
 		"Method":    method,
 		"URL":       url,
-	}).Info("handle BEGIN")
+	}).Debug("handle BEGIN")
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
@@ -66,7 +66,7 @@ func (w *DefaultHTTPClient) Handle(
 		"Method":     method,
 		"StatusCode": statusCode,
 		"Elapsed":    elapsed,
-		"Error":      err}).Info("handle END")
+		"Error":      err}).Debug("handle END")
 	return
 }
 

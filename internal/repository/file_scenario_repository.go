@@ -306,7 +306,7 @@ func (sr *FileMockScenarioRepository) addKeyData(keyData *types.MockScenarioKeyD
 		"Path":    keyData.Path,
 		"AllSize": len(sr.keysByMethodPath),
 		"Size":    len(keyMap),
-	}).Infof("addKeyData added...")
+	}).Infof("registered scenario")
 }
 
 func (sr *FileMockScenarioRepository) buildFileName(
