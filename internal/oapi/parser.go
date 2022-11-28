@@ -2,6 +2,7 @@ package oapi
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -9,10 +10,18 @@ import (
 // Parse parses Open-API and generates mock scenarios
 func Parse(ctx context.Context, data []byte) (specs []*APISpec, err error) {
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
+
 	doc, err := loader.LoadFromData(data)
 	if err != nil {
-		return nil, err
+		doc = &openapi3.T{}
+		if err = json.Unmarshal(data, doc); err != nil {
+			return nil, err
+		}
+		if err := loader.ResolveRefsIn(doc, nil); err != nil {
+			return nil, err
+		}
 	}
+
 	for k, v := range doc.Paths {
 		for _, spec := range ParseAPISpec(types.Delete, k, v.Delete) {
 			specs = append(specs, spec)
