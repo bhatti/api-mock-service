@@ -40,7 +40,7 @@ func NewStubHTTPResponse(status int, unk interface{}) *StubHTTPResponse {
 	default:
 		b, err := json.Marshal(unk)
 		if err != nil {
-			panic(fmt.Errorf("failed to serialize %v due to error %v", unk, err))
+			panic(fmt.Errorf("failed to serialize %v due to error %w", unk, err))
 		}
 		if _, err := os.Stat(string(b)); err == nil {
 			return &StubHTTPResponse{Status: status, Filename: string(b)}
@@ -101,7 +101,7 @@ func (w *StubHTTPClient) Handle(
 	}
 	b, err := os.ReadFile(resp.Filename)
 	if err != nil {
-		return 404, nil, nil, fmt.Errorf("error reading file=%v for url=%v error=%v", resp.Filename, url, err)
+		return 404, nil, nil, fmt.Errorf("error reading file %v for url %v due to %w", resp.Filename, url, err)
 	}
 	return resp.Status, io.NopCloser(bytes.NewReader(b)), nil, resp.Error
 }

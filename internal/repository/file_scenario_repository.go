@@ -216,7 +216,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 
 	scenario, err = unmarshalMockScenario(b, dir, params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load '%s' due to '%s'", fileName, err)
+		return nil, fmt.Errorf("failed to load '%s' due to %w", fileName, err)
 	}
 	scenario.RequestCount = matched[0].RequestCount
 	return
@@ -264,7 +264,7 @@ func (sr *FileMockScenarioRepository) visit(
 
 		keyData, err := unmarshalScenarioKeyData(content)
 		if err != nil {
-			return fmt.Errorf("failed to load '%s' due to '%s'", path, err)
+			return fmt.Errorf("failed to load '%s' due to %w", path, err)
 		}
 		if callback(keyData) {
 			return errStop

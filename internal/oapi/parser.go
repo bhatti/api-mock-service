@@ -3,6 +3,7 @@ package oapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -15,10 +16,10 @@ func Parse(ctx context.Context, data []byte) (specs []*APISpec, err error) {
 	if err != nil {
 		doc = &openapi3.T{}
 		if err = json.Unmarshal(data, doc); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse open-api with size %d due to %w", len(data), err)
 		}
 		if err := loader.ResolveRefsIn(doc, nil); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to resolve refs in open-api with size %d due to %w", len(data), err)
 		}
 	}
 

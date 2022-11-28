@@ -30,7 +30,7 @@ func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error
 	}
 	t, err := template.New("").Funcs(TemplateFuncs(dir, data)).Parse(body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template due to %s", err)
+		return nil, fmt.Errorf("failed to parse template due to %w", err)
 	}
 	var out bytes.Buffer
 	err = t.Execute(&out, data)
