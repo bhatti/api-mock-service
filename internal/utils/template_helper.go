@@ -177,6 +177,13 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		},
 		"NthRequest": func(n interface{}) bool {
 			switch data.(type) {
+			case map[string]string:
+				params := data.(map[string]string)
+				count := params[types.RequestCount]
+				if count == "" {
+					return false
+				}
+				return toInt(count)%toInt(n) == 0
 			case map[string]interface{}:
 				params := data.(map[string]interface{})
 				count := params[types.RequestCount]
