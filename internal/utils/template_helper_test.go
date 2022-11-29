@@ -386,6 +386,33 @@ func Test_ShouldParseNthRequestWithData(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldParseLERequestWithStringData(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{LERequest 3}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseLERequestWithData(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{LERequest 3}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{types.RequestCount: 1})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseNthRequestWithStringData(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{NthRequest 3}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
 func Test_ShouldNotHaveExtraSpace(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`

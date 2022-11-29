@@ -795,7 +795,7 @@ func RandPhone() string {
 // RandIntArrayMinMax generator
 func RandIntArrayMinMax(min int, max int) []int {
 	if max == 0 {
-		max = min + 100
+		max = min + 10
 	}
 	arr := make([]int, RandNumMinMax(min, max))
 	for i := 0; i < len(arr); i++ {
@@ -807,7 +807,7 @@ func RandIntArrayMinMax(min int, max int) []int {
 // RandStringArrayMinMax generator
 func RandStringArrayMinMax(min int, max int) []string {
 	if max == 0 {
-		max = min + 100
+		max = min + 10
 	}
 	arr := make([]string, RandNumMinMax(min, max))
 	for i := 0; i < len(arr); i++ {
@@ -819,7 +819,7 @@ func RandStringArrayMinMax(min int, max int) []string {
 // RandStringMinMax generator
 func RandStringMinMax(min int, max int) string {
 	if max == 0 {
-		max = min + 100
+		max = min + 10
 	}
 	return RandString(RandNumMinMax(min, max))
 }
