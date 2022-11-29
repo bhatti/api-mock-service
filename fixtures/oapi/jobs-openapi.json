@@ -1,0 +1,693 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Job Service",
+    "version": "2022-12-19"
+  },
+  "paths": {
+    "/v1/jobs/{jobId}/cancel": {
+      "post": {
+        "description": "Cancel current job",
+        "operationId": "CancelJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Unique identifier of job",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier of job"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CancelJob 200 response"
+          },
+          "400": {
+            "description": "ValidationException 400 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "AccessDeniedException 403 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ConflictException 409 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "ThrottlingException 429 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottlingExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerException 500 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs": {
+      "get": {
+        "description": "Returns job details",
+        "operationId": "GetJobByParameters",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "name of job",
+            "schema": {
+              "type": "string",
+              "description": "name of job"
+            },
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GetJobByParameters 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetJobByParametersResponseContent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationException 400 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "AccessDeniedException 403 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ResourceNotFoundException 404 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceNotFoundExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "ThrottlingException 429 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottlingExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerException 500 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{jobId}": {
+      "get": {
+        "description": "Returns job information",
+        "operationId": "GetJobById",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Unique identifier of job",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier of job"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GetJobById 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetJobByIdResponseContent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ValidationException 400 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "AccessDeniedException 403 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ResourceNotFoundException 404 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceNotFoundExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "ThrottlingException 429 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottlingExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerException 500 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{jobId}/pause": {
+      "post": {
+        "description": "Pause current of job by jobId",
+        "operationId": "PauseJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Unique identifier of job",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier of job"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PauseJob 200 response"
+          },
+          "400": {
+            "description": "ValidationException 400 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "AccessDeniedException 403 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "ThrottlingException 429 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottlingExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerException 500 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{jobId}/resume": {
+      "post": {
+        "description": "Resume paused job by jobId",
+        "operationId": "ResumeJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Unique identifier of job",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier of job"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ResumeJob 200 response"
+          },
+          "400": {
+            "description": "ValidationException 400 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "AccessDeniedException 403 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessDeniedExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "ThrottlingException 429 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThrottlingExceptionResponseContent"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "InternalServerException 500 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccessDeniedExceptionResponseContent": {
+        "type": "object",
+        "description": "A user does not have sufficient access to perform an action",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "AttributeMap": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/AttributeValue"
+        },
+        "description": "Shapes for selector attributes"
+      },
+      "AttributeValue": {
+        "oneOf": [
+          {
+            "type": "object",
+            "title": "stringValue",
+            "properties": {
+              "stringValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stringValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "booleanValue",
+            "properties": {
+              "booleanValue": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "booleanValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "integerValue",
+            "properties": {
+              "integerValue": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "integerValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "binaryValue",
+            "properties": {
+              "binaryValue": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "required": [
+              "binaryValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "decimalValue",
+            "properties": {
+              "decimalValue": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "decimalValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "dateTimeValue",
+            "properties": {
+              "dateTimeValue": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "required": [
+              "dateTimeValue"
+            ]
+          }
+        ]
+      },
+      "JobStatus": {
+        "type": "string",
+        "description": "An enumeration of job status",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "SUCCEEDED",
+          "CANCELED",
+          "FAILED"
+        ]
+      },
+      "ConflictExceptionResponseContent": {
+        "type": "object",
+        "description": "A request to update or delete a resource can cause an inconsistent state",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "CreateJobRequestContent": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of job"
+          },
+          "attributeMap": {
+            "$ref": "#/components/schemas/AttributeMap"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attributeMap",
+          "name"
+        ]
+      },
+      "CreateJobResponseContent": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "description": "Unique identifier of job"
+          }
+        }
+      },
+      "GetJobByParametersResponseContent": {
+        "type": "array",
+        "properties": {
+          "jobs": {
+            "$ref": "#/components/schemas/JobDetail"
+          }
+        }
+      },
+      "GetJobByIdResponseContent": {
+        "type": "object",
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/JobDetail"
+          }
+        }
+      },
+      "InternalServerExceptionResponseContent": {
+        "type": "object",
+        "description": "An unexpected error during processing of request",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "JobDetail": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "attributeMap": {
+            "$ref": "#/components/schemas/AttributeMap"
+          },
+          "jobStatus": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "records": {
+            "type": "number"
+          },
+          "remaining": {
+            "type": "number"
+          }
+        }
+      },
+      "ResourceNotFoundExceptionResponseContent": {
+        "type": "object",
+        "description": "A request references a resource which does not exist",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ThrottlingExceptionResponseContent": {
+        "type": "object",
+        "description": "ThrottlingException will be thrown when request was denied due to request throttling",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ValidationExceptionReason": {
+        "type": "string",
+        "description": "An enumeration of reasons a request failed validation.",
+        "enum": [
+          "invalidName",
+          "unknownName",
+          "invalidOperations"
+        ]
+      },
+      "ValidationExceptionResponseContent": {
+        "type": "object",
+        "description": "The input of the request fails to satisfy the constraints specified by an action",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ValidationExceptionReason"
+          }
+        },
+        "required": [
+          "message",
+          "reason"
+        ]
+      }
+    }
+  }
+}

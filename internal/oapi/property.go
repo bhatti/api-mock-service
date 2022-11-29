@@ -37,9 +37,13 @@ func (prop *Property) String() string {
 
 // Value of the property
 func (prop *Property) Value() interface{} {
-	if prop.Type == "integer" {
+	if prop.Type == "number" || prop.Type == "integer" {
 		return map[string]string{
 			prop.Name: prop.numericValue(),
+		}
+	} else if prop.Type == "boolean" {
+		return map[string]string{
+			prop.Name: prop.boolValue(),
 		}
 	} else if prop.Type == "string" {
 		return map[string]string{
@@ -80,7 +84,12 @@ func (prop *Property) numericValue() string {
 		}
 		return `\d+`
 	}
+
 	return fmt.Sprintf("{{RandNumMinMax %d %d}}", int(prop.Max), int(prop.Max))
+}
+
+func (prop *Property) boolValue() string {
+	return "{{RandBool}}"
 }
 
 func (prop *Property) stringValue() string {

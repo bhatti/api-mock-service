@@ -7,6 +7,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/getkin/kin-openapi/openapi3"
 	"strconv"
+	"strings"
 )
 
 // APISpec structure
@@ -130,14 +131,17 @@ func (api *APISpec) BuildMockScenario() (*types.MockScenario, error) {
 	return spec, nil
 }
 
-func marshalPropertyValue(params []Property) ([]byte, error) {
+func marshalPropertyValue(params []Property) (out []byte, err error) {
+	out = []byte{}
 	arr := propertyValue(params)
 	if len(arr) > 1 {
-		return json.Marshal(arr)
+		out, err = json.Marshal(arr)
 	} else if len(arr) > 0 {
-		return json.Marshal(arr[0])
+		out, err = json.Marshal(arr[0])
 	}
-	return []byte{}, nil
+	out = []byte(strings.ReplaceAll(string(out), `"{{RandNumMinMax 0 0}}"`, "{{RandNumMinMax 0 0}}"))
+	out = []byte(strings.ReplaceAll(string(out), `"{{RandBool}}"`, "{{RandBool}}"))
+	return
 }
 
 func propertyValue(params []Property) (res []interface{}) {
