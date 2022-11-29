@@ -1,0 +1,36 @@
+method: POST
+name: create
+path: /v2/create
+description: ""
+request:
+    match_headers:
+        Authorization: Bearer sk_test_[0-9a-fA-F]{5}$
+response:
+    headers:
+        "Server": 
+            - "CreateAPI"
+        "Connection": 
+            - "keep-alive"
+        "Retry-After": 
+            - {{RandNumMinMax 0 0}}
+    content_type: application/json
+    contents: >
+    {{if NthRequest 3 }}
+      {
+      "message": {{RandStringMinMax 0 0}}
+      "reason": {{EnumString `invalidNumber invalidName invalidOperation`}}
+      }
+    {{else}}
+     {
+        "Udid": "{{Udid}}",
+        "Status": "{{EnumString `Running Pending Completed`}}",
+        "Records": {{RandNumMinMax 0 0}},
+        "Tags": {{RandStringArrayMinMax 2 3}},
+        "Completed": {{RandBool}}
+     }
+    {{end}}
+    {{if NthRequest 3 }}
+    status_code: {{EnumInt 400 429 500 501}}
+    {{else}}
+    status_code: {{EnumInt 200}}
+    {{end}}
