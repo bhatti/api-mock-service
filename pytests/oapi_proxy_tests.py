@@ -57,11 +57,11 @@ class OAPIProxyTest(unittest.TestCase):
         headers = {
             'Content-Type': 'application/json',
         }
-        resp = requests.post('http://localhost:8080/v1/AuthTokens/Promote', headers = headers)
-        self.assertEqual(200, resp.status_code)
+        resp = requests.post('http://localhost:8080/v1/jobs/1/pause', headers = headers)
+        self.assertTrue(resp.headers['X-Mock-Scenario'] != None)
 
-        resp = requests.post('http://localhost:8080/v1/AuthTokens/Secondary', headers = headers)
-        self.assertEqual(201, resp.status_code)
+        resp = requests.post('http://localhost:8080/v1/jobs/1/resume', headers = headers)
+        self.assertTrue(resp.headers['X-Mock-Scenario'] != None)
 
         resp = requests.get('http://localhost:8080/_scenarios', headers = headers)
         self.assertEqual(200, resp.status_code)

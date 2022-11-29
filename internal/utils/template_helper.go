@@ -132,8 +132,12 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"RandStringMinMax": func(min interface{}, max interface{}) string {
 			return RandStringMinMax(toInt(min), toInt(max))
 		},
-		"RandStringArrayMinMax": func(min interface{}, max interface{}) []string {
-			return RandStringArrayMinMax(toInt(min), toInt(max))
+		"RandStringArrayMinMax": func(min interface{}, max interface{}) template.HTML {
+			arr := RandStringArrayMinMax(toInt(min), toInt(max))
+			for i := range arr {
+				arr[i] = fmt.Sprintf(`"%s"`, arr[i])
+			}
+			return template.HTML("[" + strings.Join(arr, ",") + "]")
 		},
 		"RandIntArrayMinMax": func(min interface{}, max interface{}) []int {
 			return RandIntArrayMinMax(toInt(min), toInt(max))

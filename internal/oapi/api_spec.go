@@ -140,6 +140,7 @@ func marshalPropertyValue(params []Property) (out []byte, err error) {
 		out, err = json.Marshal(arr[0])
 	}
 	out = []byte(strings.ReplaceAll(string(out), `"{{RandNumMinMax 0 0}}"`, "{{RandNumMinMax 0 0}}"))
+	out = []byte(strings.ReplaceAll(string(out), `"{{RandStringArrayMinMax 0 0}}"`, "{{RandStringArrayMinMax 0 0}}"))
 	out = []byte(strings.ReplaceAll(string(out), `"{{RandBool}}"`, "{{RandBool}}"))
 	return
 }
