@@ -386,18 +386,18 @@ func Test_ShouldParseNthRequestWithData(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_ShouldParseLERequestWithStringData(t *testing.T) {
+func Test_ShouldParseLTRequestWithStringData(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{LERequest 3}}`)
+	b := []byte(`{{LTRequest 3}}`)
 	// WHEN parsing int
 	_, err := ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
 
-func Test_ShouldParseLERequestWithData(t *testing.T) {
+func Test_ShouldParseLTRequestWithData(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{LERequest 3}}`)
+	b := []byte(`{{LTRequest 3}}`)
 	// WHEN parsing int
 	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{types.RequestCount: 1})
 	// THEN it should succeed

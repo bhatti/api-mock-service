@@ -175,7 +175,7 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"Nth": func(a interface{}, b interface{}) bool {
 			return toInt(a)%toInt(b) == 0
 		},
-		"LERequest": func(n interface{}) bool {
+		"LTRequest": func(n interface{}) bool {
 			switch data.(type) {
 			case map[string]string:
 				params := data.(map[string]string)
