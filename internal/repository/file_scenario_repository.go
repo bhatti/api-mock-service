@@ -174,7 +174,7 @@ func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyDat
 		}
 		return res[i].LastUsageTime < res[j].LastUsageTime
 	})
-	return
+	return filterScenariosByPredicate(res, target), paramMismatchErrors
 }
 
 // Lookup finds top matching scenario
@@ -192,12 +192,13 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)
 
 	log.WithFields(log.Fields{
-		"Path":         matched[0].Path,
-		"Name":         matched[0].Name,
-		"Method":       matched[0].Method,
-		"RequestCount": matched[0].RequestCount,
-		"Timestamp":    matched[0].LastUsageTime,
-		"Matched":      len(matched),
+		"Path":              matched[0].Path,
+		"Name":              matched[0].Name,
+		"Method":            matched[0].Method,
+		"RequestCount":      matched[0].RequestCount,
+		"TotalRequestCount": sumRequestCount(matched),
+		"Timestamp":         matched[0].LastUsageTime,
+		"Matched":           len(matched),
 	}).Infof("API mock scenario found...")
 
 	// Read template file
@@ -212,7 +213,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	params := matched[0].MatchGroups(target.Path)
 	addQueryParams(matched[0].MatchQueryParams, params)
 	addQueryParams(target.MatchQueryParams, params)
-	params[types.RequestCount] = fmt.Sprintf("%d", matched[0].RequestCount)
+	params[types.RequestCount] = fmt.Sprintf("%d", sumRequestCount(matched))
 
 	scenario, err = unmarshalMockScenario(b, dir, params)
 	if err != nil {
@@ -301,11 +302,12 @@ func (sr *FileMockScenarioRepository) addKeyData(keyData *types.MockScenarioKeyD
 	}
 	keyMap[keyData.MethodNamePathPrefixKey()] = keyData
 	log.WithFields(log.Fields{
-		"Name":    keyData.Name,
-		"Method":  keyData.Method,
-		"Path":    keyData.Path,
-		"AllSize": len(sr.keysByMethodPath),
-		"Size":    len(keyMap),
+		"Name":      keyData.Name,
+		"Method":    keyData.Method,
+		"Path":      keyData.Path,
+		"Predicate": keyData.Predicate,
+		"AllSize":   len(sr.keysByMethodPath),
+		"Size":      len(keyMap),
 	}).Infof("registered scenario")
 }
 
@@ -359,4 +361,30 @@ func unmarshalScenarioKeyData(data []byte) (keyData *types.MockScenarioKeyData, 
 		return nil, err
 	}
 	return keyData, nil
+}
+
+func filterScenariosByPredicate(
+	all []*types.MockScenarioKeyData, target *types.MockScenarioKeyData) (matched []*types.MockScenarioKeyData) {
+	if len(all) == 0 {
+		return all
+	}
+	sumReqCount := sumRequestCount(all)
+
+	for _, next := range all {
+		if utils.MatchScenarioPredicate(next, target, sumReqCount) {
+			matched = append(matched, next)
+		}
+	}
+	if len(matched) == 0 {
+		return all
+	}
+	return
+}
+
+func sumRequestCount(all []*types.MockScenarioKeyData) uint64 {
+	sumReqCount := uint64(0)
+	for _, next := range all {
+		sumReqCount += next.RequestCount
+	}
+	return sumReqCount
 }

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 )
@@ -14,6 +15,8 @@ type MockScenarioKeyData struct {
 	Name string `yaml:"name" json:"name"`
 	// Path for the API (excluding query params)
 	Path string `yaml:"path" json:"path"`
+	// Predicate for the request
+	Predicate string `yaml:"predicate" json:"predicate"`
 	// MatchQueryParams for the API
 	MatchQueryParams map[string]string `yaml:"match_query_params" json:"match_query_params"`
 	// MatchHeaders for mock response
@@ -38,6 +41,14 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	if err != nil {
 		return err
 	}
+	log.WithFields(log.Fields{
+		"Target":     target.String(),
+		"This":       msd.String(),
+		"TargetPath": target.Path,
+		"ThisPath":   msd.Path,
+		"RegexPath":  rePath,
+		"Matched":    matched,
+	}).Debugf("matching path...")
 	if !matched {
 		return NewNotFoundError(fmt.Sprintf("path '%s' didn't match '%s'", msd.Path, target.Path))
 	}
@@ -190,10 +201,12 @@ func rePath(rawPath string) (rePath string) {
 	} else if strings.Contains(rePath, "{") && strings.Contains(rePath, "}") {
 		re := regexp.MustCompile(`{[\w\d-_]+}`)
 		rePath = re.ReplaceAllString(rawPath, targetPattern)
+	} else {
+		rePath = rePath + "$"
 	}
 	ndx := strings.LastIndex(rePath, targetPattern)
 	if ndx != -1 {
-		rePath = fmt.Sprintf("%s(.*)%s", rePath[0:ndx], rePath[ndx+len(targetPattern):])
+		rePath = fmt.Sprintf("%s(.+)%s", rePath[0:ndx], rePath[ndx+len(targetPattern):])
 	}
 	return
 }

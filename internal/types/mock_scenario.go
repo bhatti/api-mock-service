@@ -86,6 +86,8 @@ type MockScenario struct {
 	Path string `yaml:"path" json:"path"`
 	// Description of scenario
 	Description string `yaml:"description" json:"description"`
+	// Predicate for the request
+	Predicate string `yaml:"predicate" json:"predicate"`
 	// Request for the API
 	Request MockHTTPRequest `yaml:"request" json:"request"`
 	// Response for the API
@@ -106,6 +108,7 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 		Method:           ms.Method,
 		Name:             ms.Name,
 		Path:             rawPath,
+		Predicate:        ms.Predicate,
 		MatchQueryParams: ms.Request.MatchQueryParams,
 		MatchContentType: ms.Request.MatchContentType,
 		MatchContents:    ms.Request.MatchContents,

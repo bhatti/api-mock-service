@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"html/template"
 	"path/filepath"
@@ -17,6 +18,34 @@ import (
 
 // UnescapeHTML flag
 const UnescapeHTML = "UnescapeHTML"
+
+// MatchScenarioPredicate checks if predicate match
+func MatchScenarioPredicate(matched *types.MockScenarioKeyData, target *types.MockScenarioKeyData, requestCount uint64) bool {
+	if matched.Predicate == "" {
+		return true
+	}
+	// Find any params for query params and path variables
+	params := matched.MatchGroups(target.Path)
+	for k, v := range matched.MatchQueryParams {
+		params[k] = v
+	}
+	for k, v := range target.MatchQueryParams {
+		params[k] = v
+	}
+	params[types.RequestCount] = fmt.Sprintf("%d", requestCount)
+	out, err := ParseTemplate("", []byte(matched.Predicate), params)
+	log.WithFields(log.Fields{
+		"Path":          matched.Path,
+		"Name":          matched.Name,
+		"Method":        matched.Method,
+		"RequestCount":  requestCount,
+		"Timestamp":     matched.LastUsageTime,
+		"MatchedOutput": string(out),
+		"Error":         err,
+	}).Debugf("matching predicate...")
+
+	return err != nil || string(out) == "true"
+}
 
 // ParseTemplate parses GO template with dynamic parameters
 func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error) {
@@ -176,44 +205,16 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			return toInt(a)%toInt(b) == 0
 		},
 		"LTRequest": func(n interface{}) bool {
-			switch data.(type) {
-			case map[string]string:
-				params := data.(map[string]string)
-				count := params[types.RequestCount]
-				if count == "" {
-					return false
-				}
-				return toInt(count) < toInt(n)
-			case map[string]interface{}:
-				params := data.(map[string]interface{})
-				count := params[types.RequestCount]
-				if count == nil {
-					return false
-				}
-				return toInt(count) < toInt(n)
-			default:
-				return false
-			}
+			reqCount := parseRequestCount(data)
+			return reqCount >= 0 && reqCount < toInt(n)
+		},
+		"GERequest": func(n interface{}) bool {
+			reqCount := parseRequestCount(data)
+			return reqCount >= 0 && reqCount >= toInt(n)
 		},
 		"NthRequest": func(n interface{}) bool {
-			switch data.(type) {
-			case map[string]string:
-				params := data.(map[string]string)
-				count := params[types.RequestCount]
-				if count == "" {
-					return false
-				}
-				return toInt(count)%toInt(n) == 0
-			case map[string]interface{}:
-				params := data.(map[string]interface{})
-				count := params[types.RequestCount]
-				if count == nil {
-					return false
-				}
-				return toInt(count)%toInt(n) == 0
-			default:
-				return false
-			}
+			reqCount := parseRequestCount(data)
+			return reqCount >= 0 && reqCount%toInt(n) == 0
 		},
 		"JSONFileProperty": func(fileName string, name string) template.HTML {
 			return toJSON(fileProperty(dir, fileName+types.MockDataExt, name))
@@ -249,6 +250,27 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 }
 
 // PRIVATE FUNCTIONS
+
+func parseRequestCount(data interface{}) int {
+	switch data.(type) {
+	case map[string]string:
+		params := data.(map[string]string)
+		count := params[types.RequestCount]
+		if count == "" {
+			return -1
+		}
+		return toInt(count)
+	case map[string]interface{}:
+		params := data.(map[string]interface{})
+		count := params[types.RequestCount]
+		if count == nil {
+			return -1
+		}
+		return toInt(count)
+	default:
+		return -1
+	}
+}
 
 func toJSON(val interface{}) template.HTML {
 	str, err := json.Marshal(val)

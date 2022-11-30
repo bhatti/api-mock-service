@@ -127,6 +127,9 @@ func (api *APISpec) BuildMockScenario() (*types.MockScenario, error) {
 		Response:        res,
 		WaitBeforeReply: 0,
 	}
+	if res.StatusCode >= 300 {
+		spec.Predicate = "{{NthRequest 2}}"
+	}
 	spec.Name = api.ID + "-" + spec.Digest()
 	return spec, nil
 }

@@ -52,7 +52,7 @@ func Test_ShouldValidateWithoutPath(t *testing.T) {
 	keyData := &MockScenarioKeyData{}
 	keyData.Method = Post
 	require.Error(t, keyData.Equals(buildScenario().ToKeyData()))
-	keyData.Path = "/path1"
+	keyData.Path = "/path1/test1/abc"
 	require.Error(t, keyData.Equals(buildScenario().ToKeyData()))
 	keyData.Name = "scenario"
 	require.NoError(t, keyData.Equals(buildScenario().ToKeyData()))

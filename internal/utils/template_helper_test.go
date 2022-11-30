@@ -10,6 +10,56 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_ShouldParsePredicateFalse(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{false}}`)
+	// WHEN parsing template
+	out, err := ParseTemplate("", b, map[string]interface{}{})
+	// THEN it should not fail
+	require.NoError(t, err)
+	require.Equal(t, "false", string(out))
+}
+
+func Test_ShouldParsePredicateTrue(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{false}}`)
+	// WHEN parsing template
+	out, err := ParseTemplate("", b, map[string]interface{}{})
+	// THEN it should not fail
+	require.NoError(t, err)
+	require.Equal(t, "false", string(out))
+}
+
+func Test_ShouldParsePredicateMissing(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{GERequest 3}}`)
+	// WHEN parsing template
+	out, err := ParseTemplate("", b, map[string]interface{}{})
+	// THEN it should not fail
+	require.NoError(t, err)
+	require.Equal(t, "false", string(out))
+}
+
+func Test_ShouldParsePredicateMismatch(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{GERequest 3}}`)
+	// WHEN parsing template
+	out, err := ParseTemplate("", b, map[string]interface{}{types.RequestCount: 1})
+	// THEN it should not fail
+	require.NoError(t, err)
+	require.Equal(t, "false", string(out))
+}
+
+func Test_ShouldParsePredicateMatch(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{GERequest 3}}`)
+	// WHEN parsing template
+	out, err := ParseTemplate("", b, map[string]interface{}{types.RequestCount: 3})
+	// THEN it should not fail
+	require.NoError(t, err)
+	require.Equal(t, "true", string(out))
+}
+
 func Test_ShouldParseAdd(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{Add 3 5}}`)
@@ -368,6 +418,15 @@ func Test_ShouldParseRandSeededFileLine(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
+	keyData := &types.MockScenarioKeyData{}
+	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
+	keyData.Predicate = `{{NthRequest 3}}`
+	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
+	require.False(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 2))
+	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 3))
+}
+
 func Test_ShouldParseNthRequest(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{NthRequest 3}}`)
@@ -380,6 +439,28 @@ func Test_ShouldParseNthRequest(t *testing.T) {
 func Test_ShouldParseNthRequestWithData(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{NthRequest 3}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{types.RequestCount: 1})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseGERequestWithStringData(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{GERequest 3}}`)
+	// WHEN parsing without count
+	_, err := ParseTemplate("../../fixtures", b, map[string]string{})
+	// THEN it should succeed
+	require.NoError(t, err)
+	// WHEN parsing int
+	_, err = ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseGERequestWithData(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{GERequest 3}}`)
 	// WHEN parsing int
 	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{types.RequestCount: 1})
 	// THEN it should succeed
@@ -564,17 +645,17 @@ func Test_ShouldConvertToInt64(t *testing.T) {
 	require.Equal(t, int64(0), toInt64(nil))
 	require.Equal(t, int64(10), toInt64(int64(10)))
 	require.Equal(t, int64(10), toInt64(int32(10)))
-	require.Equal(t, int64(10), toInt64(int(10)))
+	require.Equal(t, int64(10), toInt64(10))
 	require.Equal(t, int64(10), toInt64(uint(10)))
 	require.Equal(t, int64(10), toInt64("10"))
 }
 
 func Test_ShouldConvertToInt(t *testing.T) {
-	require.Equal(t, int(0), toInt(nil))
-	require.Equal(t, int(10), toInt(int64(10)))
-	require.Equal(t, int(10), toInt(int32(10)))
-	require.Equal(t, int(10), toInt(int(10)))
-	require.Equal(t, int(10), toInt(uint(10)))
+	require.Equal(t, 0, toInt(nil))
+	require.Equal(t, 10, toInt(int64(10)))
+	require.Equal(t, 10, toInt(int32(10)))
+	require.Equal(t, 10, toInt(10))
+	require.Equal(t, 10, toInt(uint(10)))
 }
 
 func Test_ShouldConvertToFloat64(t *testing.T) {
@@ -585,7 +666,7 @@ func Test_ShouldConvertToFloat64(t *testing.T) {
 	require.Equal(t, float64(0), ToFloat64(nil))
 	require.Equal(t, float64(10), ToFloat64(float64(10)))
 	require.Equal(t, float64(10), ToFloat64(float32(10)))
-	require.Equal(t, float64(10), ToFloat64(int(10)))
+	require.Equal(t, float64(10), ToFloat64(10))
 	require.Equal(t, float64(10), ToFloat64(uint(10)))
 	require.Equal(t, float64(10), ToFloat64(int32(10)))
 	require.Equal(t, float64(10), ToFloat64(int64(10)))

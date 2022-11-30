@@ -53,6 +53,18 @@ func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
 }
 
+func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
+	keyData1 := buildScenario(types.Post, "test1", mockPath, 1).ToKeyData()
+	keyData2 := buildScenario(types.Post, "test2", mockPath, 2).ToKeyData()
+	require.True(t, utils.MatchScenarioPredicate(keyData1, keyData2, 0))
+	keyData1.MatchQueryParams = map[string]string{"a": `\d+`, "b": "abc"}
+	keyData2.MatchQueryParams = map[string]string{"a": `\d+`, "b": "abc"}
+	keyData1.Predicate = `{{NthRequest 3}}`
+	require.True(t, utils.MatchScenarioPredicate(keyData1, keyData2, 0))
+	require.False(t, utils.MatchScenarioPredicate(keyData1, keyData2, 2))
+	require.True(t, utils.MatchScenarioPredicate(keyData1, keyData2, 3))
+}
+
 func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
 	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})

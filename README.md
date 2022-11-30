@@ -12,6 +12,7 @@ API mock service for REST/HTTP based services with following goals:
 - Support test fixtures that can be uploaded to the mock service and can be used to generate mock responses.
 - Define a collection of helper methods to generate different kind of random data such as UDID, dates, URI, Regex, text and numeric data.
 - Ability to playback all test scenarios or a specific scenario and change API behavior dynamically with different input parameters.
+- Support multiple mock scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
 - Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
@@ -105,6 +106,7 @@ method: GET
 name: recorded-v1-customers-cus
 path: /v1/customers/cus_**/cash_balance
 description: recorded at 2022-10-29 04:26:17.24776 +0000 UTC
+predicate: {{NthRequest 2}}
 request:
     match_query_params: {}
     match_headers: {}
@@ -163,6 +165,10 @@ wait_before_reply: 0s
 ```
 
 Above example defines a mock scenario for testing /v1/customers/cus_**/cash_balance path. A test scenario includes:
+### Predicate
+
+The predicate allows matching based on any condition based on parameters or request count.
+
 ### Request Matching Parameters:
 
 The matching request parameters will be used to select the mock scenario to execute and you can use regular expressions to validate:
@@ -220,6 +226,7 @@ You can customize the recorded scenario, e.g. you can add path variables to abov
 method: GET
 name: stripe-cash-balance
 path: /v1/customers/:customer/cash_balance
+predicate: {{NthRequest 2}}
 request:
   match_headers:
     Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
@@ -299,6 +306,7 @@ As you can see, the values of customer, page and pageSize are dynamically update
 method: GET
 name: stripe-customer-failure
 path: /v1/customers/:customer/cash_balance
+predicate: {{NthRequest 2}}
 request:
     match_headers:
         Authorization:
@@ -342,6 +350,7 @@ method: GET
 name: get_devices
 path: /devices
 description: ""
+predicate: ""
 request:
     match_content_type: "application/json; charset=utf-8"
 response:
@@ -525,6 +534,7 @@ method: GET
 name: test-image
 path: /images/mock_image
 description: ""
+predicate: ""
 request:
 response:
     headers:
@@ -708,6 +718,7 @@ It will generate a mock scenarios for each API based on mime-type, status-code, 
 name: UpdateAuthTokenPromotion-xx
 path: /v1/AuthTokens/Promote
 description: Promote the secondary Auth Token to primary. After promoting the new token, all requests to Twilio using your old primary Auth Token will result in an error.
+predicate: ""
 request:
     match_query_params: {}
     match_headers: {}
