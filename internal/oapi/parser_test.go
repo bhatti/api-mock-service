@@ -17,6 +17,7 @@ func Test_ShouldParseValidJobsOpenAPI(t *testing.T) {
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario()
 		require.NoError(t, err)
+		require.Equal(t, ".+", scenario.Request.MatchHeaders["x-api-key"])
 		_, err = yaml.Marshal(scenario)
 		require.NoError(t, err)
 	}

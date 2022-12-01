@@ -180,6 +180,21 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"RandEmail": func() string {
 			return RandEmail()
 		},
+		"RandDict": func() template.HTML {
+			dict := make(map[string]interface{})
+			for i := 0; i < RandNumMinMax(3, 6); i += 2 {
+				key := RandName()
+				if i == 0 {
+					dict[key] = RandStringMinMax(5, 10)
+				} else if i == 2 {
+					dict[key] = RandBool()
+				} else {
+					dict[key] = RandNumMinMax(100, 5000)
+				}
+			}
+			j, _ := json.Marshal(dict)
+			return template.HTML(j)
+		},
 		"Int": func(num interface{}) int64 {
 			return toInt64(num)
 		},

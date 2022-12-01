@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"gopkg.in/yaml.v3"
 	"os"
 	"testing"
@@ -425,6 +426,19 @@ func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
 	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
 	require.False(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 2))
 	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 3))
+}
+
+func Test_ShouldParseRandDict(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandDict}}`)
+	// WHEN parsing int
+	out, err := ParseTemplate("", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+	dict := make(map[string]interface{})
+	err = json.Unmarshal(out, &dict)
+	require.NoError(t, err)
+	require.True(t, len(dict) >= 2)
 }
 
 func Test_ShouldParseNthRequest(t *testing.T) {

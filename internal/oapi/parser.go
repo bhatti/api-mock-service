@@ -40,5 +40,21 @@ func Parse(ctx context.Context, data []byte) (specs []*APISpec, err error) {
 			specs = append(specs, spec)
 		}
 	}
+	for _, ref := range doc.Components.SecuritySchemes {
+		for _, spec := range specs {
+			prop := Property{
+				Name:        ref.Value.Name,
+				Description: ref.Value.Description,
+				Type:        ref.Value.Type,
+				In:          ref.Value.In,
+				Regex:       ref.Value.BearerFormat,
+			}
+			if ref.Value.In == "header" {
+				spec.Request.Headers = append(spec.Request.Headers, prop)
+			} else if ref.Value.In == "query" {
+				spec.Request.QueryParams = append(spec.Request.Headers, prop)
+			}
+		}
+	}
 	return
 }

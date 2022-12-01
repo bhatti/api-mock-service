@@ -2,6 +2,7 @@ package oapi
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strings"
 
 	"github.com/bhatti/api-mock-service/internal/utils"
@@ -51,7 +52,21 @@ func (prop *Property) Value() interface{} {
 		}
 	} else if len(prop.Children) > 0 || prop.Type == "array" {
 		return prop.arrayValue()
+	} else if prop.In == "header" {
+		return map[string]string{
+			prop.Name: ".+",
+		}
+	} else if prop.In == "body" && prop.Type == "object" {
+		return map[string]string{
+			prop.Name: "{{RandDict}}",
+		}
 	} else {
+		log.WithFields(log.Fields{
+			"component": "Property",
+			"Name":      prop.Name,
+			"In":        prop.In,
+			"Children":  len(prop.Children),
+			"Type":      prop.Type}).Debugf("unknown type")
 		return map[string]string{
 			prop.Name: fmt.Sprintf("{{RandStringArrayMinMax %d %d}}", int(prop.Max), int(prop.Max)),
 		}

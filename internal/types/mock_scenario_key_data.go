@@ -76,11 +76,11 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	}
 
 	for k, msdHeaderVal := range msd.MatchHeaders {
-		targetHeaderVal := target.MatchHeaders[k]
+		targetHeaderVal := getDictValue(k, target.MatchHeaders)
 		if targetHeaderVal != msdHeaderVal &&
 			!reMatch(msdHeaderVal, targetHeaderVal) {
-			return NewValidationError(fmt.Sprintf("%s request header didn't match [%v == %v]",
-				k, targetHeaderVal, msdHeaderVal))
+			return NewValidationError(fmt.Sprintf("%s request header didn't match [%v == %v], all headers %v",
+				k, targetHeaderVal, msdHeaderVal, target.MatchHeaders))
 		}
 	}
 
@@ -221,4 +221,14 @@ func rePath(rawPath string) (rePath string) {
 		rePath += `$`
 	}
 	return
+}
+
+func getDictValue(name string, dict map[string]string) string {
+	name = strings.ToUpper(name)
+	for k, v := range dict {
+		if strings.ToUpper(k) == name {
+			return v
+		}
+	}
+	return ""
 }

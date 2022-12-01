@@ -771,6 +771,14 @@
           "reason"
         ]
       }
+    },
+    "securitySchemes": {
+      "custom.api.httpApiKeyAuth": {
+        "type": "apiKey",
+        "description": "API key authentication via the 'x-api-key' header",
+        "name": "x-api-key",
+        "in": "header"
+      }
     }
   }
 }

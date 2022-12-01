@@ -589,6 +589,7 @@ Following functions can be used to generate numeric data within a range or with 
 - RandRegex
 - RandEmail
 - RandPhone
+- RandDict
 
 ### Boolean
 
