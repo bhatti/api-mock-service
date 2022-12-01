@@ -191,12 +191,13 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	matched[0].LastUsageTime = time.Now().Unix()
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)
 
+	reqCount := sumRequestCount(matched)
 	log.WithFields(log.Fields{
 		"Path":              matched[0].Path,
 		"Name":              matched[0].Name,
 		"Method":            matched[0].Method,
 		"RequestCount":      matched[0].RequestCount,
-		"TotalRequestCount": sumRequestCount(matched),
+		"TotalRequestCount": reqCount,
 		"Timestamp":         matched[0].LastUsageTime,
 		"Matched":           len(matched),
 	}).Infof("API mock scenario found...")
@@ -213,13 +214,13 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	params := matched[0].MatchGroups(target.Path)
 	addQueryParams(matched[0].MatchQueryParams, params)
 	addQueryParams(target.MatchQueryParams, params)
-	params[types.RequestCount] = fmt.Sprintf("%d", sumRequestCount(matched))
+	params[types.RequestCount] = fmt.Sprintf("%d", reqCount)
 
 	scenario, err = unmarshalMockScenario(b, dir, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load '%s' due to %w", fileName, err)
 	}
-	scenario.RequestCount = matched[0].RequestCount
+	scenario.RequestCount = reqCount
 	return
 }
 

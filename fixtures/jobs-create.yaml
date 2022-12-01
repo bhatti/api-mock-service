@@ -1,6 +1,6 @@
 method: POST
-name: create
-path: /v2/create
+name: create-job
+path: /v2/jobs
 description: ""
 request:
     match_headers:
@@ -23,7 +23,11 @@ response:
     {{else}}
      {
         "Udid": "{{Udid}}",
-        "Status": "{{EnumString `Running Pending Completed`}}",
+    {{if GERequest 5 }}
+        "Status": "{{EnumString `Failed Completed`}}",
+    {{else}}
+        "Status": "{{EnumString `Running Pending`}}",
+    {{end}}
         "Records": {{RandNumMinMax 0 0}},
         "Tags": {{RandStringArrayMinMax 2 3}},
         "Completed": {{RandBool}}
