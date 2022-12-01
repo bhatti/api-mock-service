@@ -13,7 +13,7 @@ func Test_ShouldParseValidJobsOpenAPI(t *testing.T) {
 	require.NoError(t, err)
 	specs, err := Parse(context.Background(), data)
 	require.NoError(t, err)
-	require.Equal(t, 25, len(specs))
+	require.Equal(t, 27, len(specs))
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario()
 		require.NoError(t, err)

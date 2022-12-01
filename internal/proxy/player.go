@@ -69,6 +69,7 @@ func addMockResponse(
 		}
 	}
 	respHeader.Add(types.MockScenarioName, matchedScenario.Name)
+	respHeader.Add(types.MockScenarioPath, matchedScenario.Path)
 	respHeader.Add(types.MockRequestCount, fmt.Sprintf("%d", matchedScenario.RequestCount))
 	// Override wait time from request header
 	if reqHeader.Get(types.MockWaitBeforeReply) != "" {

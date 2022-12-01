@@ -63,13 +63,27 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	player := NewPlayer(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, scenarioRepository.Save(buildScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books", i)))
+		require.NoError(t, scenarioRepository.Save(buildScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books/:id", i)))
 	}
 
-	u, err := url.Parse("https://books.com/api/scifi/books/13?a=123&b=abc")
+	// WHEN matching partial url without id
+	u, err := url.Parse("https://books.com/api/scifi/books?a=123&b=abc")
 	require.NoError(t, err)
 	// WHEN looking up todos by POST with different query param
 	ctx := web.NewStubContext(&http.Request{
+		Method: "POST",
+		URL:    u,
+		Header: make(http.Header),
+	})
+	err = player.Handle(ctx)
+	// THEN it should not find it
+	require.Error(t, err)
+
+	// WHEN matching complete url with id
+	u, err = url.Parse("https://books.com/api/scifi/books/13?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by POST with different query param
+	ctx = web.NewStubContext(&http.Request{
 		Method: "POST",
 		URL:    u,
 		Header: make(http.Header),

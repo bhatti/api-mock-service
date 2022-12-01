@@ -433,6 +433,89 @@
           }
         }
       }
+    },
+    "/v1/jobs/{jobId}/state": {
+      "post": {
+        "description": "Set default state of job",
+        "operationId": "setDefaultState",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Unique identifier of job",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier of job"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SetDefaultState 200 response"
+          },
+          "400": {
+            "description": "ValidationException 400 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/jobs/{jobId}/state/{state}": {
+      "post": {
+        "description": "Set state of job",
+        "operationId": "setState",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "Unique identifier of job",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier of job"
+            },
+            "required": true
+          },
+          {
+            "name": "state",
+            "in": "path",
+            "description": "State of job",
+            "schema": {
+              "type": "string",
+              "description": "State of job"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SetState 200 response"
+          },
+          "500": {
+            "description": "InternalServerException 500 response",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalServerExceptionResponseContent"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

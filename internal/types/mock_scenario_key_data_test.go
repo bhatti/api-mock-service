@@ -27,6 +27,7 @@ func Test_ShouldNotValidateEmptyMockScenarioKeyData(t *testing.T) {
 	// THEN it should fail
 	require.Error(t, keyData.Validate())
 	keyData.Method = Get
+	require.Error(t, keyData.Validate())
 	keyData.Path = "/path1//\\\\//test1/2///"
 	require.Error(t, keyData.Validate())
 	keyData.Name = "test1"

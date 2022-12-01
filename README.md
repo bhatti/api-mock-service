@@ -220,6 +220,16 @@ Which will return captured response such as:
 Though, you can customize your template with dynamic properties or conditional logic but you can also send HTTP headers 
 for `X-Mock-Response-Status` to override HTTP status to return or `X-Mock-Wait-Before-Reply` to add artificial latency using duration syntax. 
 
+
+### Debug Headers from Playback
+The playback request will return mock-headers to indicate the selected mock scenario, path and request count, e.g.
+
+```
+X-Mock-Path: /v1/jobs/{jobId}/state
+X-Mock-Request-Count: 13
+X-Mock-Scenario: setDefaultState-bfb86eb288c9abf2988822938ef6d4aa3bd654a15e77158b89f17b9319d6f4e4
+```
+
 ## Upload Mock API Scenario
 You can customize the recorded scenario, e.g. you can add path variables to above API as follows:
 ```yaml

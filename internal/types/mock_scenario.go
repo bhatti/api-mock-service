@@ -21,6 +21,9 @@ const MockURL = "X-Mock-Url"
 // MockScenarioName header
 const MockScenarioName = "X-Mock-Scenario"
 
+// MockScenarioPath header
+const MockScenarioPath = "X-Mock-Path"
+
 // ContentTypeHeader header
 const ContentTypeHeader = "Content-Type"
 

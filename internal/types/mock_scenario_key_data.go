@@ -36,15 +36,16 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	if msd.Method != target.Method {
 		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", msd.Method, target.Method))
 	}
+	targetPath := filterURLQueryParams(target.Path)
 	rePath := rePath(msd.Path)
-	matched, err := regexp.Match(rePath, []byte(target.Path))
+	matched, err := regexp.Match(rePath, []byte(targetPath))
 	if err != nil {
 		return err
 	}
 	log.WithFields(log.Fields{
 		"Target":     target.String(),
 		"This":       msd.String(),
-		"TargetPath": target.Path,
+		"TargetPath": targetPath,
 		"ThisPath":   msd.Path,
 		"RegexPath":  rePath,
 		"Matched":    matched,
@@ -192,7 +193,17 @@ func (msd *MockScenarioKeyData) PathPrefix(max int) string {
 	return buf.String()
 }
 
+func filterURLQueryParams(rawPath string) string {
+	ndx := strings.Index(rawPath, "?")
+	if ndx != -1 {
+		return rawPath[0:ndx]
+	}
+	return rawPath
+}
+
 func rePath(rawPath string) (rePath string) {
+	rawPath = filterURLQueryParams(rawPath)
+
 	targetPattern := `([^/]*)`
 	rePath = rawPath
 	if strings.Contains(rePath, ":") {
@@ -201,12 +212,13 @@ func rePath(rawPath string) (rePath string) {
 	} else if strings.Contains(rePath, "{") && strings.Contains(rePath, "}") {
 		re := regexp.MustCompile(`{[\w\d-_]+}`)
 		rePath = re.ReplaceAllString(rawPath, targetPattern)
-	} else {
-		rePath = rePath + "$"
 	}
 	ndx := strings.LastIndex(rePath, targetPattern)
 	if ndx != -1 {
 		rePath = fmt.Sprintf("%s(.+)%s", rePath[0:ndx], rePath[ndx+len(targetPattern):])
+	}
+	if len(rePath) > 0 {
+		rePath += `$`
 	}
 	return
 }
