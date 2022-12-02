@@ -670,10 +670,8 @@
       },
       "GetJobByParametersResponseContent": {
         "type": "array",
-        "properties": {
-          "jobs": {
-            "$ref": "#/components/schemas/JobDetail"
-          }
+        "items": {
+          "$ref": "#/components/schemas/JobDetail"
         }
       },
       "GetJobByIdResponseContent": {

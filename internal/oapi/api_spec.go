@@ -6,6 +6,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/getkin/kin-openapi/openapi3"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 )
@@ -202,6 +203,17 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
 		}
 	}
+	if property.In == "body" {
+		log.WithFields(log.Fields{
+			"component": "Property",
+			"Name":      property.Name,
+			"In":        property.In,
+			"Children":  len(property.Children),
+			"Type":      property.Type,
+			"Value":     property.Value(),
+		}).Debugf("parsing property")
+	}
+
 	return property
 }
 

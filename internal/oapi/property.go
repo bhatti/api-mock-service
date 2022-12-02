@@ -150,31 +150,42 @@ func (prop *Property) arrayValue() interface{} {
 		}
 	}
 
-	// if property has name
-	if prop.Name == "" {
+	// if property has name or is object (e.g. jobs openapi)
+	if prop.Name == "" || prop.Type == "object" {
 		if prop.Type == "array" && prop.SubType != "object" && prop.SubType != "" {
 			return childArr
 		}
+
 		res := make(map[string]interface{})
 		for _, child := range childArr {
 			switch child.(type) {
 			case map[string]string:
-				for k, v := range child.(map[string]string) {
+				subProperty := child.(map[string]string)
+				for k, v := range subProperty {
 					res[k] = v
 				}
 			case map[string]interface{}:
-				for k, v := range child.(map[string]interface{}) {
+				subProperty := child.(map[string]interface{})
+				for k, v := range subProperty {
 					res[k] = v
 				}
 			}
 		}
 
 		if prop.Type == "array" {
-			arr := make([]interface{}, utils.RandNumMinMax(5, 20))
+			arr := make([]interface{}, utils.RandNumMinMax(5, 10))
 			for i := 0; i < len(arr); i++ {
 				arr[i] = res
 			}
+			// see jobs-openapi for examples
+			if prop.Name != "" {
+				return map[string]interface{}{prop.Name: arr}
+			}
 			return arr
+		}
+		// see jobs-openapi for examples
+		if prop.Name != "" {
+			return map[string]interface{}{prop.Name: res}
 		}
 		return res
 	}

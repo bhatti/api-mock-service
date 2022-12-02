@@ -1,6 +1,8 @@
 package oapi
 
-import "github.com/bhatti/api-mock-service/internal/types"
+import (
+	"github.com/bhatti/api-mock-service/internal/types"
+)
 
 // Response Body
 type Response struct {
