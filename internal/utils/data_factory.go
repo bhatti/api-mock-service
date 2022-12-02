@@ -19,6 +19,9 @@ func RandNumMinMax(min, max int) int {
 	if max == 0 {
 		max = 100000
 	}
+	if min == max {
+		return min
+	}
 	return rand.Intn(max-min) + min
 }
 

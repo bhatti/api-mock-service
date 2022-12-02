@@ -703,6 +703,20 @@
           "name": {
             "type": "string"
           },
+          "add": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "maxItems": 1,
+          },
+          "remove": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "maxItems": 1,
+          },
           "attributeMap": {
             "$ref": "#/components/schemas/AttributeMap"
           },

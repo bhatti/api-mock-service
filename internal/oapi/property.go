@@ -68,7 +68,7 @@ func (prop *Property) Value() interface{} {
 			"Children":  len(prop.Children),
 			"Type":      prop.Type}).Debugf("unknown type")
 		return map[string]string{
-			prop.Name: fmt.Sprintf("{{RandStringArrayMinMax %d %d}}", int(prop.Max), int(prop.Max)),
+			prop.Name: fmt.Sprintf("{{RandStringArrayMinMax %d %d}}", int(prop.Min), int(prop.Max)),
 		}
 	}
 }
@@ -130,7 +130,7 @@ func (prop *Property) stringValue() string {
 	} else if prop.Regex != "" {
 		return fmt.Sprintf("{{RandRegex `%s`}}", prop.Regex)
 	} else {
-		return fmt.Sprintf("{{RandStringMinMax %d %d}}", int(prop.Max), int(prop.Max))
+		return fmt.Sprintf("{{RandStringMinMax %d %d}}", int(prop.Min), int(prop.Max))
 	}
 }
 
@@ -149,13 +149,28 @@ func (prop *Property) arrayValue() interface{} {
 			childArr = append(childArr, val)
 		}
 	}
+	if prop.Type == "array" && prop.SubType != "object" && prop.SubType != "" {
+		if len(childArr) > 0 {
+			return childArr
+		}
+		childArr = prop.buildValueArray()
+		for i := 0; i < len(childArr); i++ {
+			if prop.SubType == "number" || prop.SubType == "integer" {
+				childArr[i] = "{{RandNumMinMax 0 0}}"
+			} else if prop.SubType == "boolean" {
+				childArr[i] = "{{RandBool}}"
+			} else if prop.SubType == "string" {
+				childArr[i] = "{{RandStringMinMax 5 10}}"
+			}
+		}
+		if prop.Name != "" {
+			return map[string]interface{}{prop.Name: childArr}
+		}
+		return childArr
+	}
 
 	// if property has name or is object (e.g. jobs openapi)
 	if prop.Name == "" || prop.Type == "object" {
-		if prop.Type == "array" && prop.SubType != "object" && prop.SubType != "" {
-			return childArr
-		}
-
 		res := make(map[string]interface{})
 		for _, child := range childArr {
 			switch child.(type) {
@@ -173,7 +188,7 @@ func (prop *Property) arrayValue() interface{} {
 		}
 
 		if prop.Type == "array" {
-			arr := make([]interface{}, utils.RandNumMinMax(5, 10))
+			arr := prop.buildValueArray()
 			for i := 0; i < len(arr); i++ {
 				arr[i] = res
 			}
@@ -192,6 +207,16 @@ func (prop *Property) arrayValue() interface{} {
 	return map[string]interface{}{
 		prop.Name: childArr,
 	}
+}
+
+func (prop *Property) buildValueArray() []interface{} {
+	if prop.Max == 0 {
+		prop.Max = prop.Min + float64(utils.RandNumMinMax(1, 5))
+	}
+	if prop.Min == 0 {
+		prop.Min = prop.Max
+	}
+	return make([]interface{}, utils.RandNumMinMax(int(prop.Min), int(prop.Max)))
 }
 
 func propsToMap(props []Property) (res map[string]string) {

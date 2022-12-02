@@ -7,8 +7,8 @@ import (
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
+	"regexp"
 	"strconv"
-	"strings"
 )
 
 // APISpec structure
@@ -143,11 +143,12 @@ func marshalPropertyValue(params []Property) (out []byte, err error) {
 	} else if len(arr) > 0 {
 		out, err = json.Marshal(arr[0])
 	}
-	out = []byte(strings.ReplaceAll(string(out), `"{{RandNumMinMax 0 0}}"`, "{{RandNumMinMax 0 0}}"))
-	out = []byte(strings.ReplaceAll(string(out), `"{{RandStringArrayMinMax 0 0}}"`, "{{RandStringArrayMinMax 0 0}}"))
-	out = []byte(strings.ReplaceAll(string(out), `"{{RandDict}}"`, "{{RandDict}}"))
-	out = []byte(strings.ReplaceAll(string(out), `"{{RandBool}}"`, "{{RandBool}}"))
-	return
+	return stripQuotes(out), nil
+}
+
+func stripQuotes(b []byte) []byte {
+	re := regexp.MustCompile(`"{{(RandNumMinMax \d \d|RandStringArrayMinMax \d \d|RandDict|RandBool)}}"`)
+	return []byte(re.ReplaceAllString(string(b), `{{$1}}`))
 }
 
 func propertyValue(params []Property) (res []interface{}) {
