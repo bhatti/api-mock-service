@@ -8,6 +8,7 @@ import (
 )
 
 func Test_ShouldGetRandomMinMax(t *testing.T) {
+	require.True(t, RandNumMinMax(1, 0) >= 1)
 	require.True(t, RandNumMinMax(1, 10) >= 1)
 }
 
