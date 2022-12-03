@@ -160,7 +160,7 @@ func (prop *Property) arrayValue() interface{} {
 			} else if prop.SubType == "boolean" {
 				childArr[i] = "{{RandBool}}"
 			} else if prop.SubType == "string" {
-				childArr[i] = "{{RandStringMinMax 5 10}}"
+				childArr[i] = "{{RandStringMinMax 0 0}}"
 			}
 		}
 		if prop.Name != "" {
