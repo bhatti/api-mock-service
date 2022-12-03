@@ -759,7 +759,7 @@ func SeededPhrase(seed int64) string {
 		"yard", "year", "yellow", "you", "young", "youth",
 		"zebra", "zero", "zone", "zoo",
 	}
-	return randomArrayElement(words, seed) + "_" + randomArrayElement(words, seed)
+	return randomArrayElement(words, seed) + "_" + randomArrayElement(words, seed) + "_" + randomArrayElement(words, seed)
 }
 
 // RandName name generator
