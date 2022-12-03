@@ -851,7 +851,7 @@ func RandStringArrayMinMax(min int, max int) []string {
 	}
 	arr := make([]string, RandNumMinMax(min, max))
 	for i := 0; i < len(arr); i++ {
-		arr[i] = RandStringMinMax(min, max)
+		arr[i] = RandPhrase()
 	}
 	return arr
 }
