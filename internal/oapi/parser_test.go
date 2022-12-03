@@ -8,6 +8,21 @@ import (
 	"testing"
 )
 
+func Test_ShouldParseValidTwitterOpenAPI(t *testing.T) {
+	data, err := os.ReadFile("../../fixtures/oapi/twitter.yaml")
+	require.NoError(t, err)
+	specs, err := Parse(context.Background(), data)
+	require.NoError(t, err)
+	require.Equal(t, 112, len(specs))
+	for _, spec := range specs {
+		scenario, err := spec.BuildMockScenario()
+		require.NoError(t, err)
+		out, err := yaml.Marshal(scenario)
+		require.NoError(t, err)
+		require.True(t, len(out) > 0)
+	}
+}
+
 func Test_ShouldParseValidJobsOpenAPI(t *testing.T) {
 	data, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)

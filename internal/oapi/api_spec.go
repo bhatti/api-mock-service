@@ -172,9 +172,6 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 		Children:     make([]Property, 0),
 		matchRequest: matchRequest,
 	}
-	if schema.Items != nil {
-		property.SubType = schema.Items.Value.Type
-	}
 	if property.Type == "integer" || property.Type == "float" {
 		property.Min = utils.ToFloat64(schema.Min)
 		property.Max = utils.ToFloat64(schema.Max)
@@ -192,10 +189,14 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 		}
 	}
 	if schema.Items != nil && schema.Items.Value != nil {
-		for name, prop := range schema.Items.Value.Properties {
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+		property.SubType = schema.Items.Value.Type
+		for name, next := range schema.Items.Value.Properties {
+			childProperty := schemaToProperty(name, matchRequest, in, next.Value)
+			property.Children = append(property.Children, childProperty)
 		}
+		addAllAnySchemaToProperty(schema.Items.Value, &property, matchRequest, in)
 	}
+	addAllAnySchemaToProperty(schema, &property, matchRequest, in)
 	for name, prop := range schema.Properties {
 		property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
 	}
@@ -216,6 +217,28 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 	}
 
 	return property
+}
+
+func addAllAnySchemaToProperty(schema *openapi3.Schema, property *Property, matchRequest bool, in string) {
+	for _, next := range schema.AllOf {
+		property.SubType = next.Value.Type
+		for name, prop := range next.Value.Properties {
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+		}
+	}
+	// TODO add support for any-of/one-of at the property
+	for _, next := range schema.AllOf {
+		property.SubType = next.Value.Type
+		for name, prop := range next.Value.Properties {
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+		}
+	}
+	for _, next := range schema.AllOf {
+		property.SubType = next.Value.Type
+		for name, prop := range next.Value.Properties {
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+		}
+	}
 }
 
 func extractHeaders(headers openapi3.Headers) (res []Property) {

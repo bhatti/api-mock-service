@@ -170,7 +170,7 @@ func (prop *Property) arrayValue() interface{} {
 	}
 
 	// if property has name or is object (e.g. jobs openapi)
-	if prop.Name == "" || prop.Type == "object" {
+	if prop.Name == "" || prop.Type == "object" || (prop.Type == "array" && len(childArr) > 1) {
 		res := make(map[string]interface{})
 		for _, child := range childArr {
 			switch child.(type) {
@@ -203,6 +203,13 @@ func (prop *Property) arrayValue() interface{} {
 			return map[string]interface{}{prop.Name: res}
 		}
 		return res
+	} else {
+		log.WithFields(log.Fields{
+			"name":    prop.Name,
+			"type":    prop.Type,
+			"subtype": prop.SubType,
+			"Res":     len(childArr),
+		}).Debug("default else for parsing property")
 	}
 	return map[string]interface{}{
 		prop.Name: childArr,
