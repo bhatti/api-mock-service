@@ -93,9 +93,10 @@ type MockHTTPResponse struct {
 	Assertions []string `yaml:"assertions" json:"assertions"`
 }
 
+// ContentType() find content-type
 func (r MockHTTPResponse) ContentType() string {
 	for k, v := range r.Headers {
-		if k == ContentTypeHeader {
+		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
 			return v[0]
 		}
 	}

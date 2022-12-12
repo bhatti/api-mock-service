@@ -317,14 +317,13 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interfa
 			return map[string]interface{}{prop.Name: res}
 		}
 		return res
-	} else {
-		log.WithFields(log.Fields{
-			"name":    prop.Name,
-			"type":    prop.Type,
-			"subtype": prop.SubType,
-			"Res":     len(childArr),
-		}).Debug("default else for parsing property")
 	}
+	log.WithFields(log.Fields{
+		"name":    prop.Name,
+		"type":    prop.Type,
+		"subtype": prop.SubType,
+		"Res":     len(childArr),
+	}).Debug("default else for parsing property")
 	return map[string]interface{}{
 		prop.Name: childArr,
 	}

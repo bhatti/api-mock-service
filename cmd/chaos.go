@@ -52,11 +52,11 @@ var chaosCmd = &cobra.Command{
 		chaosReq := types.NewChaosRequest(baseURL, executionTimes)
 		chaosReq.Verbose = verbose
 		executor := chaos.NewExecutor(scenarioRepo, web.NewHTTPClient(serverConfig))
-		errs, succeeded, failed := executor.ExecuteByGroup(context.Background(), group, dataTemplate, chaosReq)
+		res := executor.ExecuteByGroup(context.Background(), group, dataTemplate, chaosReq)
 		log.WithFields(log.Fields{
-			"Errors":    errs,
-			"Succeeded": succeeded,
-			"Failed":    failed,
+			"Errors":    res.Errors,
+			"Succeeded": res.Succeeded,
+			"Failed":    res.Failed,
 		}).Infof("completed all executions")
 	},
 }

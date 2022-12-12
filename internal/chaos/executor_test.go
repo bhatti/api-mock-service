@@ -30,8 +30,8 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should execute saved scenario
-	errs, _, _ := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
-	require.Equal(t, 0, len(errs), fmt.Sprintf("%v", errs))
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
 }
 
 func Test_ShouldExecutePutPosts(t *testing.T) {
@@ -50,11 +50,11 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should execute saved scenario
-	errs, _, _ := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
-	for _, err := range errs {
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
 		t.Log(err)
 	}
-	require.Equal(t, 0, len(errs))
+	require.Equal(t, 0, len(res.Errors))
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
@@ -77,12 +77,12 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should not execute saved scenario
-	errs, _, _ := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
-	for _, err := range errs {
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
 		t.Log(err)
 	}
-	require.Equal(t, 1, len(errs))
-	require.Contains(t, errs[0].Error(), `failed to assert '{{VariableContains "headers.Content-Type"`)
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors[0].Error(), `failed to assert '{{VariableContains "headers.Content-Type"`)
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
@@ -106,13 +106,13 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 
 	// WHEN executing scenario
-	errs, _, _ := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
 	// THEN it should not execute saved scenario
-	for _, err := range errs {
+	for _, err := range res.Errors {
 		t.Log(err)
 	}
-	require.Equal(t, 1, len(errs))
-	require.Contains(t, errs[0].Error(), `didn't match required header Content-Type with regex application/xjson`)
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors[0].Error(), `didn't match required header Content-Type with regex application/xjson`)
 }
 
 func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
@@ -135,12 +135,12 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should not execute saved scenario
-	errs, _, _ := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
-	for _, err := range errs {
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
 		t.Log(err)
 	}
-	require.Equal(t, 1, len(errs))
-	require.Contains(t, errs[0].Error(), `failed to find required header Abc-Content-Type`)
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors[0].Error(), `failed to find required header Abc-Content-Type`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
@@ -170,12 +170,12 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	// WHEN executing scenario
 	executor := NewExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	errs, _, _ := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
-	for _, err := range errs {
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
 		t.Log(err)
 	}
-	require.Equal(t, 1, len(errs))
-	require.Contains(t, errs[0].Error(), `failed to assert '{{VariableContains "contents.id" "1"}}`)
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors[0].Error(), `failed to assert '{{VariableContains "contents.id" "1"}}`)
 }
 
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
@@ -207,8 +207,8 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	// AND executor
 	executor := NewExecutor(repo, client)
 	// WHEN executing scenario
-	errs, _, _ := executor.ExecuteByGroup(context.Background(), "v1_jobs", dataTemplate, chaosReq)
-	for _, err := range errs {
+	res := executor.ExecuteByGroup(context.Background(), "v1_jobs", dataTemplate, chaosReq)
+	for _, err := range res.Errors {
 		t.Log(err)
 		// THEN it should fail to execute
 		require.Contains(t, err.Error(), "key 'jobStatus' - value 'BAD' didn't match regex")
@@ -248,16 +248,16 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 
 		// WHEN executing scenario
-		errs, _, _ := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, chaosReq)
-		for _, err := range errs {
+		res := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, chaosReq)
+		for _, err := range res.Errors {
 			t.Log(err)
 		}
 		// THEN it should succeed
-		require.Equal(t, 0, len(errs), fmt.Sprintf("%v", errs))
+		require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
 	}
 }
 
-func buildJobsTestClient(jobId string, jobStatus string) (web.HTTPClient, map[string]any) {
+func buildJobsTestClient(jobID string, jobStatus string) (web.HTTPClient, map[string]any) {
 	client := web.NewStubHTTPClient()
 	job := `
 {
@@ -269,7 +269,7 @@ func buildJobsTestClient(jobId string, jobStatus string) (web.HTTPClient, map[st
     "attr2": "hello"
   },
   "completed": false,
-  "jobId": "` + jobId + `",
+  "jobId": "` + jobID + `",
   "jobStatus": "` + jobStatus + `",
   "name": "test-job",
   "records": 5000,
@@ -281,19 +281,19 @@ func buildJobsTestClient(jobId string, jobStatus string) (web.HTTPClient, map[st
 `
 	jobStatusReply := `
 {
-  "jobId": "` + jobId + `",
+  "jobId": "` + jobID + `",
   "jobStatus": "` + jobStatus + `"
 }
 `
-	client.AddMapping("GET", baseURL+"/v1/jobs/"+jobId, web.NewStubHTTPResponse(200, job))
+	client.AddMapping("GET", baseURL+"/v1/jobs/"+jobID, web.NewStubHTTPResponse(200, job))
 	client.AddMapping("GET", baseURL+"/v1/jobs", web.NewStubHTTPResponse(200, `[`+job+`]`))
 	client.AddMapping("POST", baseURL+"/v1/jobs", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobId+"/cancel", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobId+"/pause", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobId+"/resume", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobId+"/state", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobId+"/state/"+jobStatus, web.NewStubHTTPResponse(200, jobStatusReply))
-	return client, map[string]any{"jobId": jobId, "state": jobStatus}
+	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/cancel", web.NewStubHTTPResponse(200, jobStatusReply))
+	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/pause", web.NewStubHTTPResponse(200, jobStatusReply))
+	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/resume", web.NewStubHTTPResponse(200, jobStatusReply))
+	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/state", web.NewStubHTTPResponse(200, jobStatusReply))
+	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/state/"+jobStatus, web.NewStubHTTPResponse(200, jobStatusReply))
+	return client, map[string]any{"jobId": jobID, "state": jobStatus}
 }
 
 func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {

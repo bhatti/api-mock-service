@@ -73,16 +73,15 @@ func word(wordLen int) string {
 		}
 		n++
 	}
-	return ""
 }
 
-// Generate a word in a specfied range of letters.
+// Word - Generate a word in a specfied range of letters.
 func Word(min, max int) string {
 	n := intRange(min, max)
 	return word(n)
 }
 
-// Generate a sentence with a specified range of words.
+// Sentence - Generate a sentence with a specified range of words.
 func Sentence(min, max int) string {
 	n := intRange(min, max)
 
@@ -97,7 +96,7 @@ func Sentence(min, max int) string {
 		// the current word is not the last or first
 		if (rand.Int()%n == 0) && numcomma < maxcommas && i < n-1 && i > 2 {
 			ws[i-1] += ","
-			numcomma += 1
+			numcomma++
 		}
 
 	}
@@ -113,6 +112,7 @@ const (
 	maxwords = 22
 )
 
+// Paragraph generates random paragraph
 func Paragraph(min, max int) string {
 	n := intRange(min, max)
 

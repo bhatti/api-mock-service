@@ -39,13 +39,14 @@ func (x *Executor) Execute(
 	scenarioKey *types.MockScenarioKeyData,
 	dataTemplate types.DataTemplateRequest,
 	chaosReq types.ChaosRequest,
-) (errs []error, succeeded int, failed int) {
+) *types.ChaosResponse {
 	started := time.Now()
 	scenarioKey.Name = ""
 	scenario, err := x.scenarioRepository.Lookup(scenarioKey)
+	res := types.NewChaosResponse(nil, 0, 0)
 	if err != nil {
-		errs = append(errs, err)
-		return
+		res.Errors = append(res.Errors, err)
+		return res
 	}
 	url := chaosReq.BaseURL + scenario.Path
 	log.WithFields(log.Fields{
@@ -57,10 +58,10 @@ func (x *Executor) Execute(
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
 		err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
 		if err != nil {
-			errs = append(errs, err)
-			failed++
+			res.Errors = append(res.Errors, err)
+			res.Failed++
 		} else {
-			succeeded++
+			res.Succeeded++
 		}
 		time.Sleep(scenario.WaitBeforeReply)
 	}
@@ -70,9 +71,9 @@ func (x *Executor) Execute(
 		"URL":       url,
 		"Scenario":  scenario,
 		"Elapsed":   elapsed,
-		"Errors":    len(errs),
+		"Errors":    len(res.Errors),
 	}).Infof("execute COMPLETED")
-	return
+	return res
 }
 
 // ExecuteByGroup an API with mock data
@@ -81,13 +82,14 @@ func (x *Executor) ExecuteByGroup(
 	group string,
 	dataTemplate types.DataTemplateRequest,
 	chaosReq types.ChaosRequest,
-) (errs []error, succeeded int, failed int) {
+) *types.ChaosResponse {
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
+	res := types.NewChaosResponse(nil, 0, 0)
 	for _, scenarioKey := range scenarioKeys {
 		scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 		if err != nil {
-			errs = append(errs, err)
+			res.Errors = append(res.Errors, err)
 			continue
 		}
 		url := chaosReq.BaseURL + scenario.Path
@@ -101,10 +103,10 @@ func (x *Executor) ExecuteByGroup(
 		for i := 0; i < chaosReq.ExecutionTimes; i++ {
 			err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
 			if err != nil {
-				errs = append(errs, err)
-				failed++
+				res.Errors = append(res.Errors, err)
+				res.Failed++
 			} else {
-				succeeded++
+				res.Succeeded++
 			}
 			time.Sleep(scenario.WaitBeforeReply)
 		}
@@ -115,11 +117,11 @@ func (x *Executor) ExecuteByGroup(
 			"URL":       url,
 			"Scenario":  scenario,
 			"Elapsed":   elapsed,
-			"Errors":    len(errs),
+			"Errors":    len(res.Errors),
 			"Request":   chaosReq,
 		}).Infof("execute-by-group COMPLETED")
 	}
-	return
+	return res
 }
 
 // execute an API with mock data

@@ -1,4 +1,37 @@
 definitions:
+  ChaosRequest:
+    description: ChaosRequest for generating random requests to an API
+    properties:
+      base_url:
+        type: string
+        x-go-name: BaseURL
+      execution_times:
+        format: int64
+        type: integer
+        x-go-name: ExecutionTimes
+      verbose:
+        type: boolean
+        x-go-name: Verbose
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  ChaosResponse:
+    description: ChaosResponse for response of chaos request
+    properties:
+      errors:
+        items:
+          type: string
+        type: array
+        x-go-name: Errors
+      failed:
+        format: int64
+        type: integer
+        x-go-name: Failed
+      succeeded:
+        format: int64
+        type: integer
+        x-go-name: Succeeded
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
   Duration:
     description: |-
       A Duration represents the elapsed time between two instants
@@ -14,10 +47,28 @@ definitions:
   MockHTTPRequest:
     description: MockHTTPRequest defines mock request for APIs
     properties:
-      match_content_type:
-        description: MatchContentType for the response
+      example_contents:
+        description: ExampleContents sample for request optionally
         type: string
-        x-go-name: MatchContentType
+        x-go-name: ExampleContents
+      example_headers:
+        additionalProperties:
+          type: string
+        description: ExampleHeaders for mock response
+        type: object
+        x-go-name: ExampleHeaders
+      example_path_params:
+        additionalProperties:
+          type: string
+        description: ExamplePathParams sample for the API
+        type: object
+        x-go-name: ExamplePathParams
+      example_query_params:
+        additionalProperties:
+          type: string
+        description: ExampleQueryParams sample for the API
+        type: object
+        x-go-name: ExampleQueryParams
       match_contents:
         description: MatchContents for request optionally
         type: string
@@ -39,10 +90,12 @@ definitions:
   MockHTTPResponse:
     description: MockHTTPResponse defines mock respons for APIs
     properties:
-      content_type:
-        description: ContentType for the response
-        type: string
-        x-go-name: ContentType
+      assertions:
+        description: Assertions for validating response
+        items:
+          type: string
+        type: array
+        x-go-name: Assertions
       contents:
         description: Contents for request
         type: string
@@ -59,6 +112,16 @@ definitions:
         description: Headers for mock response
         type: object
         x-go-name: Headers
+      match_contents:
+        description: MatchContents for request optionally
+        type: string
+        x-go-name: MatchContents
+      match_headers:
+        additionalProperties:
+          type: string
+        description: MatchHeaders for mock response
+        type: object
+        x-go-name: MatchHeaders
       status_code:
         description: StatusCode for response
         format: int64
@@ -73,6 +136,10 @@ definitions:
         description: Description of scenario
         type: string
         x-go-name: Description
+      group:
+        description: Group of scenario
+        type: string
+        x-go-name: Group
       method:
         $ref: '#/definitions/MethodType'
       name:
@@ -83,6 +150,10 @@ definitions:
         description: Path for the API (excluding query params)
         type: string
         x-go-name: Path
+      predicate:
+        description: Predicate for the request
+        type: string
+        x-go-name: Predicate
       request:
         $ref: '#/definitions/MockHTTPRequest'
       response:
@@ -102,10 +173,10 @@ definitions:
         description: RequestCount for the API
         format: uint64
         type: integer
-      match_content_type:
-        description: MatchContentType for the response
+      group:
+        description: Group of scenario
         type: string
-        x-go-name: MatchContentType
+        x-go-name: Group
       match_contents:
         description: MatchContents for request optionally
         type: string
@@ -132,12 +203,44 @@ definitions:
         description: Path for the API (excluding query params)
         type: string
         x-go-name: Path
+      predicate:
+        description: Predicate for the request
+        type: string
+        x-go-name: Predicate
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
 paths:
+  /_chaos/{group}:
+    post:
+      description: Plays chaos client for a scenario by group
+      operationId: PostMockChaosGroupScenario
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/ChaosRequest'
+      responses:
+        "200":
+          $ref: '#/responses/mockScenarioChaosResponse'
+      tags:
+      - chaos
+  /_chaos/{method}/{name}/{path}:
+    post:
+      description: Plays chaos client for a scenario by name
+      operationId: PostMockChaosScenario
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/ChaosRequest'
+      responses:
+        "200":
+          $ref: '#/responses/mockScenarioChaosResponse'
+      tags:
+      - chaos
   /_fixtures/{method}/{name}/{path}:
     delete:
-      operationId: getMockFixture
+      operationId: GetMockFixture
       parameters:
       - in: path
         name: method
@@ -161,7 +264,7 @@ paths:
       tags:
       - mock-fixtures
     get:
-      operationId: getMockFixture
+      operationId: GetMockFixture
       parameters:
       - in: path
         name: method
@@ -185,7 +288,7 @@ paths:
       tags:
       - mock-fixtures
     post:
-      operationId: postMockFixture
+      operationId: PostMockFixture
       parameters:
       - in: path
         name: method
@@ -238,7 +341,7 @@ paths:
   /_oapi:
     post:
       description: Creates new mock scenarios based on Open API v3
-      operationId: postMockOAPIScenario
+      operationId: PostMockOAPIScenario
       parameters:
       - in: body
         name: Body
@@ -283,7 +386,7 @@ paths:
       tags:
       - mock-scenarios
     post:
-      operationId: postMockScenario
+      operationId: PostMockScenario
       parameters:
       - in: path
         name: method
@@ -312,7 +415,7 @@ paths:
       - mock-scenarios
   /_scenarios/{method}/{name}/{path}:
     delete:
-      operationId: getMockScenario
+      operationId: GetMockScenario
       parameters:
       - in: path
         name: method
@@ -336,7 +439,7 @@ paths:
       tags:
       - mock-scenarios
     get:
-      operationId: getMockScenario
+      operationId: GetMockScenario
       parameters:
       - in: path
         name: method
@@ -461,6 +564,10 @@ responses:
       items:
         type: string
       type: array
+  mockScenarioChaosResponse:
+    description: MockScenario body for update
+    schema:
+      $ref: '#/definitions/ChaosResponse'
   mockScenarioOAPIResponse:
     description: MockScenario body for update
     schema:

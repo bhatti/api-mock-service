@@ -33,7 +33,7 @@ func NewMockChaosController(
 // ********************************* HTTP Handlers ***********************************
 
 // PostMockChaosGroupScenario handler
-// swagger:route POST /_chaos chaos PostMockChaosGroupScenario
+// swagger:route POST /_chaos/{group} chaos PostMockChaosGroupScenario
 // Plays chaos client for a scenario by group
 // responses:
 //
@@ -48,12 +48,12 @@ func (mcc *MockChaosController) PostMockChaosGroupScenario(c web.APIContext) (er
 		return err
 	}
 	dataTemplate := types.NewDataTemplateRequest(false, 1, 1)
-	errs, succeeded, failed := mcc.executor.ExecuteByGroup(context.Background(), group, dataTemplate, chaosReq)
-	return c.JSON(http.StatusOK, map[string]any{"errors": errs, "succeeded": succeeded, "failed": failed})
+	res := mcc.executor.ExecuteByGroup(context.Background(), group, dataTemplate, chaosReq)
+	return c.JSON(http.StatusOK, res)
 }
 
 // PostMockChaosScenario handler
-// swagger:route POST /_chaos chaos PostMockChaosScenario
+// swagger:route POST /_chaos/{method}/{name}/{path} chaos PostMockChaosScenario
 // Plays chaos client for a scenario by name
 // responses:
 //
@@ -88,8 +88,8 @@ func (mcc *MockChaosController) PostMockChaosScenario(c web.APIContext) (err err
 		return err
 	}
 	dataTemplate := types.NewDataTemplateRequest(true, 1, 1)
-	errs, succeeded, failed := mcc.executor.Execute(context.Background(), keyData, dataTemplate, chaosReq)
-	return c.JSON(http.StatusOK, map[string]any{"errors": errs, "succeeded": succeeded, "failed": failed})
+	res := mcc.executor.Execute(context.Background(), keyData, dataTemplate, chaosReq)
+	return c.JSON(http.StatusOK, res)
 }
 
 // ********************************* Swagger types ***********************************
@@ -105,7 +105,7 @@ type mockScenarioChaosCreateParams struct {
 // swagger:response mockScenarioChaosResponse
 type mockScenarioChaosResponseBody struct {
 	// in:body
-	Body []error
+	Body types.ChaosResponse
 }
 
 func buildChaosRequest(c web.APIContext) (types.ChaosRequest, error) {

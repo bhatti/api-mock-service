@@ -135,9 +135,8 @@ func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(map[string]any)
-	errs := res["errors"]
-	require.Nil(t, errs)
+	res := ctx.Result.(*types.ChaosResponse)
+	require.Equal(t, 0, len(res.Errors))
 }
 
 func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
@@ -187,9 +186,8 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(map[string]any)
-	errs := res["errors"]
-	require.Nil(t, errs)
+	res := ctx.Result.(*types.ChaosResponse)
+	require.Equal(t, 0, len(res.Errors))
 }
 
 func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {
