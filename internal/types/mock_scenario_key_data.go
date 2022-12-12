@@ -145,7 +145,10 @@ func (msd *MockScenarioKeyData) Validate() error {
 	if matched, err := regexp.Match(`^[\w\d\.\-_\/\\:{}]+$`, []byte(msd.Path)); err == nil && !matched {
 		return fmt.Errorf("key path is invalid with special characters '%s'", msd.Path)
 	}
-	msd.Path = "/" + NormalizePath(msd.Path, '/')
+	msd.Path = NormalizePath(msd.Path, '/')
+	if !strings.HasPrefix(msd.Path, "/") {
+		msd.Path = "/" + msd.Path
+	}
 	if msd.Name == "" {
 		return fmt.Errorf("key scenario name is not specified")
 	}

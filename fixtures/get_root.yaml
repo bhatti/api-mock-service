@@ -1,0 +1,42 @@
+method: GET
+name: get_root
+path: /
+group: root
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers:
+        Content-Type: ""
+    match_contents: '{}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        User-Agent: curl/7.65.2
+    example_contents: ""
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Cache-Control:
+            - max-age=43200
+        Connection:
+            - keep-alive
+        Content-Type:
+            - application/json; charset=utf-8
+        Pragma:
+            - no-cache
+    contents: |-
+        {
+          "id": 10,
+          "name": "id labore ex et quam laborum",
+          "email": "Eliseo@gardner.biz",
+          "body": "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
+        }
+    contents_file: ""
+    status_code: 200
+    match_headers: {}
+    assertions:
+        - VariableContains contents.id 1
+        - VariableContains contents.body est
+wait_before_reply: 0s

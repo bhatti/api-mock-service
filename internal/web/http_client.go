@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/types"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/smartystreets/go-aws-auth"
 )
 
 // HTTPClient defines methods for http get and post methods
@@ -88,6 +90,13 @@ func (w *DefaultHTTPClient) execute(
 	for name, vals := range headers {
 		for _, val := range vals {
 			req.Header.Add(name, val)
+			if name == "Authorization" && strings.HasPrefix(val, "AWS") {
+				awsauth.Sign(req, awsauth.Credentials{
+					AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
+					SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+					SecurityToken:   os.Getenv("AWS_SECURITY_TOKEN"),
+				})
+			}
 		}
 	}
 	if w.config.UserAgent != "" {

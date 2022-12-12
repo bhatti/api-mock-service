@@ -28,6 +28,16 @@ func NewRootController(
 	webserver.PATCH("/:path", ctrl.patchRoot)
 	webserver.TRACE("/:path", ctrl.traceRoot)
 
+	webserver.GET("/", ctrl.getRoot)
+	webserver.PUT("/", ctrl.putRoot)
+	webserver.POST("/", ctrl.postRoot)
+	webserver.DELETE("/", ctrl.deleteRoot)
+	webserver.CONNECT("/", ctrl.connectRoot)
+	webserver.HEAD("/", ctrl.headRoot)
+	webserver.OPTIONS("/", ctrl.optionsRoot)
+	webserver.PATCH("/", ctrl.patchRoot)
+	webserver.TRACE("/", ctrl.traceRoot)
+
 	return ctrl
 }
 
