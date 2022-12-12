@@ -20,5 +20,9 @@ func NormalizeGroup(title string, path string) string {
 	if len(path) > 0 {
 		path = path[1:]
 	}
-	return strings.ReplaceAll(path, "/", "_")
+	group := strings.ReplaceAll(path, "/", "_")
+	if group == "" {
+		group = "root"
+	}
+	return group
 }
