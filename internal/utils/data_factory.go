@@ -3,15 +3,16 @@ package utils
 import (
 	"bufio"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/utils/lorem"
+	log "github.com/sirupsen/logrus"
+	"github.com/twinj/uuid"
+	regen "github.com/zach-klippenstein/goregen"
 	"gopkg.in/yaml.v3"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/twinj/uuid"
-	regen "github.com/zach-klippenstein/goregen"
 )
 
 // RandNumMinMax returns random number between min and max
@@ -725,13 +726,13 @@ func SeededCountryCode(seed int64) string {
 	return randomArrayElement(countryCodes, seed)
 }
 
-// RandPhrase phrase generator
-func RandPhrase() string {
-	return SeededPhrase(0)
+// RandTriString phrase generator
+func RandTriString(sep string) string {
+	return SeededTriString(0, sep)
 }
 
-// SeededPhrase phrase generator
-func SeededPhrase(seed int64) string {
+// SeededTriString phrase generator
+func SeededTriString(seed int64, sep string) string {
 	words := []string{
 		"abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse", "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act", "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit", "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent", "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert", "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter", "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger", "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique", "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic", "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest", "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset", "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction", "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake", "aware", "away", "awesome", "awful", "awkward", "axis",
 		"baby", "bachelor", "bacon", "badge", "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain", "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become", "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit", "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology", "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless", "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body", "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss", "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread", "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze", "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb", "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy", "butter", "buyer", "buzz",
@@ -759,12 +760,27 @@ func SeededPhrase(seed int64) string {
 		"yard", "year", "yellow", "you", "young", "youth",
 		"zebra", "zero", "zone", "zoo",
 	}
-	return randomArrayElement(words, seed) + "_" + randomArrayElement(words, seed) + "_" + randomArrayElement(words, seed)
+	return randomArrayElement(words, seed) + sep + randomArrayElement(words, seed) + sep + randomArrayElement(words, seed)
 }
 
 // RandName name generator
 func RandName() string {
 	return SeededName(0)
+}
+
+// RandWord generate a word with at least min letters and at most max letters.
+func RandWord(min, max int) string {
+	return lorem.Word(min, max)
+}
+
+// RandSentence generate a sentence with at least min words and at most max words.
+func RandSentence(min, max int) string {
+	return lorem.Sentence(min, max)
+}
+
+// RandParagraph generate a paragraph with at least min sentences and at most max sentences.
+func RandParagraph(min, max int) string {
+	return lorem.Paragraph(min, max)
 }
 
 // SeededName name generator
@@ -805,22 +821,55 @@ func SeededName(seed int64) string {
 	return randomArrayElement(names, seed)
 }
 
+func replaceWordTag(str, tag string) string {
+	for {
+		n := strings.Index(str, tag)
+		if n == -1 {
+			return str
+		}
+		str = strings.Replace(str, tag, RandWord(5, 10), 1)
+	}
+}
+
 // RandRegex generator
 func RandRegex(re string) string {
+	if re == `\w+@\w+.?\w+` {
+		return RandEmail()
+	}
+	re = replaceWordTag(re, `\w+`)
+	re = replaceWordTag(re, `\w`)
 	out, err := regen.Generate(re)
 	if err != nil {
-		return err.Error()
+		log.WithFields(log.Fields{
+			"Error": err,
+			"Regex": re,
+		}).Warnf("failed to parse regex")
+		return RandSentence(1, 5)
 	}
 	return out
 }
 
 // RandEmail generator
 func RandEmail() string {
-	out, err := regen.Generate(`@[a-z]{10}\.(com|org|net|io|gov|edu)`)
+	return strings.ToLower(RandName() + "." + RandWord(5, 10) + `@` + RandHost())
+}
+
+// RandURL generator
+func RandURL() string {
+	protocol, err := regen.Generate(`(ftp|http|https|mailto)`)
 	if err != nil {
 		return err.Error()
 	}
-	return strings.ToLower(RandName() + "." + RandName() + out)
+	return strings.ToLower(protocol + `://` + RandHost())
+}
+
+// RandHost generator
+func RandHost() string {
+	domain, err := regen.Generate(`(com|org|net|io|gov|edu)`)
+	if err != nil {
+		return err.Error()
+	}
+	return strings.ToLower(RandWord(5, 10) + `.` + domain)
 }
 
 // RandPhone generator
@@ -851,7 +900,7 @@ func RandStringArrayMinMax(min int, max int) []string {
 	}
 	arr := make([]string, RandNumMinMax(min, max))
 	for i := 0; i < len(arr); i++ {
-		arr[i] = RandPhrase()
+		arr[i] = RandTriString("_")
 	}
 	return arr
 }
@@ -859,7 +908,7 @@ func RandStringArrayMinMax(min int, max int) []string {
 // RandStringMinMax generator
 func RandStringMinMax(min int, max int) string {
 	if max == 0 {
-		return RandPhrase()
+		return RandTriString("_")
 	}
 	return RandString(RandNumMinMax(min, max))
 }

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 	"testing"
@@ -302,6 +303,24 @@ func Test_ShouldParseRandRegexEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldParseRandRegexHost(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandHost}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandRegexURL(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandURL}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
 func Test_ShouldParseInt(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{Int 3}}`)
@@ -438,7 +457,7 @@ func Test_ShouldParseRandDict(t *testing.T) {
 	dict := make(map[string]interface{})
 	err = json.Unmarshal(out, &dict)
 	require.NoError(t, err)
-	require.True(t, len(dict) >= 2)
+	require.True(t, len(dict) >= 1)
 }
 
 func Test_ShouldParseNthRequest(t *testing.T) {
@@ -495,6 +514,33 @@ func Test_ShouldParseLTRequestWithData(t *testing.T) {
 	b := []byte(`{{LTRequest 3}}`)
 	// WHEN parsing int
 	_, err := ParseTemplate("../../fixtures", b, map[string]interface{}{types.RequestCount: 1})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseWord(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandWord 1 10}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSentence(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandSentence 1 10}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("", b, map[string]interface{}{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseParagraph(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandParagraph 1 10}}`)
+	// WHEN parsing int
+	_, err := ParseTemplate("", b, map[string]interface{}{})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -596,7 +642,8 @@ func Test_ShouldParseScenarioTemplate(t *testing.T) {
 		// AND it should have expected contents
 
 		require.Contains(t, scenario.Response.Headers["ETag"], "abc")
-		require.Contains(t, scenario.Response.ContentType, "application/json")
+		require.Contains(t, scenario.Response.ContentType(), "application/json",
+			fmt.Sprintf("%v in %s", scenario.Response.Headers, scenarioFile))
 	}
 }
 
@@ -618,7 +665,26 @@ func Test_ShouldParseCustomerStripeTemplate(t *testing.T) {
 	// AND it should have expected contents
 
 	require.Equal(t, "Bearer sk_test_[0-9a-fA-F]{10}$", scenario.Request.MatchHeaders["Authorization"])
-	require.Contains(t, scenario.Response.ContentType, "application/json")
+	require.Contains(t, scenario.Response.ContentType(), "application/json")
+}
+
+func Test_ShouldParseCommentsTemplate(t *testing.T) {
+	// GIVEN a mock scenario loaded from YAML
+	b, err := os.ReadFile("../../fixtures/list_comments.yaml")
+	require.NoError(t, err)
+
+	// WHEN parsing YAML for contents tag
+	body, err := ParseTemplate("../../fixtures", b, map[string]interface{}{})
+
+	// THEN it should not fail
+	require.NoError(t, err)
+	scenario := types.MockScenario{}
+	// AND it should return valid mock scenario
+	err = yaml.Unmarshal(body, &scenario)
+	require.NoError(t, err)
+	// AND it should have expected contents
+	require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
+	require.Contains(t, scenario.Response.ContentType(), "application/json")
 }
 
 func Test_ShouldParseDevicesTemplate(t *testing.T) {
@@ -643,8 +709,164 @@ func Test_ShouldParseDevicesTemplate(t *testing.T) {
 		} else {
 			require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
 		}
-		require.Contains(t, scenario.Response.ContentType, "application/json")
+		require.Contains(t, scenario.Response.ContentType(), "application/json")
 	}
+}
+
+func Test_ShouldParseArrayVariableSizeEQTrue(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeEQ "contents.arr" 4}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true, "arr": []int{1, 2, 3, 4}}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseStringArrayVariableSizeEQTrue(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeEQ "contents.arr" 2}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true, "arr": []string{"one", "two"}}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseArrayVariableSizeEQFalse(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeEQ "contents.arr" 5}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true, "arr": []float64{1, 2, 3, 4}}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseVariableSizeEQTrue(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeEQ "contents" 4}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseVariableSizeEQFalse(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeEQ "contents" 5}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseVariableSizeLE(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeLE "contents" 4}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseVariableSizeGE(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableSizeGE "contents" 1}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseVariableEquals(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableEquals "contents.id" "10"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseVariableNotEquals(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableEquals "contents.id" "10"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 101, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseVariableContains(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableContains "contents.id" "10"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseVariableNotContains(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableContains "contents.id" "20"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseVariableNotPartialContains(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableContains "contents.id" "10"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 201, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseVariablePartialContains(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableContains "contents.id" "10"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "id": 101, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]interface{}{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
 }
 
 func Test_ShouldValidateFileName(t *testing.T) {
@@ -689,4 +911,20 @@ func Test_ShouldConvertToFloat64(t *testing.T) {
 	require.Equal(t, float64(10), ToFloat64(&f64))
 	require.Equal(t, float64(10), ToFloat64(&i64))
 	require.Equal(t, float64(10), ToFloat64(&u64))
+}
+
+func Test_ShouldFindVariable(t *testing.T) {
+	require.Nil(t, findVariable("k", nil))
+	require.Nil(t, findVariable("k", ""))
+	require.NotNil(t, findVariable("k", map[string]string{"k": "1"}))
+	require.Nil(t, findVariable("k", map[string]string{"x": "1"}))
+	require.NotNil(t, findVariable("k.a", map[string]interface{}{"k": map[string]string{"a": "b"}}))
+}
+
+func Test_ShouldCompareVariable(t *testing.T) {
+	require.False(t, variableEquals("k", nil, 1))
+	require.False(t, variableEquals("k", "", 1))
+	require.True(t, variableEquals("k", map[string]string{"k": "1"}, "1"))
+	require.False(t, variableEquals("k", map[string]string{"x": "1"}, "1"))
+	require.True(t, variableEquals("k.a", map[string]interface{}{"k": map[string]string{"a": "b"}}, "b"))
 }

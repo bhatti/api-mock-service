@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"html/template"
 	"path/filepath"
@@ -12,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/bhatti/api-mock-service/internal/types"
 )
@@ -119,6 +120,15 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"RandNumMax": func(max interface{}) int {
 			return Random(toInt(max))
 		},
+		"RandWord": func(min, max interface{}) string {
+			return RandWord(toInt(min), toInt(max))
+		},
+		"RandSentence": func(min, max interface{}) string {
+			return RandSentence(toInt(min), toInt(max))
+		},
+		"RandParagraph": func(min, max interface{}) string {
+			return RandParagraph(toInt(min), toInt(max))
+		},
 		"Udid": func() string {
 			return Udid()
 		},
@@ -180,12 +190,18 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"RandEmail": func() string {
 			return RandEmail()
 		},
+		"RandHost": func() string {
+			return RandHost()
+		},
+		"RandURL": func() string {
+			return RandURL()
+		},
 		"RandDict": func() template.HTML {
 			dict := make(map[string]interface{})
 			for i := 0; i < RandNumMinMax(3, 6); i += 2 {
 				key := RandName()
 				if i == 0 {
-					dict[key] = RandPhrase()
+					dict[key] = RandTriString(".")
 				} else if i == 2 {
 					dict[key] = RandBool()
 				} else {
@@ -246,6 +262,21 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"SeededFileLine": func(fileName string, seed interface{}) template.HTML {
 			return randFileLine(dir, fileName+types.MockDataExt, toInt64(seed))
 		},
+		"VariableEquals": func(varName string, target interface{}) bool {
+			return variableEquals(varName, data, target)
+		},
+		"VariableContains": func(varName string, target interface{}) bool {
+			return variableContains(varName, target, data)
+		},
+		"VariableSizeEQ": func(varName string, size interface{}) bool {
+			return variableSize(varName, data) == toInt(size)
+		},
+		"VariableSizeLE": func(varName string, size interface{}) bool {
+			return variableSize(varName, data) <= toInt(size)
+		},
+		"VariableSizeGE": func(varName string, size interface{}) bool {
+			return variableSize(varName, data) >= toInt(size)
+		},
 		"Date": func() string {
 			return time.Now().Format("2006-01-02")
 		},
@@ -261,6 +292,84 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"EnumInt": func(vals ...interface{}) int64 {
 			return EnumInt(vals...)
 		},
+	}
+}
+
+func variableSize(name string, data interface{}) int {
+	val := findVariable(name, data)
+	if val == nil {
+		return -1
+	}
+	switch val.(type) {
+	case map[string]string:
+		return len(val.(map[string]string))
+	case map[string]interface{}:
+		return len(val.(map[string]interface{}))
+	case []interface{}:
+		return len(val.([]interface{}))
+	case []int:
+		return len(val.([]int))
+	case []string:
+		return len(val.([]string))
+	case []float64:
+		return len(val.([]float64))
+	default:
+		return -1
+	}
+}
+
+func variableContains(name string, target interface{}, data interface{}) bool {
+	val := findVariable(name, data)
+	if val == nil {
+		return false
+	}
+	valStr := fmt.Sprintf("%v", val)
+	reStr := fmt.Sprintf("%v", target)
+	re, err := regexp.Compile(reStr)
+	if err != nil {
+		return false
+	}
+	return re.MatchString(valStr)
+}
+
+func variableEquals(name string, data interface{}, target interface{}) bool {
+	val := findVariable(name, data)
+	if val == nil {
+		return false
+	}
+	return fmt.Sprintf("%v", val) == fmt.Sprintf("%v", target)
+}
+
+func findVariable(name string, data interface{}) interface{} {
+	n := strings.Index(name, ".")
+	var nextName string
+	if n != -1 {
+		nextName = name[n+1:]
+		name = name[0:n]
+	}
+	switch data.(type) {
+	case map[string]string:
+		params := data.(map[string]string)
+		val := params[name]
+		if val == "" {
+			return nil
+		}
+		if nextName == "" {
+			return val
+		}
+		return findVariable(nextName, val)
+	case map[string]interface{}:
+		params := data.(map[string]interface{})
+		val := params[name]
+		if val == nil {
+			return nil
+		}
+		if nextName == "" {
+			return val
+		}
+		return findVariable(nextName, val)
+	default:
+		return nil
 	}
 }
 

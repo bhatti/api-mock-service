@@ -1,0 +1,37 @@
+method: GET
+name: list_comments
+path: /comments
+request:
+    match_query_params: {}
+    match_headers:
+        Content-Type: ""
+    match_contents: ""
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        User-Agent: curl/7.65.2
+    example_contents: ""
+response:
+    headers:
+        Cache-Control:
+            - max-age=43200
+        Content-Type:
+            - application/json; charset=utf-8
+    contents: |-
+        [
+{{- range $val := Iterate 20 }}
+          {
+            "postId": {{RandNumMax 1000}},
+            "id": {{RandNumMax 1000}},
+            "name": "{{RandSentence 2 3}}",
+            "email": "{{RandEmail}}",
+            "body": "{{RandParagraph 3 5}}"
+          }{{if LastIter $val 20}}{{else}},{{end}}
+{{ end }}
+        ]
+    contents_file: ""
+    status_code: 200
+    match_headers: {}
+    assertions: []
+wait_before_reply: 0s

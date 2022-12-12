@@ -78,7 +78,7 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 	req := &http.Request{
 		URL:    u,
 		Method: "POST",
-		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
+		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"application/json"}},
 	}
 	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)

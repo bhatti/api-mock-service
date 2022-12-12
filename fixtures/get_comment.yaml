@@ -1,0 +1,50 @@
+method: GET
+name: get_comment
+path: /comments/1
+group: /comments/1
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers:
+        Content-Type: ""
+    match_contents: '{}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        User-Agent: curl/7.65.2
+    example_contents: ""
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Cache-Control:
+            - max-age=43200
+        Connection:
+            - keep-alive
+        Content-Type:
+            - application/json; charset=utf-8
+        Pragma:
+            - no-cache
+        X-Ratelimit-Limit:
+            - "1000"
+        X-Ratelimit-Remaining:
+            - "999"
+        X-Ratelimit-Reset:
+            - "1670749274"
+    contents: |-
+        {
+          "postId": 1,
+          "id": 10,
+          "name": "id labore ex et quam laborum",
+          "email": "Eliseo@gardner.biz",
+          "body": "laudantium enim quasi est quidem magnam voluptate ipsam eos\ntempora quo necessitatibus\ndolor quam autem quasi\nreiciendis et nam sapiente accusantium"
+        }
+    contents_file: ""
+    status_code: 200
+    match_headers: {}
+    match_contents: '{"body":"(__string__\\w+)","email":"(__string__\\w+@\\w+.?\\w+)","id":"(__number__[+-]?[0-9]{1,10})","name":"(__string__\\w+)","postId":"(__number__[+-]?[0-9]{1,10})"}'
+    assertions:
+        - VariableContains contents.id 1
+        - VariableContains contents.body est
+wait_before_reply: 0s

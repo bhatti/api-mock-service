@@ -123,7 +123,7 @@ func (sr *FileMockScenarioRepository) Delete(
 }
 
 // ListScenarioKeyData returns keys for all scenarios
-func (sr *FileMockScenarioRepository) ListScenarioKeyData() []*types.MockScenarioKeyData {
+func (sr *FileMockScenarioRepository) ListScenarioKeyData(group string) []*types.MockScenarioKeyData {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
@@ -131,7 +131,9 @@ func (sr *FileMockScenarioRepository) ListScenarioKeyData() []*types.MockScenari
 	res := make([]*types.MockScenarioKeyData, 0)
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
-			res = append(res, keyData)
+			if group == "" || group == keyData.Group {
+				res = append(res, keyData)
+			}
 		}
 	}
 	sort.Slice(res, func(i, j int) bool {
@@ -144,8 +146,34 @@ func (sr *FileMockScenarioRepository) ListScenarioKeyData() []*types.MockScenari
 
 }
 
+// LookupAllByGroup finds matching scenarios by group
+func (sr *FileMockScenarioRepository) LookupAllByGroup(
+	group string) []*types.MockScenarioKeyData {
+	sr.mutex.RLock()
+	defer func() {
+		sr.mutex.RUnlock()
+	}()
+	res := make([]*types.MockScenarioKeyData, 0)
+	for _, keyDataMap := range sr.keysByMethodPath {
+		for _, keyData := range keyDataMap {
+			if group == keyData.Group {
+				res = append(res, keyData)
+			}
+		}
+	}
+	sort.Slice(res, func(i, j int) bool {
+		if res[i].LastUsageTime == res[j].LastUsageTime {
+			return res[i].Name < res[j].Name
+		}
+		return res[i].LastUsageTime < res[j].LastUsageTime
+	})
+	return res
+}
+
 // LookupAll finds matching scenarios
-func (sr *FileMockScenarioRepository) LookupAll(target *types.MockScenarioKeyData) (res []*types.MockScenarioKeyData, paramMismatchErrors int) {
+func (sr *FileMockScenarioRepository) LookupAll(
+	target *types.MockScenarioKeyData,
+) (res []*types.MockScenarioKeyData, paramMismatchErrors int) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
@@ -218,7 +246,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 
 	scenario, err = unmarshalMockScenario(b, dir, params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load '%s' due to %w", fileName, err)
+		return nil, fmt.Errorf("lookup failed to parse scenario '%s' due to %w", fileName, err)
 	}
 	scenario.RequestCount = reqCount
 	return
@@ -231,13 +259,13 @@ func unmarshalMockScenario(
 	// parse template
 	b, err = utils.ParseTemplate(dir, b, params)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse template due to %w", err)
 	}
 
 	// unmarshal scenario from template output
 	scenario = &types.MockScenario{}
 	if err = yaml.Unmarshal(b, scenario); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal due to %w", err)
 	}
 	return scenario, nil
 }
@@ -266,7 +294,7 @@ func (sr *FileMockScenarioRepository) visit(
 
 		keyData, err := unmarshalScenarioKeyData(content)
 		if err != nil {
-			return fmt.Errorf("failed to load '%s' due to %w", path, err)
+			return fmt.Errorf("visit failed to load '%s' due to %w", path, err)
 		}
 		if callback(keyData) {
 			return errStop

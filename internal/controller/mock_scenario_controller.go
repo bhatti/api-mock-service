@@ -64,7 +64,7 @@ func (msc *MockScenarioController) PostMockScenario(c web.APIContext) (err error
 //	200: mockScenarioPathsResponse
 func (msc *MockScenarioController) ListMockScenarioPaths(c web.APIContext) error {
 	res := make(map[string]*types.MockScenarioKeyData)
-	for _, next := range msc.mockScenarioRepository.ListScenarioKeyData() {
+	for _, next := range msc.mockScenarioRepository.ListScenarioKeyData(c.QueryParam("group")) {
 		res[fmt.Sprintf("/_scenarios/%s/%s%s", next.Method, next.Name, next.Path)] = next
 	}
 	return c.JSON(http.StatusOK, res)

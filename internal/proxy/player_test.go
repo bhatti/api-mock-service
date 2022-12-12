@@ -32,7 +32,11 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		&http.Request{
 			Method: "PUT",
 			URL:    u,
-			Header: http.Header{types.MockWaitBeforeReply: []string{"1"}, types.MockResponseStatus: []string{"0"}},
+			Header: http.Header{
+				types.MockWaitBeforeReply: []string{"1"},
+				types.MockResponseStatus:  []string{"0"},
+				types.ContentTypeHeader:   []string{"application/json"},
+			},
 		},
 	)
 	// THEN it should not find it
@@ -45,7 +49,11 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "PUT",
 		URL:    u,
-		Header: http.Header{types.MockWaitBeforeReply: []string{"1"}, types.MockResponseStatus: []string{"0"}},
+		Header: http.Header{
+			types.MockWaitBeforeReply: []string{"1"},
+			types.MockResponseStatus:  []string{"0"},
+			types.ContentTypeHeader:   []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -73,7 +81,9 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "POST",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	// THEN it should not find it
@@ -86,7 +96,9 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "POST",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -112,7 +124,9 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "GET",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	// THEN it should not find it
 	err = player.Handle(ctx)
@@ -124,7 +138,9 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "GET",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -149,7 +165,9 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "DELETE",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	// THEN it should not find it
 	err = player.Handle(ctx)
@@ -160,7 +178,9 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "DELETE",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -185,7 +205,9 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "DELETE",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	// THEN it should not find it
 	err = player.Handle(ctx)
@@ -196,7 +218,9 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "DELETE",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -222,7 +246,9 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 		&http.Request{
 			Method: "PUT",
 			URL:    u,
-			Header: make(http.Header),
+			Header: http.Header{
+				types.ContentTypeHeader: []string{"application/json"},
+			},
 		},
 	)
 	// THEN it should not find it
@@ -235,7 +261,9 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	ctx = web.NewStubContext(&http.Request{
 		Method: "PUT",
 		URL:    u,
-		Header: make(http.Header),
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+		},
 	})
 	err = player.Handle(ctx)
 	require.NoError(t, err)
@@ -253,7 +281,7 @@ func Test_ShouldAddMockResponse(t *testing.T) {
 	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
 	_ = os.MkdirAll("../../mock_tests/path/POST", 0755)
-	os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
+	_ = os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
 	_, err = addMockResponse(reqHeader, resHeader, matchedScenario, fixtureRepository)
 	require.NoError(t, err)
 }
@@ -266,15 +294,17 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		Description: name,
 		Request: types.MockHTTPRequest{
 			MatchQueryParams: map[string]string{"a": `\d+`, "b": "abc"},
-			MatchContentType: "application/json",
+			MatchHeaders: map[string]string{
+				types.ContentTypeHeader: "application/json",
+			},
 		},
 		Response: types.MockHTTPResponse{
 			Headers: map[string][]string{
-				"ETag": {strconv.Itoa(n)},
+				"ETag":                  {strconv.Itoa(n)},
+				types.ContentTypeHeader: {"application/json"},
 			},
-			ContentType: "application/json",
-			Contents:    "test body",
-			StatusCode:  200,
+			Contents:   "test body",
+			StatusCode: 200,
 		},
 		WaitBeforeReply: time.Duration(1) * time.Second,
 	}

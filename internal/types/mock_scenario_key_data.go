@@ -15,14 +15,14 @@ type MockScenarioKeyData struct {
 	Name string `yaml:"name" json:"name"`
 	// Path for the API (excluding query params)
 	Path string `yaml:"path" json:"path"`
+	// Group of scenario
+	Group string `yaml:"group" json:"group"`
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// MatchQueryParams for the API
 	MatchQueryParams map[string]string `yaml:"match_query_params" json:"match_query_params"`
 	// MatchHeaders for mock response
 	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
-	// MatchContentType for the response
-	MatchContentType string `yaml:"match_content_type" json:"match_content_type"`
 	// MatchContents for request optionally
 	MatchContents string `yaml:"match_contents" json:"match_contents"`
 	// LastUsageTime of key data
@@ -36,6 +36,9 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	if msd.Method != target.Method {
 		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", msd.Method, target.Method))
 	}
+	if msd.Group != "" && target.Group != "" && msd.Group != target.Group {
+		return NewNotFoundError(fmt.Sprintf("group '%s' didn't match '%s'", msd.Group, target.Group))
+	}
 	targetPath := filterURLQueryParams(target.Path)
 	rePath := rePath(msd.Path)
 	matched, err := regexp.Match(rePath, []byte(targetPath))
@@ -43,6 +46,7 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 		return err
 	}
 	log.WithFields(log.Fields{
+		"Group":      msd.Group,
 		"Target":     target.String(),
 		"This":       msd.String(),
 		"TargetPath": targetPath,
@@ -62,12 +66,6 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 		}
 	}
 
-	if msd.MatchContentType != "" &&
-		!strings.Contains(msd.MatchContentType, target.MatchContentType) &&
-		!reMatch(msd.MatchContentType, target.MatchContentType) {
-		return NewValidationError(fmt.Sprintf("content-type '%s' didn't match '%s'",
-			msd.MatchContentType, target.MatchContentType))
-	}
 	if msd.MatchContents != "" &&
 		!strings.Contains(msd.MatchContents, target.MatchContents) &&
 		!reMatch(msd.MatchContents, target.MatchContents) {
@@ -85,7 +83,7 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	}
 
 	if target.Name != "" && msd.Name != target.Name {
-		return NewValidationError(fmt.Sprintf("name '%s' didn't match '%s'",
+		return NewValidationError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
 			msd.Name, target.Name))
 	}
 	return nil

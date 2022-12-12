@@ -9,7 +9,7 @@ import (
 )
 
 // Parse parses Open-API and generates mock scenarios
-func Parse(ctx context.Context, data []byte) (specs []*APISpec, err error) {
+func Parse(ctx context.Context, data []byte, dataTemplate types.DataTemplateRequest) (specs []*APISpec, err error) {
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
 	doc, err := loader.LoadFromData(data)
@@ -22,21 +22,25 @@ func Parse(ctx context.Context, data []byte) (specs []*APISpec, err error) {
 			return nil, fmt.Errorf("failed to resolve refs in open-api with size %d due to %w", len(data), err)
 		}
 	}
+	var title string
+	if doc.Info != nil {
+		title = doc.Info.Title
+	}
 
 	for k, v := range doc.Paths {
-		for _, spec := range ParseAPISpec(types.Delete, k, v.Delete) {
+		for _, spec := range ParseAPISpec(title, types.Delete, k, v.Delete, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(types.Get, k, v.Get) {
+		for _, spec := range ParseAPISpec(title, types.Get, k, v.Get, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(types.Post, k, v.Post) {
+		for _, spec := range ParseAPISpec(title, types.Post, k, v.Post, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(types.Put, k, v.Put) {
+		for _, spec := range ParseAPISpec(title, types.Put, k, v.Put, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(types.Patch, k, v.Patch) {
+		for _, spec := range ParseAPISpec(title, types.Patch, k, v.Patch, dataTemplate) {
 			specs = append(specs, spec)
 		}
 	}

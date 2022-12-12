@@ -1,0 +1,46 @@
+method: PUT
+name: put_posts
+path: /posts/1
+group: ""
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers:
+        Content-Type: application/x-www-form-urlencoded
+    match_contents: '{"body":"(__string__\\w+)","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    example_headers:
+        Accept: '*/*'
+        Content-Length: "88"
+        Content-Type: application/x-www-form-urlencoded
+        User-Agent: curl/7.65.2
+    example_contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Alt-Svc:
+            - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+        Cache-Control:
+            - no-cache
+        Connection:
+            - keep-alive
+        Content-Type:
+            - application/json; charset=utf-8
+        X-Ratelimit-Limit:
+            - "1000"
+        X-Ratelimit-Remaining:
+            - "998"
+        X-Ratelimit-Reset:
+            - "1670780414"
+    contents: |-
+        {
+          "id": 1
+        }
+    contents_file: ""
+    status_code: 200
+    match_headers: {}
+    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
+    assertions:
+        - VariableContains headers.Pragma no-cache
+        - VariableContains contents.id 1
+wait_before_reply: 0s

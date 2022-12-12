@@ -1,11 +1,24 @@
 # api-mock-service
-## Mocking Distributed Micro services with Record/Play, Templates and OpenAPI Specifications
-API mock service for REST/HTTP based services with following goals:
-- Record API request/response by working as a proxy server (native http/https or via API) between client and remote service.
+
+## Mocking Distributed Micro services and Chaos testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
+
+### Use-Cases
+- Mock remote APIs using HTTP Proxy or Open-API specifications so that they can be deployed locally for ease of development and testing.
+- Mock new APIs that are not yet available for testing but their specifications are defined so that other teams can continue with their development without waiting for full implementation.
+- Define Mock behavior for happy path and failure test cases so that the development team can test all failure cases.
+- Add network delays and inject errors so that the development team can test for chaos and game days.
+- Test remote APIs using chaos or stochastic testing where input parameters are randomly created based on regex or other patterns.
+- Validate APIs using custom defined regex patterns and assertion policies.
+- Fuzz testing a group of remote APIs with random data.
+ 
+### Features
+API mock service for REST/HTTP based services with following features:
+- Record API request/response by working as a HTTP proxy server (native http/https or via API) between client and remote service.
 - Playback API response that were previously recorded based on request parameters.
-- Define API behavior manually by specifying request parameters and response contents.
-- Generate API behavior from open standards such as Open API or Swagger.
-- Customize API behavior using a template language so that users can generate dynamic contents based on input parameters or other configuration. The template language can be used to generate response of any size from small to very large so that you can test performance of your system.
+- Define API behavior manually by specifying request parameters and response contents using static data or dynamic data based on GO templating language.
+- Generate API behavior from open standards such as Open API/Swagger and automatically create constraints and regex based on the specification. 
+- Customize API behavior using a GO template language so that users can generate dynamic contents based on input parameters or other configuration. 
+- Generate large responses using the template language with dynamic loops so that you can test performance of your system.
 - Define multiple test scenarios for the API based on different input parameters or simulating various error cases that are difficult to reproduce with real services.
 - Store API request/responses locally as files so that it’s easy to port stubbed request/responses to any machine.
 - Allow users to define API request/response with various formats such as XML/JSON/YAML and upload them to the mock service.
@@ -13,7 +26,8 @@ API mock service for REST/HTTP based services with following goals:
 - Define a collection of helper methods to generate different kind of random data such as UDID, dates, URI, Regex, text and numeric data.
 - Ability to playback all test scenarios or a specific scenario and change API behavior dynamically with different input parameters.
 - Support multiple mock scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
-- Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce.
+- Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/chaos testing.
+- Generate client requests for a remote API for chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
 As, it's written in GO, you can either download GO runtime environment or use Docker to install it locally. 
@@ -48,6 +62,7 @@ Usage:
   api-mock-service [command]
 
 Available Commands:
+  chaos       Executes chaos client
   completion  Generate the autocompletion script for the specified shell
   help        Help about any command
   version     Version will output the current build information
@@ -57,10 +72,8 @@ Flags:
       --config string     config file
       --dataDir string    data dir to store mock scenarios
   -h, --help              help for api-mock-service
-      --httpPort int      HTTP API port to listen
-      --proxyPort int     proxy port to listen
-
-Use "api-mock-service [command] --help" for more information about a command
+      --httpPort int      HTTP port to listen
+      --proxyPort int     Proxy port to listen
 ```
 
 ## API Docs
@@ -106,93 +119,121 @@ method: GET
 name: recorded-v1-customers-cus
 path: /v1/customers/cus_**/cash_balance
 description: recorded at 2022-10-29 04:26:17.24776 +0000 UTC
+group: v1_customers_cus_xx_cash_balance
 predicate: {{NthRequest 2}}
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_content_type: ""
-    match_contents: ""
-    example_path_params: {}
-    example_query_params: {}
-    example_headers:
-        Accept: '*/*'
-        Authorization: Bearer sk_test_xxx
-        User-Agent: curl/7.65.2
-        X-Mock-Url: https://api.stripe.com/v1/customers/cus_/cash_balance
-    example_contents: ""
+  match_query_params: {}
+  match_headers:
+    Content-Type: ""
+  match_contents: '{}'
+  example_path_params: {}
+  example_query_params: {}
+  example_headers:
+    Accept: '*/*'
+    Authorization: Bearer sk_test_xxx
+    User-Agent: curl/7.65.2
+    X-Mock-Url: https://api.stripe.com/v1/customers/cus_/cash_balance
+  example_contents: ""  
 response:
-    headers:
-        Access-Control-Allow-Credentials:
-            - "true"
-        Access-Control-Allow-Methods:
-            - GET, POST, HEAD, OPTIONS, DELETE
-        Access-Control-Allow-Origin:
-            - '*'
-        Access-Control-Expose-Headers:
-            - Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required
-        Access-Control-Max-Age:
-            - "300"
-        Cache-Control:
-            - no-cache, no-store
-        Content-Length:
-            - "168"
-        Content-Type:
-            - application/json
-        Date:
-            - Sat, 29 Oct 2022 04:26:17 GMT
-        Request-Id:
-            - req_xxx
-        Server:
-            - nginx
-        Strict-Transport-Security:
-            - max-age=63072000; includeSubDomains; preload
-        Stripe-Version:
-            - "2018-09-06"
-    content_type: application/json
-    contents: |-
-        {
-          "object": "cash_balance",
-          "available": null,
-          "customer": "cus_",
-          "livemode": false,
-          "settings": {
-            "reconciliation_mode": "automatic"
-          }
-        }
-    contents_file: ""
-    status_code: 200
+  headers:
+    Access-Control-Allow-Credentials:
+      - "true"
+    Access-Control-Allow-Methods:
+      - GET, POST, HEAD, OPTIONS, DELETE
+    Access-Control-Allow-Origin:
+      - '*'
+    Access-Control-Expose-Headers:
+      - Request-Id, Stripe-Manage-Version, X-Stripe-External-Auth-Required, X-Stripe-Privileged-Session-Required
+    Access-Control-Max-Age:
+      - "300"
+    Cache-Control:
+      - no-cache, no-store
+    Content-Length:
+      - "168"
+    Content-Type:
+      - application/json
+    Date:
+      - Mon, 12 Dec 2022 01:21:45 GMT
+    Request-Id:
+      - req_xxx
+    Server:
+      - nginx
+    Strict-Transport-Security:
+      - max-age=63072000; includeSubDomains; preload
+    Stripe-Version:
+      - "2018-09-06"
+  contents: |-
+    {
+      "object": "cash_balance",
+      "available": null,
+      "customer": "cus_xxx",
+      "livemode": false,
+      "settings": {
+        "reconciliation_mode": "automatic"
+      }
+    }
+  contents_file: ""
+  status_code: 200
+  match_headers: {}
+  match_contents: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
+  assertions: []
 wait_before_reply: 0s
 ```
 
 Above example defines a mock scenario for testing /v1/customers/cus_**/cash_balance path. A test scenario includes:
 ### Predicate
-
-The predicate allows matching based on any condition based on parameters or request count.
+- This is a boolean condition if you need to enable or disable a scenario test based on dynamic parameters or request count.
+ 
+### Group
+- This specifies the group for related test scenarios.
 
 ### Request Matching Parameters:
+You can define match parameters based on:
 
-The matching request parameters will be used to select the mock scenario to execute and you can use regular expressions to validate:
+- URL Query Parameters
+- URL Request Headers
+- Request Body
+  
+You can use these parameters so that test scenario is executed only when the parameters match, e.g.
+```yaml
+    match_query_params:
+      name: [a-z0-9]{1,50}
+    match_headers:
+      Content-Type: "application/json"
+```
+The matching request parameters will be used to select the mock scenario to execute and you can use regular expressions to validate, 
+e.g. above example will be matched if content-type is `application/json` and it will validate that name query parameter is alphanumeric from 1-50 size.
 
-    - URL Query Parameters
-    - URL Request Headers
-    - Request Body
 
 ### Example Request Parameters:
 
 The example request parameters show the contents captured from the record/play so that you can use and customize to define matching parameters.
 
-    - URL Query Parameters
-    - URL Request Headers
-    - Request Body
+- URL Query Parameters
+- URL Request Headers
+- Request Body
 
 ### Response Properties
 
 The response properties will include:
 
-    - Response Headers
-    - Response Body statically defined or loaded from a test fixture
-
+- Response Headers
+- Response Body statically defined or loaded from a test fixture
+- Response can also be loaded from a test fixture file
+- Status Code
+- Matching header and contents
+- Assertions
 You can copy recorded scenario to another folder and use templates to customize it and then upload it for playback.
+
+The matching header and contents use `match_headers` and `match_contents` similar to request to validate response in case you want to test response from a real service for chaos testing.
+Similarly, `assertions` defines a set of predicates to test against response from a real service:
+```yaml
+    assertions:
+        - VariableContains contents.id 10
+        - VariableContains contents.title illo
+        - VariableContains headers.Pragma no-cache 
+```
+Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result headers include `Pragma: no-cache` header.
 
 ## Playback the Mock API Scenario
 
@@ -237,6 +278,7 @@ method: GET
 name: stripe-cash-balance
 path: /v1/customers/:customer/cash_balance
 predicate: {{NthRequest 2}}
+group: my_group
 request:
   match_headers:
     Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
@@ -278,6 +320,11 @@ response:
       }
     }
   status_code: 200
+  match_headers: {}
+  match_contents: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
+  assertions:
+    - VariableContains contents.livemode false
+    - VariableContains headers.Pragma no-cache
 wait_before_reply: 1s
 ```
 
@@ -317,6 +364,7 @@ method: GET
 name: stripe-customer-failure
 path: /v1/customers/:customer/cash_balance
 predicate: {{NthRequest 2}}
+group: my_group
 request:
     match_headers:
         Authorization:
@@ -361,8 +409,10 @@ name: get_devices
 path: /devices
 description: ""
 predicate: ""
+group: devices
 request:
-    match_content_type: "application/json; charset=utf-8"
+    match_headers:
+      Content-Type: "application/json; charset=utf-8"
 response:
     headers:
         "Server":
@@ -437,22 +487,71 @@ Above example shows delay based on page number but you can use any parameter to 
 
 ### Builtin functions
 Go template allows custom functions that can provide customized behavior for generating test data, e.g.:
+#### Add numbers
 ```yaml
-        "SerialNumber": "{{Udid}}",
-        "AssetNumber": "{{RandString 20}}",
-        "LastSeen": "{{Time}}",
-        "Email": "{{RandEmail}}",
-        "Phone": "{{RandPhone}}",
-        "EnrollmentStatus": {{SeededBool $val}}
-        "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
-        "Group": {{RandCity}},
-        "Date": {{TimeFormat "3:04PM"}},
-        "BatteryLevel": "{{RandNumMax 100}}%",
-        "StrEnum": {{EnumString "ONE TWO THREE"}},
-        "IntEnum": {{EnumInt 10 20 30}},
+  "Num": "{{Add 1 2}}",
 ```
 
-### Conditional Logic
+#### Date/Time
+```yaml
+  "LastSeen": "{{Time}}",
+  "Date": {{Date}},
+  "DateFormatted": {{TimeFormat "3:04PM"}},
+  "LastSeen": "{{Time}}",
+```
+
+#### Comparison
+```yaml
+  {{if EQ .MyVariable 10 }}
+  {{if GE .MyVariable 10 }}
+  {{if GT .MyVariable 10 }}
+  {{if LE .MyVariable 10 }}
+  {{if LT .MyVariable 10 }}
+  {{if Nth .MyVariable 10 }}
+```
+
+#### Enums
+```yaml
+  "StrEnum": {{EnumString "ONE TWO THREE"}},
+  "IntEnum": {{EnumInt 10 20 30}},
+```
+
+### Random Data
+```yaml
+  "SerialNumber": "{{Udid}}",
+  "AssetNumber": "{{RandString 20}}",
+  "LastSeen": "{{Time}}",
+  "Host": "{{RandHost}}",
+  "Email": "{{RandEmail}}",
+  "Phone": "{{RandPhone}}",
+  "URL": "{{RandURL}}",
+  "EnrollmentStatus": {{SeededBool $val}}
+  "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
+  "City": {{RandCity}},
+  "Country": {{RandCountry}},
+  "CountryCode": {{RandCountryCode}},
+  "Completed": {{RandBool}},
+  "Date": {{TimeFormat "3:04PM"}},
+  "BatteryLevel": "{{RandNumMax 100}}%",
+  "Object": "{{RandDict}}",
+  "IntHistory": {{RandIntArrayMinMax 1 10}},
+  "StringHistory": {{RandStringArrayMinMax 1 10}},
+  "FirstName": "{{SeededName 1 10}}",
+  "LastName": "{{RandName}}",
+  "Score": "{{RandNumMinMax 1 100}}",
+  "Paragraph": "{{RandParagraph 1 10}}",
+  "Word": "{{RandWord 1 1}}",
+  "Sentence": "{{RandSentence 1 10}}",
+  "Colony": "{{RandString}}",
+```
+
+### Request count and Conditional Logic
+```yaml
+{{if NthRequest 10 }}   -- for every 10th request
+{{if GERequest 10 }}    -- if number of requests made to API so far are >= 10
+{{if LTRequest 10 }}    -- if number of requests made to API so far are < 10
+```
+
 The template syntax allows you to define a conditional logic such as:
 ```yaml
     {{if NthRequest 10 }}
@@ -462,6 +561,24 @@ The template syntax allows you to define a conditional logic such as:
     {{end}}
 ```
 In above example, the mock API will return HTTP status 500 or 501 for every 10th request and 200 or 400 for other requests. You can use conditional syntax to simulate different error status or customize response.
+
+
+### Loops
+```yaml
+  {{- range $val := Iterate 10}}
+
+     {{if LastIter $val 10}}{{else}},{{end}}
+  {{ end }}
+```
+
+### Variables
+```yaml
+     {{if VariableContains "contents" "blah"}}
+     {{if VariableEquals "contents" "blah"}}
+     {{if VariableSizeEQ "contents" "blah"}}
+     {{if VariableSizeGE "contents" "blah"}}
+     {{if VariableSizeLE "contents" "blah"}}
+```
 
 ### Test fixtures
 The mock service allows you to upload a test fixture that you can refer in your template, e.g. 
@@ -590,6 +707,20 @@ Following functions can be used to generate numeric data within a range or with 
 - RandEmail
 - RandPhone
 - RandDict
+- RandCity
+- RandName
+- RandParagraph
+- RandPhone
+- RandSentence
+- RandString
+- RandStringMinMax
+- RandWord
+
+### Email/Host/URL
+
+- RandURL
+- RandEmail
+- RandHost
 
 ### Boolean
 
@@ -726,23 +857,31 @@ curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/twilio_acc
 It will generate a mock scenarios for each API based on mime-type, status-code, parameter formats, regex, data ranges, e.g.,
 
 ```yaml
-name: UpdateAuthTokenPromotion-xx
+method: POST
+name: UpdateAuthTokenPromotion-eb3708edc5bbb05dbc7894000b1e032c3c29d40475834163797b7c5e7c368097
 path: /v1/AuthTokens/Promote
 description: Promote the secondary Auth Token to primary. After promoting the new token, all requests to Twilio using your old primary Auth Token will result in an error.
+group: v1_AuthTokens_Promote
 predicate: ""
 request:
     match_query_params: {}
     match_headers: {}
-    match_content_type: ""
-    match_contents: ""
+    match_contents: '{}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers: {}
+    example_contents: ""
 response:
     headers: {}
-    content_type: application/json
-    contents: '{"account_sid":"{{RandRegex `^AC[0-9a-fA-F]{32}$`}}",\
-    "auth_token":"{{RandStringMinMax 0 0}}","date_created":"{{Time}}",\
-    "date_updated":"{{Time}}","url":"https://{{RandName}}.com"}'
+    contents: |>
+      {"account_sid":"{{RandRegex `^AC[0-9a-fA-F]{32}$`}}",
+      "auth_token":"{{RandStringMinMax 0 0}}","date_created":"{{Time}}",
+      "date_updated":"{{Time}}","url":"{{RandURL}}"}
     contents_file: ""
     status_code: 200
+    match_headers: {}
+    match_contents: '{"account_sid":"(__string__^AC[0-9a-fA-F]{32}$)","auth_token":"(__string__\\w+)"}'
+    assertions: []
 wait_before_reply: 0s
 ```
 
@@ -809,6 +948,103 @@ Which will return summary of APIs such as:
   },
 ...  
 ```
+
+## Chaos Testing
+In addition to serving a mock service, you can also use a builtin chaos client to test remote services for stochastic testing
+by generating random data based on regex or API specifications.
+For example, you may capture a test scenario for a remote API using http proxy such as:
+```bash
+export http_proxy="http://localhost:8081"
+export https_proxy="http://localhost:8081"
+curl -k https://jsonplaceholder.typicode.com/todos
+```
+
+This will capture a mock scenario such as:
+```yaml
+method: GET
+name: recorded-todos-ff9a8e133347f7f05273f15394f722a9bcc68bb0e734af05ba3dd98a6f2248d1
+path: /todos
+description: recorded at 2022-12-12 02:23:42.845176 +0000 UTC for https://jsonplaceholder.typicode.com:443/todos
+group: todos
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers:
+        Content-Type: ""
+    match_contents: '{}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        User-Agent: curl/7.65.2
+    example_contents: ""
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Age:
+            - "19075"
+        Alt-Svc:
+            - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+        Cache-Control:
+            - max-age=43200
+        Cf-Cache-Status:
+            - HIT
+        Cf-Ray:
+            - 7782ffe4bd6bc62c-SEA
+        Connection:
+            - keep-alive
+        Content-Type:
+            - application/json; charset=utf-8
+        Date:
+            - Mon, 12 Dec 2022 02:23:42 GMT
+        Etag:
+            - W/"5ef7-4Ad6/n39KWY9q6Ykm/ULNQ2F5IM"
+        Expires:
+            - "-1"
+        Nel:
+            - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+        Pragma:
+            - no-cache
+    contents: |-
+      [
+        {
+          "userId": 1,
+          "id": 1,
+          "title": "delectus aut autem",
+          "completed": false
+        },
+        {
+          "userId": 1,
+          "id": 2,
+          "title": "quis ut nam facilis et officia qui",
+          "completed": false
+        },
+      ...
+        ]
+    contents_file: ""
+    status_code: 200
+    match_headers: {}
+    match_contents: '{"completed":"__string__.+","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assertions: []
+```
+
+You can then customize this scenario with additional assertions and you may remove all response contents as they won't be used. Note that
+above scenario is defined with group `todos`. You can then submit a request for chaos testing as follows:
+```bash
+curl -k -v -X POST http://localhost:8080/_chaos/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 10}'
+```
+
+Above request will submit 10 requests to the todo server with random data and return response such as:
+```yaml
+{"errors":null,"failed":0,"succeeded":10}
+```
+
+If you have a local captured data, you can also run chaos client with a command line without running mock server, e.g.:
+```bash
+go run main.go chaos --base_url https://jsonplaceholder.typicode.com --group todos --times 10
+```
+
 ## Static Assets
 The mock service can serve any static assets from a user-defined folder and then serve it as follows:
 ```bash

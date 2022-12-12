@@ -2,11 +2,15 @@ package oapi
 
 import (
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
+	"reflect"
 	"strings"
 
 	"github.com/bhatti/api-mock-service/internal/utils"
 )
+
+var asciiPattern = `[\x20-\x7F]{1,128}`
 
 // Property structure
 type Property struct {
@@ -37,26 +41,85 @@ func (prop *Property) String() string {
 }
 
 // Value of the property
-func (prop *Property) Value() interface{} {
+func (prop *Property) Value(dataTemplate types.DataTemplateRequest) interface{} {
 	if prop.Type == "number" || prop.Type == "integer" {
+		if dataTemplate.IncludeType {
+			if prop.Regex == "" {
+				return map[string]string{
+					prop.Name: utils.NumberPrefixRegex,
+				}
+			}
+			return map[string]string{
+				prop.Name: types.PrefixTypeNumber + prop.Regex,
+			}
+		}
 		return map[string]string{
 			prop.Name: prop.numericValue(),
 		}
 	} else if prop.Type == "boolean" {
+		if dataTemplate.IncludeType {
+			return map[string]string{
+				prop.Name: utils.BooleanPrefixRegex,
+			}
+		}
 		return map[string]string{
 			prop.Name: prop.boolValue(),
 		}
 	} else if prop.Type == "string" {
+		if dataTemplate.IncludeType {
+			if prop.Regex != "" {
+				return map[string]string{
+					prop.Name: types.PrefixTypeString + prop.Regex,
+				}
+			} else if prop.Format != "" {
+				if strings.Contains(prop.Format, "date") || strings.Contains(prop.Format, "time") {
+					return `(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))`
+				} else if prop.Format == "uri" {
+					return `http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
+				} else if prop.Format == "host" {
+					return `(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?`
+				} else {
+					return `\w+`
+				}
+			} else if len(prop.Enum) > 0 {
+				var sb strings.Builder
+				sb.WriteString(types.PrefixTypeString)
+				sb.WriteString("(")
+				for i, e := range prop.Enum {
+					if i > 0 {
+						sb.WriteString("|")
+					}
+					sb.WriteString(e)
+				}
+				sb.WriteString(")")
+				return map[string]string{
+					prop.Name: sb.String(),
+				}
+			}
+			return map[string]string{
+				prop.Name: types.PrefixTypeString + `\w+`,
+			}
+		}
 		return map[string]string{
 			prop.Name: prop.stringValue(),
 		}
 	} else if len(prop.Children) > 0 || prop.Type == "array" {
-		return prop.arrayValue()
+		return prop.arrayValue(dataTemplate)
 	} else if prop.In == "header" {
+		if dataTemplate.IncludeType {
+			return map[string]string{
+				prop.Name: types.PrefixTypeString + asciiPattern,
+			}
+		}
 		return map[string]string{
-			prop.Name: ".+",
+			prop.Name: asciiPattern,
 		}
 	} else if prop.In == "body" && prop.Type == "object" {
+		if dataTemplate.IncludeType {
+			return map[string]string{
+				prop.Name: types.PrefixTypeObject + prop.Regex,
+			}
+		}
 		return map[string]string{
 			prop.Name: "{{RandDict}}",
 		}
@@ -67,27 +130,60 @@ func (prop *Property) Value() interface{} {
 			"In":        prop.In,
 			"Children":  len(prop.Children),
 			"Type":      prop.Type}).Debugf("unknown type")
+		if dataTemplate.IncludeType {
+			return map[string]string{}
+		}
 		return map[string]string{
-			prop.Name: fmt.Sprintf("{{RandStringArrayMinMax %d %d}}", int(prop.Min), int(prop.Max)),
+			prop.Name: "{{RandDict}}",
 		}
 	}
 }
-func (prop *Property) mapValue() string {
-	val := prop.Value()
+
+func (prop *Property) mapValue(dataTemplate types.DataTemplateRequest) string {
+	val := prop.Value(dataTemplate)
 	if val == nil {
 		return ""
 	}
 	switch val.(type) {
 	case map[string]string:
+		if dataTemplate.IncludeType {
+			if prop.Regex != "" {
+				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+			}
+			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
+		}
 		m := val.(map[string]string)
 		if len(m[prop.Name]) > 0 {
 			return m[prop.Name]
 		}
 	case map[string]interface{}:
-		m := val.(map[string]interface{})
-		if m[prop.Name] != nil {
-			return fmt.Sprintf("%v", m[prop.Name])
+		if dataTemplate.IncludeType {
+			if prop.Regex != "" {
+				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+			}
+			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
+		m := val.(map[string]interface{})
+		val := m[prop.Name]
+		if val != nil {
+			return fmt.Sprintf("%v", val)
+		}
+	case string:
+		if dataTemplate.IncludeType {
+			if prop.Regex != "" {
+				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+			}
+			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
+		}
+		return val.(string)
+	default:
+		log.WithFields(log.Fields{
+			"name":    prop.Name,
+			"type":    prop.Type,
+			"subtype": prop.SubType,
+			"val":     val,
+			"valType": reflect.TypeOf(val),
+		}).Debug("unknown value type")
 	}
 	return ""
 }
@@ -120,10 +216,16 @@ func (prop *Property) stringValue() string {
 	} else if prop.Format != "" {
 		if prop.Format == "date" {
 			return "{{Date}}"
-		} else if prop.Format == "date-time" {
+		} else if strings.Contains(prop.Format, "time") {
 			return "{{Time}}"
+		} else if prop.Format == "host" {
+			return "{{RandHost}}"
+		} else if prop.Format == "email" {
+			return "{{RandEmail}}"
+		} else if prop.Format == "phone" {
+			return "{{RandPhone}}"
 		} else if prop.Format == "uri" {
-			return "https://{{RandName}}.com"
+			return "{{RandURL}}"
 		} else {
 			return "{{RandString 20}}"
 		}
@@ -134,7 +236,7 @@ func (prop *Property) stringValue() string {
 	}
 }
 
-func (prop *Property) arrayValue() interface{} {
+func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interface{} {
 	if prop.matchRequest || prop.In == "path" || prop.In == "query" {
 		if prop.Regex != "" {
 			return prop.Regex
@@ -144,7 +246,7 @@ func (prop *Property) arrayValue() interface{} {
 
 	childArr := make([]interface{}, 0)
 	for _, child := range prop.Children {
-		val := child.Value()
+		val := child.Value(dataTemplate)
 		if val != nil {
 			childArr = append(childArr, val)
 		}
@@ -156,11 +258,23 @@ func (prop *Property) arrayValue() interface{} {
 		childArr = prop.buildValueArray()
 		for i := 0; i < len(childArr); i++ {
 			if prop.SubType == "number" || prop.SubType == "integer" {
-				childArr[i] = "{{RandNumMinMax 0 0}}"
+				if dataTemplate.IncludeType {
+					childArr[i] = utils.NumberPrefixRegex
+				} else {
+					childArr[i] = "{{RandNumMinMax 0 0}}"
+				}
 			} else if prop.SubType == "boolean" {
-				childArr[i] = "{{RandBool}}"
+				if dataTemplate.IncludeType {
+					childArr[i] = utils.BooleanPrefixRegex
+				} else {
+					childArr[i] = "{{RandBool}}"
+				}
 			} else if prop.SubType == "string" {
-				childArr[i] = "{{RandStringMinMax 0 0}}"
+				if dataTemplate.IncludeType {
+					childArr[i] = types.PrefixTypeString + `\w+`
+				} else {
+					childArr[i] = "{{RandStringMinMax 0 0}}"
+				}
 			}
 		}
 		if prop.Name != "" {
@@ -226,23 +340,26 @@ func (prop *Property) buildValueArray() []interface{} {
 	return make([]interface{}, utils.RandNumMinMax(int(prop.Min), int(prop.Max)))
 }
 
-func propsToMap(props []Property) (res map[string]string) {
+func propsToMap(props []Property, defVal string, dataTemplate types.DataTemplateRequest) (res map[string]string) {
 	res = make(map[string]string)
 	for _, prop := range props {
-		val := prop.mapValue()
+		val := prop.mapValue(dataTemplate)
+		if val == "" {
+			val = defVal
+		}
 		if val != "" {
-			res[prop.Name] = prop.mapValue()
+			res[prop.Name] = val
 		}
 	}
 	return
 }
 
-func propsToMapArray(props []Property) (res map[string][]string) {
+func propsToMapArray(props []Property, dataTemplate types.DataTemplateRequest) (res map[string][]string) {
 	res = make(map[string][]string)
 	for _, prop := range props {
-		val := prop.mapValue()
+		val := prop.mapValue(dataTemplate)
 		if val != "" {
-			res[prop.Name] = []string{prop.mapValue()}
+			res[prop.Name] = []string{val}
 		}
 	}
 	return res

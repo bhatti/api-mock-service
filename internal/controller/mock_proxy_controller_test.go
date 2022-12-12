@@ -25,7 +25,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 	{
 		"userId": 1,
 		"id": 10,
-		"title": "illo est ratione doloremque quia maiores aut",
+		"title": "my test title1",
 		"completed": true
 	  }
 	`))
@@ -50,7 +50,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	{
 		"userId": 1,
 		"id": 10,
-		"title": "illo est ratione doloremque quia maiores aut",
+		"title": "my test title 5",
 		"completed": true
 	  }
 	`)

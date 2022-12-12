@@ -17,7 +17,8 @@ response:
             - "SampleAPI"
         "Connection":
             - "keep-alive"
-    content_type: application/json
+        "Content-Type":
+            - "application/json"
     contents: '{"account_sid":"{{RandRegex `^AC[0-9a-fA-F]{32}$`}}","auth_token":"{{RandStringMinMax 0 0}}","date_created":"{{Time}}","date_updated":"{{Time}}","url":"https://{{RandName}}.com"}'
     contents_file: ""
     status_code: 200

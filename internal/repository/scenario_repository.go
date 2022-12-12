@@ -21,7 +21,7 @@ type MockScenarioRepository interface {
 	// Save MockScenario
 	Save(scenario *types.MockScenario) (err error)
 
-	// Delete removes a mock senario
+	// Delete removes a mock scenario
 	Delete(
 		method types.MethodType,
 		scenarioName string,
@@ -30,9 +30,12 @@ type MockScenarioRepository interface {
 	// LookupAll finds matching scenarios
 	LookupAll(key *types.MockScenarioKeyData) ([]*types.MockScenarioKeyData, int)
 
+	// LookupAllByGroup finds matching scenarios by group
+	LookupAllByGroup(group string) []*types.MockScenarioKeyData
+
 	// Lookup finds top matching scenario that hasn't been used recently
 	Lookup(target *types.MockScenarioKeyData) (*types.MockScenario, error)
 
 	// ListScenarioKeyData returns keys for all scenarios
-	ListScenarioKeyData() []*types.MockScenarioKeyData
+	ListScenarioKeyData(group string) []*types.MockScenarioKeyData
 }

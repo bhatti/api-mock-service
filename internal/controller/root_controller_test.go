@@ -73,7 +73,7 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 	require.Error(t, err)
 
 	// WHEN looking up todos by GET with header
-	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}, types.ContentTypeHeader: {"application/yaml"}}
 
 	// WHEN invoking GET proxy API
 	err = ctrl.getRoot(ctx)
@@ -104,7 +104,7 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 		URL:    u,
 		Header: make(http.Header),
 	})
-	ctx.Request().Header = map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}}
+	ctx.Request().Header = map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}}
 
 	// WHEN invoking DELETE proxy API
 	err = ctrl.deleteRoot(ctx)
@@ -134,7 +134,7 @@ func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "POST",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking POST proxy API
@@ -165,7 +165,7 @@ func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "PUT",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking PUT proxy API
@@ -196,7 +196,7 @@ func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "Connect",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking Connect proxy API
@@ -227,7 +227,7 @@ func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "Head",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking Head proxy API
@@ -258,7 +258,7 @@ func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "Options",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking Options proxy API
@@ -289,7 +289,7 @@ func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "Patch",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking Patch proxy API
@@ -320,7 +320,7 @@ func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{
 		Method: "Trace",
 		URL:    u,
-		Header: map[string][]string{types.ContentTypeHeader: []string{"application/yaml"}, "Auth": []string{"01234567890"}},
+		Header: map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}},
 	})
 
 	// WHEN invoking Trace proxy API
@@ -340,18 +340,18 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		Description: name,
 		Request: types.MockHTTPRequest{
 			MatchQueryParams: map[string]string{"a": `\d+`, "b": "abc"},
-			MatchContentType: "application/(json|yaml)",
 			MatchHeaders: map[string]string{
-				"Auth": "[0-9a-z]{10}",
+				types.ContentTypeHeader: "application/(json|yaml)",
+				"Auth":                  "[0-9a-z]{10}",
 			},
 		},
 		Response: types.MockHTTPResponse{
 			Headers: map[string][]string{
-				"ETag": {strconv.Itoa(n)},
+				"ETag":                  {strconv.Itoa(n)},
+				types.ContentTypeHeader: {"application/json"},
 			},
-			ContentType: "application/json)",
-			Contents:    "test body",
-			StatusCode:  200,
+			Contents:   "test body",
+			StatusCode: 200,
 		},
 		WaitBeforeReply: time.Duration(1) * time.Second,
 	}

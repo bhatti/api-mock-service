@@ -1,0 +1,32 @@
+method: POST
+name: post_posts
+path: /posts
+group: ""
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers:
+        Content-Type: application/x-www-form-urlencoded
+    match_contents: '{"body":"||string||\\w+ \\w+ \\w+ \\w+ \\w+","id":"||number||[+-]?[0-9]{5,10}","title":"||string||\\w+ \\w+","userId":"||number||[+-]?[0-9]{5,10}"}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        Content-Length: "88"
+        Content-Type: application/x-www-form-urlencoded
+        User-Agent: curl/7.65.2
+    example_contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
+response:
+    headers:
+        Content-Type:
+            - application/json; charset=utf-8
+    contents: |-
+        {
+          "id": 101
+        }
+    contents_file: ""
+    status_code: 201
+    match_headers: {}
+    match_contents: '{"id":"||number||[+-]?[0-9]{5,10}"}'
+    assertions: []
+wait_before_reply: 0s

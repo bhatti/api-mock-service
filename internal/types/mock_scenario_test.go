@@ -149,11 +149,11 @@ func buildScenario() *MockScenario {
 		},
 		Response: MockHTTPResponse{
 			Headers: map[string][]string{
-				"ETag": {"123"},
+				"ETag":            {"123"},
+				ContentTypeHeader: {"application/json"},
 			},
-			ContentType: "application/json",
-			Contents:    "test body",
-			StatusCode:  200,
+			Contents:   "test body",
+			StatusCode: 200,
 		},
 		WaitBeforeReply: time.Duration(1) * time.Second,
 	}

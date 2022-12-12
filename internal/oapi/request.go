@@ -6,24 +6,21 @@ import (
 
 // Request Body
 type Request struct {
-	ContentType string
 	PathParams  []Property
 	QueryParams []Property
 	Headers     []Property
 	Body        []Property
 }
 
-func (req *Request) buildMockHTTPRequest() (_ types.MockHTTPRequest, err error) {
-	var contents []byte
-	contents, err = marshalPropertyValue(req.Body)
+func (req *Request) buildMockHTTPRequest(dataTemplate types.DataTemplateRequest) (res types.MockHTTPRequest, err error) {
+	contents, err := marshalPropertyValueWithTypes(req.Body, dataTemplate.WithInclude(true))
 	if err != nil {
-		return
+		return res, err
 	}
 	return types.MockHTTPRequest{
-		MatchContentType:  req.ContentType,
-		MatchHeaders:      propsToMap(req.Headers),
-		MatchQueryParams:  propsToMap(req.QueryParams),
-		MatchContents:     string(contents),
-		ExamplePathParams: propsToMap(req.PathParams),
+		MatchHeaders:      propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
+		MatchQueryParams:  propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
+		MatchContents:     contents,
+		ExamplePathParams: propsToMap(req.PathParams, asciiPattern, dataTemplate.WithInclude(false)),
 	}, nil
 }

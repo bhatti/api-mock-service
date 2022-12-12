@@ -23,7 +23,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 	{
 		"userId": 1,
 		"id": 10,
-		"title": "illo est ratione doloremque quia maiores aut",
+		"title": "my test title 2",
 		"completed": true
 	  }
 	`))
@@ -47,7 +47,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	{
 		"userId": 1,
 		"id": 10,
-		"title": "illo est ratione doloremque quia maiores aut",
+		"title": "my test title 4",
 		"completed": true
 	  }
 	`)
@@ -185,4 +185,32 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 		&types.Configuration{ProxyPort: 8081, MatchQueryRegex: "target", MatchHeaderRegex: "target"}, u, req, []byte("test"), []byte("test"),
 		resHeaders, 404, mockScenarioRepository)
 	require.NoError(t, err)
+}
+
+func Test_ShouldRecordRealPostProxyRequests(t *testing.T) {
+	// GIVEN repository and controller for mock scenario
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	client := web.NewHTTPClient(config)
+	reqBody := []byte(`{ "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }`)
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	reader := io.NopCloser(bytes.NewReader(reqBody))
+	u, err := url.Parse("https://jsonplaceholder.typicode.com/posts")
+	require.NoError(t, err)
+	ctx := web.NewStubContext(&http.Request{
+		Method: "POST",
+		URL:    u,
+		Header: map[string][]string{
+			"X-Mock-Url": {"https://jsonplaceholder.typicode.com/posts"},
+		},
+		Body: reader,
+	})
+	// WHEN invoking POST proxy API
+	err = recorder.Handle(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Contains(t, string(saved), "id")
 }

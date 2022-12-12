@@ -12,8 +12,9 @@
         "parameters": [
           {
             "name": "jobId",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "in": "path",
-            "description": "Unique identifier of job",
+            "description": "Unique identifier of job in path",
             "schema": {
               "type": "string",
               "description": "Unique identifier of job"
@@ -23,7 +24,14 @@
         ],
         "responses": {
           "200": {
-            "description": "CancelJob 200 response"
+            "description": "CancelJob 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelJobResponseContent"
+                }
+              }
+            }
           },
           "400": {
             "description": "ValidationException 400 response",
@@ -104,6 +112,14 @@
             "schema": {
               "type": "string",
               "description": "name of job"
+            },
+            "required": false
+          },
+          {
+            "name": "x-test-header",
+            "in": "header",
+            "schema": {
+              "type": "string",
             },
             "required": false
           }
@@ -194,6 +210,7 @@
           {
             "name": "jobId",
             "in": "path",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "description": "Unique identifier of job",
             "schema": {
               "type": "string",
@@ -208,7 +225,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetJobByIdResponseContent"
+                  "$ref": "#/components/schemas/JobDetail"
                 }
               }
             }
@@ -287,6 +304,7 @@
         "parameters": [
           {
             "name": "jobId",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "in": "path",
             "description": "Unique identifier of job",
             "schema": {
@@ -298,7 +316,14 @@
         ],
         "responses": {
           "200": {
-            "description": "PauseJob 200 response"
+            "description": "PauseJob 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PauseJobResponseContent"
+                }
+              }
+            }
           },
           "400": {
             "description": "ValidationException 400 response",
@@ -364,6 +389,7 @@
         "parameters": [
           {
             "name": "jobId",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "in": "path",
             "description": "Unique identifier of job",
             "schema": {
@@ -375,7 +401,14 @@
         ],
         "responses": {
           "200": {
-            "description": "ResumeJob 200 response"
+            "description": "ResumeJob 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeJobResponseContent"
+                }
+              }
+            }
           },
           "400": {
             "description": "ValidationException 400 response",
@@ -441,6 +474,7 @@
         "parameters": [
           {
             "name": "jobId",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "in": "path",
             "description": "Unique identifier of job",
             "schema": {
@@ -452,7 +486,14 @@
         ],
         "responses": {
           "200": {
-            "description": "SetDefaultState 200 response"
+            "description": "SetDefaultState 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateJobResponseContent"
+                }
+              }
+            }
           },
           "400": {
             "description": "ValidationException 400 response",
@@ -474,6 +515,7 @@
         "parameters": [
           {
             "name": "jobId",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "in": "path",
             "description": "Unique identifier of job",
             "schema": {
@@ -495,7 +537,14 @@
         ],
         "responses": {
           "200": {
-            "description": "SetState 200 response"
+            "description": "SetState 200 response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateJobResponseContent"
+                }
+              }
+            }
           },
           "500": {
             "description": "InternalServerException 500 response",
@@ -525,6 +574,8 @@
         "description": "A user does not have sufficient access to perform an action",
         "properties": {
           "message": {
+            "min_length": 34,
+            "max_length": 34,
             "type": "string"
           }
         },
@@ -664,7 +715,60 @@
         "properties": {
           "jobId": {
             "type": "string",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
             "description": "Unique identifier of job"
+          }
+        }
+      },
+      "StateJobResponseContent": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
+            "description": "Unique identifier of job"
+          },
+          "jobStatus": {
+            "$ref": "#/components/schemas/JobStatus"
+          }
+        }
+      },
+      "CancelJobResponseContent": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
+            "description": "Unique identifier of job"
+          },
+          "jobStatus": {
+            "$ref": "#/components/schemas/JobStatus"
+          }
+        }
+      },
+      "PauseJobResponseContent": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
+            "description": "Unique identifier of job"
+          },
+          "jobStatus": {
+            "$ref": "#/components/schemas/JobStatus"
+          }
+        }
+      },
+      "ResumeJobResponseContent": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "pattern": "^AC[0-9a-fA-F]{10}$",
+            "description": "Unique identifier of job"
+          },
+          "jobStatus": {
+            "$ref": "#/components/schemas/JobStatus"
           }
         }
       },
@@ -672,14 +776,6 @@
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/JobDetail"
-        }
-      },
-      "GetJobByIdResponseContent": {
-        "type": "object",
-        "properties": {
-          "job": {
-            "$ref": "#/components/schemas/JobDetail"
-          }
         }
       },
       "InternalServerExceptionResponseContent": {
@@ -698,7 +794,8 @@
         "type": "object",
         "properties": {
           "jobId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "AC[0-9a-fA-F]{10}$"
           },
           "name": {
             "type": "string"
@@ -706,16 +803,18 @@
           "add": {
             "type": "array",
             "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "field.[0-9a-fA-F]{10}$"
             },
-            "maxItems": 1,
+            "maxItems": 1
           },
           "remove": {
             "type": "array",
             "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "field.[0-9a-fA-F]{10}$"
             },
-            "maxItems": 1,
+            "maxItems": 1
           },
           "attributeMap": {
             "$ref": "#/components/schemas/AttributeMap"
@@ -789,6 +888,7 @@
         "type": "apiKey",
         "description": "API key authentication via the 'x-api-key' header",
         "name": "x-api-key",
+        "pattern": "^AC[0-9a-fA-F]{10}$",
         "in": "header"
       }
     }

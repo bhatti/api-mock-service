@@ -24,8 +24,7 @@ func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKey
 		Name:             req.Header.Get(types.MockScenarioName),
 		Path:             req.URL.Path,
 		MatchQueryParams: make(map[string]string),
-		MatchHeaders:     make(map[string]string),
-		MatchContentType: req.Header.Get(types.ContentTypeHeader),
+		MatchHeaders:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
 		MatchContents:    string(reqBytes),
 	}
 	for k, v := range req.URL.Query() {

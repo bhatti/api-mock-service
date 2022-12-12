@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/chaos"
 	"os"
 	"strconv"
 	"strings"
@@ -164,10 +165,12 @@ func buildControllers(
 ) (err error) {
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 	player := proxy.NewPlayer(scenarioRepo, fixtureRepo)
+	executor := chaos.NewExecutor(scenarioRepo, httpClient)
 	_ = controller.NewMockOAPIController(scenarioRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, webServer)
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
 	_ = controller.NewMockProxyController(recorder, webServer)
+	_ = controller.NewMockChaosController(executor, webServer)
 	_ = controller.NewRootController(player, webServer)
 	if serverConfig.AssetDir != "" {
 		webServer.Static(serverConfig.AssetDir)

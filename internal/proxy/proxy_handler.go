@@ -97,7 +97,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	resp.Request = req
 	resp.TransferEncoding = req.TransferEncoding
 	resp.Header = respHeader
-	resp.Header.Add("Content-Type", matchedScenario.Response.ContentType)
+	resp.Header.Add(types.ContentTypeHeader, matchedScenario.Response.ContentType())
 	resp.StatusCode = matchedScenario.Response.StatusCode
 	resp.Status = http.StatusText(matchedScenario.Response.StatusCode)
 	buf := bytes.NewBuffer(respBody)
@@ -154,7 +154,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 		return resp, err
 	}
 	resp.Body = io.NopCloser(bytes.NewReader(resBytes))
-	resp.Header["Content-Type"] = []string{resContentType}
+	resp.Header[types.ContentTypeHeader] = []string{resContentType}
 	log.WithFields(log.Fields{
 		"Response": resp,
 		"Length":   len(resBytes),

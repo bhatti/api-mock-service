@@ -2,10 +2,14 @@ method: POST
 name: post-todo
 path: /todos/2
 request:
+    match_query_params: {}
     match_headers:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/2
-    match_content_type: ""
-    match_contents: '{"id": 202, "userId": 505, "title": "Buy milk", "completed": False}'
+        x-api-key: '[\x20-\x7F]{1,128}'
+        Content-Type: application/x-www-form-urlencoded
+    example_path_params:
+        id: '\d{3}'
+    match_contents: '{"completed":"||boolean||(false|true)","id":"||number||[+-]?[0-9]{5,10}","title":"||string||\\w+ \\w+ \\w+","userId":"||number||[+-]?[0-9]{5,10}"}'
 response:
     headers: {}
     content_type: ""
@@ -15,4 +19,6 @@ response:
           "id": 2
         }
     status_code: 200
+    assertions:
+      - {{contents.id > 0}}
 wait_before_reply: 1s

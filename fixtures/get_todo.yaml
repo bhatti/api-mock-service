@@ -2,8 +2,16 @@ method: GET
 name: todo-get
 path: /todos/10
 request:
+    match_query_params: {}
     match_headers:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/10
+        x-api-key: '[\x20-\x7F]{1,32}'
+    example_headers:
+        x-api-key: '[\x20-\x7F]{1,32}'
+    example_query_params:
+        group: '[a-zA-Z]{5,10}'
+    example_path_params:
+        id: '[0-9]{4,10}'
     match_content_type: ""
     match_contents: ""
 response:
@@ -11,10 +19,14 @@ response:
     content_type: ""
     contents: |-
         {
-        		"userId": 1,
+        		"userId": 15,
         		"id": 10,
-        		"title": "illo est ratione doloremque quia maiores aut",
+        		"title": "illo test title",
         		"completed": true
         	  }
+    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     status_code: 200
+    assertions:
+        - VariableContains contents.id 10
+        - VariableContains contents.title illo
 wait_before_reply: 1s

@@ -19,7 +19,8 @@ response:
             - "SampleAPI"
         "Connection": 
             - "keep-alive"
-    content_type: application/json
+        "Content-Type":
+            - "application/json"
     contents: >
      {
      "Devices": [

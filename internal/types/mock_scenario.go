@@ -45,14 +45,24 @@ const ScenarioExt = ".scr"
 // RequestCount name
 const RequestCount = "_RequestCount"
 
+// PrefixTypeNumber type
+const PrefixTypeNumber = "__number__"
+
+// PrefixTypeBoolean type
+const PrefixTypeBoolean = "__boolean__"
+
+// PrefixTypeString type
+const PrefixTypeString = "__string__"
+
+// PrefixTypeObject type
+const PrefixTypeObject = "__object__"
+
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
 	// MatchQueryParams for the API
 	MatchQueryParams map[string]string `yaml:"match_query_params" json:"match_query_params"`
 	// MatchHeaders for mock response
 	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
-	// MatchContentType for the response
-	MatchContentType string `yaml:"match_content_type" json:"match_content_type"`
 	// MatchContents for request optionally
 	MatchContents string `yaml:"match_contents" json:"match_contents"`
 	// ExamplePathParams sample for the API
@@ -69,14 +79,27 @@ type MockHTTPRequest struct {
 type MockHTTPResponse struct {
 	// Headers for mock response
 	Headers map[string][]string `yaml:"headers" json:"headers"`
-	// ContentType for the response
-	ContentType string `yaml:"content_type" json:"content_type"`
 	// Contents for request
 	Contents string `yaml:"contents" json:"contents"`
 	// ContentsFile for request
 	ContentsFile string `yaml:"contents_file" json:"contents_file"`
 	// StatusCode for response
 	StatusCode int `yaml:"status_code" json:"status_code"`
+	// MatchHeaders for mock response
+	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
+	// MatchContents for request optionally
+	MatchContents string `yaml:"match_contents" json:"match_contents"`
+	// Assertions for validating response
+	Assertions []string `yaml:"assertions" json:"assertions"`
+}
+
+func (r MockHTTPResponse) ContentType() string {
+	for k, v := range r.Headers {
+		if k == ContentTypeHeader {
+			return v[0]
+		}
+	}
+	return ""
 }
 
 // MockScenario defines mock scenario for APIs
@@ -89,6 +112,8 @@ type MockScenario struct {
 	Path string `yaml:"path" json:"path"`
 	// Description of scenario
 	Description string `yaml:"description" json:"description"`
+	// Group of scenario
+	Group string `yaml:"group" json:"group"`
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// Request for the API
@@ -111,9 +136,9 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 		Method:           ms.Method,
 		Name:             ms.Name,
 		Path:             rawPath,
+		Group:            ms.Group,
 		Predicate:        ms.Predicate,
 		MatchQueryParams: ms.Request.MatchQueryParams,
-		MatchContentType: ms.Request.MatchContentType,
 		MatchContents:    ms.Request.MatchContents,
 		MatchHeaders:     ms.Request.MatchHeaders,
 	}
@@ -121,21 +146,20 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 
 // String
 func (ms *MockScenario) String() string {
-	return string(ms.Method) + ms.Name + ms.Path
+	return string(ms.Method) + ms.Name + ms.Group + ms.Path
 }
 
 // Digest of scenario
 func (ms *MockScenario) Digest() string {
 	h := sha256.New()
 	h.Write([]byte(ms.Method))
+	h.Write([]byte(ms.Group))
 	h.Write([]byte(ms.Path))
 	for k, v := range ms.Request.MatchQueryParams {
 		h.Write([]byte(k))
 		h.Write([]byte(v))
 	}
-	h.Write([]byte(ms.Request.MatchContentType))
 	h.Write([]byte(ms.Request.MatchContents))
-	h.Write([]byte(ms.Response.ContentType))
 	h.Write([]byte(ms.Response.Contents))
 	h.Write([]byte(ms.Response.ContentsFile))
 	return fmt.Sprintf("%x", h.Sum(nil))

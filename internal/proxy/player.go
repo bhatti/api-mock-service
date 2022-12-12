@@ -54,7 +54,7 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 	}
 	return c.Blob(
 		matchedScenario.Response.StatusCode,
-		matchedScenario.Response.ContentType,
+		matchedScenario.Response.ContentType(),
 		respBody)
 }
 

@@ -85,10 +85,10 @@ func (w *StubHTTPClient) Handle(
 	if method == "" {
 		return 500, nil, nil, fmt.Errorf("method is not specified")
 	}
-	log.WithFields(log.Fields{"component": "stub-web", "url": url, "method": method}).Info("BEGIN")
+	log.WithFields(log.Fields{"component": "stub-web", "url": url, "method": method}).Debugf("BEGIN")
 	resp := w.getMapping(method, url)
 	if resp == nil {
-		return 404, nil, nil, fmt.Errorf("couldn't find URL '%s' method '%s' in mapping", url, method)
+		return 404, nil, nil, fmt.Errorf("couldn't find URL '%s' method '%s' in mapping: %v", url, method, w.mappingByMethodURL)
 	}
 	if resp.sleepDuration > 0 {
 		time.Sleep(resp.sleepDuration)

@@ -13,6 +13,7 @@ import (
 
 // APISpec structure
 type APISpec struct {
+	Title       string
 	ID          string
 	Description string
 	Path        string
@@ -22,7 +23,12 @@ type APISpec struct {
 }
 
 // ParseAPISpec converts open-api operation to API specs
-func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) (specs []*APISpec) {
+func ParseAPISpec(
+	title string,
+	method types.MethodType,
+	path string,
+	op *openapi3.Operation,
+	dataTemplate types.DataTemplateRequest) (specs []*APISpec) {
 	specs = make([]*APISpec, 0)
 	if op == nil {
 		return
@@ -39,7 +45,7 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 			param.Value.Name = param.Ref
 		}
 		if param.Value.Schema != nil {
-			property := schemaToProperty(param.Value.Name, true, param.Value.In, param.Value.Schema.Value)
+			property := schemaToProperty(param.Value.Name, true, param.Value.In, param.Value.Schema.Value, dataTemplate)
 			if param.Value.In == "path" {
 				pathParams = append(pathParams, property)
 			} else if param.Value.In == "header" {
@@ -51,12 +57,14 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 	}
 
 	for status, resp := range op.Responses {
-		respHeaders := extractHeaders(resp.Value.Headers)
+		respHeaders := extractHeaders(resp.Value.Headers, dataTemplate)
 
 		for resContentType, resMedia := range resp.Value.Content {
 			if len(reqContent) > 0 {
 				for reqContentType, reqMedia := range reqContent {
+					reqHeaders = append(reqHeaders, Property{Name: "ContentsType", Regex: reqContentType, Type: "string", In: "header"})
 					spec := &APISpec{
+						Title:       title,
 						ID:          op.OperationID,
 						Description: op.Description,
 						Method:      method,
@@ -66,19 +74,19 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 							QueryParams: queryParams,
 							PathParams:  pathParams,
 							Body:        make([]Property, 0),
-							ContentType: reqContentType,
 						},
 						Response: Response{
 							Headers:     respHeaders,
 							ContentType: resContentType,
-							Body:        []Property{schemaToProperty("", false, "body", resMedia.Schema.Value)},
-							StatusCode:  parseResponseStatus(status),
+							Body: []Property{schemaToProperty("", false,
+								"body", resMedia.Schema.Value, dataTemplate)},
+							StatusCode: parseResponseStatus(status),
 						},
 					}
 					if op.RequestBody != nil && op.RequestBody.Value != nil {
-						spec.Request.ContentType = reqContentType
 						spec.Request.Body = append(spec.Request.Body,
-							schemaToProperty("", true, "body", reqMedia.Schema.Value))
+							schemaToProperty("", true,
+								"body", reqMedia.Schema.Value, dataTemplate))
 					}
 					specs = append(specs, spec)
 				}
@@ -93,13 +101,13 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 						QueryParams: queryParams,
 						PathParams:  pathParams,
 						Body:        make([]Property, 0),
-						ContentType: "",
 					},
 					Response: Response{
 						Headers:     respHeaders,
 						ContentType: resContentType,
-						Body:        []Property{schemaToProperty("", false, "body", resMedia.Schema.Value)},
-						StatusCode:  parseResponseStatus(status),
+						Body: []Property{schemaToProperty("", false,
+							"body", resMedia.Schema.Value, dataTemplate)},
+						StatusCode: parseResponseStatus(status),
 					},
 				}
 				specs = append(specs, spec)
@@ -110,20 +118,21 @@ func ParseAPISpec(method types.MethodType, path string, op *openapi3.Operation) 
 }
 
 // BuildMockScenario builds mock scenario from API spec
-func (api *APISpec) BuildMockScenario() (*types.MockScenario, error) {
-	req, err := api.Request.buildMockHTTPRequest()
+func (api *APISpec) BuildMockScenario(dataTemplate types.DataTemplateRequest) (*types.MockScenario, error) {
+	req, err := api.Request.buildMockHTTPRequest(dataTemplate)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to build request for mock scenario %s - %s due to %w", api.Path, api.Method, err)
 	}
-	res, err := api.Response.buildMockHTTPResponse()
+	res, err := api.Response.buildMockHTTPResponse(dataTemplate)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to build response for mock scenario due to %w", err)
 	}
 
 	spec := &types.MockScenario{
 		Description:     api.Description,
 		Method:          api.Method,
 		Path:            api.Path,
+		Group:           utils.NormalizeGroup(api.Title, api.Path),
 		Request:         req,
 		Response:        res,
 		WaitBeforeReply: 0,
@@ -135,9 +144,25 @@ func (api *APISpec) BuildMockScenario() (*types.MockScenario, error) {
 	return spec, nil
 }
 
-func marshalPropertyValue(params []Property) (out []byte, err error) {
+func marshalPropertyValueWithTypes(params []Property, dataTemplate types.DataTemplateRequest) (out string, err error) {
+	matchContents, err := marshalPropertyValue(params, dataTemplate.WithInclude(true))
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal params due to %w", err)
+	}
+	res, err := utils.UnmarshalArrayOrObject(matchContents)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal params object/array '%s' due to %w", matchContents, err)
+	}
+	j, err := json.Marshal(utils.FlatRegexMap(res))
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal params flat map due to %w", err)
+	}
+	return string(j), nil
+}
+
+func marshalPropertyValue(params []Property, dataTemplate types.DataTemplateRequest) (out []byte, err error) {
 	out = []byte{}
-	arr := propertyValue(params)
+	arr := propertyValue(params, dataTemplate)
 	if len(arr) > 1 {
 		out, err = json.Marshal(arr)
 	} else if len(arr) > 0 {
@@ -151,9 +176,9 @@ func stripQuotes(b []byte) []byte {
 	return []byte(re.ReplaceAllString(string(b), `{{$1}}`))
 }
 
-func propertyValue(params []Property) (res []interface{}) {
+func propertyValue(params []Property, dataTemplate types.DataTemplateRequest) (res []interface{}) {
 	for _, param := range params {
-		val := param.Value()
+		val := param.Value(dataTemplate)
 		if val != nil {
 			res = append(res, val)
 		}
@@ -161,7 +186,12 @@ func propertyValue(params []Property) (res []interface{}) {
 	return
 }
 
-func schemaToProperty(name string, matchRequest bool, in string, schema *openapi3.Schema) Property {
+func schemaToProperty(
+	name string,
+	matchRequest bool,
+	in string,
+	schema *openapi3.Schema,
+	dataTemplate types.DataTemplateRequest) Property {
 	property := Property{
 		Name:         name,
 		Description:  schema.Description,
@@ -191,18 +221,18 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 	if schema.Items != nil && schema.Items.Value != nil {
 		property.SubType = schema.Items.Value.Type
 		for name, next := range schema.Items.Value.Properties {
-			childProperty := schemaToProperty(name, matchRequest, in, next.Value)
+			childProperty := schemaToProperty(name, matchRequest, in, next.Value, dataTemplate)
 			property.Children = append(property.Children, childProperty)
 		}
-		addAllAnySchemaToProperty(schema.Items.Value, &property, matchRequest, in)
+		addAllAnySchemaToProperty(schema.Items.Value, &property, matchRequest, in, dataTemplate)
 	}
-	addAllAnySchemaToProperty(schema, &property, matchRequest, in)
+	addAllAnySchemaToProperty(schema, &property, matchRequest, in, dataTemplate)
 	for name, prop := range schema.Properties {
-		property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+		property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 	}
 	if schema.AdditionalProperties != nil {
 		for name, prop := range schema.AdditionalProperties.Value.Properties {
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
 	}
 	if property.In == "body" {
@@ -212,36 +242,44 @@ func schemaToProperty(name string, matchRequest bool, in string, schema *openapi
 			"In":        property.In,
 			"Children":  len(property.Children),
 			"Type":      property.Type,
-			"Value":     property.Value(),
+			"Value":     property.Value(dataTemplate),
 		}).Debugf("parsing property")
 	}
 
 	return property
 }
 
-func addAllAnySchemaToProperty(schema *openapi3.Schema, property *Property, matchRequest bool, in string) {
+func addAllAnySchemaToProperty(
+	schema *openapi3.Schema,
+	property *Property,
+	matchRequest bool, in string,
+	dataTemplate types.DataTemplateRequest,
+) {
 	for _, next := range schema.AllOf {
 		property.SubType = next.Value.Type
 		for name, prop := range next.Value.Properties {
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
 	}
 	// TODO add support for any-of/one-of at the property
 	for _, next := range schema.AllOf {
 		property.SubType = next.Value.Type
 		for name, prop := range next.Value.Properties {
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
 	}
 	for _, next := range schema.AllOf {
 		property.SubType = next.Value.Type
 		for name, prop := range next.Value.Properties {
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value))
+			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
 	}
 }
 
-func extractHeaders(headers openapi3.Headers) (res []Property) {
+func extractHeaders(
+	headers openapi3.Headers,
+	dataTemplate types.DataTemplateRequest,
+) (res []Property) {
 	for k, header := range headers {
 		if header.Value.Schema == nil {
 			continue
@@ -249,7 +287,7 @@ func extractHeaders(headers openapi3.Headers) (res []Property) {
 		if header.Value.Name == "" {
 			header.Value.Name = k
 		}
-		property := schemaToProperty(header.Value.Name, false, header.Value.In, header.Value.Schema.Value)
+		property := schemaToProperty(header.Value.Name, false, header.Value.In, header.Value.Schema.Value, dataTemplate)
 		res = append(res, property)
 	}
 	return

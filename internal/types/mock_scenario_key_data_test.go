@@ -67,7 +67,7 @@ func Test_ShouldCompareEqualsMockScenarioKeyData(t *testing.T) {
 	require.Error(t, keyData1.Equals(keyData2))
 	keyData1.MatchContents = "content1"
 	require.Error(t, keyData1.Equals(keyData2))
-	keyData1.MatchContentType = "yaml"
+	keyData1.MatchHeaders[ContentTypeHeader] = "yaml"
 	require.Error(t, keyData1.Equals(keyData2))
 	keyData1.MatchQueryParams["xyz"] = "111"
 	require.Error(t, keyData1.Equals(keyData2))

@@ -157,7 +157,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{Body: reader, Method: string(scenario.Method), URL: u})
-	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}, "Content-Type": []string{"application/json"}}
 
 	// WHEN creating mock scenario
 	err = ctrl.PostMockScenario(ctx)

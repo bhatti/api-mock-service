@@ -58,6 +58,7 @@ func Test_ShouldGetRandName(t *testing.T) {
 
 func Test_ShouldGetRandString(t *testing.T) {
 	require.True(t, RandString(5) != "")
+	require.Equal(t, "", RandString(0))
 }
 
 func Test_ShouldGetRandStringMinMax(t *testing.T) {
@@ -72,8 +73,18 @@ func Test_ShouldGetRandIntArrayMinMax(t *testing.T) {
 	require.True(t, len(RandIntArrayMinMax(5, 10)) >= 5)
 }
 
+func Test_ShouldGetRandRegexAny(t *testing.T) {
+	require.True(t, RandRegex(`[\x20-\x7F]{1,40}`) != "")
+}
+
 func Test_ShouldGetRandRegex(t *testing.T) {
 	require.Equal(t, "abc", RandRegex("abc"))
+}
+
+func Test_ShouldGetRandRegexWord(t *testing.T) {
+	require.True(t, RandRegex(AnyWordRegex) != "")
+	require.True(t, RandRegex(`\w`) != "")
+	require.True(t, RandRegex(`\w+@\w+\.\w+`) != "")
 }
 
 func Test_ShouldGetRandPhone(t *testing.T) {
@@ -84,10 +95,34 @@ func Test_ShouldGetRandEmail(t *testing.T) {
 	require.Contains(t, RandEmail(), "@")
 }
 
+func Test_ShouldGetRandHost(t *testing.T) {
+	require.Contains(t, RandHost(), ".")
+}
+
+func Test_ShouldGetRandURL(t *testing.T) {
+	require.Contains(t, RandURL(), "://")
+}
+
 func Test_ShouldGetRandFileLine(t *testing.T) {
 	require.True(t, RandFileLine("../../fixtures/lines.txt") != "")
 }
 
 func Test_ShouldGetRandPropertyLine(t *testing.T) {
 	require.Equal(t, "sample token", FileProperty("../../fixtures/props.yaml", "token"))
+}
+
+func Test_ShouldGenerateWord(t *testing.T) {
+	require.True(t, RandWord(1, 10) != "")
+}
+
+func Test_ShouldGenerateWordEmpty(t *testing.T) {
+	require.Equal(t, 1, len(RandWord(0, 0)))
+}
+
+func Test_ShouldGenerateSentence(t *testing.T) {
+	require.True(t, RandSentence(1, 10) != "")
+}
+
+func Test_ShouldGenerateParagraph(t *testing.T) {
+	require.True(t, RandParagraph(1, 10) != "")
 }

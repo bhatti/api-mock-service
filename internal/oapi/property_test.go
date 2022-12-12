@@ -2,6 +2,7 @@ package oapi
 
 import (
 	"context"
+	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -15,16 +16,17 @@ func Test_ShouldBuildProperty(t *testing.T) {
 	doc, err := loader.LoadFromData(data)
 	require.NoError(t, err)
 	reqParam := doc.Paths["/v1/Credentials/AWS"].Get.Parameters[0]
-	reqProperty := schemaToProperty(reqParam.Value.Name, true, reqParam.Value.In, reqParam.Value.Schema.Value)
+	dataTempl := types.NewDataTemplateRequest(false, 1, 1)
+	reqProperty := schemaToProperty(reqParam.Value.Name, true, reqParam.Value.In, reqParam.Value.Schema.Value, dataTempl)
 	require.Equal(t, float64(1), reqProperty.Min)
 	require.Equal(t, float64(1000), reqProperty.Max)
 	require.Equal(t, "integer", reqProperty.Type)
 	require.Contains(t, reqProperty.String(), reqProperty.Name)
 
 	for k, resParam := range doc.Paths["/v1/Credentials/AWS"].Get.Responses["200"].Value.Content.Get("application/json").Schema.Value.Properties {
-		resProperty := schemaToProperty(k, false, "body", resParam.Value)
+		resProperty := schemaToProperty(k, false, "body", resParam.Value, dataTempl)
 		require.Contains(t, resProperty.String(), k)
-		require.NotNil(t, resProperty.Value())
+		require.NotNil(t, resProperty.Value(dataTempl))
 	}
 
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/utils"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"time"
@@ -80,7 +81,7 @@ func saveMockResponse(
 	u *url.URL,
 	req *http.Request,
 	reqBody []byte,
-	resBytes []byte,
+	resBody []byte,
 	resHeaders map[string][]string,
 	status int,
 	mockScenarioRepository repository.MockScenarioRepository) (resContentType string, err error) {
@@ -90,28 +91,46 @@ func saveMockResponse(
 		if len(val) > 0 {
 			resContentType = val[0]
 		}
-
 	}
 
+	dataTemplate := types.NewDataTemplateRequest(true, 1, 1)
+	matchReqContents, err := utils.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(reqBody), dataTemplate)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   req.URL,
+			"Method": req.Method,
+			"Error":  err,
+		}).Warnf("failed to unmarshal and extrate types for request")
+	}
+	matchResContents, err := utils.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(resBody), dataTemplate)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   req.URL,
+			"Method": req.Method,
+			"Error":  err,
+		}).Warnf("failed to unmarshal and extrate types for response")
+	}
 	scenario := &types.MockScenario{
 		Method: types.MethodType(req.Method),
 		Name:   req.Header.Get(types.MockScenarioName),
 		Path:   u.Path,
+		Group:  utils.NormalizeGroup("", u.Path),
 		Request: types.MockHTTPRequest{
 			MatchQueryParams:   make(map[string]string),
-			MatchHeaders:       make(map[string]string),
-			MatchContentType:   req.Header.Get(types.ContentTypeHeader),
+			MatchHeaders:       map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
+			MatchContents:      matchReqContents,
 			ExampleQueryParams: make(map[string]string),
 			ExampleHeaders:     make(map[string]string),
 			ExampleContents:    string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
-			Headers:     resHeaders,
-			ContentType: resContentType,
-			Contents:    string(resBytes),
-			StatusCode:  status,
+			Headers:       resHeaders,
+			Contents:      string(resBody),
+			StatusCode:    status,
+			MatchContents: matchResContents,
 		},
 	}
+
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
 			scenario.Request.ExampleQueryParams[k] = v[0]
@@ -128,9 +147,11 @@ func saveMockResponse(
 			}
 		}
 	}
+
 	if scenario.Name == "" {
 		scenario.Name = fmt.Sprintf("recorded-%s-%s", scenario.NormalName(), scenario.Digest())
 	}
+
 	scenario.Description = fmt.Sprintf("recorded at %v for %s", time.Now().UTC(), u)
 	if err = mockScenarioRepository.Save(scenario); err != nil {
 		return "", err

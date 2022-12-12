@@ -42,13 +42,14 @@ func (moc *MockOAPIController) PostMockOAPIScenario(c web.APIContext) (err error
 	if err != nil {
 		return err
 	}
-	specs, err := oapi.Parse(context.Background(), data)
+	dataTempl := types.NewDataTemplateRequest(true, 1, 1)
+	specs, err := oapi.Parse(context.Background(), data, dataTempl)
 	if err != nil {
 		return err
 	}
 	scenarios := make([]*types.MockScenario, 0)
 	for _, spec := range specs {
-		scenario, err := spec.BuildMockScenario()
+		scenario, err := spec.BuildMockScenario(dataTempl)
 		if err != nil {
 			return err
 		}
