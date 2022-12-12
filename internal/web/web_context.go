@@ -1,12 +1,11 @@
 package web
 
 import (
+	"github.com/labstack/echo/v4"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
-
-	"github.com/labstack/echo/v4"
 )
 
 // APIContext interface
@@ -42,20 +41,20 @@ type APIContext interface { //nolint
 	SetCookie(cookie *http.Cookie)
 
 	// Get retrieves data from the context.
-	Get(key string) interface{}
+	Get(key string) any
 
 	// Set saves data in the context.
-	Set(key string, val interface{})
+	Set(key string, val any)
 
 	// Render renders a template with data and sends a text/html response with status
 	// code. Renderer must be registered using `Echo.Renderer`.
-	Render(code int, name string, data interface{}) error
+	Render(code int, name string, data any) error
 
 	// String sends a string response with status code.
 	String(code int, s string) error
 
 	// JSON sends a JSON response with status code.
-	JSON(code int, i interface{}) error
+	JSON(code int, i any) error
 
 	// MultipartForm returns the multipart form.
 	MultipartForm() (*multipart.Form, error)

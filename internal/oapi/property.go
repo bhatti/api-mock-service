@@ -2,10 +2,11 @@ package oapi
 
 import (
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types"
-	log "github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
+
+	"github.com/bhatti/api-mock-service/internal/types"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/bhatti/api-mock-service/internal/utils"
 )
@@ -41,7 +42,7 @@ func (prop *Property) String() string {
 }
 
 // Value of the property
-func (prop *Property) Value(dataTemplate types.DataTemplateRequest) interface{} {
+func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 	if prop.Type == "number" || prop.Type == "integer" {
 		if dataTemplate.IncludeType {
 			if prop.Regex == "" {
@@ -156,14 +157,14 @@ func (prop *Property) mapValue(dataTemplate types.DataTemplateRequest) string {
 		if len(m[prop.Name]) > 0 {
 			return m[prop.Name]
 		}
-	case map[string]interface{}:
+	case map[string]any:
 		if dataTemplate.IncludeType {
 			if prop.Regex != "" {
 				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
 			}
 			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
-		m := val.(map[string]interface{})
+		m := val.(map[string]any)
 		val := m[prop.Name]
 		if val != nil {
 			return fmt.Sprintf("%v", val)
@@ -236,7 +237,7 @@ func (prop *Property) stringValue() string {
 	}
 }
 
-func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interface{} {
+func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) any {
 	if prop.matchRequest || prop.In == "path" || prop.In == "query" {
 		if prop.Regex != "" {
 			return prop.Regex
@@ -244,7 +245,7 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interfa
 		return nil
 	}
 
-	childArr := make([]interface{}, 0)
+	childArr := make([]any, 0)
 	for _, child := range prop.Children {
 		val := child.Value(dataTemplate)
 		if val != nil {
@@ -278,14 +279,14 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interfa
 			}
 		}
 		if prop.Name != "" {
-			return map[string]interface{}{prop.Name: childArr}
+			return map[string]any{prop.Name: childArr}
 		}
 		return childArr
 	}
 
 	// if property has name or is object (e.g. jobs openapi)
 	if prop.Name == "" || prop.Type == "object" || (prop.Type == "array" && len(childArr) > 1) {
-		res := make(map[string]interface{})
+		res := make(map[string]any)
 		for _, child := range childArr {
 			switch child.(type) {
 			case map[string]string:
@@ -293,8 +294,8 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interfa
 				for k, v := range subProperty {
 					res[k] = v
 				}
-			case map[string]interface{}:
-				subProperty := child.(map[string]interface{})
+			case map[string]any:
+				subProperty := child.(map[string]any)
 				for k, v := range subProperty {
 					res[k] = v
 				}
@@ -308,13 +309,13 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interfa
 			}
 			// see jobs-openapi for examples
 			if prop.Name != "" {
-				return map[string]interface{}{prop.Name: arr}
+				return map[string]any{prop.Name: arr}
 			}
 			return arr
 		}
 		// see jobs-openapi for examples
 		if prop.Name != "" {
-			return map[string]interface{}{prop.Name: res}
+			return map[string]any{prop.Name: res}
 		}
 		return res
 	}
@@ -324,19 +325,19 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) interfa
 		"subtype": prop.SubType,
 		"Res":     len(childArr),
 	}).Debug("default else for parsing property")
-	return map[string]interface{}{
+	return map[string]any{
 		prop.Name: childArr,
 	}
 }
 
-func (prop *Property) buildValueArray() []interface{} {
+func (prop *Property) buildValueArray() []any {
 	if prop.Max == 0 {
 		prop.Max = prop.Min + float64(utils.RandNumMinMax(1, 5))
 	}
 	if prop.Min == 0 {
 		prop.Min = prop.Max
 	}
-	return make([]interface{}, utils.RandNumMinMax(int(prop.Min), int(prop.Max)))
+	return make([]any, utils.RandNumMinMax(int(prop.Min), int(prop.Max)))
 }
 
 func propsToMap(props []Property, defVal string, dataTemplate types.DataTemplateRequest) (res map[string]string) {

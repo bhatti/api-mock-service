@@ -255,7 +255,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 func unmarshalMockScenario(
 	b []byte,
 	dir string,
-	params interface{}) (scenario *types.MockScenario, err error) {
+	params any) (scenario *types.MockScenario, err error) {
 	// parse template
 	b, err = utils.ParseTemplate(dir, b, params)
 	if err != nil {

@@ -3,12 +3,13 @@ package oapi
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
+
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
-	"regexp"
-	"strconv"
 )
 
 // APISpec structure
@@ -176,7 +177,7 @@ func stripQuotes(b []byte) []byte {
 	return []byte(re.ReplaceAllString(string(b), `{{$1}}`))
 }
 
-func propertyValue(params []Property, dataTemplate types.DataTemplateRequest) (res []interface{}) {
+func propertyValue(params []Property, dataTemplate types.DataTemplateRequest) (res []any) {
 	for _, param := range params {
 		val := param.Value(dataTemplate)
 		if val != nil {

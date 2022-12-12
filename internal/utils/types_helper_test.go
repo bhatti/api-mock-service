@@ -2,12 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types"
-	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_ShouldExtractTypesNil(t *testing.T) {
@@ -94,7 +95,7 @@ func Test_ShouldExtractTypesObject(t *testing.T) {
 	j := `{"userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto"}`
 	res, err := UnmarshalArrayOrObject([]byte(j))
 	require.NoError(t, err)
-	actual := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1)).(map[string]interface{})
+	actual := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1)).(map[string]any)
 
 	require.Equal(t, 4, len(actual))
 }
@@ -152,8 +153,8 @@ func Test_ShouldExtractTypesArray(t *testing.T) {
 `
 	res, err := UnmarshalArrayOrObject([]byte(j))
 	require.NoError(t, err)
-	array := res.([]interface{})
-	actual := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1)).([]interface{})
+	array := res.([]any)
+	actual := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1)).([]any)
 	require.Equal(t, len(array), len(actual))
 }
 
@@ -347,7 +348,7 @@ func Test_ShouldPopulateRandomDataObject(t *testing.T) {
 	res, err := UnmarshalArrayOrObject([]byte(j))
 	require.NoError(t, err)
 	val := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1))
-	actual := PopulateRandomData(val).(map[string]interface{})
+	actual := PopulateRandomData(val).(map[string]any)
 	require.Equal(t, 4, len(actual))
 }
 
@@ -405,7 +406,7 @@ func Test_ShouldPopulateRandomDataArray(t *testing.T) {
 	res, err := UnmarshalArrayOrObject([]byte(j))
 	require.NoError(t, err)
 	val := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1))
-	actual := PopulateRandomData(val).([]interface{})
+	actual := PopulateRandomData(val).([]any)
 	require.Equal(t, 2, len(actual))
 }
 
@@ -425,7 +426,7 @@ func Test_ShouldPopulateRandomDataItems(t *testing.T) {
 	expected := [][]string{
 		{"__number__[+-]?[0-9]{1,10}", "int"},
 		{`__string__\w+`, "string"},
-		{`__string__\w+@\w+.?\w+`, "string"},
+		{`__string__` + EmailRegex, "string"},
 		{`__string__\w+.?\w+[0-9]{3,3}`, "string"},
 		{`__string__[0-9]{5,5}[-][0-9]{4,4}`, "string"},
 		{`__string__[+-]?[0-9]{2,2}\.[0-9]{4,4}`, "string"},
@@ -438,8 +439,8 @@ func Test_ShouldPopulateRandomDataItems(t *testing.T) {
 		res, err := UnmarshalArrayOrObject([]byte(j))
 		require.NoError(t, err)
 		val := ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1))
-		require.Equal(t, expected[i][0], val.(map[string]interface{})["id"], fmt.Sprintf("test %d", i))
-		actual := PopulateRandomData(val).(map[string]interface{})
+		require.Equal(t, expected[i][0], val.(map[string]any)["id"], fmt.Sprintf("test %d", i))
+		actual := PopulateRandomData(val).(map[string]any)
 		require.Equal(t, expected[i][1], reflect.TypeOf(actual["id"]).String(), fmt.Sprintf("test %d", i))
 	}
 }
@@ -472,7 +473,7 @@ func Test_ShouldFlatRegexMap(t *testing.T) {
 	res, err := UnmarshalArrayOrObject([]byte(scenario.Response.Contents))
 	require.NoError(t, err)
 	regexMap := FlatRegexMap(ExtractTypes(res, types.NewDataTemplateRequest(false, 1, 1)))
-	arr := res.([]interface{})
+	arr := res.([]any)
 	err = ValidateRegexMap(arr[0], regexMap)
 	require.NoError(t, err)
 }

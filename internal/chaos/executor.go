@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/repository"
-	"github.com/bhatti/api-mock-service/internal/types"
-	"github.com/bhatti/api-mock-service/internal/utils"
-	"github.com/bhatti/api-mock-service/internal/web"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/bhatti/api-mock-service/internal/repository"
+	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/utils"
+	"github.com/bhatti/api-mock-service/internal/web"
+	log "github.com/sirupsen/logrus"
 )
 
 // Executor structure
@@ -156,7 +157,7 @@ func (x *Executor) execute(
 		return err
 	}
 
-	var resContents interface{}
+	var resContents any
 	if resContents, err = updateTemplateParams(templateParams, scenario, resBytes, resHeaders, statusCode); err != nil {
 		return err
 	}
@@ -264,7 +265,7 @@ func updateTemplateParams(
 	scenario *types.MockScenario,
 	resBytes []byte,
 	resHeaders map[string][]string,
-	statusCode int) (interface{}, error) {
+	statusCode int) (any, error) {
 	templateParams[types.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
 	contents, err := utils.UnmarshalArrayOrObject(resBytes)
 	if err != nil {

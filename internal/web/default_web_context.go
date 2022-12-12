@@ -88,18 +88,18 @@ func (d *DefaultAPIContext) SetCookie(cookie *http.Cookie) {
 }
 
 // Get retrieves data from the context.
-func (d *DefaultAPIContext) Get(key string) interface{} {
+func (d *DefaultAPIContext) Get(key string) any {
 	return d.ctx.Value(key)
 }
 
 // Set saves data in the context.
-func (d *DefaultAPIContext) Set(key string, val interface{}) {
+func (d *DefaultAPIContext) Set(key string, val any) {
 	d.ctx = context.WithValue(d.ctx, key, val)
 }
 
 // Render renders a template with data and sends a text/html response with status
 // code. Renderer must be registered using `Echo.Renderer`.
-func (d *DefaultAPIContext) Render(code int, name string, data interface{}) error {
+func (d *DefaultAPIContext) Render(_ int, _ string, _ any) error {
 	return fmt.Errorf("render not supported")
 }
 
@@ -111,7 +111,7 @@ func (d *DefaultAPIContext) String(code int, s string) error {
 }
 
 // JSON sends a JSON response with status code.
-func (d *DefaultAPIContext) JSON(code int, i interface{}) error {
+func (d *DefaultAPIContext) JSON(code int, i any) error {
 	d.response.StatusCode = code
 	j, err := json.Marshal(i)
 	if err != nil {
@@ -157,6 +157,6 @@ func (d *DefaultAPIContext) Stream(code int, contentType string, r io.Reader) (e
 
 // Attachment sends a response as attachment, prompting client to save the
 // file.
-func (d *DefaultAPIContext) Attachment(file string, name string) error {
+func (d *DefaultAPIContext) Attachment(_ string, _ string) error {
 	return fmt.Errorf("attachment not supported")
 }

@@ -27,7 +27,7 @@ func NewStubHTTPResponseError(status int, sleep time.Duration, err error) *StubH
 }
 
 // NewStubHTTPResponse creates stubbed response
-func NewStubHTTPResponse(status int, unk interface{}) *StubHTTPResponse {
+func NewStubHTTPResponse(status int, unk any) *StubHTTPResponse {
 	if unk == nil {
 		return &StubHTTPResponse{Status: status}
 	}

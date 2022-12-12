@@ -2,12 +2,11 @@ package web
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
-
-	"github.com/labstack/echo/v4"
 )
 
 // ********************************* STUB METHODS For Web server ***********************************
@@ -17,9 +16,9 @@ type stubWebServer struct {
 type stubContext struct {
 	request  *http.Request
 	response *echo.Response
-	Result   interface{}
+	Result   any
 	Params   map[string]string
-	Context  map[string]interface{}
+	Context  map[string]any
 }
 
 func (c *stubContext) SetResponse(r *echo.Response) {
@@ -35,7 +34,7 @@ func NewStubContext(req *http.Request) *stubContext { //nolint
 		request:  req,
 		response: echo.NewResponse(&StubResponseWriter{}, nil),
 		Params:   make(map[string]string),
-		Context:  make(map[string]interface{}),
+		Context:  make(map[string]any),
 	}
 }
 
@@ -65,27 +64,27 @@ func (w *stubWebServer) DELETE(string, HandlerFunc, ...echo.MiddlewareFunc) *ech
 }
 
 // CONNECT calls HTTP CONNECT method
-func (w *stubWebServer) CONNECT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+func (w *stubWebServer) CONNECT(_ string, _ HandlerFunc, _ ...echo.MiddlewareFunc) *echo.Route {
 	return &echo.Route{}
 }
 
 // HEAD calls HTTP HEAD method
-func (w *stubWebServer) HEAD(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+func (w *stubWebServer) HEAD(_ string, _ HandlerFunc, _ ...echo.MiddlewareFunc) *echo.Route {
 	return &echo.Route{}
 }
 
 // OPTIONS calls HTTP OPTIONS method
-func (w *stubWebServer) OPTIONS(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+func (w *stubWebServer) OPTIONS(_ string, _ HandlerFunc, _ ...echo.MiddlewareFunc) *echo.Route {
 	return &echo.Route{}
 }
 
 // PATCH calls HTTP PATCH method
-func (w *stubWebServer) PATCH(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+func (w *stubWebServer) PATCH(_ string, _ HandlerFunc, _ ...echo.MiddlewareFunc) *echo.Route {
 	return &echo.Route{}
 }
 
 // TRACE calls HTTP TRACE method
-func (w *stubWebServer) TRACE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+func (w *stubWebServer) TRACE(_ string, _ HandlerFunc, _ ...echo.MiddlewareFunc) *echo.Route {
 	return &echo.Route{}
 }
 
@@ -208,23 +207,23 @@ func (c *stubContext) Cookies() []*http.Cookie {
 	return c.request.Cookies()
 }
 
-func (c *stubContext) Get(name string) interface{} {
+func (c *stubContext) Get(name string) any {
 	return c.Context[name]
 }
 
-func (c *stubContext) Set(name string, value interface{}) {
+func (c *stubContext) Set(name string, value any) {
 	c.Context[name] = value
 }
 
-func (c *stubContext) Bind(interface{}) error {
+func (c *stubContext) Bind(any) error {
 	return nil
 }
 
-func (c *stubContext) Validate(interface{}) error {
+func (c *stubContext) Validate(any) error {
 	return nil
 }
 
-func (c *stubContext) Render(code int, t string, r interface{}) (err error) {
+func (c *stubContext) Render(code int, t string, r any) (err error) {
 	c.Result = r
 	if code >= 300 {
 		return fmt.Errorf("%d - %s", code, t)
@@ -256,7 +255,7 @@ func (c *stubContext) String(code int, s string) (err error) {
 	return nil
 }
 
-func (c *stubContext) JSON(code int, j interface{}) (err error) {
+func (c *stubContext) JSON(code int, j any) (err error) {
 	c.Result = j
 	if code >= 300 {
 		return fmt.Errorf("%d - %v", code, j)
@@ -264,7 +263,7 @@ func (c *stubContext) JSON(code int, j interface{}) (err error) {
 	return nil
 }
 
-func (c *stubContext) JSONPretty(code int, j interface{}, _ string) (err error) {
+func (c *stubContext) JSONPretty(code int, j any, _ string) (err error) {
 	c.Result = j
 	if code >= 300 {
 		return fmt.Errorf("%d - %v", code, j)
@@ -280,7 +279,7 @@ func (c *stubContext) JSONBlob(code int, b []byte) (err error) {
 	return nil
 }
 
-func (c *stubContext) JSONP(code int, j string, _ interface{}) (err error) {
+func (c *stubContext) JSONP(code int, j string, _ any) (err error) {
 	c.Result = j
 	if code >= 300 {
 		return fmt.Errorf("%d - %s", code, j)
@@ -296,7 +295,7 @@ func (c *stubContext) JSONPBlob(code int, j string, _ []byte) (err error) {
 	return nil
 }
 
-func (c *stubContext) XML(code int, j interface{}) (err error) {
+func (c *stubContext) XML(code int, j any) (err error) {
 	c.Result = j
 	if code >= 300 {
 		return fmt.Errorf("%d - %v", code, j)
@@ -304,7 +303,7 @@ func (c *stubContext) XML(code int, j interface{}) (err error) {
 	return nil
 }
 
-func (c *stubContext) XMLPretty(code int, j interface{}, _ string) (err error) {
+func (c *stubContext) XMLPretty(code int, j any, _ string) (err error) {
 	c.Result = j
 	if code >= 300 {
 		return fmt.Errorf("%d - %v", code, j)

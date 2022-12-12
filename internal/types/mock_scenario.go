@@ -93,7 +93,7 @@ type MockHTTPResponse struct {
 	Assertions []string `yaml:"assertions" json:"assertions"`
 }
 
-// ContentType() find content-type
+// ContentType find content-type
 func (r MockHTTPResponse) ContentType() string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
@@ -225,8 +225,8 @@ func NormalizeDirPath(path string) string {
 // NormalizePath normalizes path
 func NormalizePath(path string, sepChar uint8) string {
 	sep := fmt.Sprintf("%c", sepChar)
-	if regexp, err := regexp.Compile(`[\/\\]+`); err == nil {
-		path = regexp.ReplaceAllString(path, sep)
+	if re, err := regexp.Compile(`[\/\\]+`); err == nil {
+		path = re.ReplaceAllString(path, sep)
 	}
 	if len(path) < 2 {
 		return path
@@ -244,7 +244,15 @@ func NormalizePath(path string, sepChar uint8) string {
 	return path[from:to]
 }
 
+// StripTypeTags removes type prefixes
+func StripTypeTags(re string) string {
+	return regexp.MustCompile(
+		fmt.Sprintf("(%s|%s|%s|%s)", PrefixTypeNumber, PrefixTypeBoolean, PrefixTypeString, PrefixTypeObject)).
+		ReplaceAllString(re, "")
+}
+
 func reMatch(re string, str string) bool {
+	re = StripTypeTags(re)
 	match, err := regexp.MatchString(re, str)
 	if err != nil {
 		return false

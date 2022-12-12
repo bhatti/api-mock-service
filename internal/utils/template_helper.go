@@ -49,7 +49,7 @@ func MatchScenarioPredicate(matched *types.MockScenarioKeyData, target *types.Mo
 }
 
 // ParseTemplate parses GO template with dynamic parameters
-func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error) {
+func ParseTemplate(dir string, byteBody []byte, data any) ([]byte, error) {
 	body := string(byteBody)
 	if !strings.Contains(body, "{{") {
 		return byteBody, nil
@@ -70,8 +70,8 @@ func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error
 	}
 	strResponse := emptyLineRegex.ReplaceAllString(out.String(), "")
 	switch data.(type) {
-	case map[string]interface{}:
-		m := data.(map[string]interface{})
+	case map[string]any:
+		m := data.(map[string]any)
 		if m[UnescapeHTML] == true {
 			strResponse = strings.ReplaceAll(strResponse, "&lt;", "<")
 		}
@@ -80,13 +80,13 @@ func ParseTemplate(dir string, byteBody []byte, data interface{}) ([]byte, error
 }
 
 // TemplateFuncs returns template functions
-func TemplateFuncs(dir string, data interface{}) template.FuncMap {
+func TemplateFuncs(dir string, data any) template.FuncMap {
 	return template.FuncMap{
-		"Dict": func(values ...interface{}) (map[string]interface{}, error) {
+		"Dict": func(values ...any) (map[string]any, error) {
 			if len(values)%2 != 0 {
 				return nil, fmt.Errorf("invalid dict call")
 			}
-			dict := make(map[string]interface{}, len(values)/2)
+			dict := make(map[string]any, len(values)/2)
 			for i := 0; i < len(values); i += 2 {
 				key, ok := values[i].(string)
 				if !ok {
@@ -96,7 +96,7 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			}
 			return dict, nil
 		},
-		"Iterate": func(input interface{}) []int {
+		"Iterate": func(input any) []int {
 			count := toInt(input)
 			var i int
 			var Items []int
@@ -105,80 +105,80 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			}
 			return Items
 		},
-		"LastIter": func(val interface{}, max interface{}) bool {
+		"LastIter": func(val any, max any) bool {
 			return toInt(val) == toInt(max)-1
 		},
-		"Add": func(n interface{}, plus interface{}) int {
+		"Add": func(n any, plus any) int {
 			return toInt(n) + toInt(plus)
 		},
 		"Unescape": func(s string) template.HTML {
 			return template.HTML(s)
 		},
-		"RandNumMinMax": func(min interface{}, max interface{}) int {
+		"RandNumMinMax": func(min any, max any) int {
 			return RandNumMinMax(toInt(min), toInt(max))
 		},
-		"RandNumMax": func(max interface{}) int {
+		"RandNumMax": func(max any) int {
 			return Random(toInt(max))
 		},
-		"RandWord": func(min, max interface{}) string {
+		"RandWord": func(min, max any) string {
 			return RandWord(toInt(min), toInt(max))
 		},
-		"RandSentence": func(min, max interface{}) string {
+		"RandSentence": func(min, max any) string {
 			return RandSentence(toInt(min), toInt(max))
 		},
-		"RandParagraph": func(min, max interface{}) string {
+		"RandParagraph": func(min, max any) string {
 			return RandParagraph(toInt(min), toInt(max))
 		},
 		"Udid": func() string {
 			return Udid()
 		},
-		"SeededUdid": func(seed interface{}) string {
+		"SeededUdid": func(seed any) string {
 			return SeededUdid(toInt64(seed))
 		},
 		"RandCity": func() string {
 			return RandCity()
 		},
-		"SeededCity": func(seed interface{}) string {
+		"SeededCity": func(seed any) string {
 			return SeededCity(toInt64(seed))
 		},
 		"RandBool": func() bool {
 			return RandBool()
 		},
-		"SeededBool": func(seed interface{}) bool {
+		"SeededBool": func(seed any) bool {
 			return SeededBool(toInt64(seed))
 		},
 		"RandCountry": func() string {
 			return RandCountry()
 		},
-		"SeededCountry": func(seed interface{}) string {
+		"SeededCountry": func(seed any) string {
 			return SeededCountry(toInt64(seed))
 		},
 		"RandCountryCode": func() string {
 			return RandCountryCode()
 		},
-		"SeededCountryCode": func(seed interface{}) string {
+		"SeededCountryCode": func(seed any) string {
 			return SeededCountryCode(toInt64(seed))
 		},
 		"RandName": func() string {
 			return RandName()
 		},
-		"SeededName": func(seed interface{}) string {
+		"SeededName": func(seed any) string {
 			return SeededName(toInt64(seed))
 		},
-		"RandString": func(max interface{}) string {
+		"RandString": func(max any) string {
 			return RandString(toInt(max))
 		},
-		"RandStringMinMax": func(min interface{}, max interface{}) string {
+		"RandStringMinMax": func(min any, max any) string {
 			return RandStringMinMax(toInt(min), toInt(max))
 		},
-		"RandStringArrayMinMax": func(min interface{}, max interface{}) template.HTML {
+		"RandStringArrayMinMax": func(min any, max any) template.HTML {
 			arr := RandStringArrayMinMax(toInt(min), toInt(max))
 			for i := range arr {
 				arr[i] = fmt.Sprintf(`"%s"`, arr[i])
 			}
 			return template.HTML("[" + strings.Join(arr, ",") + "]")
 		},
-		"RandIntArrayMinMax": func(min interface{}, max interface{}) []int {
+		"RandIntArrayMinMax": func(min any, max any) []int {
 			return RandIntArrayMinMax(toInt(min), toInt(max))
 		},
 		"RandRegex": func(re string) string {
@@ -197,7 +197,7 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			return RandURL()
 		},
 		"RandDict": func() template.HTML {
-			dict := make(map[string]interface{})
+			dict := make(map[string]any)
 			for i := 0; i < RandNumMinMax(3, 6); i += 2 {
 				key := RandName()
 				if i == 0 {
@@ -211,39 +211,39 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 			j, _ := json.Marshal(dict)
 			return template.HTML(j)
 		},
-		"Int": func(num interface{}) int64 {
+		"Int": func(num any) int64 {
 			return toInt64(num)
 		},
-		"Float": func(num interface{}) float64 {
+		"Float": func(num any) float64 {
 			return ToFloat64(num)
 		},
-		"LT": func(a interface{}, b interface{}) bool {
+		"LT": func(a any, b any) bool {
 			return ToFloat64(a) < ToFloat64(b)
 		},
-		"LE": func(a interface{}, b interface{}) bool {
+		"LE": func(a any, b any) bool {
 			return ToFloat64(a) <= ToFloat64(b)
 		},
-		"EQ": func(a interface{}, b interface{}) bool {
+		"EQ": func(a any, b any) bool {
 			return ToFloat64(a) == ToFloat64(b)
 		},
-		"GT": func(a interface{}, b interface{}) bool {
+		"GT": func(a any, b any) bool {
 			return ToFloat64(a) > ToFloat64(b)
 		},
-		"GE": func(a interface{}, b interface{}) bool {
+		"GE": func(a any, b any) bool {
 			return ToFloat64(a) >= ToFloat64(b)
 		},
-		"Nth": func(a interface{}, b interface{}) bool {
+		"Nth": func(a any, b any) bool {
 			return toInt(a)%toInt(b) == 0
 		},
-		"LTRequest": func(n interface{}) bool {
+		"LTRequest": func(n any) bool {
 			reqCount := parseRequestCount(data)
 			return reqCount >= 0 && reqCount < toInt(n)
 		},
-		"GERequest": func(n interface{}) bool {
+		"GERequest": func(n any) bool {
 			reqCount := parseRequestCount(data)
 			return reqCount >= 0 && reqCount >= toInt(n)
 		},
-		"NthRequest": func(n interface{}) bool {
+		"NthRequest": func(n any) bool {
 			reqCount := parseRequestCount(data)
 			return reqCount >= 0 && reqCount%toInt(n) == 0
 		},
@@ -253,28 +253,28 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"YAMLFileProperty": func(fileName string, name string) template.HTML {
 			return toYAML(fileProperty(dir, fileName+types.MockDataExt, name))
 		},
-		"FileProperty": func(fileName string, name string) interface{} {
+		"FileProperty": func(fileName string, name string) any {
 			return fileProperty(dir, fileName+types.MockDataExt, name)
 		},
 		"RandFileLine": func(fileName string) template.HTML {
 			return randFileLine(dir, fileName+types.MockDataExt, 0)
 		},
-		"SeededFileLine": func(fileName string, seed interface{}) template.HTML {
+		"SeededFileLine": func(fileName string, seed any) template.HTML {
 			return randFileLine(dir, fileName+types.MockDataExt, toInt64(seed))
 		},
-		"VariableEquals": func(varName string, target interface{}) bool {
+		"VariableEquals": func(varName string, target any) bool {
 			return variableEquals(varName, data, target)
 		},
-		"VariableContains": func(varName string, target interface{}) bool {
+		"VariableContains": func(varName string, target any) bool {
 			return variableContains(varName, target, data)
 		},
-		"VariableSizeEQ": func(varName string, size interface{}) bool {
+		"VariableSizeEQ": func(varName string, size any) bool {
 			return variableSize(varName, data) == toInt(size)
 		},
-		"VariableSizeLE": func(varName string, size interface{}) bool {
+		"VariableSizeLE": func(varName string, size any) bool {
 			return variableSize(varName, data) <= toInt(size)
 		},
-		"VariableSizeGE": func(varName string, size interface{}) bool {
+		"VariableSizeGE": func(varName string, size any) bool {
 			return variableSize(varName, data) >= toInt(size)
 		},
 		"Date": func() string {
@@ -286,16 +286,16 @@ func TemplateFuncs(dir string, data interface{}) template.FuncMap {
 		"TimeFormat": func(format string) string {
 			return time.Now().Format(format)
 		},
-		"EnumString": func(str ...interface{}) string {
+		"EnumString": func(str ...any) string {
 			return EnumString(str...)
 		},
-		"EnumInt": func(vals ...interface{}) int64 {
+		"EnumInt": func(vals ...any) int64 {
 			return EnumInt(vals...)
 		},
 	}
 }
 
-func variableSize(name string, data interface{}) int {
+func variableSize(name string, data any) int {
 	val := findVariable(name, data)
 	if val == nil {
 		return -1
@@ -303,10 +303,10 @@ func variableSize(name string, data interface{}) int {
 	switch val.(type) {
 	case map[string]string:
 		return len(val.(map[string]string))
-	case map[string]interface{}:
-		return len(val.(map[string]interface{}))
-	case []interface{}:
-		return len(val.([]interface{}))
+	case map[string]any:
+		return len(val.(map[string]any))
+	case []any:
+		return len(val.([]any))
 	case []int:
 		return len(val.([]int))
 	case []string:
@@ -318,7 +318,7 @@ func variableSize(name string, data interface{}) int {
 	}
 }
 
-func variableContains(name string, target interface{}, data interface{}) bool {
+func variableContains(name string, target any, data any) bool {
 	val := findVariable(name, data)
 	if val == nil {
 		return false
@@ -332,7 +332,7 @@ func variableContains(name string, target interface{}, data interface{}) bool {
 	return re.MatchString(valStr)
 }
 
-func variableEquals(name string, data interface{}, target interface{}) bool {
+func variableEquals(name string, data any, target any) bool {
 	val := findVariable(name, data)
 	if val == nil {
 		return false
@@ -340,7 +340,7 @@ func variableEquals(name string, data interface{}, target interface{}) bool {
 	return fmt.Sprintf("%v", val) == fmt.Sprintf("%v", target)
 }
 
-func findVariable(name string, data interface{}) interface{} {
+func findVariable(name string, data any) any {
 	n := strings.Index(name, ".")
 	var nextName string
 	if n != -1 {
@@ -358,8 +358,8 @@ func findVariable(name string, data interface{}) interface{} {
 			return val
 		}
 		return findVariable(nextName, val)
-	case map[string]interface{}:
-		params := data.(map[string]interface{})
+	case map[string]any:
+		params := data.(map[string]any)
 		val := params[name]
 		if val == nil {
 			return nil
@@ -375,7 +375,7 @@ func findVariable(name string, data interface{}) interface{} {
 
 // PRIVATE FUNCTIONS
 
-func parseRequestCount(data interface{}) int {
+func parseRequestCount(data any) int {
 	switch data.(type) {
 	case map[string]string:
 		params := data.(map[string]string)
@@ -384,8 +384,8 @@ func parseRequestCount(data interface{}) int {
 			return -1
 		}
 		return toInt(count)
-	case map[string]interface{}:
-		params := data.(map[string]interface{})
+	case map[string]any:
+		params := data.(map[string]any)
 		count := params[types.RequestCount]
 		if count == nil {
 			return -1
@@ -396,7 +396,7 @@ func parseRequestCount(data interface{}) int {
 	}
 }
 
-func toJSON(val interface{}) template.HTML {
+func toJSON(val any) template.HTML {
 	str, err := json.Marshal(val)
 	if err != nil {
 		str = []byte(err.Error())
@@ -404,7 +404,7 @@ func toJSON(val interface{}) template.HTML {
 	return template.HTML(strings.TrimSpace(string(str)))
 }
 
-func toYAML(val interface{}) template.HTML {
+func toYAML(val any) template.HTML {
 	str, err := yaml.Marshal(val)
 	if err != nil {
 		str = []byte(err.Error())
@@ -412,7 +412,7 @@ func toYAML(val interface{}) template.HTML {
 	return template.HTML(strings.TrimSpace(string(str)))
 }
 
-func fileProperty(dir string, fileName string, name string) interface{} {
+func fileProperty(dir string, fileName string, name string) any {
 	if validFileName(fileName) {
 		return FileProperty(filepath.Join(dir, fileName), name)
 	}
@@ -429,7 +429,7 @@ func randFileLine(dir string, fileName string, seed int64) template.HTML {
 	return template.HTML(line)
 }
 
-func toInt(input interface{}) (res int) {
+func toInt(input any) (res int) {
 	if input == nil {
 		return 0
 	}
@@ -449,7 +449,7 @@ func toInt(input interface{}) (res int) {
 }
 
 // ToFloat64 converter
-func ToFloat64(input interface{}) (res float64) {
+func ToFloat64(input any) (res float64) {
 	if input == nil {
 		return 0
 	}
@@ -492,7 +492,7 @@ func ToFloat64(input interface{}) (res float64) {
 	return
 }
 
-func toInt64(input interface{}) (res int64) {
+func toInt64(input any) (res int64) {
 	if input == nil {
 		return 0
 	}

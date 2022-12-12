@@ -3,13 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types"
-	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"reflect"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/bhatti/api-mock-service/internal/types"
+	log "github.com/sirupsen/logrus"
 )
 
 // TypePrefix constant
@@ -27,16 +28,19 @@ const NumberPrefixRegex = types.PrefixTypeNumber + `[+-]?(([0-9]{1,10}(\.[0-9]{1
 // BooleanPrefixRegex constant
 const BooleanPrefixRegex = types.PrefixTypeBoolean + `(false|true)`
 
+// EmailRegex constant
+const EmailRegex = `\w+@\w+.?\w+`
+
 // AnyWordRegex  constant
 const AnyWordRegex = `\w+`
 
 // ValidateRegexMap validate data against regex map
-func ValidateRegexMap(val interface{}, regex map[string]string) error {
+func ValidateRegexMap(val any, regex map[string]string) error {
 	return validateRegexMap(val, regex, "")
 }
 
 // FlatRegexMap to add all regex in same map
-func FlatRegexMap(val interface{}) map[string]string {
+func FlatRegexMap(val any) map[string]string {
 	regex := make(map[string]string)
 	flatRegexMap(val, regex, "")
 	for k, v := range regex {
@@ -65,7 +69,7 @@ func ValueToRegEx(val string, dataTemplate types.DataTemplateRequest) string {
 	alphabets := 0
 	decimal := false
 	specialChars := map[rune]bool{'@': true, '%': true, '(': true, ')': true,
-		'#': true, '$': true, '*': true, '_': true}
+		'#': true, '$': true, '*': true}
 	for _, c := range []rune(val) {
 		if unicode.IsDigit(c) {
 			addAlphabets(alphabets, &sb, dataTemplate)
@@ -164,7 +168,7 @@ func UnmarshalArrayOrObject(b []byte) (res any, err error) {
 }
 
 // ExtractTypes extract types from any structure
-func ExtractTypes(val interface{}, dataTemplate types.DataTemplateRequest) interface{} {
+func ExtractTypes(val any, dataTemplate types.DataTemplateRequest) any {
 	if val == nil {
 		return nil
 	}
@@ -213,16 +217,16 @@ func ExtractTypes(val interface{}, dataTemplate types.DataTemplateRequest) inter
 			res[k] = v
 		}
 		return res
-	case map[string]interface{}:
-		hm := val.(map[string]interface{})
-		res := make(map[string]interface{})
+	case map[string]any:
+		hm := val.(map[string]any)
+		res := make(map[string]any)
 		for k, v := range hm {
 			res[k] = ExtractTypes(v, dataTemplate)
 		}
 		return res
-	case []interface{}:
-		arr := val.([]interface{})
-		res := make([]interface{}, len(arr))
+	case []any:
+		arr := val.([]any)
+		res := make([]any, len(arr))
 		for i, v := range arr {
 			res[i] = ExtractTypes(v, dataTemplate)
 		}
@@ -237,7 +241,7 @@ func ExtractTypes(val interface{}, dataTemplate types.DataTemplateRequest) inter
 }
 
 // PopulateRandomData using regex
-func PopulateRandomData(val interface{}) interface{} {
+func PopulateRandomData(val any) any {
 	if val == nil {
 		return nil
 	}
@@ -286,21 +290,21 @@ func PopulateRandomData(val interface{}) interface{} {
 		}
 	case map[string]string:
 		hm := val.(map[string]string)
-		res := make(map[string]interface{})
+		res := make(map[string]any)
 		for k, v := range hm {
 			res[k] = PopulateRandomData(v)
 		}
 		return res
-	case map[string]interface{}:
-		hm := val.(map[string]interface{})
-		res := make(map[string]interface{})
+	case map[string]any:
+		hm := val.(map[string]any)
+		res := make(map[string]any)
 		for k, v := range hm {
 			res[k] = PopulateRandomData(v)
 		}
 		return res
-	case []interface{}:
-		arr := val.([]interface{})
-		res := make([]interface{}, len(arr))
+	case []any:
+		arr := val.([]any)
+		res := make([]any, len(arr))
 		for i, v := range arr {
 			res[i] = PopulateRandomData(v)
 		}
@@ -355,7 +359,7 @@ func addDigits(digits int, fraction int, negative bool, decimal bool,
 	}
 }
 
-func matchRegexMap(val interface{}, regex map[string]string, key string) error {
+func matchRegexMap(val any, regex map[string]string, key string) error {
 	re := regex[key]
 	if re == "" {
 		return nil
@@ -375,7 +379,7 @@ func matchRegexMap(val interface{}, regex map[string]string, key string) error {
 	return nil
 }
 
-func validateRegexMap(val interface{}, regex map[string]string, prefix string) error {
+func validateRegexMap(val any, regex map[string]string, prefix string) error {
 	if val == nil {
 		return nil
 	}
@@ -388,16 +392,16 @@ func validateRegexMap(val interface{}, regex map[string]string, prefix string) e
 				return err
 			}
 		}
-	case map[string]interface{}:
-		hm := val.(map[string]interface{})
+	case map[string]any:
+		hm := val.(map[string]any)
 		for k, v := range hm {
 			fullKey := buildFlatRegexKey(prefix, k)
 			if err := validateRegexMap(v, regex, fullKey); err != nil {
 				return err
 			}
 		}
-	case []interface{}:
-		arr := val.([]interface{})
+	case []any:
+		arr := val.([]any)
 		for _, v := range arr {
 			if err := validateRegexMap(v, regex, prefix); err != nil {
 				return err
@@ -412,7 +416,7 @@ func validateRegexMap(val interface{}, regex map[string]string, prefix string) e
 	return nil
 }
 
-func flatRegexMap(val interface{}, regex map[string]string, prefix string) {
+func flatRegexMap(val any, regex map[string]string, prefix string) {
 	if val == nil {
 		return
 	}
@@ -425,14 +429,14 @@ func flatRegexMap(val interface{}, regex map[string]string, prefix string) {
 		for k, v := range hm {
 			addFlatRegexMapValue(regex, prefix, k, v)
 		}
-	case map[string]interface{}:
-		hm := val.(map[string]interface{})
+	case map[string]any:
+		hm := val.(map[string]any)
 		for k, v := range hm {
 			fullKey := buildFlatRegexKey(prefix, k)
 			flatRegexMap(v, regex, fullKey)
 		}
-	case []interface{}:
-		arr := val.([]interface{})
+	case []any:
+		arr := val.([]any)
 		for _, v := range arr {
 			flatRegexMap(v, regex, prefix)
 		}

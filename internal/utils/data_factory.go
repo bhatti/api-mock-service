@@ -3,16 +3,18 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/utils/lorem"
-	log "github.com/sirupsen/logrus"
-	"github.com/twinj/uuid"
-	regen "github.com/zach-klippenstein/goregen"
 	"gopkg.in/yaml.v3"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/utils/lorem"
+	log "github.com/sirupsen/logrus"
+	"github.com/twinj/uuid"
+	regen "github.com/zach-klippenstein/goregen"
 )
 
 // RandNumMinMax returns random number between min and max
@@ -191,7 +193,7 @@ func SeededCity(seed int64) string {
 }
 
 // EnumString selects substring
-func EnumString(anyArr ...interface{}) string {
+func EnumString(anyArr ...any) string {
 	var str strings.Builder
 	for _, val := range anyArr {
 		if str.Len() > 0 {
@@ -204,7 +206,7 @@ func EnumString(anyArr ...interface{}) string {
 }
 
 // EnumInt selects numeric
-func EnumInt(anyArr ...interface{}) (n int64) {
+func EnumInt(anyArr ...any) (n int64) {
 	str := EnumString(anyArr...)
 	n, _ = strconv.ParseInt(str, 10, 64)
 	return
@@ -833,7 +835,8 @@ func replaceWordTag(str, tag string) string {
 
 // RandRegex generator
 func RandRegex(re string) string {
-	if re == `\w+@\w+.?\w+` {
+	re = types.StripTypeTags(re)
+	if re == EmailRegex {
 		return RandEmail()
 	}
 	re = replaceWordTag(re, `\w+`)
@@ -925,13 +928,13 @@ func RandString(n int) string {
 }
 
 // FileProperty generator
-func FileProperty(fileName string, name string) interface{} {
+func FileProperty(fileName string, name string) any {
 	file, err := os.ReadFile(fileName)
 	if err != nil {
 		return err.Error()
 	}
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 
 	err = yaml.Unmarshal(file, &data)
 	if err != nil {
