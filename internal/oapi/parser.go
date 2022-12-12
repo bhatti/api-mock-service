@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
 // Parse parses Open-API and generates mock scenarios
-func Parse(ctx context.Context, data []byte, dataTemplate types.DataTemplateRequest) (specs []*APISpec, err error) {
+func Parse(ctx context.Context, data []byte, dataTemplate fuzz.DataTemplateRequest) (specs []*APISpec, err error) {
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
 	doc, err := loader.LoadFromData(data)

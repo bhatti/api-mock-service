@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/bhatti/api-mock-service/internal/chaos"
-	"github.com/bhatti/api-mock-service/internal/utils"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
@@ -75,7 +75,7 @@ func Test_ShouldFailPostChaosScenarioWithoutBaseURL(t *testing.T) {
 		URL:    u,
 		Header: map[string][]string{
 			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
-			"x-api-key": {utils.RandRegex(`[\x20-\x7F]{1,32}`)},
+			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
 		},
 	})
 	ctx.Params["method"] = string(scenario.Method)
@@ -125,7 +125,7 @@ func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
 		URL:    u,
 		Header: map[string][]string{
 			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
-			"x-api-key": {utils.RandRegex(`[\x20-\x7F]{1,32}`)},
+			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
 		},
 	})
 	ctx.Params["group"] = "/todos/10"
@@ -174,7 +174,7 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 		URL:    u,
 		Header: map[string][]string{
 			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
-			"x-api-key": {utils.RandRegex(`[\x20-\x7F]{1,32}`)},
+			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
 		},
 	})
 	ctx.Params["method"] = string(scenario.Method)

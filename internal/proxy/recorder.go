@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -93,8 +94,8 @@ func saveMockResponse(
 		}
 	}
 
-	dataTemplate := types.NewDataTemplateRequest(true, 1, 1)
-	matchReqContents, err := utils.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(reqBody), dataTemplate)
+	dataTemplate := fuzz.NewDataTemplateRequest(true, 1, 1)
+	matchReqContents, err := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(reqBody), dataTemplate)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Path":   req.URL,
@@ -102,7 +103,7 @@ func saveMockResponse(
 			"Error":  err,
 		}).Warnf("failed to unmarshal and extrate types for request")
 	}
-	matchResContents, err := utils.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(resBody), dataTemplate)
+	matchResContents, err := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(resBody), dataTemplate)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Path":   req.URL,

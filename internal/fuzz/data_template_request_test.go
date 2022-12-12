@@ -1,4 +1,4 @@
-package types
+package fuzz
 
 import (
 	"github.com/stretchr/testify/require"

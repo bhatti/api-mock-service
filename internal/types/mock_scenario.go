@@ -3,6 +3,7 @@ package types
 import (
 	"crypto/sha256"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"os"
 	"regexp"
 	"strings"
@@ -44,18 +45,6 @@ const ScenarioExt = ".scr"
 
 // RequestCount name
 const RequestCount = "_RequestCount"
-
-// PrefixTypeNumber type
-const PrefixTypeNumber = "__number__"
-
-// PrefixTypeBoolean type
-const PrefixTypeBoolean = "__boolean__"
-
-// PrefixTypeString type
-const PrefixTypeString = "__string__"
-
-// PrefixTypeObject type
-const PrefixTypeObject = "__object__"
 
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
@@ -244,15 +233,8 @@ func NormalizePath(path string, sepChar uint8) string {
 	return path[from:to]
 }
 
-// StripTypeTags removes type prefixes
-func StripTypeTags(re string) string {
-	return regexp.MustCompile(
-		fmt.Sprintf("(%s|%s|%s|%s)", PrefixTypeNumber, PrefixTypeBoolean, PrefixTypeString, PrefixTypeObject)).
-		ReplaceAllString(re, "")
-}
-
 func reMatch(re string, str string) bool {
-	re = StripTypeTags(re)
+	re = fuzz.StripTypeTags(re)
 	match, err := regexp.MatchString(re, str)
 	if err != nil {
 		return false

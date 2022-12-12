@@ -1,8 +1,9 @@
-package utils
+package fuzz
 
 import (
 	"bufio"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz/lorem"
 	"gopkg.in/yaml.v3"
 	"math/rand"
 	"os"
@@ -10,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bhatti/api-mock-service/internal/types"
-	"github.com/bhatti/api-mock-service/internal/utils/lorem"
 	log "github.com/sirupsen/logrus"
 	"github.com/twinj/uuid"
 	regen "github.com/zach-klippenstein/goregen"
@@ -835,7 +834,7 @@ func replaceWordTag(str, tag string) string {
 
 // RandRegex generator
 func RandRegex(re string) string {
-	re = types.StripTypeTags(re)
+	re = StripTypeTags(re)
 	if re == EmailRegex {
 		return RandEmail()
 	}

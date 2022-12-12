@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/chaos"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/bhatti/api-mock-service/internal/web"
@@ -47,7 +48,7 @@ func (mcc *MockChaosController) PostMockChaosGroupScenario(c web.APIContext) (er
 	if err != nil {
 		return err
 	}
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 1)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 	res := mcc.executor.ExecuteByGroup(context.Background(), group, dataTemplate, chaosReq)
 	return c.JSON(http.StatusOK, res)
 }
@@ -87,7 +88,7 @@ func (mcc *MockChaosController) PostMockChaosScenario(c web.APIContext) (err err
 	if err != nil {
 		return err
 	}
-	dataTemplate := types.NewDataTemplateRequest(true, 1, 1)
+	dataTemplate := fuzz.NewDataTemplateRequest(true, 1, 1)
 	res := mcc.executor.Execute(context.Background(), keyData, dataTemplate, chaosReq)
 	return c.JSON(http.StatusOK, res)
 }

@@ -1,4 +1,4 @@
-package types
+package fuzz
 
 // DataTemplateRequest for generating random data pattern
 type DataTemplateRequest struct {

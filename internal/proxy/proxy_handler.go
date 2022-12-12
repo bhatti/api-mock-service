@@ -55,7 +55,7 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 			"Path":   req.URL,
 			"Method": req.Method,
 			"Error":  err,
-		}).Warnf("proxy server failed to match existing mock scenario")
+		}).Warnf("proxy server failed to fuzz existing mock scenario")
 	}
 	return req, res
 }

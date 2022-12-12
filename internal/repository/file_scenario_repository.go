@@ -210,7 +210,7 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	matched, paramMismatchErrors := sr.LookupAll(target)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
-			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", target.String()))
+			return nil, types.NewValidationError(fmt.Sprintf("could not fuzz input parameters for API %s", target.String()))
 		}
 		fileName := sr.buildFileName(target.Method, target.Name, target.Path)
 		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s']",

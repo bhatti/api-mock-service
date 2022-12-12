@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bhatti/api-mock-service/internal/fuzz"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -115,97 +117,97 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return template.HTML(s)
 		},
 		"RandNumMinMax": func(min any, max any) int {
-			return RandNumMinMax(toInt(min), toInt(max))
+			return fuzz.RandNumMinMax(toInt(min), toInt(max))
 		},
 		"RandNumMax": func(max any) int {
-			return Random(toInt(max))
+			return fuzz.Random(toInt(max))
 		},
 		"RandWord": func(min, max any) string {
-			return RandWord(toInt(min), toInt(max))
+			return fuzz.RandWord(toInt(min), toInt(max))
 		},
 		"RandSentence": func(min, max any) string {
-			return RandSentence(toInt(min), toInt(max))
+			return fuzz.RandSentence(toInt(min), toInt(max))
 		},
 		"RandParagraph": func(min, max any) string {
-			return RandParagraph(toInt(min), toInt(max))
+			return fuzz.RandParagraph(toInt(min), toInt(max))
 		},
 		"Udid": func() string {
-			return Udid()
+			return fuzz.Udid()
 		},
 		"SeededUdid": func(seed any) string {
-			return SeededUdid(toInt64(seed))
+			return fuzz.SeededUdid(toInt64(seed))
 		},
 		"RandCity": func() string {
-			return RandCity()
+			return fuzz.RandCity()
 		},
 		"SeededCity": func(seed any) string {
-			return SeededCity(toInt64(seed))
+			return fuzz.SeededCity(toInt64(seed))
 		},
 		"RandBool": func() bool {
-			return RandBool()
+			return fuzz.RandBool()
 		},
 		"SeededBool": func(seed any) bool {
-			return SeededBool(toInt64(seed))
+			return fuzz.SeededBool(toInt64(seed))
 		},
 		"RandCountry": func() string {
-			return RandCountry()
+			return fuzz.RandCountry()
 		},
 		"SeededCountry": func(seed any) string {
-			return SeededCountry(toInt64(seed))
+			return fuzz.SeededCountry(toInt64(seed))
 		},
 		"RandCountryCode": func() string {
-			return RandCountryCode()
+			return fuzz.RandCountryCode()
 		},
 		"SeededCountryCode": func(seed any) string {
-			return SeededCountryCode(toInt64(seed))
+			return fuzz.SeededCountryCode(toInt64(seed))
 		},
 		"RandName": func() string {
-			return RandName()
+			return fuzz.RandName()
 		},
 		"SeededName": func(seed any) string {
-			return SeededName(toInt64(seed))
+			return fuzz.SeededName(toInt64(seed))
 		},
 		"RandString": func(max any) string {
-			return RandString(toInt(max))
+			return fuzz.RandString(toInt(max))
 		},
 		"RandStringMinMax": func(min any, max any) string {
-			return RandStringMinMax(toInt(min), toInt(max))
+			return fuzz.RandStringMinMax(toInt(min), toInt(max))
 		},
 		"RandStringArrayMinMax": func(min any, max any) template.HTML {
-			arr := RandStringArrayMinMax(toInt(min), toInt(max))
+			arr := fuzz.RandStringArrayMinMax(toInt(min), toInt(max))
 			for i := range arr {
 				arr[i] = fmt.Sprintf(`"%s"`, arr[i])
 			}
 			return template.HTML("[" + strings.Join(arr, ",") + "]")
 		},
 		"RandIntArrayMinMax": func(min any, max any) []int {
-			return RandIntArrayMinMax(toInt(min), toInt(max))
+			return fuzz.RandIntArrayMinMax(toInt(min), toInt(max))
 		},
 		"RandRegex": func(re string) string {
-			return RandRegex(re)
+			return fuzz.RandRegex(re)
 		},
 		"RandPhone": func() string {
-			return RandPhone()
+			return fuzz.RandPhone()
 		},
 		"RandEmail": func() string {
-			return RandEmail()
+			return fuzz.RandEmail()
 		},
 		"RandHost": func() string {
-			return RandHost()
+			return fuzz.RandHost()
 		},
 		"RandURL": func() string {
-			return RandURL()
+			return fuzz.RandURL()
 		},
 		"RandDict": func() template.HTML {
 			dict := make(map[string]any)
-			for i := 0; i < RandNumMinMax(3, 6); i += 2 {
-				key := RandName()
+			for i := 0; i < fuzz.RandNumMinMax(3, 6); i += 2 {
+				key := fuzz.RandName()
 				if i == 0 {
-					dict[key] = RandTriString(".")
+					dict[key] = fuzz.RandTriString(".")
 				} else if i == 2 {
-					dict[key] = RandBool()
+					dict[key] = fuzz.RandBool()
 				} else {
-					dict[key] = RandNumMinMax(100, 5000)
+					dict[key] = fuzz.RandNumMinMax(100, 5000)
 				}
 			}
 			j, _ := json.Marshal(dict)
@@ -287,10 +289,10 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return time.Now().Format(format)
 		},
 		"EnumString": func(str ...any) string {
-			return EnumString(str...)
+			return fuzz.EnumString(str...)
 		},
 		"EnumInt": func(vals ...any) int64 {
-			return EnumInt(vals...)
+			return fuzz.EnumInt(vals...)
 		},
 	}
 }
@@ -414,7 +416,7 @@ func toYAML(val any) template.HTML {
 
 func fileProperty(dir string, fileName string, name string) any {
 	if validFileName(fileName) {
-		return FileProperty(filepath.Join(dir, fileName), name)
+		return fuzz.FileProperty(filepath.Join(dir, fileName), name)
 	}
 	return fmt.Sprintf("invalid file-name '%s'", fileName)
 }
@@ -422,7 +424,7 @@ func fileProperty(dir string, fileName string, name string) any {
 func randFileLine(dir string, fileName string, seed int64) template.HTML {
 	var line string
 	if validFileName(fileName) {
-		line = SeededFileLine(filepath.Join(dir, fileName), seed)
+		line = fuzz.SeededFileLine(filepath.Join(dir, fileName), seed)
 	} else {
 		line = fmt.Sprintf("invalid file-name '%s'", fileName)
 	}

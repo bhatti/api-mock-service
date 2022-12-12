@@ -1,6 +1,7 @@
 package oapi
 
 import (
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 )
 
@@ -12,7 +13,7 @@ type Request struct {
 	Body        []Property
 }
 
-func (req *Request) buildMockHTTPRequest(dataTemplate types.DataTemplateRequest) (res types.MockHTTPRequest, err error) {
+func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) (res types.MockHTTPRequest, err error) {
 	contents, err := marshalPropertyValueWithTypes(req.Body, dataTemplate.WithInclude(true))
 	if err != nil {
 		return res, err

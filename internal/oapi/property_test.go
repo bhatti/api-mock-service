@@ -2,7 +2,7 @@ package oapi
 
 import (
 	"context"
-	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -16,7 +16,7 @@ func Test_ShouldBuildProperty(t *testing.T) {
 	doc, err := loader.LoadFromData(data)
 	require.NoError(t, err)
 	reqParam := doc.Paths["/v1/Credentials/AWS"].Get.Parameters[0]
-	dataTempl := types.NewDataTemplateRequest(false, 1, 1)
+	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
 	reqProperty := schemaToProperty(reqParam.Value.Name, true, reqParam.Value.In, reqParam.Value.Schema.Value, dataTempl)
 	require.Equal(t, float64(1), reqProperty.Min)
 	require.Equal(t, float64(1000), reqProperty.Max)

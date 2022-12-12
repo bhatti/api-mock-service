@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"net/http"
@@ -42,7 +43,7 @@ func (moc *MockOAPIController) PostMockOAPIScenario(c web.APIContext) (err error
 	if err != nil {
 		return err
 	}
-	dataTempl := types.NewDataTemplateRequest(true, 1, 1)
+	dataTempl := fuzz.NewDataTemplateRequest(true, 1, 1)
 	specs, err := oapi.Parse(context.Background(), data, dataTempl)
 	if err != nil {
 		return err

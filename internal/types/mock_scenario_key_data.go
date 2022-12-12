@@ -1,10 +1,13 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
+
+	"github.com/bhatti/api-mock-service/internal/fuzz"
+	log "github.com/sirupsen/logrus"
 )
 
 // MockScenarioKeyData defines keys of mock scenario for in-memory store
@@ -69,8 +72,24 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	if msd.MatchContents != "" &&
 		!strings.Contains(msd.MatchContents, target.MatchContents) &&
 		!reMatch(msd.MatchContents, target.MatchContents) {
-		return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s'",
-			msd.MatchContents, target.MatchContents))
+		if target.MatchContents == "" {
+			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s'",
+				msd.MatchContents, target.MatchContents))
+		}
+		regex := make(map[string]string)
+		err := json.Unmarshal([]byte(msd.MatchContents), &regex)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal contents '%s' regex due to %w", msd.MatchContents, err)
+		}
+		matchContents, err := fuzz.UnmarshalArrayOrObject([]byte(target.MatchContents))
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal target contents '%s' regex due to %w", target.MatchContents, err)
+		}
+		err = fuzz.ValidateRegexMap(matchContents, regex)
+		if err != nil {
+			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s' due to %s",
+				msd.MatchContents, target.MatchContents, err))
+		}
 	}
 
 	for k, msdHeaderVal := range msd.MatchHeaders {

@@ -3,6 +3,7 @@ package oapi
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"regexp"
 	"strconv"
 
@@ -29,7 +30,7 @@ func ParseAPISpec(
 	method types.MethodType,
 	path string,
 	op *openapi3.Operation,
-	dataTemplate types.DataTemplateRequest) (specs []*APISpec) {
+	dataTemplate fuzz.DataTemplateRequest) (specs []*APISpec) {
 	specs = make([]*APISpec, 0)
 	if op == nil {
 		return
@@ -119,7 +120,7 @@ func ParseAPISpec(
 }
 
 // BuildMockScenario builds mock scenario from API spec
-func (api *APISpec) BuildMockScenario(dataTemplate types.DataTemplateRequest) (*types.MockScenario, error) {
+func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*types.MockScenario, error) {
 	req, err := api.Request.buildMockHTTPRequest(dataTemplate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build request for mock scenario %s - %s due to %w", api.Path, api.Method, err)
@@ -145,23 +146,23 @@ func (api *APISpec) BuildMockScenario(dataTemplate types.DataTemplateRequest) (*
 	return spec, nil
 }
 
-func marshalPropertyValueWithTypes(params []Property, dataTemplate types.DataTemplateRequest) (out string, err error) {
+func marshalPropertyValueWithTypes(params []Property, dataTemplate fuzz.DataTemplateRequest) (out string, err error) {
 	matchContents, err := marshalPropertyValue(params, dataTemplate.WithInclude(true))
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal params due to %w", err)
 	}
-	res, err := utils.UnmarshalArrayOrObject(matchContents)
+	res, err := fuzz.UnmarshalArrayOrObject(matchContents)
 	if err != nil {
 		return "", fmt.Errorf("failed to unmarshal params object/array '%s' due to %w", matchContents, err)
 	}
-	j, err := json.Marshal(utils.FlatRegexMap(res))
+	j, err := json.Marshal(fuzz.FlatRegexMap(res))
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal params flat map due to %w", err)
 	}
 	return string(j), nil
 }
 
-func marshalPropertyValue(params []Property, dataTemplate types.DataTemplateRequest) (out []byte, err error) {
+func marshalPropertyValue(params []Property, dataTemplate fuzz.DataTemplateRequest) (out []byte, err error) {
 	out = []byte{}
 	arr := propertyValue(params, dataTemplate)
 	if len(arr) > 1 {
@@ -177,7 +178,7 @@ func stripQuotes(b []byte) []byte {
 	return []byte(re.ReplaceAllString(string(b), `{{$1}}`))
 }
 
-func propertyValue(params []Property, dataTemplate types.DataTemplateRequest) (res []any) {
+func propertyValue(params []Property, dataTemplate fuzz.DataTemplateRequest) (res []any) {
 	for _, param := range params {
 		val := param.Value(dataTemplate)
 		if val != nil {
@@ -192,7 +193,7 @@ func schemaToProperty(
 	matchRequest bool,
 	in string,
 	schema *openapi3.Schema,
-	dataTemplate types.DataTemplateRequest) Property {
+	dataTemplate fuzz.DataTemplateRequest) Property {
 	property := Property{
 		Name:         name,
 		Description:  schema.Description,
@@ -254,7 +255,7 @@ func addAllAnySchemaToProperty(
 	schema *openapi3.Schema,
 	property *Property,
 	matchRequest bool, in string,
-	dataTemplate types.DataTemplateRequest,
+	dataTemplate fuzz.DataTemplateRequest,
 ) {
 	for _, next := range schema.AllOf {
 		property.SubType = next.Value.Type
@@ -279,7 +280,7 @@ func addAllAnySchemaToProperty(
 
 func extractHeaders(
 	headers openapi3.Headers,
-	dataTemplate types.DataTemplateRequest,
+	dataTemplate fuzz.DataTemplateRequest,
 ) (res []Property) {
 	for k, header := range headers {
 		if header.Value.Schema == nil {

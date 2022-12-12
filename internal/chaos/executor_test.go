@@ -3,14 +3,16 @@ package chaos
 import (
 	"context"
 	"fmt"
+	"gopkg.in/yaml.v3"
+	"os"
+	"testing"
+
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
-	"os"
-	"testing"
 )
 
 var baseURL = "https://mocksite.local"
@@ -25,7 +27,7 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
@@ -44,7 +46,7 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
@@ -71,7 +73,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
@@ -99,7 +101,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
@@ -129,7 +131,7 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
@@ -165,7 +167,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	client.AddMapping("GET", baseURL+"/comments/1", web.NewStubHTTPResponse(200, todo))
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, client)
@@ -187,7 +189,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 1)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 	chaosReq := types.NewChaosRequest(baseURL, 5)
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)
@@ -224,7 +226,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	dataTemplate := types.NewDataTemplateRequest(false, 1, 2)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	chaosReq := types.NewChaosRequest(baseURL, 5)
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)

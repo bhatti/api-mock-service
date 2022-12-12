@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"os"
 
 	"github.com/bhatti/api-mock-service/internal/chaos"
@@ -48,7 +49,7 @@ var chaosCmd = &cobra.Command{
 			os.Exit(4)
 		}
 
-		dataTemplate := types.NewDataTemplateRequest(false, 1, 1)
+		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 		chaosReq := types.NewChaosRequest(baseURL, executionTimes)
 		chaosReq.Verbose = verbose
 		executor := chaos.NewExecutor(scenarioRepo, web.NewHTTPClient(serverConfig))

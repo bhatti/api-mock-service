@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bhatti/api-mock-service/internal/fuzz"
+
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
@@ -38,7 +40,7 @@ func NewExecutor(
 func (x *Executor) Execute(
 	ctx context.Context,
 	scenarioKey *types.MockScenarioKeyData,
-	dataTemplate types.DataTemplateRequest,
+	dataTemplate fuzz.DataTemplateRequest,
 	chaosReq types.ChaosRequest,
 ) *types.ChaosResponse {
 	started := time.Now()
@@ -81,7 +83,7 @@ func (x *Executor) Execute(
 func (x *Executor) ExecuteByGroup(
 	ctx context.Context,
 	group string,
-	dataTemplate types.DataTemplateRequest,
+	dataTemplate fuzz.DataTemplateRequest,
 	chaosReq types.ChaosRequest,
 ) *types.ChaosResponse {
 	started := time.Now()
@@ -131,13 +133,13 @@ func (x *Executor) execute(
 	url string,
 	scenario *types.MockScenario,
 	overrides map[string]any,
-	dataTemplate types.DataTemplateRequest,
+	dataTemplate fuzz.DataTemplateRequest,
 	chaosRequest types.ChaosRequest,
 ) (err error) {
 	started := time.Now()
 	templateParams := buildTemplateParams(scenario, overrides)
-	if utils.RandNumMinMax(1, 100) < 20 {
-		dataTemplate = dataTemplate.WithMaxMultiplier(utils.RandNumMinMax(2, 5))
+	if fuzz.RandNumMinMax(1, 100) < 20 {
+		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandNumMinMax(2, 5))
 	}
 	for k, v := range templateParams {
 		url = strings.ReplaceAll(url, "{"+k+"}", fmt.Sprintf("%v", v))
@@ -180,7 +182,7 @@ func (x *Executor) execute(
 		}
 		match, err := regexp.MatchString(v, actualHeader[0])
 		if err != nil {
-			return fmt.Errorf("failed to match required header %s with regex %s and actual value %s due to %w",
+			return fmt.Errorf("failed to fuzz required header %s with regex %s and actual value %s due to %w",
 				k, v, actualHeader[0], err)
 		}
 		if !match {
@@ -195,7 +197,7 @@ func (x *Executor) execute(
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal response '%s' regex due to %w", scenario.Response.MatchContents, err)
 		}
-		err = utils.ValidateRegexMap(resContents, regex)
+		err = fuzz.ValidateRegexMap(resContents, regex)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"Component":  "Tester",
@@ -267,7 +269,7 @@ func updateTemplateParams(
 	resHeaders map[string][]string,
 	statusCode int) (any, error) {
 	templateParams[types.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
-	contents, err := utils.UnmarshalArrayOrObject(resBytes)
+	contents, err := fuzz.UnmarshalArrayOrObject(resBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +287,7 @@ func updateTemplateParams(
 
 func buildRequestBody(
 	scenario *types.MockScenario,
-	dataTemplate types.DataTemplateRequest,
+	dataTemplate fuzz.DataTemplateRequest,
 ) (string, io.ReadCloser) {
 	var contents string
 	if scenario.Request.MatchContents != "" {
@@ -296,7 +298,7 @@ func buildRequestBody(
 	if contents == "" {
 		return "", nil
 	}
-	res, err := utils.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(contents, dataTemplate)
+	res, err := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(contents, dataTemplate)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Component": "Tester",
@@ -320,13 +322,13 @@ func buildTemplateParams(
 		}
 	}
 	for k, v := range scenario.Request.ExamplePathParams {
-		templateParams[k] = utils.RandRegex(v)
+		templateParams[k] = fuzz.RandRegex(v)
 	}
 	for k, v := range scenario.Request.ExampleQueryParams {
-		templateParams[k] = utils.RandRegex(v)
+		templateParams[k] = fuzz.RandRegex(v)
 	}
 	for k, v := range scenario.Request.ExampleHeaders {
-		templateParams[k] = utils.RandRegex(v)
+		templateParams[k] = fuzz.RandRegex(v)
 	}
 	// Find any params for query params and path variables
 	for k, v := range scenario.ToKeyData().MatchGroups(scenario.Path) {

@@ -2,13 +2,11 @@ package oapi
 
 import (
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"reflect"
 	"strings"
 
-	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/bhatti/api-mock-service/internal/utils"
 )
 
 var asciiPattern = `[\x20-\x7F]{1,128}`
@@ -42,16 +40,16 @@ func (prop *Property) String() string {
 }
 
 // Value of the property
-func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
+func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 	if prop.Type == "number" || prop.Type == "integer" {
 		if dataTemplate.IncludeType {
 			if prop.Regex == "" {
 				return map[string]string{
-					prop.Name: utils.NumberPrefixRegex,
+					prop.Name: fuzz.NumberPrefixRegex,
 				}
 			}
 			return map[string]string{
-				prop.Name: types.PrefixTypeNumber + prop.Regex,
+				prop.Name: fuzz.PrefixTypeNumber + prop.Regex,
 			}
 		}
 		return map[string]string{
@@ -60,7 +58,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 	} else if prop.Type == "boolean" {
 		if dataTemplate.IncludeType {
 			return map[string]string{
-				prop.Name: utils.BooleanPrefixRegex,
+				prop.Name: fuzz.BooleanPrefixRegex,
 			}
 		}
 		return map[string]string{
@@ -70,7 +68,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 		if dataTemplate.IncludeType {
 			if prop.Regex != "" {
 				return map[string]string{
-					prop.Name: types.PrefixTypeString + prop.Regex,
+					prop.Name: fuzz.PrefixTypeString + prop.Regex,
 				}
 			} else if prop.Format != "" {
 				if strings.Contains(prop.Format, "date") || strings.Contains(prop.Format, "time") {
@@ -84,7 +82,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 				}
 			} else if len(prop.Enum) > 0 {
 				var sb strings.Builder
-				sb.WriteString(types.PrefixTypeString)
+				sb.WriteString(fuzz.PrefixTypeString)
 				sb.WriteString("(")
 				for i, e := range prop.Enum {
 					if i > 0 {
@@ -98,7 +96,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 				}
 			}
 			return map[string]string{
-				prop.Name: types.PrefixTypeString + `\w+`,
+				prop.Name: fuzz.PrefixTypeString + `\w+`,
 			}
 		}
 		return map[string]string{
@@ -109,7 +107,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 	} else if prop.In == "header" {
 		if dataTemplate.IncludeType {
 			return map[string]string{
-				prop.Name: types.PrefixTypeString + asciiPattern,
+				prop.Name: fuzz.PrefixTypeString + asciiPattern,
 			}
 		}
 		return map[string]string{
@@ -118,7 +116,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 	} else if prop.In == "body" && prop.Type == "object" {
 		if dataTemplate.IncludeType {
 			return map[string]string{
-				prop.Name: types.PrefixTypeObject + prop.Regex,
+				prop.Name: fuzz.PrefixTypeObject + prop.Regex,
 			}
 		}
 		return map[string]string{
@@ -140,7 +138,7 @@ func (prop *Property) Value(dataTemplate types.DataTemplateRequest) any {
 	}
 }
 
-func (prop *Property) mapValue(dataTemplate types.DataTemplateRequest) string {
+func (prop *Property) mapValue(dataTemplate fuzz.DataTemplateRequest) string {
 	val := prop.Value(dataTemplate)
 	if val == nil {
 		return ""
@@ -149,9 +147,9 @@ func (prop *Property) mapValue(dataTemplate types.DataTemplateRequest) string {
 	case map[string]string:
 		if dataTemplate.IncludeType {
 			if prop.Regex != "" {
-				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+				return fuzz.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
 			}
-			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
+			return fuzz.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
 		m := val.(map[string]string)
 		if len(m[prop.Name]) > 0 {
@@ -160,9 +158,9 @@ func (prop *Property) mapValue(dataTemplate types.DataTemplateRequest) string {
 	case map[string]any:
 		if dataTemplate.IncludeType {
 			if prop.Regex != "" {
-				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+				return fuzz.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
 			}
-			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
+			return fuzz.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
 		m := val.(map[string]any)
 		val := m[prop.Name]
@@ -172,9 +170,9 @@ func (prop *Property) mapValue(dataTemplate types.DataTemplateRequest) string {
 	case string:
 		if dataTemplate.IncludeType {
 			if prop.Regex != "" {
-				return utils.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+				return fuzz.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
 			}
-			return utils.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
+			return fuzz.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
 		return val.(string)
 	default:
@@ -237,7 +235,7 @@ func (prop *Property) stringValue() string {
 	}
 }
 
-func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) any {
+func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 	if prop.matchRequest || prop.In == "path" || prop.In == "query" {
 		if prop.Regex != "" {
 			return prop.Regex
@@ -260,19 +258,19 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) any {
 		for i := 0; i < len(childArr); i++ {
 			if prop.SubType == "number" || prop.SubType == "integer" {
 				if dataTemplate.IncludeType {
-					childArr[i] = utils.NumberPrefixRegex
+					childArr[i] = fuzz.NumberPrefixRegex
 				} else {
 					childArr[i] = "{{RandNumMinMax 0 0}}"
 				}
 			} else if prop.SubType == "boolean" {
 				if dataTemplate.IncludeType {
-					childArr[i] = utils.BooleanPrefixRegex
+					childArr[i] = fuzz.BooleanPrefixRegex
 				} else {
 					childArr[i] = "{{RandBool}}"
 				}
 			} else if prop.SubType == "string" {
 				if dataTemplate.IncludeType {
-					childArr[i] = types.PrefixTypeString + `\w+`
+					childArr[i] = fuzz.PrefixTypeString + `\w+`
 				} else {
 					childArr[i] = "{{RandStringMinMax 0 0}}"
 				}
@@ -332,15 +330,15 @@ func (prop *Property) arrayValue(dataTemplate types.DataTemplateRequest) any {
 
 func (prop *Property) buildValueArray() []any {
 	if prop.Max == 0 {
-		prop.Max = prop.Min + float64(utils.RandNumMinMax(1, 5))
+		prop.Max = prop.Min + float64(fuzz.RandNumMinMax(1, 5))
 	}
 	if prop.Min == 0 {
 		prop.Min = prop.Max
 	}
-	return make([]any, utils.RandNumMinMax(int(prop.Min), int(prop.Max)))
+	return make([]any, fuzz.RandNumMinMax(int(prop.Min), int(prop.Max)))
 }
 
-func propsToMap(props []Property, defVal string, dataTemplate types.DataTemplateRequest) (res map[string]string) {
+func propsToMap(props []Property, defVal string, dataTemplate fuzz.DataTemplateRequest) (res map[string]string) {
 	res = make(map[string]string)
 	for _, prop := range props {
 		val := prop.mapValue(dataTemplate)
@@ -354,7 +352,7 @@ func propsToMap(props []Property, defVal string, dataTemplate types.DataTemplate
 	return
 }
 
-func propsToMapArray(props []Property, dataTemplate types.DataTemplateRequest) (res map[string][]string) {
+func propsToMapArray(props []Property, dataTemplate fuzz.DataTemplateRequest) (res map[string][]string) {
 	res = make(map[string][]string)
 	for _, prop := range props {
 		val := prop.mapValue(dataTemplate)
