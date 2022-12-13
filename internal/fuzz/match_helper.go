@@ -24,9 +24,6 @@ const PrefixTypeString = "__string__"
 // PrefixTypeObject type
 const PrefixTypeObject = "__object__"
 
-// TypePrefix constant
-const TypePrefix = "__"
-
 // UintPrefixRegex constant
 const UintPrefixRegex = PrefixTypeNumber + `[0-9]{1,10}`
 
@@ -44,6 +41,9 @@ const EmailRegex = `\w+@\w+.?\w+`
 
 // AnyWordRegex  constant
 const AnyWordRegex = `\w+`
+
+// WildRegex  constant
+const WildRegex = `.+`
 
 // StripTypeTags removes type prefixes
 func StripTypeTags(re string) string {
@@ -94,6 +94,8 @@ func PopulateRandomData(val any) any {
 			return RandNumMinMax(0, 10000)
 		} else if strVal == IntPrefixRegex {
 			return RandNumMinMax(-100, 10000)
+		} else if strings.Contains(strVal, WildRegex) {
+			return RandSentence(1, 3)
 		} else {
 			return RandRegex(strVal)
 		}
@@ -137,7 +139,7 @@ func FlatRegexMap(val any) map[string]string {
 				"Key": k,
 				"Val": v,
 			}).Debugf("simplifying regex")
-			regex[k] = `__string__.+` // simplify really long regex
+			regex[k] = WildRegex // simplify really long regex
 		}
 	}
 	return regex
@@ -416,7 +418,7 @@ func buildFlatRegexKey(prefix string, k string) string {
 func addFlatRegexMapValue(res map[string]string, prefix string, k string, v string) {
 	fullKey := buildFlatRegexKey(prefix, k)
 	if strings.Contains(v, `\w`) && strings.Contains(v, `[0-9]`) {
-		v = `.+` // mix regex are not supported
+		v = WildRegex // mix regex are not supported
 	}
 	old := res[fullKey]
 	if old == "" {

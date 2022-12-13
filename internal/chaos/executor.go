@@ -45,8 +45,8 @@ func (x *Executor) Execute(
 ) *types.ChaosResponse {
 	started := time.Now()
 	scenarioKey.Name = ""
-	scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 	res := types.NewChaosResponse(nil, 0, 0)
+	scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 	if err != nil {
 		res.Errors = append(res.Errors, err)
 		return res

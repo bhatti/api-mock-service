@@ -17,6 +17,25 @@ import (
 
 var baseURL = "https://mocksite.local"
 
+func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
+	// GIVEN scenario repository
+	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+
+	// AND valid template for random data
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	// WHEN executing scenario
+	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	// THEN it should execute saved scenario
+	res := executor.Execute(context.Background(), &types.MockScenarioKeyData{}, dataTemplate, chaosReq)
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors[0].Error(), `could not lookup matching API`)
+}
+
 func Test_ShouldExecuteGetTodo(t *testing.T) {
 	// GIVEN scenario repository
 	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
