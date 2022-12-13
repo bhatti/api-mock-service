@@ -98,6 +98,7 @@ func (w *DefaultHTTPClient) execute(
 					"Component":   "DefaultHTTPClient",
 					"URL":         req.URL,
 					"Method":      req.Method,
+					"Headers":     req.Header,
 					"AccessKeyID": os.Getenv("AWS_ACCESS_KEY_ID"),
 				}).Infof("added AWS signatures")
 			} else {
