@@ -164,6 +164,7 @@ func (x *Executor) execute(
 			"Scenario":   scenario,
 			"StatusCode": statusCode,
 			"Elapsed":    elapsed,
+			"Headers":    reqHeaders,
 			"Request":    reqContents,
 			"Response":   string(resBytes)}).Warnf("failed to execute request")
 		return fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBody)
@@ -181,6 +182,7 @@ func (x *Executor) execute(
 			"Scenario":   scenario,
 			"StatusCode": statusCode,
 			"Elapsed":    elapsed,
+			"Headers":    reqHeaders,
 			"Request":    reqContents,
 			"Response":   resContents}).Infof("executed request")
 	}
@@ -215,6 +217,7 @@ func (x *Executor) execute(
 				"Scenario":   scenario,
 				"StatusCode": statusCode,
 				"Elapsed":    elapsed,
+				"Headers":    reqHeaders,
 				"Request":    reqContents,
 				"Response":   resContents}).Warnf("failed to validate resposne")
 			return fmt.Errorf("failed to validate response due to %w", err)
@@ -245,6 +248,7 @@ func (x *Executor) execute(
 				"Assertion":  assertion,
 				"Elapsed":    elapsed,
 				"Params":     templateParams,
+				"Headers":    reqHeaders,
 				"Request":    reqContents,
 				"Response":   resContents,
 				"Output":     string(b)}).Warnf("failed to assert test")
