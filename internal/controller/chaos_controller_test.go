@@ -90,6 +90,46 @@ func Test_ShouldFailPostChaosScenarioWithoutBaseURL(t *testing.T) {
 	require.Contains(t, err.Error(), "baseURL is not specified")
 }
 
+func Test_ShouldPostChaosScenarioWithoutGroup(t *testing.T) {
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	// AND a valid scenario
+	_, err = saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
+	require.NoError(t, err)
+
+	client := web.NewStubHTTPClient()
+	todo := ` { } `
+	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
+	executor := chaos.NewExecutor(mockScenarioRepository, client)
+
+	webServer := web.NewStubWebServer()
+	ctrl := NewMockChaosController(executor, webServer)
+
+	chaosReq := types.NewChaosRequest("https://localhost", 1)
+	data, err := json.Marshal(chaosReq)
+	require.NoError(t, err)
+	reader := io.NopCloser(bytes.NewReader(data))
+	u, err := url.Parse("http://localhost:8080/_chaos/GET/todo-get/todos/10")
+	require.NoError(t, err)
+	ctx := web.NewStubContext(&http.Request{
+		Body:   reader,
+		Method: "POST",
+		URL:    u,
+		Header: map[string][]string{
+			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
+			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
+		},
+	})
+	ctx.Params["group"] = ""
+
+	// WHEN creating mock scenario without group
+	err = ctrl.PostMockChaosGroupScenario(ctx)
+
+	// THEN it should fail
+	require.Error(t, err)
+}
+
 func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
@@ -130,7 +170,7 @@ func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
 	})
 	ctx.Params["group"] = "/todos/10"
 
-	// WHEN creating mock scenario with without method, name and path
+	// WHEN creating mock scenario with group
 	err = ctrl.PostMockChaosGroupScenario(ctx)
 
 	// THEN it should not fail
@@ -181,7 +221,7 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 	ctx.Params["name"] = scenario.Name
 	ctx.Params["path"] = "/todos/10"
 
-	// WHEN creating mock scenario with without method, name and path
+	// WHEN creating mock scenario with method, name and path
 	err = ctrl.PostMockChaosScenario(ctx)
 
 	// THEN it should not fail

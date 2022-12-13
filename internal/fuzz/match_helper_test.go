@@ -520,11 +520,19 @@ func Test_ShouldUnmarshalArrayOrObjectAndExtractTypesAndMarshal(t *testing.T) {
 	require.Contains(t, str, "address")
 }
 
-func Test_ShouldPopulateRandomDataStringMap(t *testing.T) {
+func Test_ShouldPopulateRandomDataStringMapDta(t *testing.T) {
 	val := PopulateRandomData(map[string]string{"k": "1"})
 	require.Equal(t, "map[string]interface {}", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataStringUnknown(t *testing.T) {
 	require.Nil(t, PopulateRandomData(complex(1, 1)))
+}
+
+func Test_ShouldPopulateRandomDataStringMapRegex(t *testing.T) {
+	strJSON := `{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}`
+	val, err := UnmarshalArrayOrObject([]byte(strJSON))
+	require.NoError(t, err)
+	val = PopulateRandomData(val)
+	require.Equal(t, "map[string]interface {}", reflect.TypeOf(val).String())
 }

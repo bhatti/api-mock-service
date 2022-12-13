@@ -1,18 +1,44 @@
 method: PUT
 name: put-todo
-path: /todos/202
+path: /todos/:id
+group: put_todo
 request:
+    match_query_params: {}
     match_headers:
+        Content-Type: application/x-www-form-urlencoded
+    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        Accept: '*/*'
+        Content-Length: "75"
+        Content-Type: application/x-www-form-urlencoded
+        User-Agent: curl/7.65.2
         Mock-Url: https://jsonplaceholder.typicode.com/todos/202
-    match_content_type: ""
-    match_contents: '{"userId": 101, "title": "Buy milk", "completed": False}'
+    example_contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 response:
-    headers: {}
-    content_type: ""
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+        Alt-Svc:
+            - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+        Cache-Control:
+            - no-cache
+        Cf-Cache-Status:
+            - DYNAMIC
+        X-Ratelimit-Limit:
+            - "1000"
+        X-Ratelimit-Remaining:
+            - "999"
+        X-Ratelimit-Reset:
+            - "1670882840"
     contents: |-
         {
-          "{\"userId\": 101, \"title\": \"Buy milk\", \"completed\": False}": "",
-          "id": 201
+          "id": 1
         }
+    contents_file: ""
     status_code: 200
-wait_before_reply: 1s
+    match_headers: {}
+    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
+    assertions: []
+wait_before_reply: 0s

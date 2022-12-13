@@ -180,6 +180,33 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	require.Contains(t, res.Errors[0].Error(), `failed to assert '{{VariableContains "contents.id" "1"}}`)
 }
 
+func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
+	// GIVEN scenario repository
+	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+
+	// AND a valid scenario
+	scenario, err := saveTestScenario("../../fixtures/get_comment.yaml", repo)
+	require.NoError(t, err)
+
+	client := web.NewStubHTTPClient()
+	todo := `{} `
+	client.AddMapping("GET", baseURL+"/comments/1", web.NewStubHTTPResponse(400, todo))
+
+	// AND valid template for random data
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	chaosReq := types.NewChaosRequest(baseURL, 1)
+	// WHEN executing scenario
+	executor := NewExecutor(repo, client)
+	// THEN it should not execute saved scenario
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors[0].Error(), `failed to execute request with status 400`)
+}
+
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	// GIVEN scenario repository
 	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})

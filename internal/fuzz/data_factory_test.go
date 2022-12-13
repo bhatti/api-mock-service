@@ -73,7 +73,7 @@ func Test_ShouldGetRandIntArrayMinMax(t *testing.T) {
 	require.True(t, len(RandIntArrayMinMax(5, 10)) >= 5)
 }
 
-func Test_ShouldGetRandRegexAny(t *testing.T) {
+func Test_ShouldGetxAny(t *testing.T) {
 	require.True(t, RandRegex(`[\x20-\x7F]{1,40}`) != "")
 }
 

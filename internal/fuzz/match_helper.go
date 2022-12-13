@@ -52,7 +52,7 @@ func StripTypeTags(re string) string {
 		ReplaceAllString(re, "")
 }
 
-// PopulateRandomData using regex
+// PopulateRandomData using regex or data
 func PopulateRandomData(val any) any {
 	if val == nil {
 		return nil
@@ -94,11 +94,8 @@ func PopulateRandomData(val any) any {
 			return RandNumMinMax(0, 10000)
 		} else if strVal == IntPrefixRegex {
 			return RandNumMinMax(-100, 10000)
-		} else if strings.HasPrefix(strVal, TypePrefix) {
-			parts := strings.Split(strVal, TypePrefix)
-			return RandRegex(parts[len(parts)-1])
 		} else {
-			return RandSentence(1, 10)
+			return RandRegex(strVal)
 		}
 	case map[string]string:
 		hm := val.(map[string]string)

@@ -137,19 +137,17 @@ func (x *Executor) execute(
 	chaosRequest types.ChaosRequest,
 ) (err error) {
 	started := time.Now()
-	templateParams := buildTemplateParams(scenario, overrides)
+	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides)
 	if fuzz.RandNumMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandNumMinMax(2, 5))
 	}
 	for k, v := range templateParams {
 		url = strings.ReplaceAll(url, "{"+k+"}", fmt.Sprintf("%v", v))
 	}
-	headers := make(map[string][]string)
-	params := make(map[string]string)
-	reqContents, reqBody := buildRequestBody(scenario, dataTemplate)
+	reqContents, reqBody := buildRequestBody(scenario)
 
 	statusCode, resBody, resHeaders, err := x.client.Handle(
-		ctx, url, string(scenario.Method), headers, params, reqBody)
+		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	if err != nil {
 		return err
 	}
@@ -157,6 +155,18 @@ func (x *Executor) execute(
 	var resBytes []byte
 	if resBytes, resBody, err = utils.ReadAll(resBody); err != nil {
 		return err
+	}
+
+	if statusCode >= 300 {
+		log.WithFields(log.Fields{
+			"Component":  "Tester",
+			"URL":        url,
+			"Scenario":   scenario,
+			"StatusCode": statusCode,
+			"Elapsed":    elapsed,
+			"Request":    reqContents,
+			"Response":   string(resBytes)}).Warnf("failed to execute request")
+		return fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBody)
 	}
 
 	var resContents any
@@ -287,7 +297,6 @@ func updateTemplateParams(
 
 func buildRequestBody(
 	scenario *types.MockScenario,
-	dataTemplate fuzz.DataTemplateRequest,
 ) (string, io.ReadCloser) {
 	var contents string
 	if scenario.Request.MatchContents != "" {
@@ -298,7 +307,7 @@ func buildRequestBody(
 	if contents == "" {
 		return "", nil
 	}
-	res, err := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(contents, dataTemplate)
+	res, err := fuzz.UnmarshalArrayOrObject([]byte(contents))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Component": "Tester",
@@ -307,14 +316,26 @@ func buildRequestBody(
 		}).Infof("failed to unmarshal request")
 		return "", nil
 	}
-	return res, io.NopCloser(bytes.NewReader([]byte(res)))
+	res = fuzz.PopulateRandomData(res)
+	j, err := json.Marshal(res)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Component": "Tester",
+			"Scenario":  scenario,
+			"Error":     err,
+		}).Infof("failed to marshal populated request")
+		return "", nil
+	}
+	return string(j), io.NopCloser(bytes.NewReader(j))
 }
 
 func buildTemplateParams(
 	scenario *types.MockScenario,
 	overrides map[string]any,
-) map[string]any {
-	templateParams := make(map[string]any)
+) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
+	templateParams = make(map[string]any)
+	queryParams = make(map[string]string)
+	reqHeaders = make(map[string][]string)
 	for _, env := range os.Environ() {
 		parts := strings.Split(env, "=")
 		if len(parts) == 2 {
@@ -323,12 +344,19 @@ func buildTemplateParams(
 	}
 	for k, v := range scenario.Request.ExamplePathParams {
 		templateParams[k] = fuzz.RandRegex(v)
+		queryParams[k] = fuzz.RandRegex(v)
 	}
 	for k, v := range scenario.Request.ExampleQueryParams {
 		templateParams[k] = fuzz.RandRegex(v)
+		queryParams[k] = fuzz.RandRegex(v)
 	}
 	for k, v := range scenario.Request.ExampleHeaders {
 		templateParams[k] = fuzz.RandRegex(v)
+		reqHeaders[k] = []string{fuzz.RandRegex(v)}
+	}
+	for k, v := range scenario.Request.MatchHeaders {
+		templateParams[k] = fuzz.RandRegex(v)
+		reqHeaders[k] = []string{fuzz.RandRegex(v)}
 	}
 	// Find any params for query params and path variables
 	for k, v := range scenario.ToKeyData().MatchGroups(scenario.Path) {
@@ -337,5 +365,5 @@ func buildTemplateParams(
 	for k, v := range overrides {
 		templateParams[k] = v
 	}
-	return templateParams
+	return
 }
