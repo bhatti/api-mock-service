@@ -167,7 +167,7 @@ func (x *Executor) execute(
 			"Headers":    reqHeaders,
 			"Request":    reqContents,
 			"Response":   string(resBytes)}).Warnf("failed to execute request")
-		return fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBody)
+		return fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBytes)
 	}
 
 	var resContents any
