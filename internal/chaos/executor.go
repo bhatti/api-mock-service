@@ -377,7 +377,7 @@ func buildTemplateParams(
 }
 
 func regexValue(val string) string {
-	if strings.HasPrefix(val, "__") {
+	if strings.HasPrefix(val, "__") || strings.HasPrefix(val, "(") {
 		return fuzz.RandRegex(val)
 	}
 	return val

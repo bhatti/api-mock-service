@@ -109,6 +109,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 
 func Test_ShouldParseRegexValue(t *testing.T) {
 	require.Equal(t, "__1", regexValue("__1"))
+	require.Equal(t, "1", regexValue("(1)"))
 	require.Equal(t, "1", regexValue("1"))
 }
 
