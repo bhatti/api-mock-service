@@ -3,13 +3,16 @@
 ## Mocking Distributed Micro services and Chaos testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
 
 ### Use-Cases
-- Mock remote APIs using HTTP Proxy or Open-API specifications so that they can be deployed locally for ease of development and testing.
-- Mock new APIs that are not yet available for testing but their specifications are defined so that other teams can continue with their development without waiting for full implementation.
-- Define Mock behavior for happy path and failure test cases so that the development team can test all failure cases.
-- Add network delays and inject errors so that the development team can test for chaos and game days.
-- Test remote APIs using chaos or stochastic testing where input parameters are randomly created based on regex or other patterns.
-- Validate APIs using custom defined regex patterns and assertion policies.
-- Fuzz testing a group of remote APIs with random data.
+- As a service owner, I need to mock remote dependent service(s) by capturing/recording request/responses through an HTTP proxy so that I can play it back when testing the remote service(s) without connecting with them.
+![use-case-1](images/mock_uc1.png)
+- As a service owner, I need to mock remote dependent service(s) based on a open-api/swagger specifications so that my service client can test all service behavior per specifications for the remote service(s) even when remote service is not fully implemented or accessible.
+![use-case-2](images/mock_uc2.png)
+- As a service owner, I need to mock remote dependent service(s) based on a mock scenario defined in a template so that my service client can test service behavior per expected request/response in the template even when remote service is not fully implemented or accessible.
+![use-case-3](images/mock_uc3.png)
+- As a service owner, I need to inject various response behavior and faults to the output of a remote service so that I can build a robust client that prevents cascading failures and is more resilient to unexpected faults.
+![use-case-4](images/mock_uc4.png)
+- As a service owner, I need to use similar test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
+![use-case-5](images/mock_uc5.png)
  
 ### Features
 API mock service for REST/HTTP based services with following features:
