@@ -48,7 +48,7 @@ func (x *Executor) Execute(
 	res := types.NewChaosResponse(nil, 0, 0)
 	scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 	if err != nil {
-		res.Errors = append(res.Errors, err)
+		res.Errors = append(res.Errors, err.Error())
 		return res
 	}
 	url := chaosReq.BaseURL + scenario.Path
@@ -61,7 +61,7 @@ func (x *Executor) Execute(
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
 		err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
 		if err != nil {
-			res.Errors = append(res.Errors, err)
+			res.Errors = append(res.Errors, err.Error())
 			res.Failed++
 		} else {
 			res.Succeeded++
@@ -92,7 +92,7 @@ func (x *Executor) ExecuteByGroup(
 	for _, scenarioKey := range scenarioKeys {
 		scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 		if err != nil {
-			res.Errors = append(res.Errors, err)
+			res.Errors = append(res.Errors, err.Error())
 			continue
 		}
 		url := chaosReq.BaseURL + scenario.Path
@@ -106,7 +106,7 @@ func (x *Executor) ExecuteByGroup(
 		for i := 0; i < chaosReq.ExecutionTimes; i++ {
 			err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
 			if err != nil {
-				res.Errors = append(res.Errors, err)
+				res.Errors = append(res.Errors, err.Error())
 				res.Failed++
 			} else {
 				res.Succeeded++

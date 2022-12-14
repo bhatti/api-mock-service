@@ -33,7 +33,7 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0].Error(), `could not lookup matching API`)
+	require.Contains(t, res.Errors[0], `could not lookup matching API`)
 }
 
 func Test_ShouldExecuteGetTodo(t *testing.T) {
@@ -104,7 +104,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0].Error(), `failed to assert '{{VariableContains "headers.Content-Type"`)
+	require.Contains(t, res.Errors[0], `failed to assert '{{VariableContains "headers.Content-Type"`)
 }
 
 func Test_ShouldParseRegexValue(t *testing.T) {
@@ -139,7 +139,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0].Error(), `didn't match required header Content-Type with regex application/xjson`)
+	require.Contains(t, res.Errors[0], `didn't match required header Content-Type with regex application/xjson`)
 }
 
 func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
@@ -167,7 +167,7 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0].Error(), `failed to find required header Abc-Content-Type`)
+	require.Contains(t, res.Errors[0], `failed to find required header Abc-Content-Type`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
@@ -202,7 +202,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0].Error(), `failed to assert '{{VariableContains "contents.id" "1"}}`)
+	require.Contains(t, res.Errors[0], `failed to assert '{{VariableContains "contents.id" "1"}}`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
@@ -229,7 +229,7 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0].Error(), `failed to execute request with status 400`)
+	require.Contains(t, res.Errors[0], `failed to execute request with status 400`)
 }
 
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
@@ -265,7 +265,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	for _, err := range res.Errors {
 		t.Log(err)
 		// THEN it should fail to execute
-		require.Contains(t, err.Error(), "key 'jobStatus' - value 'BAD' didn't match regex")
+		require.Contains(t, err, "key 'jobStatus' - value 'BAD' didn't match regex")
 	}
 }
 
