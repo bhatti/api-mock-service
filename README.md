@@ -11,7 +11,7 @@
 ![use-case-3](images/mock_uc3.png)
 - As a service owner, I need to inject various response behavior and faults to the output of a remote service so that I can build a robust client that prevents cascading failures and is more resilient to unexpected faults.
 ![use-case-4](images/mock_uc4.png)
-- As a service owner, I need to use similar test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
+- As a service owner, I need to define test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
 ![use-case-5](images/mock_uc5.png)
  
 ### Features
