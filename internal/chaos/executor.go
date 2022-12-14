@@ -347,20 +347,24 @@ func buildTemplateParams(
 		}
 	}
 	for k, v := range scenario.Request.ExamplePathParams {
-		templateParams[k] = fuzz.RandRegex(v)
-		queryParams[k] = fuzz.RandRegex(v)
+		templateParams[k] = v
+		queryParams[k] = v
 	}
 	for k, v := range scenario.Request.ExampleQueryParams {
-		templateParams[k] = fuzz.RandRegex(v)
-		queryParams[k] = fuzz.RandRegex(v)
+		templateParams[k] = v
+		queryParams[k] = v
+	}
+	for k, v := range scenario.Request.MatchQueryParams {
+		templateParams[k] = regexValue(v)
+		queryParams[k] = regexValue(v)
 	}
 	for k, v := range scenario.Request.ExampleHeaders {
-		templateParams[k] = fuzz.RandRegex(v)
-		reqHeaders[k] = []string{fuzz.RandRegex(v)}
+		templateParams[k] = v
+		reqHeaders[k] = []string{v}
 	}
 	for k, v := range scenario.Request.MatchHeaders {
-		templateParams[k] = fuzz.RandRegex(v)
-		reqHeaders[k] = []string{fuzz.RandRegex(v)}
+		templateParams[k] = regexValue(v)
+		reqHeaders[k] = []string{regexValue(v)}
 	}
 	// Find any params for query params and path variables
 	for k, v := range scenario.ToKeyData().MatchGroups(scenario.Path) {
@@ -370,4 +374,11 @@ func buildTemplateParams(
 		templateParams[k] = v
 	}
 	return
+}
+
+func regexValue(val string) string {
+	if strings.HasPrefix(val, "__") {
+		return fuzz.RandRegex(val)
+	}
+	return val
 }

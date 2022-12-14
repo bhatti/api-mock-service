@@ -59,31 +59,31 @@ func PopulateRandomData(val any) any {
 	}
 	switch val.(type) {
 	case bool:
-		return RandBool()
+		return val //RandBool()
 	case int:
-		return RandNumMinMax(-1000, 10000)
+		return val //RandNumMinMax(-1000, 10000)
 	case int8:
-		return RandNumMinMax(-1000, 10000)
+		return val //RandNumMinMax(-1000, 10000)
 	case int16:
-		return RandNumMinMax(-1000, 10000)
+		return val //RandNumMinMax(-1000, 10000)
 	case int32:
-		return RandNumMinMax(-1000, 10000)
+		return val //RandNumMinMax(-1000, 10000)
 	case int64:
-		return RandNumMinMax(-1000, 10000)
+		return val //RandNumMinMax(-1000, 10000)
 	case uint:
-		return RandNumMinMax(0, 10000)
+		return val //RandNumMinMax(0, 10000)
 	case uint8:
-		return RandNumMinMax(0, 10000)
+		return val //RandNumMinMax(0, 10000)
 	case uint16:
-		return RandNumMinMax(0, 10000)
+		return val //RandNumMinMax(0, 10000)
 	case uint32:
-		return RandNumMinMax(0, 10000)
+		return val //RandNumMinMax(0, 10000)
 	case uint64:
-		return RandNumMinMax(0, 10000)
+		return val //RandNumMinMax(0, 10000)
 	case float32:
-		return rand.Float32()
+		return val //rand.Float32()
 	case float64:
-		return rand.Float64()
+		return val //rand.Float64()
 	case string:
 		strVal := val.(string)
 		if strVal == NumberPrefixRegex {
@@ -126,7 +126,7 @@ func PopulateRandomData(val any) any {
 			"valType": reflect.TypeOf(val),
 		}).Info("cannot populate unknown value type")
 	}
-	return nil
+	return val
 }
 
 // FlatRegexMap to add all regex in same map

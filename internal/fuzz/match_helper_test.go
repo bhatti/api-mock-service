@@ -278,7 +278,7 @@ func Test_ShouldPopulateRandomDataInt8(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(int8(5))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "int8", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataInt16(t *testing.T) {
@@ -287,7 +287,7 @@ func Test_ShouldPopulateRandomDataInt16(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(int16(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "int16", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataInt32(t *testing.T) {
@@ -296,7 +296,7 @@ func Test_ShouldPopulateRandomDataInt32(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(int32(5))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "int32", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataInt64(t *testing.T) {
@@ -305,7 +305,7 @@ func Test_ShouldPopulateRandomDataInt64(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(int64(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "int64", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataUInt(t *testing.T) {
@@ -314,7 +314,7 @@ func Test_ShouldPopulateRandomDataUInt(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(uint(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "uint", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataUInt8(t *testing.T) {
@@ -323,7 +323,7 @@ func Test_ShouldPopulateRandomDataUInt8(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(uint8(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "uint8", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataUInt16(t *testing.T) {
@@ -332,7 +332,7 @@ func Test_ShouldPopulateRandomDataUInt16(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(uint16(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "uint16", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataUInt32(t *testing.T) {
@@ -341,7 +341,7 @@ func Test_ShouldPopulateRandomDataUInt32(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(uint32(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "uint32", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataUInt64(t *testing.T) {
@@ -350,7 +350,7 @@ func Test_ShouldPopulateRandomDataUInt64(t *testing.T) {
 	require.Equal(t, "int", reflect.TypeOf(val).String())
 
 	val = PopulateRandomData(uint64(1))
-	require.Equal(t, "int", reflect.TypeOf(val).String())
+	require.Equal(t, "uint64", reflect.TypeOf(val).String())
 }
 
 func Test_ShouldPopulateRandomDataFloat32(t *testing.T) {
@@ -526,7 +526,7 @@ func Test_ShouldPopulateRandomDataStringMapDta(t *testing.T) {
 }
 
 func Test_ShouldPopulateRandomDataStringUnknown(t *testing.T) {
-	require.Nil(t, PopulateRandomData(complex(1, 1)))
+	require.NotNil(t, PopulateRandomData(complex(1, 1)))
 }
 
 func Test_ShouldPopulateRandomDataStringMapRegex(t *testing.T) {

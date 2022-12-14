@@ -89,6 +89,7 @@ func (w *DefaultHTTPClient) execute(
 	for name, vals := range headers {
 		for _, val := range vals {
 			if name == "Authorization" && val == "AWS4-HMAC-SHA256" {
+				req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
 				awsauth.Sign4(req, awsauth.Credentials{
 					AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
 					SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),

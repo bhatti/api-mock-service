@@ -106,6 +106,11 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	require.Contains(t, res.Errors[0].Error(), `failed to assert '{{VariableContains "headers.Content-Type"`)
 }
 
+func Test_ShouldParseRegexValue(t *testing.T) {
+	require.Equal(t, "__1", regexValue("__1"))
+	require.Equal(t, "1", regexValue("1"))
+}
+
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	// GIVEN scenario repository
 	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
