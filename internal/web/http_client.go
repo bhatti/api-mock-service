@@ -86,22 +86,11 @@ func (w *DefaultHTTPClient) execute(
 		}
 		req.URL.RawQuery = paramVals.Encode()
 	}
+	awsAuthSig4 := false
 	for name, vals := range headers {
 		for _, val := range vals {
 			if name == "Authorization" && val == "AWS4-HMAC-SHA256" {
-				req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
-				awsauth.Sign4(req, awsauth.Credentials{
-					AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-					SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-					SecurityToken:   os.Getenv("AWS_SECURITY_TOKEN"),
-				})
-				log.WithFields(log.Fields{
-					"Component":   "DefaultHTTPClient",
-					"URL":         req.URL,
-					"Method":      req.Method,
-					"Headers":     req.Header,
-					"AccessKeyID": os.Getenv("AWS_ACCESS_KEY_ID"),
-				}).Infof("added AWS signatures")
+				awsAuthSig4 = true
 			} else {
 				req.Header.Add(name, val)
 			}
@@ -110,7 +99,21 @@ func (w *DefaultHTTPClient) execute(
 	if w.config.UserAgent != "" {
 		req.Header.Set("User-Agent", w.config.UserAgent)
 	}
-
+	if awsAuthSig4 {
+		req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
+		awsauth.Sign4(req, awsauth.Credentials{
+			AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
+			SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+			SecurityToken:   os.Getenv("AWS_SECURITY_TOKEN"),
+		})
+		log.WithFields(log.Fields{
+			"Component":   "DefaultHTTPClient",
+			"URL":         req.URL,
+			"Method":      req.Method,
+			"Headers":     req.Header,
+			"AccessKeyID": os.Getenv("AWS_ACCESS_KEY_ID"),
+		}).Infof("added AWS signatures")
+	}
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
 	if err != nil {
