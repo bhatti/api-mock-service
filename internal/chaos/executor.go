@@ -46,35 +46,31 @@ func (x *Executor) Execute(
 	started := time.Now()
 	scenarioKey.Name = ""
 	res := types.NewChaosResponse(nil, 0, 0)
-	scenario, err := x.scenarioRepository.Lookup(scenarioKey)
-	if err != nil {
-		res.Errors = append(res.Errors, err.Error())
-		return res
-	}
-	url := chaosReq.BaseURL + scenario.Path
 	log.WithFields(log.Fields{
-		"Component": "Tester",
-		"Scenario":  scenario,
-		"URL":       url,
+		"Component":    "Tester",
+		"Scenario":     scenarioKey,
+		"ChaosRequest": chaosReq,
 	}).Infof("execute BEGIN")
 
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
-		err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+		scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 		if err != nil {
 			res.Errors = append(res.Errors, err.Error())
-			res.Failed++
-		} else {
-			res.Succeeded++
+			return res
 		}
+		url := chaosReq.BaseURL + scenario.Path
+		err = x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+		res.Add(err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
+
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
-		"Component": "Tester",
-		"URL":       url,
-		"Scenario":  scenario,
-		"Elapsed":   elapsed,
-		"Errors":    len(res.Errors),
+		"Component":    "Tester",
+		"Scenario":     scenarioKey,
+		"ChaosRequest": chaosReq,
+		"Elapsed":      elapsed,
+		"Errors":       len(res.Errors),
 	}).Infof("execute COMPLETED")
 	return res
 }
@@ -89,41 +85,56 @@ func (x *Executor) ExecuteByGroup(
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
 	res := types.NewChaosResponse(nil, 0, 0)
+	log.WithFields(log.Fields{
+		"Component":    "Tester",
+		"Group":        group,
+		"ChaosRequest": chaosReq,
+		"Request":      chaosReq,
+	}).Infof("execute-by-group BEGIN")
+
 	for _, scenarioKey := range scenarioKeys {
-		scenario, err := x.scenarioRepository.Lookup(scenarioKey)
-		if err != nil {
-			res.Errors = append(res.Errors, err.Error())
-			continue
+		if chaosReq.Verbose {
+			log.WithFields(log.Fields{
+				"Component":    "Tester",
+				"Scenario":     scenarioKey,
+				"ChaosRequest": chaosReq,
+				"Request":      chaosReq,
+			}).Infof("execute-by-group-key BEGIN")
 		}
-		url := chaosReq.BaseURL + scenario.Path
-		log.WithFields(log.Fields{
-			"Component": "Tester",
-			"Scenario":  scenario,
-			"URL":       url,
-			"Request":   chaosReq,
-		}).Infof("execute-by-group BEGIN")
 
 		for i := 0; i < chaosReq.ExecutionTimes; i++ {
-			err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+			scenario, err := x.scenarioRepository.Lookup(scenarioKey)
 			if err != nil {
 				res.Errors = append(res.Errors, err.Error())
-				res.Failed++
-			} else {
-				res.Succeeded++
+				return res
 			}
+			url := chaosReq.BaseURL + scenario.Path
+			err = x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+			res.Add(err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
 
 		elapsed := time.Since(started).String()
-		log.WithFields(log.Fields{
-			"Component": "Tester",
-			"URL":       url,
-			"Scenario":  scenario,
-			"Elapsed":   elapsed,
-			"Errors":    len(res.Errors),
-			"Request":   chaosReq,
-		}).Infof("execute-by-group COMPLETED")
+		if chaosReq.Verbose {
+			log.WithFields(log.Fields{
+				"Component":    "Tester",
+				"Scenario":     scenarioKey,
+				"ChaosRequest": chaosReq,
+				"Elapsed":      elapsed,
+				"Errors":       len(res.Errors),
+				"Request":      chaosReq,
+			}).Infof("execute-by-group-key COMPLETED")
+		}
 	}
+	elapsed := time.Since(started).String()
+	log.WithFields(log.Fields{
+		"Component":    "Tester",
+		"Group":        group,
+		"ChaosRequest": chaosReq,
+		"Elapsed":      elapsed,
+		"Errors":       len(res.Errors),
+		"Request":      chaosReq,
+	}).Infof("execute-by-group COMPLETED")
 	return res
 }
 

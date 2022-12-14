@@ -536,3 +536,9 @@ func Test_ShouldPopulateRandomDataStringMapRegex(t *testing.T) {
 	val = PopulateRandomData(val)
 	require.Equal(t, "map[string]interface {}", reflect.TypeOf(val).String())
 }
+
+func Test_ShouldNotPopulateRandomDataStringWithoutRegex(t *testing.T) {
+	require.Equal(t, "__1", PopulateRandomData("__1"))
+	require.Equal(t, "1", PopulateRandomData("(1)"))
+	require.Equal(t, "1", PopulateRandomData("1"))
+}

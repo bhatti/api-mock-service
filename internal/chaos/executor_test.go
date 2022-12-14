@@ -287,6 +287,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	// AND mock web client
 	client, data := buildJobsTestClient("AC1234567890", "RUNNING")
 	chaosReq.Overrides = data
+	chaosReq.Verbose = true
 	// AND executor
 	executor := NewExecutor(repo, client)
 	for _, spec := range specs {
@@ -310,6 +311,13 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		// THEN it should succeed
 		require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
 	}
+}
+
+func Test_ShouldParseRequestBody(t *testing.T) {
+	scenario := &types.MockScenario{}
+	scenario.Request.MatchContents = `{"PoolId": "us-west-2", "Username": "christina.perdit@sonaret.gov", "UserAttributes": [{"Name": "email", "Value": "christina.perdit@sonaret.gov"}], "DesiredDeliveryMediums": ["EMAIL"]}`
+	str, _ := buildRequestBody(scenario)
+	require.Contains(t, str, "christina.perdit@sonaret.gov")
 }
 
 func buildJobsTestClient(jobID string, jobStatus string) (web.HTTPClient, map[string]any) {

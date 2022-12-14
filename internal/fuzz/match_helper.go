@@ -96,8 +96,10 @@ func PopulateRandomData(val any) any {
 			return RandNumMinMax(-100, 10000)
 		} else if strings.Contains(strVal, WildRegex) {
 			return RandSentence(1, 3)
-		} else {
+		} else if strings.HasPrefix(strVal, "__") || strings.HasPrefix(strVal, "(") {
 			return RandRegex(strVal)
+		} else {
+			return strVal
 		}
 	case map[string]string:
 		hm := val.(map[string]string)

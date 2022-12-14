@@ -15,3 +15,12 @@ func NewChaosResponse(errs []string, succeeded int, failed int) *ChaosResponse {
 		Failed:    failed,
 	}
 }
+
+func (cr *ChaosResponse) Add(err error) {
+	if err != nil {
+		cr.Errors = append(cr.Errors, err.Error())
+		cr.Failed++
+	} else {
+		cr.Succeeded++
+	}
+}
