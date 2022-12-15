@@ -851,11 +851,12 @@ paths:
            description: The URI for this resource, relative to `https://accounts.twilio.com`
 ...         
 ```
+
 You can then upload the API specification as:
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/twilio_accounts_v1.yaml \
 		http://localhost:8080/_oapi
-```a
+```
 
 It will generate a mock scenarios for each API based on mime-type, status-code, parameter formats, regex, data ranges, e.g.,
 
