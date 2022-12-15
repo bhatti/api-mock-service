@@ -1,6 +1,6 @@
 # api-mock-service
 
-## Mocking Distributed Micro services and Chaos testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
+## Mocking Distributed Micro services and Fuzz testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
 
 ### Use-Cases
 - As a service owner, I need to mock remote dependent service(s) by capturing/recording request/responses through an HTTP proxy so that I can play it back when testing the remote service(s) without connecting with them.
