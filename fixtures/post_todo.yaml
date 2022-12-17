@@ -1,24 +1,32 @@
 method: POST
 name: post-todo
-path: /todos/2
+path: /todos
+order: 0
+group: todos
+predicate: ""
 request:
     match_query_params: {}
     match_headers:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/2
         x-api-key: '[\x20-\x7F]{1,128}'
         Content-Type: application/x-www-form-urlencoded
+    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     example_path_params:
         id: '\d{3}'
-    match_contents: '{"completed":"||boolean||(false|true)","id":"||number||[+-]?[0-9]{5,10}","title":"||string||\\w+ \\w+ \\w+","userId":"||number||[+-]?[0-9]{5,10}"}'
 response:
-    headers: {}
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
     content_type: ""
     contents: |-
         {
-          "{\"id\": 202, \"userId\": 505, \"title\": \"Buy milk\", \"completed\": False}": "",
-          "id": 2
+          "id": {{RandNumMinMax 1 10}}
         }
     status_code: 200
+    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+    pipe_properties: 
+      - id
+      - title
     assertions:
-      - {{contents.id > 0}}
+      - VariableGE contents.id 0
 wait_before_reply: 1s

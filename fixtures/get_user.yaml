@@ -1,0 +1,26 @@
+method: GET
+name: get_user
+path: /users/1
+order: 1
+group: user_group
+predicate: ""
+request:
+    example_path_params: {}
+    example_headers:
+        Content-Type: application/json
+    example_contents: '{"Directory": "{{.Directory}}", "Username": "{{.Username}}"}'
+response:
+    headers:
+        Connection:
+            - keep-alive
+        Content-Type:
+            - application/json
+    contents_file: ""
+    status_code: 200
+    pipe_properties:
+      - Username
+    match_headers: {}
+    contents: '{"User": {"Directory": "{{.Directory}}", "Username": "{{.Username}}", "DesiredDeliveryMediums": ["EMAIL"]}}'
+    match_contents: '{"User.Enabled":"(__boolean__(false|true))","User.UserStatus":"(__string__\\w+)","User.Username":"__string__\\w+"}'
+    assertions: []
+wait_before_reply: 0s

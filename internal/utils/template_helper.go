@@ -265,19 +265,28 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return randFileLine(dir, fileName+types.MockDataExt, toInt64(seed))
 		},
 		"VariableEquals": func(varName string, target any) bool {
-			return variableEquals(varName, data, target)
+			return fuzz.VariableEquals(varName, data, target)
 		},
 		"VariableContains": func(varName string, target any) bool {
-			return variableContains(varName, target, data)
+			return fuzz.VariableContains(varName, target, data)
+		},
+		"VariableEQ": func(varName string, size any) bool {
+			return fuzz.VariableNumber(varName, data) == ToFloat64(size)
+		},
+		"VariableLE": func(varName string, size any) bool {
+			return fuzz.VariableNumber(varName, data) <= ToFloat64(size)
+		},
+		"VariableGE": func(varName string, size any) bool {
+			return fuzz.VariableNumber(varName, data) >= ToFloat64(size)
 		},
 		"VariableSizeEQ": func(varName string, size any) bool {
-			return variableSize(varName, data) == toInt(size)
+			return fuzz.VariableSize(varName, data) == toInt(size)
 		},
 		"VariableSizeLE": func(varName string, size any) bool {
-			return variableSize(varName, data) <= toInt(size)
+			return fuzz.VariableSize(varName, data) <= toInt(size)
 		},
 		"VariableSizeGE": func(varName string, size any) bool {
-			return variableSize(varName, data) >= toInt(size)
+			return fuzz.VariableSize(varName, data) >= toInt(size)
 		},
 		"Date": func() string {
 			return time.Now().Format("2006-01-02")
@@ -294,84 +303,6 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"EnumInt": func(vals ...any) int64 {
 			return fuzz.EnumInt(vals...)
 		},
-	}
-}
-
-func variableSize(name string, data any) int {
-	val := findVariable(name, data)
-	if val == nil {
-		return -1
-	}
-	switch val.(type) {
-	case map[string]string:
-		return len(val.(map[string]string))
-	case map[string]any:
-		return len(val.(map[string]any))
-	case []any:
-		return len(val.([]any))
-	case []int:
-		return len(val.([]int))
-	case []string:
-		return len(val.([]string))
-	case []float64:
-		return len(val.([]float64))
-	default:
-		return -1
-	}
-}
-
-func variableContains(name string, target any, data any) bool {
-	val := findVariable(name, data)
-	if val == nil {
-		return false
-	}
-	valStr := fmt.Sprintf("%v", val)
-	reStr := fmt.Sprintf("%v", target)
-	re, err := regexp.Compile(reStr)
-	if err != nil {
-		return false
-	}
-	return re.MatchString(valStr)
-}
-
-func variableEquals(name string, data any, target any) bool {
-	val := findVariable(name, data)
-	if val == nil {
-		return false
-	}
-	return fmt.Sprintf("%v", val) == fmt.Sprintf("%v", target)
-}
-
-func findVariable(name string, data any) any {
-	n := strings.Index(name, ".")
-	var nextName string
-	if n != -1 {
-		nextName = name[n+1:]
-		name = name[0:n]
-	}
-	switch data.(type) {
-	case map[string]string:
-		params := data.(map[string]string)
-		val := params[name]
-		if val == "" {
-			return nil
-		}
-		if nextName == "" {
-			return val
-		}
-		return findVariable(nextName, val)
-	case map[string]any:
-		params := data.(map[string]any)
-		val := params[name]
-		if val == nil {
-			return nil
-		}
-		if nextName == "" {
-			return val
-		}
-		return findVariable(nextName, val)
-	default:
-		return nil
 	}
 }
 

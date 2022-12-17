@@ -34,7 +34,7 @@ type MockScenarioRepository interface {
 	LookupAllByGroup(group string) []*types.MockScenarioKeyData
 
 	// Lookup finds top matching scenario that hasn't been used recently
-	Lookup(target *types.MockScenarioKeyData) (*types.MockScenario, error)
+	Lookup(target *types.MockScenarioKeyData, data map[string]any) (*types.MockScenario, error)
 
 	// ListScenarioKeyData returns keys for all scenarios
 	ListScenarioKeyData(group string) []*types.MockScenarioKeyData

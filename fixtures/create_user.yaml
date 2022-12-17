@@ -1,0 +1,28 @@
+method: POST
+name: create-user
+path: /users
+group: user_group
+order: 0
+predicate: ""
+request:
+    match_query_params: {}
+    example_path_params: {}
+    example_headers:
+        Content-Type: application/json
+    example_contents: '{"Directory": "{{RandString 20}}", "Username": "{{RandEmail}}", "DesiredDeliveryMediums": ["EMAIL"]}'
+response:
+    headers:
+        Connection:
+            - keep-alive
+        Content-Type:
+            - application/json
+    contents_file: ""
+    status_code: 200
+    pipe_properties:
+      - User.Username
+      - User.Directory
+    match_headers: {}
+    contents: '{"User": {"Directory": "{{RandString 20}}", "Username": "{{RandEmail}}", "DesiredDeliveryMediums": ["EMAIL"]}}'
+    match_contents: '{"User.Name":"(__string__\\w+)","User.UserStatus":"(__string__\\w+)","User.Username":"(__string__\\w+@\\w+.?\\w+)"}'
+    assertions: []
+wait_before_reply: 0s

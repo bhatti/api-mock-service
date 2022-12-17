@@ -18,6 +18,8 @@ type MockScenarioKeyData struct {
 	Name string `yaml:"name" json:"name"`
 	// Path for the API (excluding query params)
 	Path string `yaml:"path" json:"path"`
+	// Order of scenario
+	Order int `yaml:"order" json:"order"`
 	// Group of scenario
 	Group string `yaml:"group" json:"group"`
 	// Predicate for the request
@@ -50,6 +52,7 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	}
 	log.WithFields(log.Fields{
 		"Group":      msd.Group,
+		"Order":      msd.Order,
 		"Target":     target.String(),
 		"This":       msd.String(),
 		"TargetPath": targetPath,
@@ -102,7 +105,7 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	}
 
 	if target.Name != "" && msd.Name != target.Name {
-		return NewValidationError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
+		return NewNotFoundError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
 			msd.Name, target.Name))
 	}
 	return nil

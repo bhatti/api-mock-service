@@ -101,7 +101,8 @@ func (msc *MockScenarioController) GetMockScenario(c web.APIContext) error {
 		"Name":   name,
 		"Path":   path,
 	}).Debugf("getting mock scenario...")
-	scenario, err := msc.mockScenarioRepository.Lookup(keyData)
+
+	scenario, err := msc.mockScenarioRepository.Lookup(keyData, nil)
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -45,7 +46,7 @@ func (x *Executor) Execute(
 ) *types.ChaosResponse {
 	started := time.Now()
 	scenarioKey.Name = ""
-	res := types.NewChaosResponse(nil, 0, 0)
+	res := types.NewChaosResponse()
 	log.WithFields(log.Fields{
 		"Component":    "Tester",
 		"Scenario":     scenarioKey,
@@ -53,14 +54,14 @@ func (x *Executor) Execute(
 	}).Infof("execute BEGIN")
 
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
-		scenario, err := x.scenarioRepository.Lookup(scenarioKey)
+		scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
 		if err != nil {
-			res.Errors = append(res.Errors, err.Error())
+			res.Add(scenarioKey.Name, nil, err)
 			return res
 		}
 		url := chaosReq.BaseURL + scenario.Path
-		err = x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
-		res.Add(err)
+		resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+		res.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
 
@@ -84,48 +85,33 @@ func (x *Executor) ExecuteByGroup(
 ) *types.ChaosResponse {
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
-	res := types.NewChaosResponse(nil, 0, 0)
+	res := types.NewChaosResponse()
 	log.WithFields(log.Fields{
 		"Component":    "Tester",
 		"Group":        group,
 		"ChaosRequest": chaosReq,
 		"Request":      chaosReq,
+		"ScenarioKeys": scenarioKeys,
 	}).Infof("execute-by-group BEGIN")
 
-	for _, scenarioKey := range scenarioKeys {
-		if chaosReq.Verbose {
-			log.WithFields(log.Fields{
-				"Component":    "Tester",
-				"Scenario":     scenarioKey,
-				"ChaosRequest": chaosReq,
-				"Request":      chaosReq,
-			}).Infof("execute-by-group-key BEGIN")
-		}
+	sort.Slice(scenarioKeys, func(i, j int) bool {
+		return scenarioKeys[i].Order < scenarioKeys[j].Order
+	})
 
-		for i := 0; i < chaosReq.ExecutionTimes; i++ {
-			scenario, err := x.scenarioRepository.Lookup(scenarioKey)
+	for i := 0; i < chaosReq.ExecutionTimes; i++ {
+		for _, scenarioKey := range scenarioKeys {
+			scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
 			if err != nil {
-				res.Errors = append(res.Errors, err.Error())
+				res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
 				return res
 			}
 			url := chaosReq.BaseURL + scenario.Path
-			err = x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
-			res.Add(err)
+			resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
-
-		elapsed := time.Since(started).String()
-		if chaosReq.Verbose {
-			log.WithFields(log.Fields{
-				"Component":    "Tester",
-				"Scenario":     scenarioKey,
-				"ChaosRequest": chaosReq,
-				"Elapsed":      elapsed,
-				"Errors":       len(res.Errors),
-				"Request":      chaosReq,
-			}).Infof("execute-by-group-key COMPLETED")
-		}
 	}
+
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
 		"Component":    "Tester",
@@ -134,6 +120,7 @@ func (x *Executor) ExecuteByGroup(
 		"Elapsed":      elapsed,
 		"Errors":       len(res.Errors),
 		"Request":      chaosReq,
+		"ScenarioKeys": scenarioKeys,
 	}).Infof("execute-by-group COMPLETED")
 	return res
 }
@@ -146,7 +133,7 @@ func (x *Executor) execute(
 	overrides map[string]any,
 	dataTemplate fuzz.DataTemplateRequest,
 	chaosRequest types.ChaosRequest,
-) (err error) {
+) (res any, err error) {
 	started := time.Now()
 	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides)
 	if fuzz.RandNumMinMax(1, 100) < 20 {
@@ -160,12 +147,12 @@ func (x *Executor) execute(
 	statusCode, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("failed to invoke %s for %s (%s) due to %w", scenario.Name, url, scenario.Method, err)
 	}
 	elapsed := time.Since(started).String()
 	var resBytes []byte
 	if resBytes, resBody, err = utils.ReadAll(resBody); err != nil {
-		return err
+		return nil, fmt.Errorf("failed to read response body for %s due to %w", scenario.Name, err)
 	}
 
 	if statusCode >= 300 {
@@ -178,12 +165,12 @@ func (x *Executor) execute(
 			"Headers":    reqHeaders,
 			"Request":    reqContents,
 			"Response":   string(resBytes)}).Warnf("failed to execute request")
-		return fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBytes)
+		return nil, fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBytes)
 	}
 
 	var resContents any
 	if resContents, err = updateTemplateParams(templateParams, scenario, resBytes, resHeaders, statusCode); err != nil {
-		return err
+		return nil, err
 	}
 
 	if chaosRequest.Verbose {
@@ -201,15 +188,15 @@ func (x *Executor) execute(
 	for k, v := range scenario.Response.MatchHeaders {
 		actualHeader := resHeaders[k]
 		if len(actualHeader) == 0 {
-			return fmt.Errorf("failed to find required header %s with regex %s", k, v)
+			return nil, fmt.Errorf("failed to find required header %s with regex %s", k, v)
 		}
 		match, err := regexp.MatchString(v, actualHeader[0])
 		if err != nil {
-			return fmt.Errorf("failed to fuzz required header %s with regex %s and actual value %s due to %w",
+			return nil, fmt.Errorf("failed to fuzz required header %s with regex %s and actual value %s due to %w",
 				k, v, actualHeader[0], err)
 		}
 		if !match {
-			return fmt.Errorf("didn't match required header %s with regex %s and actual value %s",
+			return nil, fmt.Errorf("didn't match required header %s with regex %s and actual value %s",
 				k, v, actualHeader[0])
 		}
 	}
@@ -218,7 +205,7 @@ func (x *Executor) execute(
 		regex := make(map[string]string)
 		err := json.Unmarshal([]byte(scenario.Response.MatchContents), &regex)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal response '%s' regex due to %w", scenario.Response.MatchContents, err)
+			return nil, fmt.Errorf("failed to unmarshal response '%s' regex due to %w", scenario.Response.MatchContents, err)
 		}
 		err = fuzz.ValidateRegexMap(resContents, regex)
 		if err != nil {
@@ -231,7 +218,7 @@ func (x *Executor) execute(
 				"Headers":    reqHeaders,
 				"Request":    reqContents,
 				"Response":   resContents}).Warnf("failed to validate resposne")
-			return fmt.Errorf("failed to validate response due to %w", err)
+			return nil, fmt.Errorf("failed to validate response due to %w", err)
 		}
 	}
 
@@ -239,7 +226,7 @@ func (x *Executor) execute(
 		assertion = normalizeAssertion(assertion)
 		b, err := utils.ParseTemplate("", []byte(assertion), templateParams)
 		if err != nil {
-			return fmt.Errorf("failed to parse assertion %s due to %w", assertion, err)
+			return nil, fmt.Errorf("failed to parse assertion %s due to %w", assertion, err)
 		}
 		if string(b) == "true" {
 			log.WithFields(log.Fields{
@@ -263,10 +250,30 @@ func (x *Executor) execute(
 				"Request":    reqContents,
 				"Response":   resContents,
 				"Output":     string(b)}).Warnf("failed to assert test")
-			return fmt.Errorf("failed to assert '%s' with value '%s'", assertion, b)
+			return nil, fmt.Errorf("failed to assert '%s' with value '%s' and params %v",
+				assertion, b, templateParams)
 		}
 	}
-	return nil
+	if resContents != nil {
+		if overrides == nil {
+			overrides = map[string]any{}
+		}
+		pipeProperties := map[string]any{}
+
+		for _, propName := range scenario.Response.PipeProperties {
+			val := fuzz.FindVariable(propName, resContents)
+			if val != nil {
+				n := strings.Index(propName, ".")
+				propName = propName[n+1:]
+				overrides[propName] = val
+				pipeProperties[propName] = val
+			}
+		}
+		if len(pipeProperties) > 0 {
+			resContents = pipeProperties
+		}
+	}
+	return resContents, nil
 }
 
 func normalizeAssertion(assertion string) string {
@@ -296,7 +303,7 @@ func updateTemplateParams(
 	templateParams[types.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
 	contents, err := fuzz.UnmarshalArrayOrObject(resBytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal response for %s due to %w", scenario.Name, err)
 	}
 	if contents != nil {
 		templateParams["contents"] = contents
@@ -383,6 +390,7 @@ func buildTemplateParams(
 	}
 	for k, v := range overrides {
 		templateParams[k] = v
+		queryParams[k] = fmt.Sprintf("%v", v)
 	}
 	return
 }

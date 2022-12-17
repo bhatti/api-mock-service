@@ -1,6 +1,8 @@
 method: GET
 name: todo-get
-path: /todos/10
+path: /todos/:id
+order: 1
+group: todos
 request:
     match_query_params: {}
     match_headers:
@@ -20,13 +22,16 @@ response:
     contents: |-
         {
         		"userId": 15,
-        		"id": 10,
+        		"id": {{.id}},
         		"title": "illo test title",
         		"completed": true
         	  }
     match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    pipe_properties: 
+      - id
+      - userId
     status_code: 200
     assertions:
-        - VariableContains contents.id 10
+        - VariableGE contents.userId 0
         - VariableContains contents.title illo
 wait_before_reply: 1s

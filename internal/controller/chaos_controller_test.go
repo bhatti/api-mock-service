@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/bhatti/api-mock-service/internal/chaos"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"gopkg.in/yaml.v3"
@@ -186,11 +187,14 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 	// AND a valid scenario
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
 	require.NoError(t, err)
+	scenario.Path = "/todos/10"
+	err = mockScenarioRepository.Save(scenario)
+	require.NoError(t, err)
 
 	client := web.NewStubHTTPClient()
 	todo := `
 {
-  "userId": 1,
+  "userId": 15,
   "id": 10,
   "title": "illo est ratione doloremque quia maiores aut",
   "completed": true
@@ -216,10 +220,14 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
 			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
 		},
+		Form: map[string][]string{
+			"id": {"10"},
+		},
 	})
 	ctx.Params["method"] = string(scenario.Method)
 	ctx.Params["name"] = scenario.Name
 	ctx.Params["path"] = "/todos/10"
+	ctx.Params["id"] = "10"
 
 	// WHEN creating mock scenario with method, name and path
 	err = ctrl.PostMockChaosScenario(ctx)
@@ -227,7 +235,10 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 	// THEN it should not fail
 	require.NoError(t, err)
 	res := ctx.Result.(*types.ChaosResponse)
-	require.Equal(t, 0, len(res.Errors))
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
+	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("errors %v", res.Errors))
 }
 
 func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {

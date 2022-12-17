@@ -206,7 +206,9 @@ func (sr *FileMockScenarioRepository) LookupAll(
 }
 
 // Lookup finds top matching scenario
-func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) (scenario *types.MockScenario, err error) {
+func (sr *FileMockScenarioRepository) Lookup(
+	target *types.MockScenarioKeyData,
+	inData map[string]any) (scenario *types.MockScenario, err error) {
 	matched, paramMismatchErrors := sr.LookupAll(target)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
@@ -235,16 +237,22 @@ func (sr *FileMockScenarioRepository) Lookup(target *types.MockScenarioKeyData) 
 	fileName := sr.buildFileName(matched[0].Method, matched[0].Name, matched[0].Path)
 	b, err := os.ReadFile(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read %s due to %w", fileName, err)
 	}
 
+	data := make(map[string]any)
+	for k, v := range inData {
+		data[k] = v
+	}
 	// Find any params for query params and path variables
-	params := matched[0].MatchGroups(target.Path)
-	addQueryParams(matched[0].MatchQueryParams, params)
-	addQueryParams(target.MatchQueryParams, params)
-	params[types.RequestCount] = fmt.Sprintf("%d", reqCount)
+	for k, v := range matched[0].MatchGroups(target.Path) {
+		data[k] = v
+	}
+	addQueryParams(matched[0].MatchQueryParams, data)
+	addQueryParams(target.MatchQueryParams, data)
+	data[types.RequestCount] = fmt.Sprintf("%d", reqCount)
 
-	scenario, err = unmarshalMockScenario(b, dir, params)
+	scenario, err = unmarshalMockScenario(b, dir, data)
 	if err != nil {
 		return nil, fmt.Errorf("lookup failed to parse scenario '%s' due to %w", fileName, err)
 	}
@@ -368,9 +376,9 @@ func buildDir(
 	return filepath.Join(dir, types.NormalizeDirPath(path), string(method))
 }
 
-func addQueryParams(queryParams map[string]string, params map[string]string) {
+func addQueryParams(queryParams map[string]string, data map[string]any) {
 	for k, v := range queryParams {
-		params[k] = v
+		data[k] = v
 	}
 }
 

@@ -31,6 +31,7 @@ API mock service for REST/HTTP based services with following features:
 - Support multiple mock scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
 - Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/chaos testing.
 - Generate client requests for a remote API for chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
+- Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input to next test scenarios.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
 As, it's written in GO, you can either download GO runtime environment or use Docker to install it locally. 
@@ -232,7 +233,7 @@ The matching header and contents use `match_headers` and `match_contents` simila
 Similarly, `assertions` defines a set of predicates to test against response from a real service:
 ```yaml
     assertions:
-        - VariableContains contents.id 10
+        - VariableGE contents.id 10
         - VariableContains contents.title illo
         - VariableContains headers.Pragma no-cache 
 ```
@@ -581,6 +582,9 @@ In above example, the mock API will return HTTP status 500 or 501 for every 10th
      {{if VariableSizeEQ "contents" "blah"}}
      {{if VariableSizeGE "contents" "blah"}}
      {{if VariableSizeLE "contents" "blah"}}
+     {{if VariableEQ "contents.num" 20}}
+     {{if VariableGE "contents.num" 10}}
+     {{if VariableLE "contents.num" 5}}
 ```
 
 ### Test fixtures
@@ -915,10 +919,10 @@ Which will return summary of APIs such as:
 
 ```json
 {
-  "/_scenarios/GET/FetchCredentialAws-8b2fcf02dfb7dc190fb735a469e1bbaa3ccb5fd1a24726976d110374b13403c6/v1/Credentials/AWS/{Sid}": {
+  "/_scenarios/GET/FetchCredential-8b2fcf02dfb7dc190fb735a469e1bbaa3ccb5fd1a24726976d110374b13403c6/v1/Credentials/{Sid}": {
     "method": "GET",
-    "name": "FetchCredentialAws-8b2fcf02dfb7dc190fb735a469e1bbaa3ccb5fd1a24726976d110374b13403c6",
-    "path": "/v1/Credentials/AWS/{Sid}",
+    "name": "FetchCredential-8b2fcf02dfb7dc190fb735a469e1bbaa3ccb5fd1a24726976d110374b13403c6",
+    "path": "/v1/Credentials/{Sid}",
     "match_query_params": {},
     "match_headers": {},
     "match_content_type": "",
@@ -937,10 +941,10 @@ Which will return summary of APIs such as:
     "LastUsageTime": 0,
     "RequestCount": 0
   },
-  "/_scenarios/GET/ListCredentialAws-28717701f05de4374a09ec002066d308043e73e30f25fec2dcd4c3d3c001d300/v1/Credentials/AWS": {
+  "/_scenarios/GET/ListCredential-28717701f05de4374a09ec002066d308043e73e30f25fec2dcd4c3d3c001d300/v1/Credentials": {
     "method": "GET",
-    "name": "ListCredentialAws-28717701f05de4374a09ec002066d308043e73e30f25fec2dcd4c3d3c001d300",
-    "path": "/v1/Credentials/AWS",
+    "name": "ListCredential-28717701f05de4374a09ec002066d308043e73e30f25fec2dcd4c3d3c001d300",
+    "path": "/v1/Credentials",
     "match_query_params": {
       "PageSize": "\\d+"
     },
@@ -960,94 +964,226 @@ For example, you may capture a test scenario for a remote API using http proxy s
 ```bash
 export http_proxy="http://localhost:8081"
 export https_proxy="http://localhost:8081"
-curl -k https://jsonplaceholder.typicode.com/todos
+curl -k -X POST https://jsonplaceholder.typicode.com/todos -d '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 ```
 
 This will capture a mock scenario such as:
 ```yaml
-method: GET
-name: recorded-todos-ff9a8e133347f7f05273f15394f722a9bcc68bb0e734af05ba3dd98a6f2248d1
+method: POST
+name: recorded-todos-6ded24d43a7d3d65430958b467fbfbe75fe5bb9dfb7bb5821e4b3a0c5ac0f6c5
 path: /todos
-description: recorded at 2022-12-12 02:23:42.845176 +0000 UTC for https://jsonplaceholder.typicode.com:443/todos
+description: recorded at 2022-12-17 06:45:12.957308 +0000 UTC for https://jsonplaceholder.typicode.com:443/todos
+order: 0
 group: todos
 predicate: ""
 request:
     match_query_params: {}
     match_headers:
-        Content-Type: ""
-    match_contents: '{}'
+        Content-Type: application/x-www-form-urlencoded
+    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     example_path_params: {}
     example_query_params: {}
     example_headers:
         Accept: '*/*'
+        Content-Length: "75"
+        Content-Type: application/x-www-form-urlencoded
         User-Agent: curl/7.65.2
-    example_contents: ""
+    example_contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 response:
     headers:
         Access-Control-Allow-Credentials:
             - "true"
-        Age:
-            - "19075"
+        Access-Control-Expose-Headers:
+            - Location
         Alt-Svc:
             - h3=":443"; ma=86400, h3-29=":443"; ma=86400
         Cache-Control:
-            - max-age=43200
+            - no-cache
         Cf-Cache-Status:
-            - HIT
+            - DYNAMIC
         Cf-Ray:
-            - 7782ffe4bd6bc62c-SEA
+            - 77adb1d3bab8c4ed-SEA
         Connection:
             - keep-alive
+        Content-Length:
+            - "110"
         Content-Type:
             - application/json; charset=utf-8
         Date:
-            - Mon, 12 Dec 2022 02:23:42 GMT
+            - Sat, 17 Dec 2022 06:45:13 GMT
         Etag:
-            - W/"5ef7-4Ad6/n39KWY9q6Ykm/ULNQ2F5IM"
+            - W/"6e-RK9/3wRHz0Km8441rbi3vda+OPg"
         Expires:
             - "-1"
+        Location:
+            - http://jsonplaceholder.typicode.com/todos/201
         Nel:
             - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
         Pragma:
             - no-cache
+        Report-To:
+            - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=qMvfKDkgk2LDTsTQbgkEKwlwh0sbesM6eL3i6EPw0SffJFI21E5X1W16zULSrK2BG34ZOGaAe93KUm%2ByGY9r2UeE0MzTS4BBNK9NhUb5x14k0%2BXhOE%2FgHuW13yKlszX45O04%2FtFGo%2BHt1GLytp54"}],"group":"cf-nel","max_age":604800}'
+        Server:
+            - cloudflare
+        Server-Timing:
+            - cf-q-config;dur=8.000002708286e-06
+        Vary:
+            - Origin, X-HTTP-Method-Override, Accept-Encoding
+        Via:
+            - 1.1 vegur
+        X-Content-Type-Options:
+            - nosniff
+        X-Powered-By:
+            - Express
+        X-Ratelimit-Limit:
+            - "1000"
+        X-Ratelimit-Remaining:
+            - "999"
+        X-Ratelimit-Reset:
+            - "1671259562"
     contents: |-
-      [
         {
-          "userId": 1,
-          "id": 1,
-          "title": "delectus aut autem",
-          "completed": false
-        },
-        {
-          "userId": 1,
-          "id": 2,
-          "title": "quis ut nam facilis et officia qui",
-          "completed": false
-        },
-      ...
-        ]
+          "{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }": "",
+          "id": 201
+        }
     contents_file: ""
-    status_code: 200
+    status_code: 201
     match_headers: {}
-    match_contents: '{"completed":"__string__.+","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+    pipe_properties: []
     assertions: []
+wait_before_reply: 0s
 ```
 
 You can then customize this scenario with additional assertions and you may remove all response contents as they won't be used. Note that
 above scenario is defined with group `todos`. You can then submit a request for chaos testing as follows:
 ```bash
-curl -k -v -X POST http://localhost:8080/_chaos/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 10}'
+curl -k -v -X POST http://localhost:8080/_chaos/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'
 ```
 
 Above request will submit 10 requests to the todo server with random data and return response such as:
 ```yaml
-{"errors":null,"failed":0,"succeeded":10}
+{
+  "results": {
+    "recorded-todos-6ded24d43a7d3d65430958b467fbfbe75fe5bb9dfb7bb5821e4b3a0c5ac0f6c5_0": {
+      "id": 201,
+      "{\"completed\":\"false\",\"id\":\"6\",\"title\":\"indagabit\",\"userId\":\" 9\"}": ""
+    },
+    "recorded-todos-6ded24d43a7d3d65430958b467fbfbe75fe5bb9dfb7bb5821e4b3a0c5ac0f6c5_1": {
+      "id": 201,
+      "{\"completed\":\"false\",\"id\":\"0\",\"title\":\"malitia\",\"userId\":\" 5\"}": ""
+    }
+  },
+  "errors": {},
+  "succeeded": 2,
+  "failed": 0
+}
 ```
 
 If you have a local captured data, you can also run chaos client with a command line without running mock server, e.g.:
 ```bash
 go run main.go chaos --base_url https://jsonplaceholder.typicode.com --group todos --times 10
 ```
+
+## Chaining Scenarios for Group Chaos Testing
+A mock scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 
+You can capture or define multiple scenarios for a group and then execute them in a specific order and then pass certain properties 
+from one test to another. For example, following scenario creates a todo item with order 0 and captures `id` and `title` properties:
+```yaml
+method: POST
+name: post-todo
+path: /todos
+order: 0
+group: todos
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers:
+        Mock-Url: https://jsonplaceholder.typicode.com/todos/2
+        x-api-key: '[\x20-\x7F]{1,128}'
+        Content-Type: application/x-www-form-urlencoded
+    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    example_path_params:
+        id: '\d{3}'
+response:
+    headers:
+        Access-Control-Allow-Credentials:
+            - "true"
+    content_type: ""
+    contents: |-
+        {
+          "id": {{RandNumMinMax 1 10}}
+        }
+    status_code: 200
+    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+    pipe_properties:
+      - id
+      - title
+    assertions:
+      - VariableGE contents.id 0
+wait_before_reply: 1s
+```
+
+The pipeline properties can be used as input parameters for another scenario such as:
+```yaml
+method: GET
+name: todo-get
+path: /todos/:id
+order: 1
+group: todos
+request:
+    match_query_params: {}
+    match_headers:
+        Mock-Url: https://jsonplaceholder.typicode.com/todos/10
+        x-api-key: '[\x20-\x7F]{1,32}'
+    example_headers:
+        x-api-key: '[\x20-\x7F]{1,32}'
+    example_query_params:
+        group: '[a-zA-Z]{5,10}'
+    example_path_params:
+        id: '[0-9]{4,10}'
+    match_content_type: ""
+    match_contents: ""
+response:
+    headers: {}
+    content_type: ""
+    contents: |-
+        {
+                        "userId": 15,
+                        "id": {{.id}},
+                        "title": "illo test title",
+                        "completed": true
+                  }
+    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    pipe_properties:
+      - id
+      - userId
+    status_code: 200
+    assertions:
+        - VariableGE contents.userId 0
+        - VariableContains contents.title illo
+wait_before_reply: 1s
+```
+
+When you execute chaos tests using `curl -k -v -X POST http://localhost:8080/_chaos/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'`, it will execute:
+```yaml
+{
+  "results": {
+    "post-todo_0": {
+      "id": 2
+    },
+    "todo-get_0": {
+      "id": 2,
+      "userId": 15
+    }
+  },
+  "errors": {},
+  "succeeded": 2,
+  "failed": 0
+}
+```
+
+The output will show the attributes that were captured based on the `pipe_properties` configuration.
 
 ## Static Assets
 The mock service can serve any static assets from a user-defined folder and then serve it as follows:

@@ -76,7 +76,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		return req, nil, err
 	}
 
-	matchedScenario, err := h.mockScenarioRepository.Lookup(key)
+	matchedScenario, err := h.mockScenarioRepository.Lookup(key, nil)
 	log.WithFields(log.Fields{
 		"Path":            req.URL,
 		"Method":          req.Method,

@@ -1,7 +1,8 @@
 method: GET
 name: users_scenario
 path: /users
-group: ""
+order: 2
+group: user_group
 predicate: ""
 request:
     match_query_params: {}

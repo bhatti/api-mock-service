@@ -36,7 +36,16 @@ func (p *Player) Handle(c web.APIContext) (err error) {
 		return err
 	}
 
-	matchedScenario, err := p.scenarioRepository.Lookup(key)
+	overrides := make(map[string]any)
+	for k, v := range c.QueryParams() {
+		overrides[k] = v[0]
+	}
+	if form, err := c.FormParams(); err == nil {
+		for k, v := range form {
+			overrides[k] = v[0]
+		}
+	}
+	matchedScenario, err := p.scenarioRepository.Lookup(key, overrides)
 	if err != nil {
 		var validationErr *types.ValidationError
 		var notFoundErr *types.NotFoundError

@@ -912,19 +912,3 @@ func Test_ShouldConvertToFloat64(t *testing.T) {
 	require.Equal(t, float64(10), ToFloat64(&i64))
 	require.Equal(t, float64(10), ToFloat64(&u64))
 }
-
-func Test_ShouldFindVariable(t *testing.T) {
-	require.Nil(t, findVariable("k", nil))
-	require.Nil(t, findVariable("k", ""))
-	require.NotNil(t, findVariable("k", map[string]string{"k": "1"}))
-	require.Nil(t, findVariable("k", map[string]string{"x": "1"}))
-	require.NotNil(t, findVariable("k.a", map[string]any{"k": map[string]string{"a": "b"}}))
-}
-
-func Test_ShouldCompareVariable(t *testing.T) {
-	require.False(t, variableEquals("k", nil, 1))
-	require.False(t, variableEquals("k", "", 1))
-	require.True(t, variableEquals("k", map[string]string{"k": "1"}, "1"))
-	require.False(t, variableEquals("k", map[string]string{"x": "1"}, "1"))
-	require.True(t, variableEquals("k.a", map[string]any{"k": map[string]string{"a": "b"}}, "b"))
-}

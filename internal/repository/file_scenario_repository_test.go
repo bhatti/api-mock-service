@@ -32,7 +32,7 @@ func Test_ShouldRawSaveAndGetMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND should return saved scenario
-	saved, err := repo.Lookup(scenario.ToKeyData())
+	saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 	require.NoError(t, err)
 	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
 }
@@ -49,7 +49,7 @@ func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND should return saved scenario
-	saved, err := repo.Lookup(scenario.ToKeyData())
+	saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 	require.NoError(t, err)
 	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
 }
@@ -78,7 +78,7 @@ func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND should return saved scenario
-	saved, err := repo.Lookup(scenario.ToKeyData())
+	saved, err := repo.Lookup(scenario.ToKeyData(), make(map[string]any))
 	require.NoError(t, err)
 	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
 
@@ -87,7 +87,7 @@ func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN GET should fail
-	_, err = repo.Lookup(scenario.ToKeyData())
+	_, err = repo.Lookup(scenario.ToKeyData(), make(map[string]any))
 	require.Error(t, err)
 }
 
@@ -196,7 +196,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
-	})
+	}, make(map[string]any))
 	require.NoError(t, err)
 
 	//
@@ -226,7 +226,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
-	})
+	}, make(map[string]any))
 	require.NoError(t, err)
 }
 
@@ -248,7 +248,7 @@ func Test_ShouldListMockScenarios(t *testing.T) {
 	// THEN it should succeed
 	assert.True(t, len(all) >= 60, fmt.Sprintf("size %d", len(all)))
 	for _, next := range all {
-		scenario, err := repo.Lookup(next)
+		scenario, err := repo.Lookup(next, make(map[string]any))
 		require.NoError(t, err)
 		require.Equal(t, next.Name, scenario.Name)
 	}
@@ -341,7 +341,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
-	})
+	}, make(map[string]any))
 	require.NoError(t, err)
 }
 
@@ -549,7 +549,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
-	})
+	}, make(map[string]any))
 	require.NoError(t, err)
 
 	//
@@ -578,7 +578,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		MatchHeaders: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
-	})
+	}, make(map[string]any))
 	require.Error(t, err)
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
 		Method:           types.Put,
@@ -588,7 +588,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
-	})
+	}, make(map[string]any))
 	require.NoError(t, err)
 }
 

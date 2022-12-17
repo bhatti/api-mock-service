@@ -78,6 +78,8 @@ type MockHTTPResponse struct {
 	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
 	// MatchContents for request optionally
 	MatchContents string `yaml:"match_contents" json:"match_contents"`
+	// PipeProperties to extract properties from response
+	PipeProperties []string `yaml:"pipe_properties" json:"pipe_properties"`
 	// Assertions for validating response
 	Assertions []string `yaml:"assertions" json:"assertions"`
 }
@@ -102,6 +104,8 @@ type MockScenario struct {
 	Path string `yaml:"path" json:"path"`
 	// Description of scenario
 	Description string `yaml:"description" json:"description"`
+	// Order of scenario
+	Order int `yaml:"order" json:"order"`
 	// Group of scenario
 	Group string `yaml:"group" json:"group"`
 	// Predicate for the request
@@ -127,6 +131,7 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 		Name:             ms.Name,
 		Path:             rawPath,
 		Group:            ms.Group,
+		Order:            ms.Order,
 		Predicate:        ms.Predicate,
 		MatchQueryParams: ms.Request.MatchQueryParams,
 		MatchContents:    ms.Request.MatchContents,

@@ -33,7 +33,40 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0], `could not lookup matching API`)
+	require.Contains(t, res.Errors[""], `could not lookup matching API`)
+}
+
+func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
+	// GIVEN scenario repository
+	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+
+	// AND a valid scenario
+	_, err = saveTestScenario("../../fixtures/create_user.yaml", repo)
+	require.NoError(t, err)
+	_, err = saveTestScenario("../../fixtures/get_user.yaml", repo)
+	require.NoError(t, err)
+	_, err = saveTestScenario("../../fixtures/users.yaml", repo)
+	require.NoError(t, err)
+
+	// AND valid template for random data
+	chaosReq := types.NewChaosRequest(baseURL, 1)
+	client := web.NewStubHTTPClient()
+	client.AddMapping("POST", baseURL+"/users", web.NewStubHTTPResponse(200,
+		`{"User": {"Directory": "my_dir", "Username": "my_user@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
+	client.AddMapping("GET", baseURL+"/users/1", web.NewStubHTTPResponse(200,
+		`{"User": {"Directory": "my_dir2", "Username": "my_user2@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
+	client.AddMapping("GET", baseURL+"/users", web.NewStubHTTPResponse(200,
+		`{"User": {"Directory": "my_dir3", "Username": "my_user3@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
+	// WHEN executing scenario
+	executor := NewExecutor(repo, client)
+	// THEN it should execute saved scenario
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	res := executor.ExecuteByGroup(context.Background(), "user_group", dataTemplate, chaosReq)
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
+	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
 }
 
 func Test_ShouldExecuteGetTodo(t *testing.T) {
@@ -44,6 +77,10 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	// AND a valid scenario
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", repo)
 	require.NoError(t, err)
+	scenario.Path = "/todos/10"
+	scenario.Response.Assertions = []string{"VariableContains contents.id 10", "VariableContains contents.title illo"}
+	err = repo.Save(scenario)
+	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
@@ -52,6 +89,9 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
 	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
 }
 
@@ -104,7 +144,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0], `failed to assert '{{VariableContains "headers.Content-Type"`)
+	require.Contains(t, res.Errors["put_posts"], `failed to assert '{{VariableContains "headers.Content-Type"`)
 }
 
 func Test_ShouldParseRegexValue(t *testing.T) {
@@ -140,7 +180,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0], `didn't match required header Content-Type with regex application/xjson`)
+	require.Contains(t, res.Errors["put_posts"], `didn't match required header Content-Type with regex application/xjson`)
 }
 
 func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
@@ -168,7 +208,7 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0], `failed to find required header Abc-Content-Type`)
+	require.Contains(t, res.Errors["put_posts"], `failed to find required header Abc-Content-Type`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
@@ -203,7 +243,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0], `failed to assert '{{VariableContains "contents.id" "1"}}`)
+	require.Contains(t, res.Errors["get_comment"], `failed to assert '{{VariableContains "contents.id" "1"}}`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
@@ -230,7 +270,7 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 		t.Log(err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors[0], `failed to execute request with status 400`)
+	require.Contains(t, res.Errors["get_comment"], `failed to execute request with status 400`)
 }
 
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
@@ -286,11 +326,11 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 
 	// AND mock web client
 	client, data := buildJobsTestClient("AC1234567890", "RUNNING")
-	chaosReq.Overrides = data
 	chaosReq.Verbose = true
+	chaosReq.Overrides = data
 	// AND executor
 	executor := NewExecutor(repo, client)
-	for _, spec := range specs {
+	for i, spec := range specs {
 		// WHEN saving scenario to mock scenario repository
 		repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 		require.NoError(t, err)
@@ -300,16 +340,15 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		err = repo.Save(scenario)
 		require.NoError(t, err)
 		// AND should return saved scenario
-		saved, err := repo.Lookup(scenario.ToKeyData())
+		saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 		require.NoError(t, err)
-
 		// WHEN executing scenario
 		res := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, chaosReq)
 		for _, err := range res.Errors {
 			t.Log(err)
 		}
 		// THEN it should succeed
-		require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
+		require.Equal(t, 0, len(res.Errors), fmt.Sprintf("spec %d == %v", i, res.Errors))
 	}
 }
 
@@ -348,6 +387,7 @@ func buildJobsTestClient(jobID string, jobStatus string) (web.HTTPClient, map[st
   "jobStatus": "` + jobStatus + `"
 }
 `
+
 	client.AddMapping("GET", baseURL+"/v1/jobs/"+jobID, web.NewStubHTTPResponse(200, job))
 	client.AddMapping("GET", baseURL+"/v1/jobs", web.NewStubHTTPResponse(200, `[`+job+`]`))
 	client.AddMapping("POST", baseURL+"/v1/jobs", web.NewStubHTTPResponse(200, jobStatusReply))
