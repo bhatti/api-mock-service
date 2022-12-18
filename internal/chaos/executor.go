@@ -321,10 +321,10 @@ func buildRequestBody(
 	scenario *types.MockScenario,
 ) (string, io.ReadCloser) {
 	var contents string
-	if scenario.Request.MatchContents != "" {
-		contents = scenario.Request.MatchContents
-	} else if scenario.Request.ExampleContents != "" {
+	if scenario.Request.ExampleContents != "" {
 		contents = scenario.Request.ExampleContents
+	} else if scenario.Request.MatchContents != "" {
+		contents = scenario.Request.MatchContents
 	}
 	if contents == "" {
 		return "", nil
@@ -368,21 +368,21 @@ func buildTemplateParams(
 		templateParams[k] = v
 		queryParams[k] = v
 	}
-	for k, v := range scenario.Request.ExampleQueryParams {
-		templateParams[k] = v
-		queryParams[k] = v
-	}
 	for k, v := range scenario.Request.MatchQueryParams {
 		templateParams[k] = regexValue(v)
 		queryParams[k] = regexValue(v)
 	}
-	for k, v := range scenario.Request.ExampleHeaders {
+	for k, v := range scenario.Request.ExampleQueryParams {
 		templateParams[k] = v
-		reqHeaders[k] = []string{v}
+		queryParams[k] = v
 	}
 	for k, v := range scenario.Request.MatchHeaders {
 		templateParams[k] = regexValue(v)
 		reqHeaders[k] = []string{regexValue(v)}
+	}
+	for k, v := range scenario.Request.ExampleHeaders {
+		templateParams[k] = v
+		reqHeaders[k] = []string{v}
 	}
 	// Find any params for query params and path variables
 	for k, v := range scenario.ToKeyData().MatchGroups(scenario.Path) {

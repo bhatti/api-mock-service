@@ -14,14 +14,19 @@ type Request struct {
 }
 
 func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) (res types.MockHTTPRequest, err error) {
-	contents, err := marshalPropertyValueWithTypes(req.Body, dataTemplate.WithInclude(true))
+	contents, err := marshalPropertyValue(req.Body, dataTemplate.WithInclude(false))
+	if err != nil {
+		return
+	}
+	matchContents, err := marshalPropertyValueWithTypes(req.Body, dataTemplate.WithInclude(true))
 	if err != nil {
 		return res, err
 	}
 	return types.MockHTTPRequest{
 		MatchHeaders:      propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
 		MatchQueryParams:  propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
-		MatchContents:     contents,
+		ExampleContents:   string(contents),
+		MatchContents:     matchContents,
 		ExamplePathParams: propsToMap(req.PathParams, asciiPattern, dataTemplate.WithInclude(false)),
 	}, nil
 }
