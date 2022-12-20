@@ -18,6 +18,9 @@ type MockScenarioRepository interface {
 	// SaveYaml saves as yaml data
 	SaveYaml(key *types.MockScenarioKeyData, payload []byte) (err error)
 
+	// LoadRaw loads matching scenario
+	LoadRaw(method types.MethodType, name string, path string) (b []byte, err error)
+
 	// Save MockScenario
 	Save(scenario *types.MockScenario) (err error)
 

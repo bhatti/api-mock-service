@@ -20,12 +20,12 @@ func Test_ShouldGetSeededRandom(t *testing.T) {
 	require.True(t, SeededRandom(1, 10) <= 10)
 }
 
-func Test_ShouldGetUdid(t *testing.T) {
-	require.Equal(t, 36, len(Udid()))
+func Test_ShouldGetUUID(t *testing.T) {
+	require.Equal(t, 36, len(UUID()))
 }
 
-func Test_ShouldGetSeededUdid(t *testing.T) {
-	require.Equal(t, 36, len(SeededUdid(1)))
+func Test_ShouldGetSeededUUID(t *testing.T) {
+	require.Equal(t, 36, len(SeededUUID(1)))
 }
 
 func Test_ShouldGetRandBool(t *testing.T) {

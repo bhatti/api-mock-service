@@ -1,0 +1,26 @@
+method: GET
+name: error-products
+path: /products
+description: ""
+order: 0
+group: products
+predicate: '{{NthRequest 2}}'
+request:
+    match_query_params: {}
+    match_headers: {}
+    match_contents: '{}'
+    example_path_params: {}
+    example_query_params:
+        category: '[\x20-\x7F]{1,128}'
+    example_headers: {}
+    example_contents: ""
+response:
+    headers: {}
+    contents: '{"errors":["{{RandSentence 5 10}}"]}'
+    contents_file: ""
+    status_code: {{EnumInt 400 415 500}}
+    match_headers: {}
+    match_contents: '{"errors":"(__string__\\w+)"}'
+    pipe_properties: []
+    assertions: []
+wait_before_reply: 0s

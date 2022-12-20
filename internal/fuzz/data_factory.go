@@ -41,13 +41,13 @@ func SeededRandom(seed int64, max int) int {
 	return r.Intn(max)
 }
 
-// Udid generator
-func Udid() string {
+// UUID generator
+func UUID() string {
 	return uuid.NewV4().String()
 }
 
-// SeededUdid generator
-func SeededUdid(seed int64) string {
+// SeededUUID generator
+func SeededUUID(seed int64) string {
 	ids := []string{
 		"bec879f5-5072-46a8-b47c-d86ace",
 		"688b999f-fd64-4333-b704-1148a4",

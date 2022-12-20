@@ -30,7 +30,7 @@ response:
         {{SeededFileLine "lines.txt" $val}}, 
         "Type": "Public", 
         "IsManaged": {{RandBool}},
-        "ApplicationGroupID": "{{SeededUdid $val}}",
+        "ApplicationGroupID": "{{SeededUUID $val}}",
       }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
 {{ end }}
      ],

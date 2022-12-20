@@ -18,7 +18,7 @@ import (
 
 const mockPath = "//abc//\\def/123/"
 
-func Test_ShouldRawSaveAndGetMockScenarios(t *testing.T) {
+func Test_ShouldRawSaveAndLoadMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
 	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
@@ -32,9 +32,9 @@ func Test_ShouldRawSaveAndGetMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND should return saved scenario
-	saved, err := repo.Lookup(scenario.ToKeyData(), nil)
+	b, err = repo.LoadRaw(scenario.Method, scenario.Name, scenario.Path)
 	require.NoError(t, err)
-	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
+	require.True(t, len(b) > 0)
 }
 
 func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {

@@ -27,7 +27,7 @@ response:
      "AppGroups": [
 {{- range $val := Iterate .PageSize }}
       {
-        "ApplicationGroupID": "{{SeededUdid $val}}",
+        "ApplicationGroupID": "{{SeededUUID $val}}",
         "Name": "{{SeededName $val}}",
         "Platform": "Apple",
         "AppGroupType": "Whitelist",
@@ -37,7 +37,7 @@ response:
            "Value": {{RandNumMax 1000}},
          },
          "Name": "{{SeededCity $val}}",
-         "Udid": "{{Udid}}"
+         "UUID": "{{UUID}}"
         },
         "UserGroups": [],
         "LastSeen": "{{Time}}",

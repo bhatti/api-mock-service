@@ -23,6 +23,7 @@ type Property struct {
 	In           string
 	Regex        string
 	Format       string
+	Required     bool
 	Children     []Property
 	matchRequest bool
 }
@@ -192,10 +193,10 @@ func (prop *Property) numericValue() string {
 		if prop.Regex != "" {
 			return prop.Regex
 		}
-		return `\d+`
+		return `[\d\.]+`
 	}
 
-	return fmt.Sprintf("{{RandNumMinMax %d %d}}", int(prop.Max), int(prop.Max))
+	return fmt.Sprintf("{{RandNumMinMax %d %d}}", int(prop.Min), int(prop.Max))
 }
 
 func (prop *Property) boolValue() string {
@@ -207,7 +208,7 @@ func (prop *Property) stringValue() string {
 		if prop.Regex != "" {
 			return prop.Regex
 		}
-		return ""
+		return `\w+`
 	}
 	if len(prop.Enum) > 0 {
 		choices := strings.Join(prop.Enum, " ")
@@ -236,7 +237,8 @@ func (prop *Property) stringValue() string {
 }
 
 func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
-	if prop.matchRequest || prop.In == "path" || prop.In == "query" {
+	// TODO check if prop.matchRequest needs early exit here
+	if prop.In == "path" || prop.In == "query" {
 		if prop.Regex != "" {
 			return prop.Regex
 		}
@@ -330,10 +332,7 @@ func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 
 func (prop *Property) buildValueArray() []any {
 	if prop.Max == 0 {
-		prop.Max = prop.Min + float64(fuzz.RandNumMinMax(1, 5))
-	}
-	if prop.Min == 0 {
-		prop.Min = prop.Max
+		prop.Max = prop.Min + float64(fuzz.RandNumMinMax(1, 10))
 	}
 	return make([]any, fuzz.RandNumMinMax(int(prop.Min), int(prop.Max)))
 }
@@ -341,6 +340,9 @@ func (prop *Property) buildValueArray() []any {
 func propsToMap(props []Property, defVal string, dataTemplate fuzz.DataTemplateRequest) (res map[string]string) {
 	res = make(map[string]string)
 	for _, prop := range props {
+		if dataTemplate.IncludeType && !prop.Required {
+			continue
+		}
 		val := prop.mapValue(dataTemplate)
 		if val == "" {
 			val = defVal

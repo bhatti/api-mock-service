@@ -1,0 +1,37 @@
+method: POST
+name: saveProduct
+path: /products
+description: ""
+order: 0
+group: products
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers: {}
+    match_contents: '{"category":"(BOOKS|MUSIC|TOYS)","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
+    example_path_params: {}
+    example_query_params: {}
+    example_headers:
+        "Content-Type": "application/json"
+    example_contents: |
+        category: {{EnumString `BOOKS MUSIC TOYS`}}
+        id: {{UUID}}
+        inventory: {{RandNumMinMax 5 500}}
+        name: {{RandSentence 3 5}}
+        price:
+            amount: {{RandNumMinMax 1 50}}
+            currency: "{{EnumString `USD CAD`}}"
+response:
+    headers: {}
+    contents: '{"category":"{{EnumString `BOOKS MUSIC TOYS`}}","id":"{{RandStringMinMax 0 0}}","inventory":"{{RandNumMinMax 5 500}}","name":"{{RandStringMinMax 2 50}}","price":{"amount":{{RandNumMinMax 0 0}},"currency":"$"}}'
+    contents_file: ""
+    status_code: 200
+    match_headers: {}
+    match_contents: '{"category":"(__string__(BOOKS|MUSIC|TOYS))","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
+    pipe_properties: 
+      - id
+      - name
+    assertions:
+        - VariableGE contents.inventory 5
+        - VariableContains contents.category S
+wait_before_reply: 0s

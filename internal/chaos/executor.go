@@ -250,8 +250,8 @@ func (x *Executor) execute(
 				"Request":    reqContents,
 				"Response":   resContents,
 				"Output":     string(b)}).Warnf("failed to assert test")
-			return nil, fmt.Errorf("failed to assert '%s' with value '%s' and params %v",
-				assertion, b, templateParams)
+			return nil, fmt.Errorf("failed to assert '%s' with value '%s'",
+				assertion, b)
 		}
 	}
 	if resContents != nil {
@@ -269,9 +269,7 @@ func (x *Executor) execute(
 				pipeProperties[propName] = val
 			}
 		}
-		if len(pipeProperties) > 0 {
-			resContents = pipeProperties
-		}
+		resContents = pipeProperties
 	}
 	return resContents, nil
 }
@@ -338,7 +336,7 @@ func buildRequestBody(
 		}).Infof("failed to unmarshal request")
 		return "", nil
 	}
-	res = fuzz.PopulateRandomData(res)
+	res = fuzz.GenerateFuzzData(res)
 	j, err := json.Marshal(res)
 	if err != nil {
 		log.WithFields(log.Fields{

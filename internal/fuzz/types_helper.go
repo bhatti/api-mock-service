@@ -3,7 +3,7 @@ package fuzz
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"gopkg.in/yaml.v3"
 	"reflect"
 	"regexp"
 	"strings"
@@ -50,85 +50,6 @@ func StripTypeTags(re string) string {
 	return regexp.MustCompile(
 		fmt.Sprintf("(%s|%s|%s|%s)", PrefixTypeNumber, PrefixTypeBoolean, PrefixTypeString, PrefixTypeObject)).
 		ReplaceAllString(re, "")
-}
-
-// PopulateRandomData using regex or data
-func PopulateRandomData(val any) any {
-	if val == nil {
-		return nil
-	}
-	switch val.(type) {
-	case bool:
-		return val //RandBool()
-	case int:
-		return val //RandNumMinMax(-1000, 10000)
-	case int8:
-		return val //RandNumMinMax(-1000, 10000)
-	case int16:
-		return val //RandNumMinMax(-1000, 10000)
-	case int32:
-		return val //RandNumMinMax(-1000, 10000)
-	case int64:
-		return val //RandNumMinMax(-1000, 10000)
-	case uint:
-		return val //RandNumMinMax(0, 10000)
-	case uint8:
-		return val //RandNumMinMax(0, 10000)
-	case uint16:
-		return val //RandNumMinMax(0, 10000)
-	case uint32:
-		return val //RandNumMinMax(0, 10000)
-	case uint64:
-		return val //RandNumMinMax(0, 10000)
-	case float32:
-		return val //rand.Float32()
-	case float64:
-		return val //rand.Float64()
-	case string:
-		strVal := val.(string)
-		if strVal == NumberPrefixRegex {
-			return float64(RandNumMinMax(0, 10000)) * rand.ExpFloat64()
-		} else if strVal == BooleanPrefixRegex {
-			return RandBool()
-		} else if strVal == UintPrefixRegex {
-			return RandNumMinMax(0, 10000)
-		} else if strVal == IntPrefixRegex {
-			return RandNumMinMax(-100, 10000)
-		} else if strings.Contains(strVal, WildRegex) {
-			return RandSentence(1, 3)
-		} else if strings.HasPrefix(strVal, "__") || strings.HasPrefix(strVal, "(") {
-			return RandRegex(strVal)
-		} else {
-			return strVal
-		}
-	case map[string]string:
-		hm := val.(map[string]string)
-		res := make(map[string]any)
-		for k, v := range hm {
-			res[k] = PopulateRandomData(v)
-		}
-		return res
-	case map[string]any:
-		hm := val.(map[string]any)
-		res := make(map[string]any)
-		for k, v := range hm {
-			res[k] = PopulateRandomData(v)
-		}
-		return res
-	case []any:
-		arr := val.([]any)
-		res := make([]any, len(arr))
-		for i, v := range arr {
-			res[i] = PopulateRandomData(v)
-		}
-		return res
-	default:
-		log.WithFields(log.Fields{
-			"val":     val,
-			"valType": reflect.TypeOf(val),
-		}).Info("cannot populate unknown value type")
-	}
-	return val
 }
 
 // FlatRegexMap to add all regex in same map
@@ -187,6 +108,11 @@ func UnmarshalArrayOrObject(b []byte) (res any, err error) {
 	} else if strings.HasPrefix(str, "[") {
 		res = make([]any, 0)
 		if err = json.Unmarshal(b, &res); err != nil {
+			return nil, err
+		}
+	} else {
+		res = make(map[string]any)
+		if err = yaml.Unmarshal(b, &res); err != nil {
 			return nil, err
 		}
 	}

@@ -176,8 +176,8 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	getScenario := ctx.Result.(*types.MockScenario)
-	require.NoError(t, scenario.ToKeyData().Equals(getScenario.ToKeyData()))
+	res := ctx.Result.(string)
+	require.True(t, len(res) > 0)
 
 	// AND it should not fail with yaml output
 	ctx.Request().Header = map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}}

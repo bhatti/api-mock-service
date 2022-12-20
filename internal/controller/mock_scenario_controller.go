@@ -3,8 +3,8 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"net/http"
+	"strings"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -43,13 +43,13 @@ func NewMockScenarioController(
 //	200: mockScenarioResponse
 func (msc *MockScenarioController) PostMockScenario(c web.APIContext) (err error) {
 	scenario := &types.MockScenario{}
-	if c.Request().Header.Get(types.ContentTypeHeader) == "application/yaml" {
-		if err = msc.mockScenarioRepository.SaveRaw(c.Request().Body); err != nil {
+	if c.Request().Header.Get(types.ContentTypeHeader) != "application/yaml" {
+		err = json.NewDecoder(c.Request().Body).Decode(scenario)
+		if err = msc.mockScenarioRepository.Save(scenario); err != nil {
 			return err
 		}
 	} else {
-		err = json.NewDecoder(c.Request().Body).Decode(scenario)
-		if err = msc.mockScenarioRepository.Save(scenario); err != nil {
+		if err = msc.mockScenarioRepository.SaveRaw(c.Request().Body); err != nil {
 			return err
 		}
 	}
@@ -89,31 +89,21 @@ func (msc *MockScenarioController) GetMockScenario(c web.APIContext) error {
 	if path == "" {
 		return fmt.Errorf("path not specified")
 	}
-	keyData, err := web.BuildMockScenarioKeyData(c.Request())
-	if err != nil {
-		return err
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
 	}
-	keyData.Method = method
-	keyData.Name = name
-	keyData.Path = path
+
 	log.WithFields(log.Fields{
 		"Method": method,
 		"Name":   name,
 		"Path":   path,
 	}).Debugf("getting mock scenario...")
 
-	scenario, err := msc.mockScenarioRepository.Lookup(keyData, nil)
+	b, err := msc.mockScenarioRepository.LoadRaw(method, name, path)
 	if err != nil {
 		return err
 	}
-	if c.Request().Header.Get(types.ContentTypeHeader) == "application/yaml" {
-		b, err := yaml.Marshal(scenario)
-		if err != nil {
-			return err
-		}
-		return c.String(http.StatusOK, string(b))
-	}
-	return c.JSON(http.StatusOK, scenario)
+	return c.String(http.StatusOK, string(b))
 }
 
 // swagger:route GET /_scenarios/{method}/names/{path} mock-scenarios getMockNames

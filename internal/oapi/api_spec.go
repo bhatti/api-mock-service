@@ -48,6 +48,7 @@ func ParseAPISpec(
 		}
 		if param.Value.Schema != nil {
 			property := schemaToProperty(param.Value.Name, true, param.Value.In, param.Value.Schema.Value, dataTemplate)
+			property.Required = param.Value.Required
 			if param.Value.In == "path" {
 				pathParams = append(pathParams, property)
 			} else if param.Value.In == "header" {

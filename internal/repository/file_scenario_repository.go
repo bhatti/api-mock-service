@@ -113,6 +113,16 @@ func (sr *FileMockScenarioRepository) SaveYaml(keyData *types.MockScenarioKeyDat
 	return
 }
 
+// LoadRaw loads matching scenario
+func (sr *FileMockScenarioRepository) LoadRaw(
+	method types.MethodType,
+	name string,
+	path string,
+) (b []byte, err error) {
+	fileName := sr.buildFileName(method, name, path)
+	return os.ReadFile(fileName)
+}
+
 // Delete removes a job
 func (sr *FileMockScenarioRepository) Delete(
 	method types.MethodType,
@@ -230,7 +240,7 @@ func (sr *FileMockScenarioRepository) Lookup(
 		"TotalRequestCount": reqCount,
 		"Timestamp":         matched[0].LastUsageTime,
 		"Matched":           len(matched),
-	}).Infof("API mock scenario found...")
+	}).Debugf("API mock scenario found...")
 
 	// Read template file
 	dir := sr.buildDir(target.Method, target.Path)
@@ -260,6 +270,8 @@ func (sr *FileMockScenarioRepository) Lookup(
 	return
 }
 
+/////////// PRIVATE METHODS //////////////
+
 func unmarshalMockScenario(
 	b []byte,
 	dir string,
@@ -277,8 +289,6 @@ func unmarshalMockScenario(
 	}
 	return scenario, nil
 }
-
-/////////// PRIVATE METHODS //////////////
 
 // visit all scenarios matching properties
 func (sr *FileMockScenarioRepository) visit(
@@ -345,7 +355,7 @@ func (sr *FileMockScenarioRepository) addKeyData(keyData *types.MockScenarioKeyD
 		"Predicate": keyData.Predicate,
 		"AllSize":   len(sr.keysByMethodPath),
 		"Size":      len(keyMap),
-	}).Infof("registered scenario")
+	}).Debugf("registered scenario")
 }
 
 func (sr *FileMockScenarioRepository) buildFileName(

@@ -35,7 +35,7 @@ func Test_ShouldParseValidJobsOpenAPI(t *testing.T) {
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		require.NoError(t, err)
-		require.True(t, scenario.Request.MatchHeaders["x-api-key"] != "")
+		require.True(t, scenario.Request.ExampleHeaders["x-api-key"] != "")
 		_, err = yaml.Marshal(scenario)
 		require.NoError(t, err)
 	}
@@ -99,5 +99,21 @@ func Test_ShouldParseValidVimeoOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 		_, err = yaml.Marshal(scenario)
 		require.NoError(t, err)
+	}
+}
+
+func Test_ShouldParseProductsOpenAPI(t *testing.T) {
+	data, err := os.ReadFile("../../fixtures/oapi/post-product.json")
+	require.NoError(t, err)
+	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
+	specs, err := Parse(context.Background(), data, dataTempl)
+	require.NoError(t, err)
+	require.Equal(t, 4, len(specs))
+	for _, spec := range specs {
+		scenario, err := spec.BuildMockScenario(dataTempl)
+		require.NoError(t, err)
+		out, err := yaml.Marshal(scenario)
+		require.NoError(t, err)
+		require.True(t, len(out) > 0)
 	}
 }

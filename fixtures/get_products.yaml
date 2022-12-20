@@ -1,0 +1,40 @@
+method: GET
+name: getProducts
+path: /products
+order: 0
+group: products
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers: {}
+    match_contents: '{}'
+    example_path_params: {}
+    example_query_params:
+        category: '[\x20-\x7F]{1,128}'
+    example_headers:
+        "Content-Type": "application/json"
+    example_contents: ""
+response:
+    headers:
+        "Content-Type":
+          - "application/json"
+    contents: >
+      [
+{{- range $val := Iterate 5}}
+        {
+          "id": "{{UUID}}",
+          "category": "{{EnumString `BOOKS MUSIC TOYS`}}",
+          "inventory": {{RandNumMinMax 1 100}},
+          "name": "{{RandSentence 1 3}}",
+          "price":{
+            "amount":{{RandNumMinMax 1 25}},
+            "currency": "{{EnumString `USD CAD`}}"
+          }
+        }{{if lt $val 4}},{{end}}
+{{ end }}
+      ]
+    status_code: 200
+    match_headers: {}
+    match_contents: '{"category":"(MUSIC)","id":"(__string__\\w+)","inventory":".+","name":"(__string__\\w+)","price.amount":"[\\d\\.]+","price.currency":"(USD|CAD)"}'
+    assertions: []
+wait_before_reply: 0s

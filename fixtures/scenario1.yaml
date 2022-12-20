@@ -26,18 +26,18 @@ response:
      "Devices": [
 {{- range $val := Iterate .PageSize }}
       {
-        "Udid": "{{SeededUdid $val}}",
+        "UUID": "{{SeededUUID $val}}",
         "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
-        "SerialNumber": "{{Udid}}",
-        "MacAddress": "{{Udid}}",
-        "Imei": "{{Udid}}",
+        "SerialNumber": "{{UUID}}",
+        "MacAddress": "{{UUID}}",
+        "Imei": "{{UUID}}",
         "AssetNumber": "{{RandString 20}}",
         "LocationGroupId": {
          "Id": {
            "Value": {{RandNumMax 1000}},
          },
          "Name": "{{SeededCity $val}}",
-         "Udid": "{{Udid}}"
+         "UUID": "{{UUID}}"
         },
         "DeviceFriendlyName": "Device for {{SeededName $val}}",
         "LastSeen": "{{Time}}",

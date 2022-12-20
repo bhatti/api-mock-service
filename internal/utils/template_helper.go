@@ -131,11 +131,11 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"RandParagraph": func(min, max any) string {
 			return fuzz.RandParagraph(toInt(min), toInt(max))
 		},
-		"Udid": func() string {
-			return fuzz.Udid()
+		"UUID": func() string {
+			return fuzz.UUID()
 		},
-		"SeededUdid": func(seed any) string {
-			return fuzz.SeededUdid(toInt64(seed))
+		"SeededUUID": func(seed any) string {
+			return fuzz.SeededUUID(toInt64(seed))
 		},
 		"RandCity": func() string {
 			return fuzz.RandCity()

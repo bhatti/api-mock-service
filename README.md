@@ -39,14 +39,14 @@ If you haven't installed docker, you can download the community version from htt
 or find installer for your OS on https://docs.docker.com/get-docker/.
 ```bash
 docker build -t api-mock-service .
-docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
+docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
 	-e ASSET_DIR=/tmp/assets api-mock-service
 ```
 
 or pull an image from docker hub (https://hub.docker.com/r/plexobject/api-mock-service), e.g.
 ```bash
 docker pull plexobject/api-mock-service:latest
-docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
+docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
 	-e ASSET_DIR=/tmp/assets plexobject/api-mock-service:latest
 ```
 
@@ -429,19 +429,19 @@ response:
      "Devices": [
 {{- range $val := Iterate .pageSize }}
       {
-        "Udid": "{{SeededUdid $val}}",
+        "UUID": "{{SeededUUID $val}}",
         "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
         "Amount": {{JSONFileProperty "props.yaml" "amount"}},
-        "SerialNumber": "{{Udid}}",
-        "MacAddress": "{{Udid}}",
-        "Imei": "{{Udid}}",
+        "SerialNumber": "{{UUID}}",
+        "MacAddress": "{{UUID}}",
+        "Imei": "{{UUID}}",
         "AssetNumber": "{{RandString 20}}",
         "LocationGroupId": {
          "Id": {
            "Value": {{RandNumMax 1000}},
          },
          "Name": "{{SeededCity $val}}",
-         "Udid": "{{Udid}}"
+         "UUID": "{{UUID}}"
         },
         "DeviceFriendlyName": "Device for {{SeededName $val}}",
         "LastSeen": "{{Time}}",
@@ -522,7 +522,7 @@ Go template allows custom functions that can provide customized behavior for gen
 
 ### Random Data
 ```yaml
-  "SerialNumber": "{{Udid}}",
+  "SerialNumber": "{{UUID}}",
   "AssetNumber": "{{RandString 20}}",
   "LastSeen": "{{Time}}",
   "Host": "{{RandHost}}",
@@ -603,7 +603,7 @@ This template file will generate content as follows:
 ```json
 { "Devices": [
  {
-   "Udid": "fe49b338-4593-43c9-b1e9-67581d000000",
+   "UUID": "fe49b338-4593-43c9-b1e9-67581d000000",
    "Line": { "ApplicationName": "Chase", "Version": "3.80", "ApplicationIdentifier": "com.chase.sig.android", "Type": "Public", "IsManaged": false },
    "Amount": {"currency":"$","value":100},
    "SerialNumber": "47c2d7c3-c930-4194-b560-f7b89b33bc2a",
@@ -615,7 +615,7 @@ This template file will generate content as follows:
       "Value": 980
     },
     "Name": "Houston",
-    "Udid": "3bde6570-c0d4-488f-8407-10f35902cd99"
+    "UUID": "3bde6570-c0d4-488f-8407-10f35902cd99"
    },
    "DeviceFriendlyName": "Device for Alexander",
    "LastSeen": "2022-10-29T11:25:25-07:00",
@@ -740,8 +740,8 @@ Following functions can be used to generate boolean data:
 
 Following functions can be used to generate UDIDs:
 
-- Udid
-- SeededUdid
+- UUID
+- SeededUUID
 
 ### String Enums
 

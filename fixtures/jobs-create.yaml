@@ -22,7 +22,7 @@ response:
       }
     {{else}}
      {
-        "Udid": "{{Udid}}",
+        "UUID": "{{UUID}}",
     {{if GERequest 5 }}
         "Status": "{{EnumString `Failed Completed`}}",
     {{else}}

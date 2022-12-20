@@ -211,6 +211,32 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 	require.Contains(t, res.Errors["put_posts"], `failed to find required header Abc-Content-Type`)
 }
 
+func Test_ShouldExecutePostProductScenario(t *testing.T) {
+	// GIVEN scenario repository
+	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+
+	// AND a valid scenario
+	scenario, err := saveTestScenario("../../fixtures/save_product.yaml", repo)
+	require.NoError(t, err)
+
+	client := web.NewStubHTTPClient()
+	product := `{"category":"BOOKS","id":"123","inventory":"10","name":"toy 1","price":{"amount":12,"currency":"USD"}}`
+	client.AddMapping("POST", baseURL+"/products", web.NewStubHTTPResponse(200, product))
+
+	// AND valid template for random data
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	chaosReq := types.NewChaosRequest(baseURL, 1)
+	// WHEN executing scenario
+	executor := NewExecutor(repo, client)
+	// THEN it should not execute saved scenario
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
+	require.Equal(t, 0, len(res.Errors))
+}
+
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	// GIVEN scenario repository
 	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})

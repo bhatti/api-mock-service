@@ -100,18 +100,18 @@ func Test_ShouldParseRandNumMax(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_ShouldParseUdid(t *testing.T) {
+func Test_ShouldParseUUID(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{Udid}}`)
+	b := []byte(`{{UUID}}`)
 	// WHEN parsing udid
 	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
 
-func Test_ShouldParseSeededUdid(t *testing.T) {
+func Test_ShouldParseSeededUUID(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{SeededUdid 3}}`)
+	b := []byte(`{{SeededUUID 3}}`)
 	// WHEN parsing udid
 	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
 	// THEN it should succeed
