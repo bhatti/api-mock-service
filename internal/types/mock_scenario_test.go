@@ -30,6 +30,16 @@ func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
 	require.NoError(t, scenario.Validate())
 }
 
+func Test_ShouldSetName(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.Path = "/2/openapi.json"
+	// WHEN setting name
+	scenario.SetName("prefix")
+	// THEN it should succeed
+	require.Contains(t, scenario.Name, "2-openapi.json-200-", scenario.Name)
+}
+
 func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 	// GIVEN a empty mock scenario
 	scenario := &MockScenario{}
@@ -59,6 +69,7 @@ func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 	// GIVEN a empty mock scenario
 	scenario := MockScenario{
+		Name:   "abc*",
 		Method: Post,
 		Path:   "/v1/category/{cat}/books/{id}",
 	}
@@ -67,8 +78,9 @@ func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 	require.Equal(t, 2, len(groups))
 	require.Equal(t, "history", groups["cat"])
 	require.Equal(t, "101", groups["id"])
-	require.Equal(t, "POST/v1/category/{cat}/books/{id}", scenario.String())
+	require.Equal(t, "POSTabc*/v1/category/{cat}/books/{id}", scenario.String())
 	require.Equal(t, "post__v1_category_{cat}_books_{id}", scenario.MethodPath())
+	require.Equal(t, "abc", scenario.SafeName())
 }
 
 func Test_ShouldMatchGroupsInMockScenarioKeyDataWithColon(t *testing.T) {

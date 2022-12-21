@@ -150,7 +150,7 @@ func saveMockResponse(
 	}
 
 	if scenario.Name == "" {
-		scenario.Name = fmt.Sprintf("recorded-%s-%s", scenario.NormalName(), scenario.Digest())
+		scenario.SetName("recorded-")
 	}
 
 	scenario.Description = fmt.Sprintf("recorded at %v for %s", time.Now().UTC(), u)

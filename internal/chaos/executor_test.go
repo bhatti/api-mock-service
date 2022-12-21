@@ -357,13 +357,11 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	// AND executor
 	executor := NewExecutor(repo, client)
 	for i, spec := range specs {
-		// WHEN saving scenario to mock scenario repository
-		repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
-		require.NoError(t, err)
-		// THEN it should save scenario
 		scenario, err := spec.BuildMockScenario(dataTemplate)
 		require.NoError(t, err)
+		// WHEN saving scenario to mock scenario repository
 		err = repo.Save(scenario)
+		// THEN it should save scenario
 		require.NoError(t, err)
 		// AND should return saved scenario
 		saved, err := repo.Lookup(scenario.ToKeyData(), nil)

@@ -46,7 +46,8 @@ func (x *Executor) Execute(
 	chaosReq types.ChaosRequest,
 ) *types.ChaosResponse {
 	started := time.Now()
-	scenarioKey.Name = ""
+	metrics := metrics.NewMetrics()
+	metrics.RegisterHistogram(scenarioKey.SafeName())
 	res := types.NewChaosResponse()
 	log.WithFields(log.Fields{
 		"Component":    "Tester",
@@ -54,8 +55,6 @@ func (x *Executor) Execute(
 		"ChaosRequest": chaosReq,
 	}).Infof("execute BEGIN")
 
-	metrics := metrics.NewMetrics()
-	metrics.RegisterHistogram(scenarioKey.Name)
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
 		scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
 		if err != nil {
@@ -104,7 +103,7 @@ func (x *Executor) ExecuteByGroup(
 	})
 	metrics := metrics.NewMetrics()
 	for _, scenarioKey := range scenarioKeys {
-		metrics.RegisterHistogram(scenarioKey.Name)
+		metrics.RegisterHistogram(scenarioKey.SafeName())
 	}
 
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
@@ -160,7 +159,7 @@ func (x *Executor) execute(
 	statusCode, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	elapsed := time.Now().UnixMilli() - started
-	metrics.AddHistogram(scenario.Name, float64(elapsed)/1000.0, nil)
+	metrics.AddHistogram(scenario.SafeName(), float64(elapsed)/1000.0, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to invoke %s for %s (%s) due to %w", scenario.Name, url, scenario.Method, err)
 	}

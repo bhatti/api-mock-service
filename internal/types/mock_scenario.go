@@ -144,6 +144,14 @@ func (ms *MockScenario) String() string {
 	return string(ms.Method) + ms.Name + ms.Group + ms.Path
 }
 
+// SafeName strips invalid characters
+func (ms *MockScenario) SafeName() string {
+	if regexp, err := regexp.Compile(`[^a-zA-Z0-9_:]`); err == nil {
+		return regexp.ReplaceAllString(ms.Name, "")
+	}
+	return ms.Name
+}
+
 // MethodPath helper method
 func (ms *MockScenario) MethodPath() string {
 	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_")
@@ -201,6 +209,11 @@ func (ms *MockScenario) Validate() error {
 // NormalPath normalizes path
 func (ms *MockScenario) NormalPath(sep uint8) string {
 	return NormalizePath(ms.Path, sep)
+}
+
+// SetName sets name
+func (ms *MockScenario) SetName(prefix string) {
+	ms.Name = fmt.Sprintf("%s%s-%d-%s", prefix, NormalizeDirPath(ms.NormalName()), ms.Response.StatusCode, ms.Digest())
 }
 
 // NormalName normalizes name from path

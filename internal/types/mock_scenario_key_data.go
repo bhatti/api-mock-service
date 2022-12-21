@@ -105,7 +105,7 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	}
 
 	if target.Name != "" && msd.Name != target.Name {
-		return NewNotFoundError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
+		return NewValidationError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
 			msd.Name, target.Name))
 	}
 	return nil
@@ -191,6 +191,14 @@ func (msd *MockScenarioKeyData) String() string {
 // MethodPath helper method
 func (msd *MockScenarioKeyData) MethodPath() string {
 	return strings.ToLower(string(msd.Method)) + "_" + strings.ReplaceAll(msd.Path, "/", "_")
+}
+
+// SafeName strips invalid characters
+func (msd *MockScenarioKeyData) SafeName() string {
+	if regexp, err := regexp.Compile(`[^a-zA-Z0-9_:]`); err == nil {
+		return regexp.ReplaceAllString(msd.Name, "")
+	}
+	return msd.Name
 }
 
 // MethodNamePathPrefixKey returns full key for the scenario
