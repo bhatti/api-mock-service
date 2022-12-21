@@ -188,6 +188,11 @@ func (msd *MockScenarioKeyData) String() string {
 	return string(msd.Method) + "|" + msd.Path + "|" + msd.Name
 }
 
+// MethodPath helper method
+func (msd *MockScenarioKeyData) MethodPath() string {
+	return strings.ToLower(string(msd.Method)) + "_" + strings.ReplaceAll(msd.Path, "/", "_")
+}
+
 // MethodNamePathPrefixKey returns full key for the scenario
 func (msd *MockScenarioKeyData) MethodNamePathPrefixKey() string {
 	return string(msd.Method) + msd.Name + msd.PathPrefix(1)

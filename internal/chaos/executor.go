@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/metrics"
 	"io"
 	"os"
 	"regexp"
@@ -53,18 +54,21 @@ func (x *Executor) Execute(
 		"ChaosRequest": chaosReq,
 	}).Infof("execute BEGIN")
 
+	metrics := metrics.NewMetrics()
+	metrics.RegisterHistogram(scenarioKey.Name)
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
 		scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
 		if err != nil {
 			res.Add(scenarioKey.Name, nil, err)
+			res.Metrics = metrics.Summary()
 			return res
 		}
 		url := chaosReq.BaseURL + scenario.Path
-		resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+		resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq, metrics)
 		res.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
-
+	res.Metrics = metrics.Summary()
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
 		"Component":    "Tester",
@@ -72,6 +76,7 @@ func (x *Executor) Execute(
 		"ChaosRequest": chaosReq,
 		"Elapsed":      elapsed,
 		"Errors":       len(res.Errors),
+		"Metrics":      res.Metrics,
 	}).Infof("execute COMPLETED")
 	return res
 }
@@ -97,22 +102,28 @@ func (x *Executor) ExecuteByGroup(
 	sort.Slice(scenarioKeys, func(i, j int) bool {
 		return scenarioKeys[i].Order < scenarioKeys[j].Order
 	})
+	metrics := metrics.NewMetrics()
+	for _, scenarioKey := range scenarioKeys {
+		metrics.RegisterHistogram(scenarioKey.Name)
+	}
 
 	for i := 0; i < chaosReq.ExecutionTimes; i++ {
 		for _, scenarioKey := range scenarioKeys {
 			scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
 			if err != nil {
 				res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
+				res.Metrics = metrics.Summary()
 				return res
 			}
 			url := chaosReq.BaseURL + scenario.Path
-			resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq)
+			resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq, metrics)
 			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
 	}
 
 	elapsed := time.Since(started).String()
+	res.Metrics = metrics.Summary()
 	log.WithFields(log.Fields{
 		"Component":    "Tester",
 		"Group":        group,
@@ -121,6 +132,7 @@ func (x *Executor) ExecuteByGroup(
 		"Errors":       len(res.Errors),
 		"Request":      chaosReq,
 		"ScenarioKeys": scenarioKeys,
+		"Metrics":      res.Metrics,
 	}).Infof("execute-by-group COMPLETED")
 	return res
 }
@@ -133,8 +145,9 @@ func (x *Executor) execute(
 	overrides map[string]any,
 	dataTemplate fuzz.DataTemplateRequest,
 	chaosRequest types.ChaosRequest,
+	metrics *metrics.Metrics,
 ) (res any, err error) {
-	started := time.Now()
+	started := time.Now().UnixMilli()
 	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides)
 	if fuzz.RandNumMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandNumMinMax(2, 5))
@@ -146,10 +159,11 @@ func (x *Executor) execute(
 
 	statusCode, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
+	elapsed := time.Now().UnixMilli() - started
+	metrics.AddHistogram(scenario.Name, float64(elapsed)/1000.0, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to invoke %s for %s (%s) due to %w", scenario.Name, url, scenario.Method, err)
 	}
-	elapsed := time.Since(started).String()
 	var resBytes []byte
 	if resBytes, resBody, err = utils.ReadAll(resBody); err != nil {
 		return nil, fmt.Errorf("failed to read response body for %s due to %w", scenario.Name, err)

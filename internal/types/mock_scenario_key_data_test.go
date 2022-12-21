@@ -18,6 +18,7 @@ func Test_ShouldValidateBuildMockScenarioKeyData(t *testing.T) {
 	require.Equal(t, "/path1/test1", keyData.PathPrefix(2))
 	require.Equal(t, "/path1/test1/abc", keyData.PathPrefix(3))
 	require.Equal(t, "/path1/test1/abc", keyData.PathPrefix(4))
+	require.Equal(t, "post__path1_test1_abc", keyData.MethodPath())
 }
 
 func Test_ShouldNotValidateEmptyMockScenarioKeyData(t *testing.T) {

@@ -2,10 +2,11 @@ package types
 
 // ChaosResponse for response of chaos request
 type ChaosResponse struct {
-	Results   map[string]any    `yaml:"results" json:"results"`
-	Errors    map[string]string `yaml:"errors" json:"errors"`
-	Succeeded int               `yaml:"succeeded" json:"succeeded"`
-	Failed    int               `yaml:"failed" json:"failed"`
+	Results   map[string]any     `yaml:"results" json:"results"`
+	Errors    map[string]string  `yaml:"errors" json:"errors"`
+	Metrics   map[string]float64 `yaml:"metrics" json:"metrics"`
+	Succeeded int                `yaml:"succeeded" json:"succeeded"`
+	Failed    int                `yaml:"failed" json:"failed"`
 }
 
 // NewChaosResponse constructor
@@ -13,6 +14,7 @@ func NewChaosResponse() *ChaosResponse {
 	return &ChaosResponse{
 		Errors:    make(map[string]string),
 		Results:   make(map[string]any),
+		Metrics:   make(map[string]float64),
 		Succeeded: 0,
 		Failed:    0,
 	}

@@ -59,14 +59,16 @@ func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 	// GIVEN a empty mock scenario
 	scenario := MockScenario{
-		Path: "/v1/category/{cat}/books/{id}",
+		Method: Post,
+		Path:   "/v1/category/{cat}/books/{id}",
 	}
 	keyData := scenario.ToKeyData()
 	groups := keyData.MatchGroups("/v1/category/history/books/101")
 	require.Equal(t, 2, len(groups))
 	require.Equal(t, "history", groups["cat"])
 	require.Equal(t, "101", groups["id"])
-	require.Equal(t, "/v1/category/{cat}/books/{id}", scenario.String())
+	require.Equal(t, "POST/v1/category/{cat}/books/{id}", scenario.String())
+	require.Equal(t, "post__v1_category_{cat}_books_{id}", scenario.MethodPath())
 }
 
 func Test_ShouldMatchGroupsInMockScenarioKeyDataWithColon(t *testing.T) {

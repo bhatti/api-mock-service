@@ -144,6 +144,11 @@ func (ms *MockScenario) String() string {
 	return string(ms.Method) + ms.Name + ms.Group + ms.Path
 }
 
+// MethodPath helper method
+func (ms *MockScenario) MethodPath() string {
+	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_")
+}
+
 // Digest of scenario
 func (ms *MockScenario) Digest() string {
 	h := sha256.New()
