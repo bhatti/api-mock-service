@@ -44,6 +44,61 @@ func Test_ShouldFailPostChaosScenarioWithoutMethod(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid method")
 }
 
+func Test_ShouldFailPostChaosScenarioWithoutName(t *testing.T) {
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	client := web.NewStubHTTPClient()
+	executor := chaos.NewExecutor(mockScenarioRepository, client)
+
+	webServer := web.NewStubWebServer()
+	ctrl := NewMockChaosController(executor, webServer)
+
+	reader := io.NopCloser(bytes.NewReader([]byte("test")))
+	ctx := web.NewStubContext(&http.Request{
+		Body:   reader,
+		Method: "POST",
+		Header: map[string][]string{
+			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
+			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
+		},
+	})
+	ctx.Params["method"] = "POST"
+
+	// WHEN creating mock scenario with without method
+	err = ctrl.PostMockChaosScenario(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "scenario name")
+}
+
+func Test_ShouldFailPostChaosScenarioWithoutPath(t *testing.T) {
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	client := web.NewStubHTTPClient()
+	executor := chaos.NewExecutor(mockScenarioRepository, client)
+
+	webServer := web.NewStubWebServer()
+	ctrl := NewMockChaosController(executor, webServer)
+
+	reader := io.NopCloser(bytes.NewReader([]byte("test")))
+	ctx := web.NewStubContext(&http.Request{
+		Body:   reader,
+		Method: "POST",
+		Header: map[string][]string{
+			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
+			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
+		},
+	})
+	ctx.Params["method"] = "POST"
+	ctx.Params["name"] = "name"
+
+	// WHEN creating mock scenario with without method
+	err = ctrl.PostMockChaosScenario(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "path not specified")
+}
+
 func Test_ShouldFailPostChaosScenarioWithoutBaseURL(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
