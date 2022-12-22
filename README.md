@@ -2,7 +2,24 @@
 
 ## Mocking Distributed Micro services and Fuzz testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
 
+### Problems with Testing
+
+Testing methodologies such as unit-testing, integration-testing, functional-testing, chaos testing/game days, etc. are a key part of software development lifecycle for
+building reliable and robust software systems. However, these testing methodologies pose several problems such as:
+- Tests require regular maintenance same as the code, however tests often don't receive the same attention and code rot is common with the tests. This makes the tests brittle that often break with the changes and tests become difficult to understand.
+- The size of tests also pose a challenge as the code grows, which further adds development cost of syncing tests with the code updates.
+- Integration/functional tests further add risks when testing for hard to reproduce conditions with real services. Also, real services keep their own state, which could be updated externally so regression testing can't be reliably performed. 
+- You may need to inject failures, time delays, network failures or timeouts for chaos testing/game days, which require special tooling and development effort.
+- The functional/load tests also need to check for non-functional requirements when building distributed systems such as concurrency, performance, scalability and failures. This requires not only testing for robust server side code but also testing for clients/sdks that can handle various error conditions.
+
+### Facilitate testing with the api-mock-service
+
+The api-mock-service helps with the integration/functional/chaos testing by mocking dependent services and injecting failures in the implementation. 
+It allows testing both the server side and client side code with the property-based/generative/fuzzing/stochastic testing techniques.
+The property-based/generative techniques reduce the size of test suites by automatically generating test input data using fuzz-data generators.
+
 ### Use-Cases
+
 - As a service owner, I need to mock remote dependent service(s) by capturing/recording request/responses through an HTTP proxy so that I can play it back when testing the remote service(s) without connecting with them.
 ![use-case-1](images/mock_uc1.png)
 - As a service owner, I need to mock remote dependent service(s) based on a open-api/swagger specifications so that my service client can test all service behavior per specifications for the remote service(s) even when remote service is not fully implemented or accessible.
@@ -15,7 +32,9 @@
 ![use-case-5](images/mock_uc5.png)
  
 ### Features
+
 API mock service for REST/HTTP based services with following features:
+
 - Record API request/response by working as a HTTP proxy server (native http/https or via API) between client and remote service.
 - Playback API response that were previously recorded based on request parameters.
 - Define API behavior manually by specifying request parameters and response contents using static data or dynamic data based on GO templating language.
@@ -37,6 +56,7 @@ This service is based on an older mock-service https://github.com/bhatti/PlexMoc
 As, it's written in GO, you can either download GO runtime environment or use Docker to install it locally. 
 If you haven't installed docker, you can download the community version from https://docs.docker.com/engine/installation/ 
 or find installer for your OS on https://docs.docker.com/get-docker/.
+
 ```bash
 docker build -t api-mock-service .
 docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
@@ -44,6 +64,7 @@ docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DAT
 ```
 
 or pull an image from docker hub (https://hub.docker.com/r/plexobject/api-mock-service), e.g.
+
 ```bash
 docker pull plexobject/api-mock-service:latest
 docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
