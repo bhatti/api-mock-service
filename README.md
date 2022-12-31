@@ -22,16 +22,27 @@ The property-based/generative techniques reduce the size of test suites by autom
 ### Use-Cases
 
 - As a service owner, I need to mock remote dependent service(s) by capturing/recording request/responses through an HTTP proxy so that I can play it back when testing the remote service(s) without connecting with them.
+
 ![use-case-1](images/mock_uc1.png)
+
 - As a service owner, I need to mock remote dependent service(s) based on a open-api/swagger specifications so that my service client can test all service behavior per specifications for the remote service(s) even when remote service is not fully implemented or accessible.
+
 ![use-case-2](images/mock_uc2.png)
+
 - As a service owner, I need to mock remote dependent service(s) based on a mock scenario defined in a template so that my service client can test service behavior per expected request/response in the template even when remote service is not fully implemented or accessible.
+
 ![use-case-3](images/mock_uc3.png)
+
 - As a service owner, I need to inject various response behavior and faults to the output of a remote service so that I can build a robust client that prevents cascading failures and is more resilient to unexpected faults.
+
 ![use-case-4](images/mock_uc4.png)
+
 - As a developer, I need a playground to try out remote service APIs and learn how the behave with different test data scenarios so that I can understand the API behavior better while referring to the API specs.
+
 ![use-case-5](images/mock_uc5.png)
+
 - As a service owner, I need to define test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
+
 ![use-case-6](images/mock_uc6.png)
  
 ### Features
