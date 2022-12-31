@@ -11,6 +11,7 @@ building reliable and robust software systems. However, these testing methodolog
 - Integration/functional tests further add risks when testing for hard to reproduce conditions with real services. Also, real services keep their own state, which could be updated externally so regression testing can't be reliably performed. 
 - You may need to inject failures, time delays, network failures or timeouts for chaos testing/game days, which require special tooling and development effort.
 - The functional/load tests also need to check for non-functional requirements when building distributed systems such as concurrency, performance, scalability and failures. This requires not only testing for robust server side code but also testing for clients/sdks that can handle various error conditions.
+- Testing for backward and forward compatibility is hard as different clients may be using a subset of functionality. This requires solid support for contract based testing from consumer's and producer's perspectives.
 
 ### Facilitate testing with the api-mock-service
 
@@ -28,8 +29,10 @@ The property-based/generative techniques reduce the size of test suites by autom
 ![use-case-3](images/mock_uc3.png)
 - As a service owner, I need to inject various response behavior and faults to the output of a remote service so that I can build a robust client that prevents cascading failures and is more resilient to unexpected faults.
 ![use-case-4](images/mock_uc4.png)
-- As a service owner, I need to define test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
+- As a developer, I need a playground to try out remote service APIs and learn how the behave with different test data scenarios so that I can understand the API behavior better while referring to the API specs.
 ![use-case-5](images/mock_uc5.png)
+- As a service owner, I need to define test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
+![use-case-6](images/mock_uc6.png)
  
 ### Features
 
@@ -50,6 +53,8 @@ API mock service for REST/HTTP based services with following features:
 - Support multiple mock scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
 - Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/chaos testing.
 - Generate client requests for a remote API for chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
+- Create a playground for testing APIs interactively so that users can learn the APIs quickly.
+- Support contract based testing from both consumer and producer sides.
 - Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input to next test scenarios.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
