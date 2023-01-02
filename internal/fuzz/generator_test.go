@@ -263,14 +263,14 @@ func Test_ShouldPopulateRandomDataItems(t *testing.T) {
 		`{"id": "Multi-layered client-server neural-net"}`,
 	}
 	expected := [][]string{
-		{"__number__[+-]?[0-9]{1,10}", "int"},
+		{"__number__[+-]?\\d{1,10}", "int"},
 		{`__string__\w+`, "string"},
-		{`__string__` + EmailRegex, "string"},
-		{`__string__\w+.?\w+[0-9]{3,3}`, "string"},
-		{`__string__[0-9]{5,5}[-][0-9]{4,4}`, "string"},
-		{`__string__[+-]?[0-9]{2,2}\.[0-9]{4,4}`, "string"},
-		{`__string__[0-9]{2,2}\.[0-9]{4,4}`, "string"},
-		{`__string__[0-9]{1,1}[-][0-9]{3,3}[-][0-9]{3,3}[-][0-9]{4,4}\w+[0-9]{5,5}`, "string"},
+		{`__string__` + EmailRegex2, "string"},
+		{`__string__\w+.?\w+\d{3,3}`, "string"},
+		{`__string__\d{5,5}[-]\d{4,4}`, "string"},
+		{`__string__[+-]?\d{2,2}\.\d{4,4}`, "string"},
+		{`__string__\d{2,2}\.\d{4,4}`, "string"},
+		{`__string__\d{1,1}[-]\d{3,3}[-]\d{3,3}[-]\d{4,4}\w+\d{5,5}`, "string"},
 		{`__string__\w+.?\w+`, "string"},
 		{`__string__\w+[-]\w+[-]\w+[-]\w+`, "string"},
 	}

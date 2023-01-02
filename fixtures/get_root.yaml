@@ -8,12 +8,12 @@ request:
     match_headers:
         Content-Type: ""
     match_contents: '{}'
-    example_path_params: {}
-    example_query_params: {}
-    example_headers:
+    path_params: {}
+    query_params: {}
+    headers:
         Accept: '*/*'
         User-Agent: curl/7.65.2
-    example_contents: ""
+    contents: ""
 response:
     headers:
         Access-Control-Allow-Credentials:

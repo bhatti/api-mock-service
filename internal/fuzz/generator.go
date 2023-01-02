@@ -49,10 +49,16 @@ func GenerateFuzzData(val any) any {
 			return RandNumMinMax(0, 10000)
 		} else if strVal == IntPrefixRegex {
 			return RandNumMinMax(-100, 10000)
-		} else if strings.Contains(strVal, WildRegex) {
-			return RandSentence(1, 3)
 		} else if strings.HasPrefix(strVal, "__") || strings.HasPrefix(strVal, "(") {
 			return RandRegex(strVal)
+		} else if strings.HasPrefix(strVal, "{{") {
+			if out, err := ParseTemplate("", []byte(strVal), nil); err == nil {
+				return string(out)
+			}
+			return RandSentence(1, 3)
+		} else if strings.Contains(strVal, WildRegex) {
+			return RandRegex(strVal)
+			//return RandSentence(1, 3)
 		} else {
 			return strVal
 		}

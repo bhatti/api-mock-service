@@ -25,19 +25,28 @@ const PrefixTypeString = "__string__"
 const PrefixTypeObject = "__object__"
 
 // UintPrefixRegex constant
-const UintPrefixRegex = PrefixTypeNumber + `[0-9]{1,10}`
+const UintPrefixRegex = PrefixTypeNumber + `\d{1,10}`
 
 // IntPrefixRegex constant
-const IntPrefixRegex = PrefixTypeNumber + `[+-]?[0-9]{1,10}`
+const IntPrefixRegex = PrefixTypeNumber + `[+-]?\d{1,10}`
 
 // NumberPrefixRegex constant
-const NumberPrefixRegex = PrefixTypeNumber + `[+-]?(([0-9]{1,10}(\.[0-9]{1,5})?)|(\.[0-9]{1,10}))`
+const NumberPrefixRegex = PrefixTypeNumber + `[+-]?((\d{1,10}(\.\d{1,5})?)|(\.\d{1,10}))`
 
 // BooleanPrefixRegex constant
 const BooleanPrefixRegex = PrefixTypeBoolean + `(false|true)`
 
 // EmailRegex constant
-const EmailRegex = `\w+@\w+.?\w+`
+const EmailRegex = `\w+@\w+\\.\w+`
+
+// EmailRegex2 constant
+const EmailRegex2 = `\w+@\w+.?\w+`
+
+// EmailRegex3 constant
+const EmailRegex3 = `.+@.+\..+`
+
+// EmailRegex4 constant
+const EmailRegex4 = `.+@.+\\..+`
 
 // AnyWordRegex  constant
 const AnyWordRegex = `\w+`
@@ -103,17 +112,17 @@ func UnmarshalArrayOrObject(b []byte) (res any, err error) {
 	if strings.HasPrefix(str, "{") {
 		res = make(map[string]any)
 		if err = json.Unmarshal(b, &res); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("method UnmarshalArrayOrObject failed to unmarshal object due to %w", err)
 		}
 	} else if strings.HasPrefix(str, "[") {
 		res = make([]any, 0)
 		if err = json.Unmarshal(b, &res); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("method UnmarshalArrayOrObject failed to unmarshal array due to %w", err)
 		}
 	} else {
 		res = make(map[string]any)
 		if err = yaml.Unmarshal(b, &res); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("method UnmarshalArrayOrObject failed to unmarshal map due to %w", err)
 		}
 	}
 	return
@@ -345,7 +354,8 @@ func buildFlatRegexKey(prefix string, k string) string {
 
 func addFlatRegexMapValue(res map[string]string, prefix string, k string, v string) {
 	fullKey := buildFlatRegexKey(prefix, k)
-	if strings.Contains(v, `\w`) && strings.Contains(v, `[0-9]`) {
+	if strings.Contains(v, `\w`) && (strings.Contains(v, `\d`) ||
+		strings.Contains(v, `[0-9]`)) {
 		v = WildRegex // mix regex are not supported
 	}
 	old := res[fullKey]
@@ -400,11 +410,11 @@ func addDigits(digits int, fraction int, negative bool, decimal bool,
 		if negative {
 			sb.WriteString(`[+-]?`)
 		}
-		sb.WriteString(fmt.Sprintf(`[0-9]{%d,%d}`, dataTemplate.MinMultiplier*digits, dataTemplate.MaxMultiplier*digits))
-		//sb.WriteString(`[0-9]{5,10}`)
+		sb.WriteString(fmt.Sprintf(`\d{%d,%d}`, dataTemplate.MinMultiplier*digits, dataTemplate.MaxMultiplier*digits))
+		//sb.WriteString(`\d{5,10}`)
 		if decimal {
-			sb.WriteString(fmt.Sprintf(`\.[0-9]{%d,%d}`, dataTemplate.MinMultiplier*fraction, dataTemplate.MaxMultiplier*fraction))
-			//sb.WriteString(`\.[0-9]{3,5}`)
+			sb.WriteString(fmt.Sprintf(`\.\d{%d,%d}`, dataTemplate.MinMultiplier*fraction, dataTemplate.MaxMultiplier*fraction))
+			//sb.WriteString(`\.\d{3,5}`)
 		}
 	}
 }

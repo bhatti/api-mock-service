@@ -6,16 +6,16 @@ import (
 	"testing"
 )
 
-func Test_ShouldCreateChaosRequest(t *testing.T) {
-	require.Equal(t, 1, NewChaosRequest("", 1).ExecutionTimes)
+func Test_ShouldCreateContractRequest(t *testing.T) {
+	require.Equal(t, 1, NewContractRequest("", 1).ExecutionTimes)
 }
 
-func Test_ShouldCreateChaosResponse(t *testing.T) {
-	require.Equal(t, 0, NewChaosResponse().Failed)
+func Test_ShouldCreateContractResponse(t *testing.T) {
+	require.Equal(t, 0, NewContractResponse().Failed)
 }
 
-func Test_ShouldAddChaosResponse(t *testing.T) {
-	res := NewChaosResponse()
+func Test_ShouldAddContractResponse(t *testing.T) {
+	res := NewContractResponse()
 	res.Add("test", nil, nil)
 	require.Equal(t, 1, res.Succeeded)
 	res.Add("test", 1, nil)

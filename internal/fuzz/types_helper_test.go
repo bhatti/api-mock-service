@@ -168,6 +168,12 @@ func Test_ShouldExtractTypesObject(t *testing.T) {
 	require.Equal(t, 4, len(actual))
 }
 
+func Test_ShouldUnmarshalObjectArrays(t *testing.T) {
+	j := "{\"creditCard\":{\"balance\":{\"amount\":{{RandNumMinMax 0 0}},\"currency\":\"{{RandRegex `(USD|CAD|EUR|AUD)`}}\"}}}"
+	_, err := UnmarshalArrayOrObject([]byte(j))
+	require.Error(t, err) // no quotes for {RandNumMinMax 0 0}
+}
+
 func Test_ShouldExtractTypesArray(t *testing.T) {
 	j := `
 [

@@ -147,8 +147,8 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 	return spec, nil
 }
 
-func marshalPropertyValueWithTypes(params []Property, dataTemplate fuzz.DataTemplateRequest) (out string, err error) {
-	matchContents, err := marshalPropertyValue(params, dataTemplate.WithInclude(true))
+func marshalPropertyValueWithTypes(params []Property, dataTemplate fuzz.DataTemplateRequest, stripQuotes bool) (out string, err error) {
+	matchContents, err := marshalPropertyValue(params, dataTemplate.WithInclude(true), stripQuotes)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal params due to %w", err)
 	}
@@ -163,7 +163,7 @@ func marshalPropertyValueWithTypes(params []Property, dataTemplate fuzz.DataTemp
 	return string(j), nil
 }
 
-func marshalPropertyValue(params []Property, dataTemplate fuzz.DataTemplateRequest) (out []byte, err error) {
+func marshalPropertyValue(params []Property, dataTemplate fuzz.DataTemplateRequest, stripQuotes bool) (out []byte, err error) {
 	out = []byte{}
 	arr := propertyValue(params, dataTemplate)
 	if len(arr) > 1 {
@@ -171,10 +171,14 @@ func marshalPropertyValue(params []Property, dataTemplate fuzz.DataTemplateReque
 	} else if len(arr) > 0 {
 		out, err = json.Marshal(arr[0])
 	}
-	return stripQuotes(out), nil
+	if stripQuotes {
+		return stripNumericBooleanQuotes(out), nil
+	}
+	return out, nil
+
 }
 
-func stripQuotes(b []byte) []byte {
+func stripNumericBooleanQuotes(b []byte) []byte {
 	re := regexp.MustCompile(`"{{(RandNumMinMax \d \d|RandStringArrayMinMax \d \d|RandDict|RandBool)}}"`)
 	return []byte(re.ReplaceAllString(string(b), `{{$1}}`))
 }
@@ -206,14 +210,14 @@ func schemaToProperty(
 		matchRequest: matchRequest,
 	}
 	if property.Type == "integer" || property.Type == "float" {
-		property.Min = utils.ToFloat64(schema.Min)
-		property.Max = utils.ToFloat64(schema.Max)
+		property.Min = fuzz.ToFloat64(schema.Min)
+		property.Max = fuzz.ToFloat64(schema.Max)
 	} else if property.Type == "string" {
-		property.Min = utils.ToFloat64(schema.MinLength)
-		property.Max = utils.ToFloat64(schema.MaxLength)
+		property.Min = fuzz.ToFloat64(schema.MinLength)
+		property.Max = fuzz.ToFloat64(schema.MaxLength)
 	} else if property.Type == "array" {
-		property.Min = utils.ToFloat64(schema.MinItems)
-		property.Max = utils.ToFloat64(schema.MaxItems)
+		property.Min = fuzz.ToFloat64(schema.MinItems)
+		property.Max = fuzz.ToFloat64(schema.MaxItems)
 	}
 	if schema.Enum != nil {
 		property.Enum = make([]string, len(schema.Enum))

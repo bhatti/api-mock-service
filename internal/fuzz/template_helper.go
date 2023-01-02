@@ -1,4 +1,4 @@
-package utils
+package fuzz
 
 import (
 	"bytes"
@@ -12,43 +12,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bhatti/api-mock-service/internal/fuzz"
-
 	log "github.com/sirupsen/logrus"
-
-	"github.com/bhatti/api-mock-service/internal/types"
 )
 
 // UnescapeHTML flag
 const UnescapeHTML = "UnescapeHTML"
 
-// MatchScenarioPredicate checks if predicate match
-func MatchScenarioPredicate(matched *types.MockScenarioKeyData, target *types.MockScenarioKeyData, requestCount uint64) bool {
-	if matched.Predicate == "" {
-		return true
-	}
-	// Find any params for query params and path variables
-	params := matched.MatchGroups(target.Path)
-	for k, v := range matched.MatchQueryParams {
-		params[k] = v
-	}
-	for k, v := range target.MatchQueryParams {
-		params[k] = v
-	}
-	params[types.RequestCount] = fmt.Sprintf("%d", requestCount)
-	out, err := ParseTemplate("", []byte(matched.Predicate), params)
-	log.WithFields(log.Fields{
-		"Path":          matched.Path,
-		"Name":          matched.Name,
-		"Method":        matched.Method,
-		"RequestCount":  requestCount,
-		"Timestamp":     matched.LastUsageTime,
-		"MatchedOutput": string(out),
-		"Error":         err,
-	}).Debugf("matching predicate...")
+// RequestCount name
+const RequestCount = "_RequestCount"
 
-	return err != nil || string(out) == "true"
-}
+// MockDataExt extension
+const MockDataExt = ".dat"
 
 // ParseTemplate parses GO template with dynamic parameters
 func ParseTemplate(dir string, byteBody []byte, data any) ([]byte, error) {
@@ -67,6 +41,12 @@ func ParseTemplate(dir string, byteBody []byte, data any) ([]byte, error) {
 	var out bytes.Buffer
 	err = t.Execute(&out, data)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"Error": err,
+			"Dir":   dir,
+			"Body":  string(byteBody),
+			"Data":  data,
+		}).Warnf("failed to execute template")
 		return nil, fmt.Errorf("failed to execute template due to '%s', data=%v",
 			err, data)
 	}
@@ -117,97 +97,97 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return template.HTML(s)
 		},
 		"RandNumMinMax": func(min any, max any) int {
-			return fuzz.RandNumMinMax(toInt(min), toInt(max))
+			return RandNumMinMax(toInt(min), toInt(max))
 		},
 		"RandNumMax": func(max any) int {
-			return fuzz.Random(toInt(max))
+			return Random(toInt(max))
 		},
 		"RandWord": func(min, max any) string {
-			return fuzz.RandWord(toInt(min), toInt(max))
+			return RandWord(toInt(min), toInt(max))
 		},
 		"RandSentence": func(min, max any) string {
-			return fuzz.RandSentence(toInt(min), toInt(max))
+			return RandSentence(toInt(min), toInt(max))
 		},
 		"RandParagraph": func(min, max any) string {
-			return fuzz.RandParagraph(toInt(min), toInt(max))
+			return RandParagraph(toInt(min), toInt(max))
 		},
 		"UUID": func() string {
-			return fuzz.UUID()
+			return UUID()
 		},
 		"SeededUUID": func(seed any) string {
-			return fuzz.SeededUUID(toInt64(seed))
+			return SeededUUID(toInt64(seed))
 		},
 		"RandCity": func() string {
-			return fuzz.RandCity()
+			return RandCity()
 		},
 		"SeededCity": func(seed any) string {
-			return fuzz.SeededCity(toInt64(seed))
+			return SeededCity(toInt64(seed))
 		},
 		"RandBool": func() bool {
-			return fuzz.RandBool()
+			return RandBool()
 		},
 		"SeededBool": func(seed any) bool {
-			return fuzz.SeededBool(toInt64(seed))
+			return SeededBool(toInt64(seed))
 		},
 		"RandCountry": func() string {
-			return fuzz.RandCountry()
+			return RandCountry()
 		},
 		"SeededCountry": func(seed any) string {
-			return fuzz.SeededCountry(toInt64(seed))
+			return SeededCountry(toInt64(seed))
 		},
 		"RandCountryCode": func() string {
-			return fuzz.RandCountryCode()
+			return RandCountryCode()
 		},
 		"SeededCountryCode": func(seed any) string {
-			return fuzz.SeededCountryCode(toInt64(seed))
+			return SeededCountryCode(toInt64(seed))
 		},
 		"RandName": func() string {
-			return fuzz.RandName()
+			return RandName()
 		},
 		"SeededName": func(seed any) string {
-			return fuzz.SeededName(toInt64(seed))
+			return SeededName(toInt64(seed))
 		},
 		"RandString": func(max any) string {
-			return fuzz.RandString(toInt(max))
+			return RandString(toInt(max))
 		},
 		"RandStringMinMax": func(min any, max any) string {
-			return fuzz.RandStringMinMax(toInt(min), toInt(max))
+			return RandStringMinMax(toInt(min), toInt(max))
 		},
 		"RandStringArrayMinMax": func(min any, max any) template.HTML {
-			arr := fuzz.RandStringArrayMinMax(toInt(min), toInt(max))
+			arr := RandStringArrayMinMax(toInt(min), toInt(max))
 			for i := range arr {
 				arr[i] = fmt.Sprintf(`"%s"`, arr[i])
 			}
 			return template.HTML("[" + strings.Join(arr, ",") + "]")
 		},
 		"RandIntArrayMinMax": func(min any, max any) []int {
-			return fuzz.RandIntArrayMinMax(toInt(min), toInt(max))
+			return RandIntArrayMinMax(toInt(min), toInt(max))
 		},
 		"RandRegex": func(re string) string {
-			return fuzz.RandRegex(re)
+			return RandRegex(re)
 		},
 		"RandPhone": func() string {
-			return fuzz.RandPhone()
+			return RandPhone()
 		},
 		"RandEmail": func() string {
-			return fuzz.RandEmail()
+			return RandEmail()
 		},
 		"RandHost": func() string {
-			return fuzz.RandHost()
+			return RandHost()
 		},
 		"RandURL": func() string {
-			return fuzz.RandURL()
+			return RandURL()
 		},
 		"RandDict": func() template.HTML {
 			dict := make(map[string]any)
-			for i := 0; i < fuzz.RandNumMinMax(3, 6); i += 2 {
-				key := fuzz.RandName()
+			for i := 0; i < RandNumMinMax(3, 6); i += 2 {
+				key := RandName()
 				if i == 0 {
-					dict[key] = fuzz.RandTriString(".")
+					dict[key] = RandTriString(".")
 				} else if i == 2 {
-					dict[key] = fuzz.RandBool()
+					dict[key] = RandBool()
 				} else {
-					dict[key] = fuzz.RandNumMinMax(100, 5000)
+					dict[key] = RandNumMinMax(100, 5000)
 				}
 			}
 			j, _ := json.Marshal(dict)
@@ -250,43 +230,43 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return reqCount >= 0 && reqCount%toInt(n) == 0
 		},
 		"JSONFileProperty": func(fileName string, name string) template.HTML {
-			return toJSON(fileProperty(dir, fileName+types.MockDataExt, name))
+			return toJSON(fileProperty(dir, fileName+MockDataExt, name))
 		},
 		"YAMLFileProperty": func(fileName string, name string) template.HTML {
-			return toYAML(fileProperty(dir, fileName+types.MockDataExt, name))
+			return toYAML(fileProperty(dir, fileName+MockDataExt, name))
 		},
 		"FileProperty": func(fileName string, name string) any {
-			return fileProperty(dir, fileName+types.MockDataExt, name)
+			return fileProperty(dir, fileName+MockDataExt, name)
 		},
 		"RandFileLine": func(fileName string) template.HTML {
-			return randFileLine(dir, fileName+types.MockDataExt, 0)
+			return randFileLine(dir, fileName+MockDataExt, 0)
 		},
 		"SeededFileLine": func(fileName string, seed any) template.HTML {
-			return randFileLine(dir, fileName+types.MockDataExt, toInt64(seed))
+			return randFileLine(dir, fileName+MockDataExt, toInt64(seed))
 		},
 		"VariableEquals": func(varName string, target any) bool {
-			return fuzz.VariableEquals(varName, data, target)
+			return VariableEquals(varName, data, target)
 		},
 		"VariableContains": func(varName string, target any) bool {
-			return fuzz.VariableContains(varName, target, data)
+			return VariableContains(varName, target, data)
 		},
 		"VariableEQ": func(varName string, size any) bool {
-			return fuzz.VariableNumber(varName, data) == ToFloat64(size)
+			return VariableNumber(varName, data) == ToFloat64(size)
 		},
 		"VariableLE": func(varName string, size any) bool {
-			return fuzz.VariableNumber(varName, data) <= ToFloat64(size)
+			return VariableNumber(varName, data) <= ToFloat64(size)
 		},
 		"VariableGE": func(varName string, size any) bool {
-			return fuzz.VariableNumber(varName, data) >= ToFloat64(size)
+			return VariableNumber(varName, data) >= ToFloat64(size)
 		},
 		"VariableSizeEQ": func(varName string, size any) bool {
-			return fuzz.VariableSize(varName, data) == toInt(size)
+			return VariableSize(varName, data) == toInt(size)
 		},
 		"VariableSizeLE": func(varName string, size any) bool {
-			return fuzz.VariableSize(varName, data) <= toInt(size)
+			return VariableSize(varName, data) <= toInt(size)
 		},
 		"VariableSizeGE": func(varName string, size any) bool {
-			return fuzz.VariableSize(varName, data) >= toInt(size)
+			return VariableSize(varName, data) >= toInt(size)
 		},
 		"Date": func() string {
 			return time.Now().Format("2006-01-02")
@@ -298,10 +278,10 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return time.Now().Format(format)
 		},
 		"EnumString": func(str ...any) string {
-			return fuzz.EnumString(str...)
+			return EnumString(str...)
 		},
 		"EnumInt": func(vals ...any) int64 {
-			return fuzz.EnumInt(vals...)
+			return EnumInt(vals...)
 		},
 	}
 }
@@ -312,14 +292,14 @@ func parseRequestCount(data any) int {
 	switch data.(type) {
 	case map[string]string:
 		params := data.(map[string]string)
-		count := params[types.RequestCount]
+		count := params[RequestCount]
 		if count == "" {
 			return -1
 		}
 		return toInt(count)
 	case map[string]any:
 		params := data.(map[string]any)
-		count := params[types.RequestCount]
+		count := params[RequestCount]
 		if count == nil {
 			return -1
 		}
@@ -347,7 +327,7 @@ func toYAML(val any) template.HTML {
 
 func fileProperty(dir string, fileName string, name string) any {
 	if validFileName(fileName) {
-		return fuzz.FileProperty(filepath.Join(dir, fileName), name)
+		return FileProperty(filepath.Join(dir, fileName), name)
 	}
 	return fmt.Sprintf("invalid file-name '%s'", fileName)
 }
@@ -355,7 +335,7 @@ func fileProperty(dir string, fileName string, name string) any {
 func randFileLine(dir string, fileName string, seed int64) template.HTML {
 	var line string
 	if validFileName(fileName) {
-		line = fuzz.SeededFileLine(filepath.Join(dir, fileName), seed)
+		line = SeededFileLine(filepath.Join(dir, fileName), seed)
 	} else {
 		line = fmt.Sprintf("invalid file-name '%s'", fileName)
 	}

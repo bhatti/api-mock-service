@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
@@ -260,7 +261,7 @@ func (sr *FileMockScenarioRepository) Lookup(
 	}
 	addQueryParams(matched[0].MatchQueryParams, data)
 	addQueryParams(target.MatchQueryParams, data)
-	data[types.RequestCount] = fmt.Sprintf("%d", reqCount)
+	data[fuzz.RequestCount] = fmt.Sprintf("%d", reqCount)
 
 	scenario, err = unmarshalMockScenario(b, dir, data)
 	if err != nil {
@@ -277,7 +278,7 @@ func unmarshalMockScenario(
 	dir string,
 	params any) (scenario *types.MockScenario, err error) {
 	// parse template
-	b, err = utils.ParseTemplate(dir, b, params)
+	b, err = fuzz.ParseTemplate(dir, b, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template due to %w", err)
 	}

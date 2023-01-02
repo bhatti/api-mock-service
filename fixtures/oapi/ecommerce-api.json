@@ -618,7 +618,7 @@
           {
             "name": "email",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "maxLength": 36,
               "minLength": 0,
@@ -1074,6 +1074,7 @@
           },
           "currency": {
             "type": "string",
+            "pattern": "(USD|CAD|EUR|AUD)",
             "example": "USD"
           }
         }
@@ -1085,6 +1086,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "name": {
@@ -1120,6 +1122,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "customerId": {
@@ -1138,11 +1141,11 @@
           "cardNumber": {
             "maxLength": 20,
             "minLength": 10,
-            "pattern": "[\\d-]{10,20}",
+            "pattern": "\\d{4}-\\d{4}-\\d{4}",
             "type": "string"
           },
           "expiration": {
-            "pattern": "\\d{2}.\\d{4}",
+            "pattern": "\\d{2}/\\d{4}",
             "type": "string"
           },
           "balance": {
@@ -1159,6 +1162,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "customerId": {
@@ -1190,6 +1194,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "description": {
@@ -1226,6 +1231,7 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "name": {
@@ -1259,11 +1265,13 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "streetAddress": {
             "maxLength": 70,
             "minLength": 2,
+            "pattern": "\\w+",
             "type": "string"
           },
           "city": {
@@ -1274,7 +1282,7 @@
           "zipCode": {
             "maxLength": 12,
             "minLength": 2,
-            "pattern": "\\d{5}.?\\d{0,4}",
+            "pattern": "\\d{5}",
             "type": "string"
           },
           "countryCode": {
@@ -1297,16 +1305,19 @@
         "type": "object",
         "properties": {
           "id": {
+            "format": "uuid",
             "type": "string"
           },
           "firstName": {
             "maxLength": 50,
             "minLength": 2,
+            "pattern": "\\w",
             "type": "string"
           },
           "lastName": {
             "maxLength": 50,
             "minLength": 2,
+            "pattern": "\\w",
             "type": "string"
           },
           "email": {
@@ -1314,7 +1325,7 @@
             "type": "string"
           },
           "phone": {
-            "pattern": "[\\-\\d]{9,15}",
+            "pattern": "1-\\d{3}-\\d{3}-\\d{4}",
             "type": "string"
           },
           "creditCard": {

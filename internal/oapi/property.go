@@ -67,19 +67,25 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 		}
 	} else if prop.Type == "string" {
 		if dataTemplate.IncludeType {
-			if prop.Regex != "" {
-				return map[string]string{
-					prop.Name: fuzz.PrefixTypeString + prop.Regex,
-				}
-			} else if prop.Format != "" {
+			if prop.Format != "" {
 				if strings.Contains(prop.Format, "date") || strings.Contains(prop.Format, "time") {
 					return `(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))`
 				} else if prop.Format == "uri" {
-					return `http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
+					return `http[s]?://(?:[a-zA-Z]|\d|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
 				} else if prop.Format == "host" {
 					return `(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?`
+				} else if prop.Format == "email" {
+					return "[a-z]{5,15}@[a-z]{5,15}.com"
+				} else if prop.Format == "phone" {
+					return `1-\d{3}-\d{4}-\d{4}`
+				} else if prop.Format == "uuid" {
+					return `[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`
 				} else {
 					return `\w+`
+				}
+			} else if prop.Regex != "" {
+				return map[string]string{
+					prop.Name: fuzz.PrefixTypeString + prop.Regex,
 				}
 			} else if len(prop.Enum) > 0 {
 				var sb strings.Builder
@@ -226,6 +232,8 @@ func (prop *Property) stringValue() string {
 			return "{{RandPhone}}"
 		} else if prop.Format == "uri" {
 			return "{{RandURL}}"
+		} else if prop.Format == "uuid" {
+			return "{{UUID}}"
 		} else {
 			return "{{RandString 20}}"
 		}
@@ -331,6 +339,9 @@ func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 }
 
 func (prop *Property) buildValueArray() []any {
+	if prop.Min == 0 {
+		prop.Min = 1
+	}
 	if prop.Max == 0 {
 		prop.Max = prop.Min + float64(fuzz.RandNumMinMax(1, 10))
 	}

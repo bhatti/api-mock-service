@@ -1,4 +1,4 @@
-package chaos
+package contract
 
 import (
 	"bytes"
@@ -43,39 +43,39 @@ func (x *Executor) Execute(
 	ctx context.Context,
 	scenarioKey *types.MockScenarioKeyData,
 	dataTemplate fuzz.DataTemplateRequest,
-	chaosReq types.ChaosRequest,
-) *types.ChaosResponse {
+	contractReq types.ContractRequest,
+) *types.ContractResponse {
 	started := time.Now()
-	metrics := metrics.NewMetrics()
-	metrics.RegisterHistogram(scenarioKey.SafeName())
-	res := types.NewChaosResponse()
+	sli := metrics.NewMetrics()
+	sli.RegisterHistogram(scenarioKey.SafeName())
+	res := types.NewContractResponse()
 	log.WithFields(log.Fields{
-		"Component":    "Tester",
-		"Scenario":     scenarioKey,
-		"ChaosRequest": chaosReq,
+		"Component":       "Tester",
+		"Scenario":        scenarioKey,
+		"ContractRequest": contractReq,
 	}).Infof("execute BEGIN")
 
-	for i := 0; i < chaosReq.ExecutionTimes; i++ {
-		scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
+	for i := 0; i < contractReq.ExecutionTimes; i++ {
+		scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides)
 		if err != nil {
 			res.Add(scenarioKey.Name, nil, err)
-			res.Metrics = metrics.Summary()
+			res.Metrics = sli.Summary()
 			return res
 		}
-		url := chaosReq.BaseURL + scenario.Path
-		resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq, metrics)
+		url := contractReq.BaseURL + scenario.Path
+		resContents, err := x.execute(ctx, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
 		res.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
-	res.Metrics = metrics.Summary()
+	res.Metrics = sli.Summary()
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
-		"Component":    "Tester",
-		"Scenario":     scenarioKey,
-		"ChaosRequest": chaosReq,
-		"Elapsed":      elapsed,
-		"Errors":       len(res.Errors),
-		"Metrics":      res.Metrics,
+		"Component":       "Tester",
+		"Scenario":        scenarioKey,
+		"ContractRequest": contractReq,
+		"Elapsed":         elapsed,
+		"Errors":          len(res.Errors),
+		"Metrics":         res.Metrics,
 	}).Infof("execute COMPLETED")
 	return res
 }
@@ -85,53 +85,53 @@ func (x *Executor) ExecuteByGroup(
 	ctx context.Context,
 	group string,
 	dataTemplate fuzz.DataTemplateRequest,
-	chaosReq types.ChaosRequest,
-) *types.ChaosResponse {
+	contractReq types.ContractRequest,
+) *types.ContractResponse {
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
-	res := types.NewChaosResponse()
+	res := types.NewContractResponse()
 	log.WithFields(log.Fields{
-		"Component":    "Tester",
-		"Group":        group,
-		"ChaosRequest": chaosReq,
-		"Request":      chaosReq,
-		"ScenarioKeys": scenarioKeys,
+		"Component":       "Tester",
+		"Group":           group,
+		"ContractRequest": contractReq,
+		"Request":         contractReq,
+		"ScenarioKeys":    scenarioKeys,
 	}).Infof("execute-by-group BEGIN")
 
 	sort.Slice(scenarioKeys, func(i, j int) bool {
 		return scenarioKeys[i].Order < scenarioKeys[j].Order
 	})
-	metrics := metrics.NewMetrics()
+	sli := metrics.NewMetrics()
 	for _, scenarioKey := range scenarioKeys {
-		metrics.RegisterHistogram(scenarioKey.SafeName())
+		sli.RegisterHistogram(scenarioKey.SafeName())
 	}
 
-	for i := 0; i < chaosReq.ExecutionTimes; i++ {
+	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioKey := range scenarioKeys {
-			scenario, err := x.scenarioRepository.Lookup(scenarioKey, chaosReq.Overrides)
+			scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides)
 			if err != nil {
 				res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
-				res.Metrics = metrics.Summary()
+				res.Metrics = sli.Summary()
 				return res
 			}
-			url := chaosReq.BaseURL + scenario.Path
-			resContents, err := x.execute(ctx, url, scenario, chaosReq.Overrides, dataTemplate, chaosReq, metrics)
+			url := contractReq.BaseURL + scenario.Path
+			resContents, err := x.execute(ctx, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
 			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
 	}
 
 	elapsed := time.Since(started).String()
-	res.Metrics = metrics.Summary()
+	res.Metrics = sli.Summary()
 	log.WithFields(log.Fields{
-		"Component":    "Tester",
-		"Group":        group,
-		"ChaosRequest": chaosReq,
-		"Elapsed":      elapsed,
-		"Errors":       len(res.Errors),
-		"Request":      chaosReq,
-		"ScenarioKeys": scenarioKeys,
-		"Metrics":      res.Metrics,
+		"Component":       "Tester",
+		"Group":           group,
+		"ContractRequest": contractReq,
+		"Elapsed":         elapsed,
+		"Errors":          len(res.Errors),
+		"Request":         contractReq,
+		"ScenarioKeys":    scenarioKeys,
+		"Metrics":         res.Metrics,
 	}).Infof("execute-by-group COMPLETED")
 	return res
 }
@@ -143,7 +143,7 @@ func (x *Executor) execute(
 	scenario *types.MockScenario,
 	overrides map[string]any,
 	dataTemplate fuzz.DataTemplateRequest,
-	chaosRequest types.ChaosRequest,
+	contractRequest types.ContractRequest,
 	metrics *metrics.Metrics,
 ) (res any, err error) {
 	started := time.Now().UnixMilli()
@@ -186,7 +186,7 @@ func (x *Executor) execute(
 		return nil, err
 	}
 
-	if chaosRequest.Verbose {
+	if contractRequest.Verbose {
 		log.WithFields(log.Fields{
 			"Component":  "Tester",
 			"URL":        url,
@@ -237,7 +237,7 @@ func (x *Executor) execute(
 
 	for _, assertion := range scenario.Response.Assertions {
 		assertion = normalizeAssertion(assertion)
-		b, err := utils.ParseTemplate("", []byte(assertion), templateParams)
+		b, err := fuzz.ParseTemplate("", []byte(assertion), templateParams)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse assertion %s due to %w", assertion, err)
 		}
@@ -311,7 +311,7 @@ func updateTemplateParams(
 	resBytes []byte,
 	resHeaders map[string][]string,
 	statusCode int) (any, error) {
-	templateParams[types.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
+	templateParams[fuzz.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
 	contents, err := fuzz.UnmarshalArrayOrObject(resBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response for %s due to %w", scenario.Name, err)
@@ -332,8 +332,8 @@ func buildRequestBody(
 	scenario *types.MockScenario,
 ) (string, io.ReadCloser) {
 	var contents string
-	if scenario.Request.ExampleContents != "" {
-		contents = scenario.Request.ExampleContents
+	if scenario.Request.Contents != "" {
+		contents = scenario.Request.Contents
 	} else if scenario.Request.MatchContents != "" {
 		contents = scenario.Request.MatchContents
 	}
@@ -375,7 +375,7 @@ func buildTemplateParams(
 			templateParams[parts[0]] = parts[1]
 		}
 	}
-	for k, v := range scenario.Request.ExamplePathParams {
+	for k, v := range scenario.Request.PathParams {
 		templateParams[k] = v
 		queryParams[k] = v
 	}
@@ -383,7 +383,7 @@ func buildTemplateParams(
 		templateParams[k] = regexValue(v)
 		queryParams[k] = regexValue(v)
 	}
-	for k, v := range scenario.Request.ExampleQueryParams {
+	for k, v := range scenario.Request.QueryParams {
 		templateParams[k] = v
 		queryParams[k] = v
 	}
@@ -391,7 +391,7 @@ func buildTemplateParams(
 		templateParams[k] = regexValue(v)
 		reqHeaders[k] = []string{regexValue(v)}
 	}
-	for k, v := range scenario.Request.ExampleHeaders {
+	for k, v := range scenario.Request.Headers {
 		templateParams[k] = v
 		reqHeaders[k] = []string{v}
 	}

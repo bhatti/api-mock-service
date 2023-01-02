@@ -9,11 +9,11 @@ request:
     match_query_params: {}
     match_headers: {}
     match_contents: '{"category":"(BOOKS|MUSIC|TOYS)","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
-    example_path_params: {}
-    example_query_params: {}
-    example_headers:
+    path_params: {}
+    query_params: {}
+    headers:
         "Content-Type": "application/json"
-    example_contents: |
+    contents: |
         category: {{EnumString `BOOKS MUSIC TOYS`}}
         id: {{UUID}}
         inventory: {{RandNumMinMax 5 500}}

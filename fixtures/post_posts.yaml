@@ -8,14 +8,14 @@ request:
     match_headers:
         Content-Type: application/x-www-form-urlencoded
     match_contents: '{"body":"||string||\\w+ \\w+ \\w+ \\w+ \\w+","id":"||number||[+-]?[0-9]{5,10}","title":"||string||\\w+ \\w+","userId":"||number||[+-]?[0-9]{5,10}"}'
-    example_path_params: {}
-    example_query_params: {}
-    example_headers:
+    path_params: {}
+    query_params: {}
+    headers:
         Accept: '*/*'
         Content-Length: "88"
         Content-Type: application/x-www-form-urlencoded
         User-Agent: curl/7.65.2
-    example_contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
+    contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
 response:
     headers:
         Content-Type:

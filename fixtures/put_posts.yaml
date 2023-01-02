@@ -8,12 +8,12 @@ request:
     match_headers:
         Content-Type: application/x-www-form-urlencoded
     match_contents: '{"body":"(__string__\\w+)","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    example_headers:
+    headers:
         Accept: '*/*'
         Content-Length: "88"
         Content-Type: application/x-www-form-urlencoded
         User-Agent: curl/7.65.2
-    example_contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
+    contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
 response:
     headers:
         Access-Control-Allow-Credentials:

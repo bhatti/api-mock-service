@@ -1,6 +1,6 @@
 definitions:
-  ChaosRequest:
-    description: ChaosRequest for generating random requests to an API
+  ContractRequest:
+    description: ContractRequest for generating random requests to an API
     properties:
       base_url:
         type: string
@@ -14,18 +14,29 @@ definitions:
         x-go-name: Verbose
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
-  ChaosResponse:
-    description: ChaosResponse for response of chaos request
+  ContractResponse:
+    description: ContractResponse for response of contract request
     properties:
       errors:
-        items:
+        additionalProperties:
           type: string
-        type: array
+        type: object
         x-go-name: Errors
       failed:
         format: int64
         type: integer
         x-go-name: Failed
+      metrics:
+        additionalProperties:
+          format: double
+          type: number
+        type: object
+        x-go-name: Metrics
+      results:
+        additionalProperties:
+          type: string
+        type: object
+        x-go-name: Results
       succeeded:
         format: int64
         type: integer
@@ -47,28 +58,20 @@ definitions:
   MockHTTPRequest:
     description: MockHTTPRequest defines mock request for APIs
     properties:
+      contents:
+        description: Contents for request optionally
+        type: string
+        x-go-name: Contents
       example_contents:
         description: ExampleContents sample for request optionally
         type: string
         x-go-name: ExampleContents
-      example_headers:
+      headers:
         additionalProperties:
           type: string
-        description: ExampleHeaders for mock response
+        description: Headers for mock response
         type: object
-        x-go-name: ExampleHeaders
-      example_path_params:
-        additionalProperties:
-          type: string
-        description: ExamplePathParams sample for the API
-        type: object
-        x-go-name: ExamplePathParams
-      example_query_params:
-        additionalProperties:
-          type: string
-        description: ExampleQueryParams sample for the API
-        type: object
-        x-go-name: ExampleQueryParams
+        x-go-name: Headers
       match_contents:
         description: MatchContents for request optionally
         type: string
@@ -85,10 +88,22 @@ definitions:
         description: MatchQueryParams for the API
         type: object
         x-go-name: MatchQueryParams
+      path_params:
+        additionalProperties:
+          type: string
+        description: PathParams sample for the API
+        type: object
+        x-go-name: PathParams
+      query_params:
+        additionalProperties:
+          type: string
+        description: QueryParams sample for the API
+        type: object
+        x-go-name: QueryParams
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
   MockHTTPResponse:
-    description: MockHTTPResponse defines mock respons for APIs
+    description: MockHTTPResponse defines mock response for APIs
     properties:
       assertions:
         description: Assertions for validating response
@@ -104,6 +119,10 @@ definitions:
         description: ContentsFile for request
         type: string
         x-go-name: ContentsFile
+      example_contents:
+        description: ExampleContents sample for response optionally
+        type: string
+        x-go-name: ExampleContents
       headers:
         additionalProperties:
           items:
@@ -122,6 +141,12 @@ definitions:
         description: MatchHeaders for mock response
         type: object
         x-go-name: MatchHeaders
+      pipe_properties:
+        description: PipeProperties to extract properties from response
+        items:
+          type: string
+        type: array
+        x-go-name: PipeProperties
       status_code:
         description: StatusCode for response
         format: int64
@@ -146,6 +171,11 @@ definitions:
         description: Name to uniquely identify the scenario
         type: string
         x-go-name: Name
+      order:
+        description: Order of scenario
+        format: int64
+        type: integer
+        x-go-name: Order
       path:
         description: Path for the API (excluding query params)
         type: string
@@ -199,6 +229,11 @@ definitions:
         description: Name to uniquely identify the scenario
         type: string
         x-go-name: Name
+      order:
+        description: Order of scenario
+        format: int64
+        type: integer
+        x-go-name: Order
       path:
         description: Path for the API (excluding query params)
         type: string
@@ -210,34 +245,34 @@ definitions:
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
 paths:
-  /_chaos/{group}:
+  /_contracts/{group}:
     post:
-      description: Plays chaos client for a scenario by group
-      operationId: PostMockChaosGroupScenario
+      description: Plays contract client for a scenario by group
+      operationId: PostMockContractGroupScenario
       parameters:
       - in: body
         name: Body
         schema:
-          $ref: '#/definitions/ChaosRequest'
+          $ref: '#/definitions/ContractRequest'
       responses:
         "200":
-          $ref: '#/responses/mockScenarioChaosResponse'
+          $ref: '#/responses/mockScenarioContractResponse'
       tags:
-      - chaos
-  /_chaos/{method}/{name}/{path}:
+      - contract
+  /_contracts/{method}/{name}/{path}:
     post:
-      description: Plays chaos client for a scenario by name
-      operationId: PostMockChaosScenario
+      description: Plays contract client for a scenario by name
+      operationId: PostMockContractScenario
       parameters:
       - in: body
         name: Body
         schema:
-          $ref: '#/definitions/ChaosRequest'
+          $ref: '#/definitions/ContractRequest'
       responses:
         "200":
-          $ref: '#/responses/mockScenarioChaosResponse'
+          $ref: '#/responses/mockScenarioContractResponse'
       tags:
-      - chaos
+      - contract
   /_fixtures/{method}/{name}/{path}:
     delete:
       operationId: GetMockFixture
@@ -564,10 +599,10 @@ responses:
       items:
         type: string
       type: array
-  mockScenarioChaosResponse:
+  mockScenarioContractResponse:
     description: MockScenario body for update
     schema:
-      $ref: '#/definitions/ChaosResponse'
+      $ref: '#/definitions/ContractResponse'
   mockScenarioOAPIResponse:
     description: MockScenario body for update
     schema:

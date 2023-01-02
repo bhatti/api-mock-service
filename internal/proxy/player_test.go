@@ -1,7 +1,10 @@
 package proxy
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"os"
@@ -227,6 +230,48 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
+	// GIVEN a mock scenario loaded from YAML
+	b, err := os.ReadFile("../../fixtures/get_customer.yaml")
+	require.NoError(t, err)
+
+	// AND a mock scenario repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	player := NewPlayer(scenarioRepository, fixtureRepository)
+
+	b, err = fuzz.ParseTemplate("../../fixtures", b, map[string]any{"id": "123"})
+	require.NoError(t, err)
+	scenario := types.MockScenario{}
+	// AND it should return valid mock scenario
+	err = yaml.Unmarshal(b, &scenario)
+	require.NoError(t, err)
+	// AND a set of mock scenarios
+	require.NoError(t, scenarioRepository.Save(&scenario))
+	u, err := url.Parse("http://localhost/customers/123")
+	// WHEN looking up non-existing API
+	ctx := web.NewStubContext(
+		&http.Request{
+			Method: "GET",
+			URL:    u,
+			Header: http.Header{
+				types.ContentTypeHeader: []string{"application/json"},
+			},
+		},
+	)
+	// THEN it should not find it
+	err = player.Handle(ctx)
+	require.NoError(t, err)
+
+	b = ctx.Result.([]byte)
+	obj := make(map[string]any)
+	err = json.Unmarshal(b, &obj)
+	require.NoError(t, err)
+	require.Contains(t, obj["email"], "@")
 }
 
 func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {

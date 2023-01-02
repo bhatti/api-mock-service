@@ -9,11 +9,11 @@ request:
     match_query_params: {}
     match_headers: {}
     match_contents: '{}'
-    example_path_params: {}
-    example_query_params:
+    path_params: {}
+    query_params:
         category: '[\x20-\x7F]{1,128}'
-    example_headers: {}
-    example_contents: ""
+    headers: {}
+    contents: ""
 response:
     headers: {}
     contents: '{"errors":["{{RandSentence 5 10}}"]}'

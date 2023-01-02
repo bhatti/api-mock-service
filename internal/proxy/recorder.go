@@ -117,12 +117,12 @@ func saveMockResponse(
 		Path:   u.Path,
 		Group:  utils.NormalizeGroup("", u.Path),
 		Request: types.MockHTTPRequest{
-			MatchQueryParams:   make(map[string]string),
-			MatchHeaders:       map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
-			MatchContents:      matchReqContents,
-			ExampleQueryParams: make(map[string]string),
-			ExampleHeaders:     make(map[string]string),
-			ExampleContents:    string(reqBody),
+			MatchQueryParams: make(map[string]string),
+			MatchHeaders:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
+			MatchContents:    matchReqContents,
+			QueryParams:      make(map[string]string),
+			Headers:          make(map[string]string),
+			Contents:         string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
 			Headers:       resHeaders,
@@ -134,7 +134,7 @@ func saveMockResponse(
 
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
-			scenario.Request.ExampleQueryParams[k] = v[0]
+			scenario.Request.QueryParams[k] = v[0]
 			if config.MatchQueryParams(k) {
 				scenario.Request.MatchQueryParams[k] = v[0]
 			}
@@ -142,7 +142,7 @@ func saveMockResponse(
 	}
 	for k, v := range req.Header {
 		if len(v) > 0 {
-			scenario.Request.ExampleHeaders[k] = v[0]
+			scenario.Request.Headers[k] = v[0]
 			if config.MatchHeader(k) {
 				scenario.Request.MatchHeaders[k] = v[0]
 			}

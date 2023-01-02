@@ -1,0 +1,215 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Get Customers Ecommerce API",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://github.com/bhatti/api-mock-service"
+    },
+    "version": "0.1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/customers": {
+      "get": {
+        "tags": [
+          "customer-controller"
+        ],
+        "operationId": "getCustomerByEmail",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "format": "email",
+            "schema": {
+              "maxLength": 36,
+              "minLength": 0,
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Customer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorMessage": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "logRef": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "MonetaryAmount": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 99.96
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          }
+        }
+      },
+      "CreditCard": {
+        "required": [
+          "cardNumber",
+          "customerId",
+          "expiration"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "customerId": {
+            "maxLength": 36,
+            "minLength": 30,
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "VISA",
+              "MASTERCARD",
+              "AMEX"
+            ]
+          },
+          "cardNumber": {
+            "maxLength": 20,
+            "minLength": 10,
+            "pattern": "[\\d-]{10,20}",
+            "type": "string"
+          },
+          "expiration": {
+            "pattern": "\\d{2}.\\d{4}",
+            "type": "string"
+          },
+          "balance": {
+            "$ref": "#/components/schemas/MonetaryAmount"
+          }
+        }
+      },
+      "Address": {
+        "required": [
+          "city",
+          "streetAddress",
+          "zipCode"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "streetAddress": {
+            "maxLength": 70,
+            "minLength": 2,
+            "type": "string"
+          },
+          "city": {
+            "maxLength": 60,
+            "minLength": 2,
+            "type": "string"
+          },
+          "zipCode": {
+            "maxLength": 12,
+            "minLength": 2,
+            "pattern": "\\d{5}.?\\d{0,4}",
+            "type": "string"
+          },
+          "countryCode": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ]
+          }
+        }
+      },
+      "Customer": {
+        "required": [
+          "address",
+          "creditCard",
+          "firstName",
+          "lastName",
+          "phone"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "maxLength": 50,
+            "minLength": 2,
+            "type": "string"
+          },
+          "lastName": {
+            "maxLength": 50,
+            "minLength": 2,
+            "type": "string"
+          },
+          "email": {
+            "pattern": ".+@.+\\..+",
+            "type": "string"
+          },
+          "phone": {
+            "pattern": "[\\-\\d]{9,15}",
+            "type": "string"
+          },
+          "creditCard": {
+            "$ref": "#/components/schemas/CreditCard"
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "basicScheme": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  }
+}

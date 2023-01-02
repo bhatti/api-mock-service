@@ -8,11 +8,11 @@ request:
     match_headers:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/10
         x-api-key: '[\x20-\x7F]{1,32}'
-    example_headers:
+    headers:
         x-api-key: '[\x20-\x7F]{1,32}'
-    example_query_params:
+    query_params:
         group: '[a-zA-Z]{5,10}'
-    example_path_params:
+    path_params:
         id: '[0-9]{4,10}'
     match_content_type: ""
     match_contents: ""

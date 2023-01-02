@@ -4341,11 +4341,11 @@ paths:
               - disabled: false
                 email: example@example.com
                 id: 1234
-                username: example_subuser
+                username: subuser
               - disabled: false
                 email: example2@example.com
                 id: 1234
-                username: example_subuser2
+                username: subuser2
         '401':
           description: Unexpected error in API call. See HTTP response body for details.
           schema:
@@ -4404,7 +4404,7 @@ paths:
             $ref: '#/definitions/subuser_post'
           examples:
             application/json:
-              username: example_subuser
+              username: subuser
               user_id: 1234
               email: example@example.com
               signup_session_token: ''
@@ -4563,9 +4563,9 @@ paths:
                 - username
           examples:
             application/json:
-              - username: example_subuser
+              - username: subuser
                 reputation: 99
-              - username: example_subuser2
+              - username: subuser2
                 reputation: 95.2
       security:
         - Authorization: []
@@ -17795,7 +17795,7 @@ paths:
             required:
               - name
             example:
-              name: example_name
+              name: name
               generation: dynamic
         - $ref: '#/parameters/trait:onBehalfOfSubuser:on-behalf-of'
       responses:
@@ -17806,7 +17806,7 @@ paths:
           examples:
             application/json:
               id: 733ba07f-ead1-41fc-933a-3976baa23716
-              name: example_name
+              name: name
               generation: legacy
               versions: []
       security:
@@ -17858,7 +17858,7 @@ paths:
             application/json:
               result:
                 - id: fae7c985-eb92-4b47-9987-28ec29dbc698
-                  name: example_name
+                  name: name
                   generation: legacy
                   'updated_at ': '2020-11-12 12:00:09'
                   versions: []
@@ -17906,7 +17906,7 @@ paths:
                 description: The name for the new transactional template.
                 maxLength: 100
             example:
-              name: example_name
+              name: name
         - $ref: '#/parameters/trait:onBehalfOfSubuser:on-behalf-of'
       responses:
         '201':
@@ -17916,7 +17916,7 @@ paths:
           examples:
             application/json:
               id: 733ba07f-ead1-41fc-933a-3976baa2371
-              name: example_name
+              name: name
               generation: dynamic
               'updated_at ': '2019-03-13T11:52:41.009Z'
               versions: []
@@ -17964,7 +17964,7 @@ paths:
                 description: The name of the transactional template.
                 maxLength: 100
             example:
-              name: new_example_name
+              name: new_name
         - $ref: '#/parameters/trait:onBehalfOfSubuser:on-behalf-of'
       responses:
         '200':
@@ -17974,7 +17974,7 @@ paths:
           examples:
             application/json:
               id: 733ba07f-ead1-41fc-933a-3976baa23716
-              name: new_example_name
+              name: new_name
               versions: []
       security:
         - Authorization: []
@@ -18013,7 +18013,7 @@ paths:
             $ref: '#/definitions/transactional_template_version_create'
             example:
               active: 1
-              name: example_version_name
+              name: version_name
               html_content: <HTML body content>
               plain_content: Plain text content
               generate_plain_content: false
@@ -18030,7 +18030,7 @@ paths:
               id: 8aefe0ee-f12b-4575-b5b7-c97e21cb36f3
               template_id: ddb96bbc-9b92-425e-8979-99464621b543
               active: 1
-              name: example_version_name
+              name: version_name
               html_content: <%body%>
               plain_content: <%body%>
               generate_plain_content: true
@@ -18071,7 +18071,7 @@ paths:
               id: 8aefe0ee-f12b-4575-b5b7-c97e21cb36f3
               template_id: ddb96bbc-9b92-425e-8979-99464621b543
               active: 1
-              name: example_version_name
+              name: version_name
               html_content: <%body%>
               plain_content: <%body%>
               generate_plain_content: true
@@ -18112,7 +18112,7 @@ paths:
               id: 8aefe0ee-f12b-4575-b5b7-c97e21cb36f3
               template_id: ddb96bbc-9b92-425e-8979-99464621b543
               active: 1
-              name: example_version_name
+              name: version_name
               html_content: <%body%>
               plain_content: <%body%>
               generate_plain_content: true
@@ -18134,7 +18134,7 @@ paths:
             $ref: '#/definitions/transactional_template_version_create'
             example:
               active: 1
-              name: updated_example_name
+              name: updated_name
               html_content: <%body%>
               plain_content: <%body%>
               subject: <%subject%>
@@ -18149,7 +18149,7 @@ paths:
               id: 8aefe0ee-f12b-4575-b5b7-c97e21cb36f3
               template_id: ddb96bbc-9b92-425e-8979-99464621b543
               active: 1
-              name: example_version_name
+              name: version_name
               html_content: <%body%>
               plain_content: <%body%>
               generate_plain_content: true
@@ -23545,7 +23545,7 @@ definitions:
       disabled: false
       email: example@example.com
       id: 1234
-      username: example_subuser
+      username: subuser
   mail_settings_address_whitelabel:
     title: 'Mail Settings: Address Whitelabel'
     type: object
@@ -24223,7 +24223,7 @@ definitions:
             $ref: '#/definitions/transactional-template-warning'
     example:
       id: 33feeff2-5069-43fe-8853-428651e5be79
-      name: example_name
+      name: name
       'updated_at ': '2021-04-28 13:12:46'
       warning:
         message: Sample warning message
@@ -24708,7 +24708,7 @@ definitions:
       - user_id
       - email
     example:
-      username: example_subuser
+      username: subuser
       user_id: 1234
       email: example@example.com
       signup_session_token: ''
@@ -25019,7 +25019,7 @@ definitions:
       - 'updated_at '
     example:
       id: 0c314114-a2b7-4523-8cbc-a293d7d19007
-      name: example_name
+      name: name
       generation: legacy
       'updated_at ': '2021-04-28 13:12:46'
       versions: []

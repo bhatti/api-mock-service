@@ -5,10 +5,10 @@ order: 1
 group: user_group
 predicate: ""
 request:
-    example_path_params: {}
-    example_headers:
+    path_params: {}
+    headers:
         Content-Type: application/json
-    example_contents: '{"Directory": "{{.Directory}}", "Username": "{{.Username}}"}'
+    contents: '{"Directory": "{{.Directory}}", "Username": "{{.Username}}"}'
 response:
     headers:
         Connection:

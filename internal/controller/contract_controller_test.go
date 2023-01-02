@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/chaos"
+	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -20,39 +20,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_InitializeSwaggerStructsForMockChaosScenarioController(t *testing.T) {
-	_ = mockScenarioChaosCreateParams{}
-	_ = mockScenarioChaosResponseBody{}
+func Test_InitializeSwaggerStructsForMockContractScenarioController(t *testing.T) {
+	_ = mockScenarioContractCreateParams{}
+	_ = mockScenarioContractResponseBody{}
 }
 
-func Test_ShouldFailPostChaosScenarioWithoutMethod(t *testing.T) {
+func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("test")))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.PostMockChaosScenario(ctx)
+	err = ctrl.PostMockContractScenario(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid method")
 }
 
-func Test_ShouldFailPostChaosScenarioWithoutName(t *testing.T) {
+func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("test")))
 	ctx := web.NewStubContext(&http.Request{
@@ -66,20 +66,20 @@ func Test_ShouldFailPostChaosScenarioWithoutName(t *testing.T) {
 	ctx.Params["method"] = "POST"
 
 	// WHEN creating mock scenario with without method
-	err = ctrl.PostMockChaosScenario(ctx)
+	err = ctrl.PostMockContractScenario(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scenario name")
 }
 
-func Test_ShouldFailPostChaosScenarioWithoutPath(t *testing.T) {
+func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("test")))
 	ctx := web.NewStubContext(&http.Request{
@@ -94,12 +94,12 @@ func Test_ShouldFailPostChaosScenarioWithoutPath(t *testing.T) {
 	ctx.Params["name"] = "name"
 
 	// WHEN creating mock scenario with without method
-	err = ctrl.PostMockChaosScenario(ctx)
+	err = ctrl.PostMockContractScenario(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "path not specified")
 }
 
-func Test_ShouldFailPostChaosScenarioWithoutBaseURL(t *testing.T) {
+func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
@@ -117,13 +117,13 @@ func Test_ShouldFailPostChaosScenarioWithoutBaseURL(t *testing.T) {
 }
 `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("{}")))
-	u, err := url.Parse("http://localhost:8080/_chaos/GET/todo-get/todos/10")
+	u, err := url.Parse("http://localhost:8080/_contracts/GET/todo-get/todos/10")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Body:   reader,
@@ -139,14 +139,14 @@ func Test_ShouldFailPostChaosScenarioWithoutBaseURL(t *testing.T) {
 	ctx.Params["path"] = "/todos/10"
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.PostMockChaosScenario(ctx)
+	err = ctrl.PostMockContractScenario(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "baseURL is not specified")
 }
 
-func Test_ShouldPostChaosScenarioWithoutGroup(t *testing.T) {
+func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
@@ -157,16 +157,16 @@ func Test_ShouldPostChaosScenarioWithoutGroup(t *testing.T) {
 	client := web.NewStubHTTPClient()
 	todo := ` { } `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
-	chaosReq := types.NewChaosRequest("https://localhost", 1)
-	data, err := json.Marshal(chaosReq)
+	contractReq := types.NewContractRequest("https://localhost", 1)
+	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
-	u, err := url.Parse("http://localhost:8080/_chaos/GET/todo-get/todos/10")
+	u, err := url.Parse("http://localhost:8080/_contracts/GET/todo-get/todos/10")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Body:   reader,
@@ -180,13 +180,13 @@ func Test_ShouldPostChaosScenarioWithoutGroup(t *testing.T) {
 	ctx.Params["group"] = ""
 
 	// WHEN creating mock scenario without group
-	err = ctrl.PostMockChaosGroupScenario(ctx)
+	err = ctrl.PostMockContractGroupScenario(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
 }
 
-func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
+func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
@@ -204,16 +204,16 @@ func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
 }
 `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
-	chaosReq := types.NewChaosRequest("https://localhost", 1)
-	data, err := json.Marshal(chaosReq)
+	contractReq := types.NewContractRequest("https://localhost", 1)
+	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
-	u, err := url.Parse("http://localhost:8080/_chaos/GET/todo-get/todos/10")
+	u, err := url.Parse("http://localhost:8080/_contracts/GET/todo-get/todos/10")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Body:   reader,
@@ -227,15 +227,15 @@ func Test_ShouldPostChaosScenarioWithGroup(t *testing.T) {
 	ctx.Params["group"] = "/todos/10"
 
 	// WHEN creating mock scenario with group
-	err = ctrl.PostMockChaosGroupScenario(ctx)
+	err = ctrl.PostMockContractGroupScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(*types.ChaosResponse)
+	res := ctx.Result.(*types.ContractResponse)
 	require.Equal(t, 0, len(res.Errors))
 }
 
-func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
+func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
@@ -256,16 +256,16 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 }
 `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := chaos.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockChaosController(executor, webServer)
+	ctrl := NewContractController(executor, webServer)
 
-	chaosReq := types.NewChaosRequest("https://localhost", 1)
-	data, err := json.Marshal(chaosReq)
+	contractReq := types.NewContractRequest("https://localhost", 1)
+	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
-	u, err := url.Parse("http://localhost:8080/_chaos/GET/todo-get/todos/10")
+	u, err := url.Parse("http://localhost:8080/_contracts/GET/todo-get/todos/10")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
 		Body:   reader,
@@ -285,11 +285,11 @@ func Test_ShouldPostChaosScenarioWithMethodNamePath(t *testing.T) {
 	ctx.Params["id"] = "10"
 
 	// WHEN creating mock scenario with method, name and path
-	err = ctrl.PostMockChaosScenario(ctx)
+	err = ctrl.PostMockContractScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(*types.ChaosResponse)
+	res := ctx.Result.(*types.ContractResponse)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}

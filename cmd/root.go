@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/chaos"
+	"github.com/bhatti/api-mock-service/internal/contract"
 	"os"
 	"strconv"
 	"strings"
@@ -91,12 +91,12 @@ func RunServer(_ *cobra.Command, args []string) {
 		fmt.Printf("⇨ http proxy started on \x1b[32m[::]:%d\033[0m\n", serverConfig.ProxyPort)
 		adapter := web.NewWebServerAdapter()
 		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
-		executor := chaos.NewExecutor(scenarioRepo, httpClient)
+		executor := contract.NewExecutor(scenarioRepo, httpClient)
 		_ = controller.NewMockOAPIController(scenarioRepo, adapter)
 		_ = controller.NewMockScenarioController(scenarioRepo, adapter)
 		_ = controller.NewMockFixtureController(fixturesRepo, adapter)
 		_ = controller.NewMockProxyController(recorder, adapter)
-		_ = controller.NewMockChaosController(executor, adapter)
+		_ = controller.NewContractController(executor, adapter)
 		log.Fatal(proxy.NewProxyHandler(serverConfig, scenarioRepo, fixturesRepo, adapter).Start())
 	}()
 
@@ -167,12 +167,12 @@ func buildControllers(
 ) (err error) {
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 	player := proxy.NewPlayer(scenarioRepo, fixtureRepo)
-	executor := chaos.NewExecutor(scenarioRepo, httpClient)
+	executor := contract.NewExecutor(scenarioRepo, httpClient)
 	_ = controller.NewMockOAPIController(scenarioRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, webServer)
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
 	_ = controller.NewMockProxyController(recorder, webServer)
-	_ = controller.NewMockChaosController(executor, webServer)
+	_ = controller.NewContractController(executor, webServer)
 	_ = controller.NewRootController(player, webServer)
 	if serverConfig.AssetDir != "" {
 		webServer.Static(serverConfig.AssetDir)

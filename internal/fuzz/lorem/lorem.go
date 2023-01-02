@@ -101,7 +101,9 @@ func Sentence(min, max int) string {
 
 	}
 
-	ws[0] = strings.Title(ws[0])
+	if len(ws) > 0 {
+		ws[0] = strings.Title(ws[0])
+	}
 	sentence := strings.Join(ws, " ") + "."
 	return sentence
 }

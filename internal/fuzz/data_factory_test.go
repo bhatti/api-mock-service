@@ -1,7 +1,9 @@
 package fuzz
 
 import (
+	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -77,8 +79,44 @@ func Test_ShouldGetRandIntMinMax(t *testing.T) {
 	require.True(t, RandNumMinMax(-10, -1) < 0)
 }
 
-func Test_ShouldGetxAny(t *testing.T) {
+func Test_ShouldGetAsciiAny(t *testing.T) {
 	require.True(t, RandRegex(`[\x20-\x7F]{1,40}`) != "")
+}
+
+func Test_ShouldBuildRandRegexWords(t *testing.T) {
+	str := RandRegex(`\w`)
+	require.Equal(t, 0, countSpaces(str))
+	str = RandRegex(`\w+`)
+	require.True(t, countSpaces(str) >= 4)
+	str = RandRegex(`\\w`)
+	require.Equal(t, 0, countSpaces(str))
+	str = RandRegex(`\\w+`)
+	require.True(t, countSpaces(str) >= 4)
+
+	str = RandRegex(`\w{3,4}`)
+	require.True(t, countSpaces(str) >= 2, str)
+	str = RandRegex(`\w{3}`)
+	require.Equal(t, 2, countSpaces(str), str)
+	str = RandRegex(`\w{2,2`)
+	require.Equal(t, 1, countSpaces(str), str)
+}
+
+func Test_ShouldBuildRandRegexDigits(t *testing.T) {
+	num, _ := strconv.Atoi(RandRegex(`\d`))
+	require.True(t, num >= 0 && num <= 9)
+	num, _ = strconv.Atoi(RandRegex(`\d+`))
+	require.True(t, num >= 0)
+	num, _ = strconv.Atoi(RandRegex(`\\d`))
+	require.True(t, num >= 0 && num <= 9)
+	num, _ = strconv.Atoi(RandRegex(`\\d+`))
+	require.True(t, num >= 0)
+
+	num, _ = strconv.Atoi(RandRegex(`\d{3,4}`))
+	require.True(t, num >= 1 && num <= 9999, fmt.Sprintf("%d", num))
+	num, _ = strconv.Atoi(RandRegex(`\d{3}`))
+	require.True(t, num >= 1 && num <= 999, fmt.Sprintf("%d", num))
+	num, _ = strconv.Atoi(RandRegex(`\d{3`))
+	require.True(t, num >= 1 && num <= 999, fmt.Sprintf("%d", num))
 }
 
 func Test_ShouldGetRandRegex(t *testing.T) {
@@ -129,4 +167,15 @@ func Test_ShouldGenerateSentence(t *testing.T) {
 
 func Test_ShouldGenerateParagraph(t *testing.T) {
 	require.True(t, RandParagraph(1, 10) != "")
+}
+
+func countSpaces(str string) int {
+	count := 0
+	for _, ch := range str {
+		if ch == ' ' {
+			count++
+		}
+
+	}
+	return count
 }

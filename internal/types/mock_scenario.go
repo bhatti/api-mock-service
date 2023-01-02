@@ -37,14 +37,8 @@ const MockResponseStatus = "X-Mock-Response-Status"
 // MockWaitBeforeReply header
 const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 
-// MockDataExt extension
-const MockDataExt = ".dat"
-
 // ScenarioExt extension
 const ScenarioExt = ".scr"
-
-// RequestCount name
-const RequestCount = "_RequestCount"
 
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
@@ -54,17 +48,19 @@ type MockHTTPRequest struct {
 	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
 	// MatchContents for request optionally
 	MatchContents string `yaml:"match_contents" json:"match_contents"`
-	// ExamplePathParams sample for the API
-	ExamplePathParams map[string]string `yaml:"example_path_params" json:"example_path_params"`
-	// ExampleQueryParams sample for the API
-	ExampleQueryParams map[string]string `yaml:"example_query_params" json:"example_query_params"`
-	// ExampleHeaders for mock response
-	ExampleHeaders map[string]string `yaml:"example_headers" json:"example_headers"`
+	// PathParams sample for the API
+	PathParams map[string]string `yaml:"path_params" json:"path_params"`
+	// QueryParams sample for the API
+	QueryParams map[string]string `yaml:"query_params" json:"query_params"`
+	// Headers for mock response
+	Headers map[string]string `yaml:"headers" json:"headers"`
+	// Contents for request optionally
+	Contents string `yaml:"contents" json:"contents"`
 	// ExampleContents sample for request optionally
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 }
 
-// MockHTTPResponse defines mock respons for APIs
+// MockHTTPResponse defines mock response for APIs
 type MockHTTPResponse struct {
 	// Headers for mock response
 	Headers map[string][]string `yaml:"headers" json:"headers"`
@@ -72,6 +68,8 @@ type MockHTTPResponse struct {
 	Contents string `yaml:"contents" json:"contents"`
 	// ContentsFile for request
 	ContentsFile string `yaml:"contents_file" json:"contents_file"`
+	// ExampleContents sample for response optionally
+	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 	// StatusCode for response
 	StatusCode int `yaml:"status_code" json:"status_code"`
 	// MatchHeaders for mock response

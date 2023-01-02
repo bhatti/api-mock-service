@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -47,8 +48,8 @@ func (cr *FileMockFixtureRepository) GetFixtureNames(
 
 	for _, file := range files {
 		name := file.Name()
-		if strings.HasSuffix(name, types.MockDataExt) {
-			trimSize := len(name) - len(types.MockDataExt)
+		if strings.HasSuffix(name, fuzz.MockDataExt) {
+			trimSize := len(name) - len(fuzz.MockDataExt)
 			names = append(names, name[0:trimSize])
 		}
 	}
@@ -83,7 +84,7 @@ func (cr *FileMockFixtureRepository) buildFileName(
 	method types.MethodType,
 	scenarioName string,
 	path string) string {
-	return buildFileName(cr.dir, method, scenarioName, path) + types.MockDataExt
+	return buildFileName(cr.dir, method, scenarioName, path) + fuzz.MockDataExt
 }
 
 func (cr *FileMockFixtureRepository) buildDir(

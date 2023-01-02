@@ -1,4 +1,4 @@
-package chaos
+package contract
 
 import (
 	"context"
@@ -24,11 +24,11 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), &types.MockScenarioKeyData{}, dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), &types.MockScenarioKeyData{}, dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -50,7 +50,7 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	chaosReq := types.NewChaosRequest(baseURL, 1)
+	contractReq := types.NewContractRequest(baseURL, 1)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("POST", baseURL+"/users", web.NewStubHTTPResponse(200,
 		`{"User": {"Directory": "my_dir", "Username": "my_user@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
@@ -62,7 +62,7 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	executor := NewExecutor(repo, client)
 	// THEN it should execute saved scenario
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	res := executor.ExecuteByGroup(context.Background(), "user_group", dataTemplate, chaosReq)
+	res := executor.ExecuteByGroup(context.Background(), "user_group", dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -84,11 +84,11 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -106,12 +106,12 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -127,19 +127,19 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
 	require.NoError(t, err)
 	// AND a bad assertion
-	scenario.Request.ExampleHeaders["Authorization"] = "AWS4-HMAC-SHA256"
+	scenario.Request.Headers["Authorization"] = "AWS4-HMAC-SHA256"
 	scenario.Response.Assertions = append(scenario.Response.Assertions, "VariableContains headers.Content-Type application/xjson")
 	err = repo.Save(scenario)
 	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -168,13 +168,13 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 
 	// WHEN executing scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	// THEN it should not execute saved scenario
 	for _, err := range res.Errors {
 		t.Log(err)
@@ -198,12 +198,12 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -226,11 +226,11 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest(baseURL, 1)
+	contractReq := types.NewContractRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -260,11 +260,11 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest(baseURL, 1)
+	contractReq := types.NewContractRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -287,11 +287,11 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest(baseURL, 1)
+	contractReq := types.NewContractRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, chaosReq)
+	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -309,7 +309,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
-	chaosReq := types.NewChaosRequest(baseURL, 5)
+	contractReq := types.NewContractRequest(baseURL, 5)
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)
 
@@ -323,12 +323,12 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	// AND valid template for random data
 	// AND mock web client
 	client, data := buildJobsTestClient("AC1234567890", "BAD")
-	chaosReq.Overrides = data
-	chaosReq.Verbose = true
+	contractReq.Overrides = data
+	contractReq.Verbose = true
 	// AND executor
 	executor := NewExecutor(repo, client)
 	// WHEN executing scenario
-	res := executor.ExecuteByGroup(context.Background(), "v1_jobs", dataTemplate, chaosReq)
+	res := executor.ExecuteByGroup(context.Background(), "v1_jobs", dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 		// THEN it should fail to execute
@@ -346,14 +346,14 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	chaosReq := types.NewChaosRequest(baseURL, 5)
+	contractReq := types.NewContractRequest(baseURL, 5)
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)
 
 	// AND mock web client
 	client, data := buildJobsTestClient("AC1234567890", "RUNNING")
-	chaosReq.Verbose = true
-	chaosReq.Overrides = data
+	contractReq.Verbose = true
+	contractReq.Overrides = data
 	// AND executor
 	executor := NewExecutor(repo, client)
 	for i, spec := range specs {
@@ -367,7 +367,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 		require.NoError(t, err)
 		// WHEN executing scenario
-		res := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, chaosReq)
+		res := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, contractReq)
 		for _, err := range res.Errors {
 			t.Log(err)
 		}

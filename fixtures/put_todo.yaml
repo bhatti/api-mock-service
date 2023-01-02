@@ -7,15 +7,15 @@ request:
     match_headers:
         Content-Type: application/x-www-form-urlencoded
     match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    example_path_params: {}
-    example_query_params: {}
-    example_headers:
+    path_params: {}
+    query_params: {}
+    headers:
         Accept: '*/*'
         Content-Length: "75"
         Content-Type: application/x-www-form-urlencoded
         User-Agent: curl/7.65.2
         Mock-Url: https://jsonplaceholder.typicode.com/todos/202
-    example_contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
+    contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 response:
     headers:
         Access-Control-Allow-Credentials:

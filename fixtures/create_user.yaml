@@ -6,10 +6,10 @@ order: 0
 predicate: ""
 request:
     match_query_params: {}
-    example_path_params: {}
-    example_headers:
+    path_params: {}
+    headers:
         Content-Type: application/json
-    example_contents: '{"Directory": "{{RandString 20}}", "Username": "{{RandEmail}}", "DesiredDeliveryMediums": ["EMAIL"]}'
+    contents: '{"Directory": "{{RandString 20}}", "Username": "{{RandEmail}}", "DesiredDeliveryMediums": ["EMAIL"]}'
 response:
     headers:
         Connection:

@@ -1,13 +1,8 @@
-package utils
+package fuzz
 
 import (
 	"encoding/json"
-	"fmt"
-	"gopkg.in/yaml.v3"
-	"os"
 	"testing"
-
-	"github.com/bhatti/api-mock-service/internal/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -46,7 +41,7 @@ func Test_ShouldParsePredicateMismatch(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{GERequest 3}}`)
 	// WHEN parsing template
-	out, err := ParseTemplate("", b, map[string]any{types.RequestCount: 1})
+	out, err := ParseTemplate("", b, map[string]any{RequestCount: 1})
 	// THEN it should not fail
 	require.NoError(t, err)
 	require.Equal(t, "false", string(out))
@@ -56,7 +51,7 @@ func Test_ShouldParsePredicateMatch(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{GERequest 3}}`)
 	// WHEN parsing template
-	out, err := ParseTemplate("", b, map[string]any{types.RequestCount: 3})
+	out, err := ParseTemplate("", b, map[string]any{RequestCount: 3})
 	// THEN it should not fail
 	require.NoError(t, err)
 	require.Equal(t, "true", string(out))
@@ -438,15 +433,6 @@ func Test_ShouldParseRandSeededFileLine(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
-	keyData := &types.MockScenarioKeyData{}
-	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
-	keyData.Predicate = `{{NthRequest 3}}`
-	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
-	require.False(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 2))
-	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 3))
-}
-
 func Test_ShouldParseRandDict(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{RandDict}}`)
@@ -473,7 +459,7 @@ func Test_ShouldParseNthRequestWithData(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{NthRequest 3}}`)
 	// WHEN parsing int
-	_, err := ParseTemplate("../../fixtures", b, map[string]any{types.RequestCount: 1})
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{RequestCount: 1})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -486,7 +472,7 @@ func Test_ShouldParseGERequestWithStringData(t *testing.T) {
 	// THEN it should succeed
 	require.NoError(t, err)
 	// WHEN parsing int
-	_, err = ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
+	_, err = ParseTemplate("../../fixtures", b, map[string]string{RequestCount: "1"})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -495,7 +481,7 @@ func Test_ShouldParseGERequestWithData(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{GERequest 3}}`)
 	// WHEN parsing int
-	_, err := ParseTemplate("../../fixtures", b, map[string]any{types.RequestCount: 1})
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{RequestCount: 1})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -504,7 +490,7 @@ func Test_ShouldParseLTRequestWithStringData(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{LTRequest 3}}`)
 	// WHEN parsing int
-	_, err := ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
+	_, err := ParseTemplate("../../fixtures", b, map[string]string{RequestCount: "1"})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -513,7 +499,7 @@ func Test_ShouldParseLTRequestWithData(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{LTRequest 3}}`)
 	// WHEN parsing int
-	_, err := ParseTemplate("../../fixtures", b, map[string]any{types.RequestCount: 1})
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{RequestCount: 1})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -549,7 +535,7 @@ func Test_ShouldParseNthRequestWithStringData(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{NthRequest 3}}`)
 	// WHEN parsing int
-	_, err := ParseTemplate("../../fixtures", b, map[string]string{types.RequestCount: "1"})
+	_, err := ParseTemplate("../../fixtures", b, map[string]string{RequestCount: "1"})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
@@ -612,105 +598,6 @@ func Test_ShouldParseExpression(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-}
-
-func Test_ShouldParseScenarioTemplate(t *testing.T) {
-	scenarioFiles := []string{
-		"../../fixtures/scenario1.yaml",
-		"../../fixtures/scenario2.yaml",
-		"../../fixtures/scenario3.yaml",
-		"../../fixtures/account.yaml",
-	}
-	for _, scenarioFile := range scenarioFiles {
-		// GIVEN a mock scenario loaded from YAML
-		b, err := os.ReadFile(scenarioFile)
-		require.NoError(t, err)
-
-		// WHEN parsing YAML for contents tag
-		body, err := ParseTemplate("../../fixtures", b,
-			map[string]any{"ETag": "abc", "Page": 1, "PageSize": 10, "Nonce": 1, "SleepSecs": 5})
-
-		// THEN it should not fail
-		require.NoError(t, err)
-		scenario := types.MockScenario{}
-		// AND it should return valid mock scenario
-		err = yaml.Unmarshal(body, &scenario)
-		if err != nil {
-			t.Logf("faile parsing %s\n%s\n", scenarioFile, body)
-		}
-		require.NoError(t, err)
-		// AND it should have expected contents
-
-		require.Contains(t, scenario.Response.Headers["ETag"], "abc")
-		require.Contains(t, scenario.Response.ContentType(), "application/json",
-			fmt.Sprintf("%v in %s", scenario.Response.Headers, scenarioFile))
-	}
-}
-
-func Test_ShouldParseCustomerStripeTemplate(t *testing.T) {
-	// GIVEN a mock scenario loaded from YAML
-	b, err := os.ReadFile("../../fixtures/stripe-customer.yaml")
-	require.NoError(t, err)
-
-	// WHEN parsing YAML for contents tag
-	body, err := ParseTemplate("../../fixtures", b,
-		map[string]any{"ETag": "abc", "Page": 1, "PageSize": 10, "Nonce": 1, "SleepSecs": 5})
-
-	// THEN it should not fail
-	require.NoError(t, err)
-	scenario := types.MockScenario{}
-	// AND it should return valid mock scenario
-	err = yaml.Unmarshal(body, &scenario)
-	require.NoError(t, err)
-	// AND it should have expected contents
-
-	require.Equal(t, "Bearer sk_test_[0-9a-fA-F]{10}$", scenario.Request.MatchHeaders["Authorization"])
-	require.Contains(t, scenario.Response.ContentType(), "application/json")
-}
-
-func Test_ShouldParseCommentsTemplate(t *testing.T) {
-	// GIVEN a mock scenario loaded from YAML
-	b, err := os.ReadFile("../../fixtures/list_comments.yaml")
-	require.NoError(t, err)
-
-	// WHEN parsing YAML for contents tag
-	body, err := ParseTemplate("../../fixtures", b, map[string]any{})
-
-	// THEN it should not fail
-	require.NoError(t, err)
-	scenario := types.MockScenario{}
-	// AND it should return valid mock scenario
-	err = yaml.Unmarshal(body, &scenario)
-	require.NoError(t, err)
-	// AND it should have expected contents
-	require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
-	require.Contains(t, scenario.Response.ContentType(), "application/json")
-}
-
-func Test_ShouldParseDevicesTemplate(t *testing.T) {
-	// GIVEN a mock scenario loaded from YAML
-	b, err := os.ReadFile("../../fixtures/devices.yaml")
-	require.NoError(t, err)
-
-	for i := 0; i < 100; i++ {
-		// WHEN parsing YAML for contents tag
-		body, err := ParseTemplate("../../fixtures", b,
-			map[string]any{"ETag": "abc", "page": i, "pageSize": 5, types.RequestCount: i})
-
-		// THEN it should not fail
-		require.NoError(t, err)
-		scenario := types.MockScenario{}
-		// AND it should return valid mock scenario
-		err = yaml.Unmarshal(body, &scenario)
-		require.NoError(t, err)
-		// AND it should have expected contents
-		if i%10 == 0 {
-			require.True(t, scenario.Response.StatusCode == 500 || scenario.Response.StatusCode == 501)
-		} else {
-			require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
-		}
-		require.Contains(t, scenario.Response.ContentType(), "application/json")
-	}
 }
 
 func Test_ShouldParseArrayVariableSizeEQTrue(t *testing.T) {

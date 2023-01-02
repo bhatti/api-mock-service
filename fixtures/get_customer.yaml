@@ -1,0 +1,55 @@
+method: GET
+name: get-customer
+path: /customers/{{.id}}
+description: ""
+order: 1
+group: customers
+predicate: ""
+request:
+    match_query_params: {}
+    match_headers: {}
+    match_contents: '{}'
+    path_params:
+        id: \w+
+    query_params: {}
+    headers: 
+      Content-Type: application/json
+    contents: ""
+    example_contents: ""
+response:
+    headers: {}
+    contents: '{"address":{"city":"{{RandStringMinMax 2 60}}","countryCode":"{{EnumString `US CA`}}","id":"{{UUID}}","streetAddress":"{{RandRegex `\\w+`}}","zipCode":"{{RandRegex `\\d{5}`}}"},"creditCard":{"balance":{"amount":{{RandNumMinMax 0 0}},"currency":"{{RandRegex `(USD|CAD|EUR|AUD)`}}"},"cardNumber":"{{RandRegex `\\d{4}-\\d{4}-\\d{4}`}}","customerId":"{{RandStringMinMax 30 36}}","expiration":"{{RandRegex `\\d{2}/\\d{4}`}}","id":"{{UUID}}","type":"{{EnumString `VISA MASTERCARD AMEX`}}"},"email":"{{RandRegex `.+@.+\\..+`}}","firstName":"{{RandRegex `\\w`}}","id":"{{UUID}}","lastName":"{{RandRegex `\\w`}}","phone":"{{RandRegex `1-\\d{3}-\\d{3}-\\d{4}`}}"}'
+    contents_file: ""
+    example_contents: |
+        address:
+            city: uuIzmddg8
+            countryCode: CA
+            id: 55f7e7fc-d86f-4946-9c25-02903524f0dc
+            streetAddress: Agam lux aut pretium ponendi fui nollem proprios�
+            zipCode: "15127"
+        creditCard:
+            balance:
+                amount: "59953"
+                currency: EUR
+            cardNumber: 1655-3333-4727
+            customerId: jTJ5IrpwnZrqLpqqi8bqmYV03nAMMDKUO
+            expiration: 61/2222
+            id: a2ccee1c-6fac-4b52-905e-3431644ab39a
+            type: MASTERCARD
+        email: linda.nominum@mirabilia.io
+        firstName: ponamus
+        id: 0839f546-b846-45f0-b08b-5ed589534d06
+        lastName: intime
+        phone: 1-832-2222-2240
+    status_code: 200
+    match_headers: {}
+    match_contents: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5})","creditCard.balance.amount":"(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10})))","creditCard.balance.currency":"(__string__(USD|CAD|EUR|AUD))","creditCard.cardNumber":"(__string__\\d{4}-\\d{4}-\\d{4})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}/\\d{4})","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w)","lastName":"(__string__\\w)","phone":"(__string__1-\\d{3}-\\d{3}-\\d{4})"}'
+    pipe_properties: 
+      - id
+      - email
+    assertions: 
+      - VariableContains contents.email @
+      - VariableContains contents.creditCard.type A
+      - VariableContains headers.Content-Type application/json
+      - VariableEQ status 200
+wait_before_reply: 0s

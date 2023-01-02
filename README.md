@@ -1,10 +1,10 @@
 # api-mock-service
 
-## Mocking Distributed Micro services and Fuzz testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
+## Mocking Distributed Micro services and Contract/Fuzz testing with Record/Play, Templates, OpenAPI Specifications and Stochastic test client
 
 ### Problems with Testing
 
-Testing methodologies such as unit-testing, integration-testing, functional-testing, chaos testing/game days, etc. are a key part of software development lifecycle for
+Testing methodologies such as unit-testing, integration-testing, functional-testing, chaos/contract testing/game days, etc. are a key part of software development lifecycle for
 building reliable and robust software systems. However, these testing methodologies pose several problems such as:
 - Tests require regular maintenance same as the code, however tests often don't receive the same attention and code rot is common with the tests. This makes the tests brittle that often break with the changes and tests become difficult to understand.
 - The size of tests also pose a challenge as the code grows, which further adds development cost of syncing tests with the code updates.
@@ -15,7 +15,7 @@ building reliable and robust software systems. However, these testing methodolog
 
 ### Facilitate testing with the api-mock-service
 
-The api-mock-service helps with the integration/functional/chaos testing by mocking dependent services and injecting failures in the implementation. 
+The api-mock-service helps with the integration/functional/contract/chaos testing by mocking dependent services and injecting failures in the implementation. 
 It allows testing both the server side and client side code with the property-based/generative/fuzzing/stochastic testing techniques.
 The property-based/generative techniques reduce the size of test suites by automatically generating test input data using fuzz-data generators.
 
@@ -62,8 +62,8 @@ API mock service for REST/HTTP based services with following features:
 - Define a collection of helper methods to generate different kind of random data such as UDID, dates, URI, Regex, text and numeric data.
 - Ability to playback all test scenarios or a specific scenario and change API behavior dynamically with different input parameters.
 - Support multiple mock scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
-- Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/chaos testing.
-- Generate client requests for a remote API for chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
+- Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/contract/chaos testing.
+- Generate client requests for a remote API for contract, chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
 - Create a playground for testing APIs interactively so that users can learn the APIs quickly.
 - Support contract based testing from both consumer and producer sides.
 - Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input to next test scenarios.
@@ -103,8 +103,8 @@ Usage:
   api-mock-service [command]
 
 Available Commands:
-  chaos       Executes chaos client
   completion  Generate the autocompletion script for the specified shell
+  contract    Executes contract client
   help        Help about any command
   version     Version will output the current build information
 
@@ -115,6 +115,8 @@ Flags:
   -h, --help              help for api-mock-service
       --httpPort int      HTTP port to listen
       --proxyPort int     Proxy port to listen
+
+Use "api-mock-service [command] --help" for more information about a command.
 ```
 
 ## API Docs
@@ -167,14 +169,14 @@ request:
   match_headers:
     Content-Type: ""
   match_contents: '{}'
-  example_path_params: {}
-  example_query_params: {}
-  example_headers:
+  path_params: {}
+  query_params: {}
+  headers:
     Accept: '*/*'
     Authorization: Bearer sk_test_xxx
     User-Agent: curl/7.65.2
     X-Mock-Url: https://api.stripe.com/v1/customers/cus_/cash_balance
-  example_contents: ""  
+  contents: ""  
 response:
   headers:
     Access-Control-Allow-Credentials:
@@ -246,9 +248,9 @@ The matching request parameters will be used to select the mock scenario to exec
 e.g. above example will be matched if content-type is `application/json` and it will validate that name query parameter is alphanumeric from 1-50 size.
 
 
-### Example Request Parameters:
+### Request Parameters:
 
-The example request parameters show the contents captured from the record/play so that you can use and customize to define matching parameters.
+The request parameters show the contents captured from the record/play so that you can use and customize to define matching parameters.
 
 - URL Query Parameters
 - URL Request Headers
@@ -912,10 +914,10 @@ request:
     match_query_params: {}
     match_headers: {}
     match_contents: '{}'
-    example_path_params: {}
-    example_query_params: {}
-    example_headers: {}
-    example_contents: ""
+    path_params: {}
+    query_params: {}
+    headers: {}
+    contents: ""
 response:
     headers: {}
     contents: |>
@@ -994,8 +996,22 @@ Which will return summary of APIs such as:
 ...  
 ```
 
-## Chaos Testing
-In addition to serving a mock service, you can also use a builtin chaos client to test remote services for stochastic testing
+## Contract Testing
+
+This tool can be used for consumer-driven contract testing by generating stub responses and producer-driven contract testing by generating tests, e.g.
+
+![Open-API for Consumer-driven Contract Testing](images/contract_oai.png)
+
+![User based Consumer-driven Contract Testing](images/contract_user.png)
+
+![Generated tests for Producer-driven Contract Testing](images/contract_producer.png)
+
+![Recording Contracts](images/contract_record.png)
+
+![Playground for Contract Testing](images/contract_playground.png)
+
+## Contract Testing CLI
+In addition to serving a mock service, you can also use a builtin contract client to test remote services for stochastic testing
 by generating random data based on regex or API specifications.
 For example, you may capture a test scenario for a remote API using http proxy such as:
 ```bash
@@ -1018,14 +1034,14 @@ request:
     match_headers:
         Content-Type: application/x-www-form-urlencoded
     match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    example_path_params: {}
-    example_query_params: {}
-    example_headers:
+    path_params: {}
+    query_params: {}
+    headers:
         Accept: '*/*'
         Content-Length: "75"
         Content-Type: application/x-www-form-urlencoded
         User-Agent: curl/7.65.2
-    example_contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
+    contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 response:
     headers:
         Access-Control-Allow-Credentials:
@@ -1093,9 +1109,9 @@ wait_before_reply: 0s
 ```
 
 You can then customize this scenario with additional assertions and you may remove all response contents as they won't be used. Note that
-above scenario is defined with group `todos`. You can then submit a request for chaos testing as follows:
+above scenario is defined with group `todos`. You can then submit a request for contract testing as follows:
 ```bash
-curl -k -v -X POST http://localhost:8080/_chaos/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'
+curl -k -v -X POST http://localhost:8080/_contracts/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'
 ```
 
 Above request will submit 10 requests to the todo server with random data and return response such as:
@@ -1117,12 +1133,12 @@ Above request will submit 10 requests to the todo server with random data and re
 }
 ```
 
-If you have a local captured data, you can also run chaos client with a command line without running mock server, e.g.:
+If you have a local captured data, you can also run contract client with a command line without running mock server, e.g.:
 ```bash
-go run main.go chaos --base_url https://jsonplaceholder.typicode.com --group todos --times 10
+go run main.go contract --base_url https://jsonplaceholder.typicode.com --group todos --times 10
 ```
 
-## Chaining Scenarios for Group Chaos Testing
+## Chaining Scenarios for Group Contract Testing
 A mock scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 
 You can capture or define multiple scenarios for a group and then execute them in a specific order and then pass certain properties 
 from one test to another. For example, following scenario creates a todo item with order 0 and captures `id` and `title` properties:
@@ -1140,7 +1156,7 @@ request:
         x-api-key: '[\x20-\x7F]{1,128}'
         Content-Type: application/x-www-form-urlencoded
     match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    example_path_params:
+    path_params:
         id: '\d{3}'
 response:
     headers:
@@ -1173,11 +1189,11 @@ request:
     match_headers:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/10
         x-api-key: '[\x20-\x7F]{1,32}'
-    example_headers:
+    headers:
         x-api-key: '[\x20-\x7F]{1,32}'
-    example_query_params:
+    query_params:
         group: '[a-zA-Z]{5,10}'
-    example_path_params:
+    path_params:
         id: '[0-9]{4,10}'
     match_content_type: ""
     match_contents: ""
@@ -1202,7 +1218,7 @@ response:
 wait_before_reply: 1s
 ```
 
-When you execute chaos tests using `curl -k -v -X POST http://localhost:8080/_chaos/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'`, it will execute:
+When you execute contract tests using `curl -k -v -X POST http://localhost:8080/_contracts/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'`, it will execute:
 ```yaml
 {
   "results": {
@@ -1233,3 +1249,8 @@ make && ./out/bin/api-mock-service
 # access assets
 curl http://localhost:8080/_assets/default_assets
 ```
+
+## Related Articles
+- Property-based and Generative testing for Microservices - https://shahbhat.medium.com/property-based-and-generative-testing-for-microservices-1c6df1abb40b
+- Contract Testing for REST APIs - :
+- https://shahbhat.medium.com/contract-testing-for-rest-apis-31680ed6bbf3
