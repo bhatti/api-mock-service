@@ -1265,3 +1265,4 @@ curl http://localhost:8080/_assets/default_assets
 
 - Property-based and Generative testing for Microservices - https://shahbhat.medium.com/property-based-and-generative-testing-for-microservices-1c6df1abb40b
 - Contract Testing for REST APIs - https://shahbhat.medium.com/contract-testing-for-rest-apis-31680ed6bbf3
+- See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
