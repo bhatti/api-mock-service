@@ -1000,13 +1000,23 @@ Which will return summary of APIs such as:
 
 This tool can be used for consumer-driven contract testing by generating stub responses and producer-driven contract testing by generating tests, e.g.
 
+### Generate stub responses for consumer driven contract testing using Open-API
+
 ![Open-API for Consumer-driven Contract Testing](images/contract_oai.png)
+
+### Generate stub responses for consumer driven contract testing using user-defined specifications
 
 ![User based Consumer-driven Contract Testing](images/contract_user.png)
 
+### Generate tests for producer-driven contract testing using Open-API or user-defined specifications
+
 ![Generated tests for Producer-driven Contract Testing](images/contract_producer.png)
 
+### Generate stub responses and producer tests by recording interactions between a consumer and a producer
+
 ![Recording Contracts](images/contract_record.png)
+
+### Generate stub responses for interacive API playground
 
 ![Playground for Contract Testing](images/contract_playground.png)
 
@@ -1014,6 +1024,7 @@ This tool can be used for consumer-driven contract testing by generating stub re
 In addition to serving a mock service, you can also use a builtin contract client to test remote services for stochastic testing
 by generating random data based on regex or API specifications.
 For example, you may capture a test scenario for a remote API using http proxy such as:
+
 ```bash
 export http_proxy="http://localhost:8081"
 export https_proxy="http://localhost:8081"
@@ -1251,6 +1262,6 @@ curl http://localhost:8080/_assets/default_assets
 ```
 
 ## Related Articles
+
 - Property-based and Generative testing for Microservices - https://shahbhat.medium.com/property-based-and-generative-testing-for-microservices-1c6df1abb40b
-- Contract Testing for REST APIs - :
-- https://shahbhat.medium.com/contract-testing-for-rest-apis-31680ed6bbf3
+- Contract Testing for REST APIs - https://shahbhat.medium.com/contract-testing-for-rest-apis-31680ed6bbf3
