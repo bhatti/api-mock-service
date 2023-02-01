@@ -101,17 +101,20 @@ func (w *DefaultHTTPClient) execute(
 	}
 	if awsAuthSig4 {
 		req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
+		req.Header.Del("AWS_ACCESS_KEY_ID")
+		req.Header.Del("AWS_SECRET_ACCESS_KEY")
+		req.Header.Del("AWS_SECURITY_TOKEN")
 		awsauth.Sign4(req, awsauth.Credentials{
-			AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-			SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-			SecurityToken:   os.Getenv("AWS_SECURITY_TOKEN"),
+			AccessKeyID:     getHeaderOrEnvValue(headers, "AWS_ACCESS_KEY_ID"),
+			SecretAccessKey: getHeaderOrEnvValue(headers, "AWS_SECRET_ACCESS_KEY"),
+			SecurityToken:   getHeaderOrEnvValue(headers, "AWS_SECURITY_TOKEN"),
 		})
 		log.WithFields(log.Fields{
 			"Component":   "DefaultHTTPClient",
 			"URL":         req.URL,
 			"Method":      req.Method,
 			"Headers":     req.Header,
-			"AccessKeyID": os.Getenv("AWS_ACCESS_KEY_ID"),
+			"AccessKeyID": getHeaderOrEnvValue(headers, "AWS_ACCESS_KEY_ID"),
 		}).Infof("added AWS signatures")
 	}
 	client := httpClient(w.config)
@@ -120,6 +123,14 @@ func (w *DefaultHTTPClient) execute(
 		return 500, nil, make(map[string][]string), err
 	}
 	return resp.StatusCode, resp.Body, resp.Header, nil
+}
+
+func getHeaderOrEnvValue(headers map[string][]string, name string) string {
+	val := headers[name]
+	if val != nil && len(val) > 0 {
+		return val[0]
+	}
+	return os.Getenv(name)
 }
 
 func getLocalIPAddresses() []string {
