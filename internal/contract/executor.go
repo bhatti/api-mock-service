@@ -191,6 +191,7 @@ func (x *Executor) execute(
 			"StatusCode": statusCode,
 			"Elapsed":    elapsed,
 			"Request":    reqContents,
+			"Headers":    reqHeaders,
 			"Response":   resContents}).Infof("executed request")
 	}
 
