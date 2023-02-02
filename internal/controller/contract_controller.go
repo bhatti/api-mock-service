@@ -126,6 +126,9 @@ func buildContractRequest(c web.APIContext) (types.ContractRequest, error) {
 		contractReq.ExecutionTimes = 5
 	}
 	contractReq.Overrides = make(map[string]any)
+	for k, v := range c.Request().Header {
+		contractReq.Overrides[k] = v[0]
+	}
 	for k, v := range c.QueryParams() {
 		contractReq.Overrides[k] = v[0]
 	}

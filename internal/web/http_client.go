@@ -3,18 +3,18 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/types"
+	log "github.com/sirupsen/logrus"
+	awsauth "github.com/smartystreets/go-aws-auth"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
-
-	"github.com/bhatti/api-mock-service/internal/types"
-
-	log "github.com/sirupsen/logrus"
-	"github.com/smartystreets/go-aws-auth"
 )
+
+var internalParamKeys = []string{"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SECURITY_TOKEN"}
 
 // HTTPClient defines methods for http get and post methods
 type HTTPClient interface {
@@ -79,13 +79,6 @@ func (w *DefaultHTTPClient) execute(
 	if req == nil {
 		return 500, nil, make(map[string][]string), fmt.Errorf("request not specified")
 	}
-	if len(params) > 0 {
-		paramVals := url.Values{}
-		for k, v := range params {
-			paramVals.Add(k, v)
-		}
-		req.URL.RawQuery = paramVals.Encode()
-	}
 	awsAuthSig4 := false
 	for name, vals := range headers {
 		for _, val := range vals {
@@ -99,22 +92,33 @@ func (w *DefaultHTTPClient) execute(
 	if w.config.UserAgent != "" {
 		req.Header.Set("User-Agent", w.config.UserAgent)
 	}
+	if len(params) > 0 {
+		paramVals := url.Values{}
+		for k, v := range params {
+			if awsAuthSig4 && isInternalParamKeys(k) {
+				continue
+			}
+			paramVals.Add(k, v)
+		}
+		req.URL.RawQuery = paramVals.Encode()
+	}
+
 	if awsAuthSig4 {
 		req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
 		req.Header.Del("AWS_ACCESS_KEY_ID")
 		req.Header.Del("AWS_SECRET_ACCESS_KEY")
 		req.Header.Del("AWS_SECURITY_TOKEN")
 		awsauth.Sign4(req, awsauth.Credentials{
-			AccessKeyID:     getHeaderOrEnvValue(headers, "AWS_ACCESS_KEY_ID"),
-			SecretAccessKey: getHeaderOrEnvValue(headers, "AWS_SECRET_ACCESS_KEY"),
-			SecurityToken:   getHeaderOrEnvValue(headers, "AWS_SECURITY_TOKEN"),
+			AccessKeyID:     getHeaderParamOrEnvValue(headers, params, "AWS_ACCESS_KEY_ID"),
+			SecretAccessKey: getHeaderParamOrEnvValue(headers, params, "AWS_SECRET_ACCESS_KEY"),
+			SecurityToken:   getHeaderParamOrEnvValue(headers, params, "AWS_SECURITY_TOKEN"),
 		})
 		log.WithFields(log.Fields{
 			"Component":   "DefaultHTTPClient",
 			"URL":         req.URL,
 			"Method":      req.Method,
 			"Headers":     req.Header,
-			"AccessKeyID": getHeaderOrEnvValue(headers, "AWS_ACCESS_KEY_ID"),
+			"AccessKeyID": getHeaderParamOrEnvValue(headers, params, "AWS_ACCESS_KEY_ID"),
 		}).Infof("added AWS signatures")
 	}
 	client := httpClient(w.config)
@@ -125,10 +129,12 @@ func (w *DefaultHTTPClient) execute(
 	return resp.StatusCode, resp.Body, resp.Header, nil
 }
 
-func getHeaderOrEnvValue(headers map[string][]string, name string) string {
-	val := headers[name]
-	if val != nil && len(val) > 0 {
-		return val[0]
+func getHeaderParamOrEnvValue(headers map[string][]string, params map[string]string, name string) string {
+	if len(headers[name]) > 0 {
+		return headers[name][0]
+	}
+	if len(params[name]) > 0 {
+		return params[name]
 	}
 	return os.Getenv(name)
 }
@@ -214,4 +220,13 @@ func httpClient(config *types.Configuration) *http.Client {
 	return &http.Client{
 		Transport: transport,
 	}
+}
+
+func isInternalParamKeys(k string) bool {
+	for _, next := range internalParamKeys {
+		if next == k {
+			return true
+		}
+	}
+	return false
 }
