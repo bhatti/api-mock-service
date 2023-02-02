@@ -52,7 +52,7 @@ func (x *Executor) Execute(
 	log.WithFields(log.Fields{
 		"Component":       "Tester",
 		"Scenario":        scenarioKey,
-		"ContractRequest": contractReq,
+		"ContractRequest": contractReq.String(),
 	}).Infof("execute BEGIN")
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
@@ -72,7 +72,7 @@ func (x *Executor) Execute(
 	log.WithFields(log.Fields{
 		"Component":       "Tester",
 		"Scenario":        scenarioKey,
-		"ContractRequest": contractReq,
+		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
 		"Errors":          len(res.Errors),
 		"Metrics":         res.Metrics,
@@ -93,8 +93,7 @@ func (x *Executor) ExecuteByGroup(
 	log.WithFields(log.Fields{
 		"Component":       "Tester",
 		"Group":           group,
-		"ContractRequest": contractReq,
-		"Request":         contractReq,
+		"ContractRequest": contractReq.String(),
 		"ScenarioKeys":    scenarioKeys,
 	}).Infof("execute-by-group BEGIN")
 
@@ -126,7 +125,7 @@ func (x *Executor) ExecuteByGroup(
 	log.WithFields(log.Fields{
 		"Component":       "Tester",
 		"Group":           group,
-		"ContractRequest": contractReq,
+		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
 		"Errors":          len(res.Errors),
 		"ScenarioKeys":    scenarioKeys,
@@ -174,7 +173,6 @@ func (x *Executor) execute(
 			"Scenario":   scenario,
 			"StatusCode": statusCode,
 			"Elapsed":    elapsed,
-			"Headers":    reqHeaders,
 			"Request":    reqContents,
 			"Response":   string(resBytes)}).Warnf("failed to execute request")
 		return nil, fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBytes)
@@ -192,7 +190,6 @@ func (x *Executor) execute(
 			"Scenario":   scenario,
 			"StatusCode": statusCode,
 			"Elapsed":    elapsed,
-			"Headers":    reqHeaders,
 			"Request":    reqContents,
 			"Response":   resContents}).Infof("executed request")
 	}
@@ -227,7 +224,6 @@ func (x *Executor) execute(
 				"Scenario":   scenario,
 				"StatusCode": statusCode,
 				"Elapsed":    elapsed,
-				"Headers":    reqHeaders,
 				"Request":    reqContents,
 				"Response":   resContents}).Warnf("failed to validate resposne")
 			return nil, fmt.Errorf("failed to validate response due to %w", err)
@@ -258,7 +254,6 @@ func (x *Executor) execute(
 				"Assertion":  assertion,
 				"Elapsed":    elapsed,
 				"Params":     templateParams,
-				"Headers":    reqHeaders,
 				"Request":    reqContents,
 				"Response":   resContents,
 				"Output":     string(b)}).Warnf("failed to assert test")
