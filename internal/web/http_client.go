@@ -119,7 +119,6 @@ func (w *DefaultHTTPClient) execute(
 			"Component":   "DefaultHTTPClient",
 			"URL":         req.URL,
 			"Method":      req.Method,
-			"Headers":     req.Header,
 			"AccessKeyID": getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID"),
 		}).Infof("added AWS signatures")
 	}

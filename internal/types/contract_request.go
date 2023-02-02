@@ -15,3 +15,7 @@ func NewContractRequest(baseURL string, execTimes int) ContractRequest {
 		ExecutionTimes: execTimes,
 	}
 }
+
+func (req *ContractRequest) String() string {
+	return "ContractRequest(" + req.BaseURL + ")"
+}

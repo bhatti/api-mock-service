@@ -129,7 +129,6 @@ func (x *Executor) ExecuteByGroup(
 		"ContractRequest": contractReq,
 		"Elapsed":         elapsed,
 		"Errors":          len(res.Errors),
-		"Request":         contractReq,
 		"ScenarioKeys":    scenarioKeys,
 		"Metrics":         res.Metrics,
 	}).Infof("execute-by-group COMPLETED")
