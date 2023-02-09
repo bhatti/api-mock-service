@@ -97,7 +97,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	resp.Request = req
 	resp.TransferEncoding = req.TransferEncoding
 	resp.Header = respHeader
-	resp.Header.Add(types.ContentTypeHeader, matchedScenario.Response.ContentType())
+	resp.Header.Add(types.ContentTypeHeader, matchedScenario.Response.ContentType(""))
 	resp.StatusCode = matchedScenario.Response.StatusCode
 	resp.Status = http.StatusText(matchedScenario.Response.StatusCode)
 	buf := bytes.NewBuffer(respBody)

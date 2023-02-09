@@ -145,7 +145,7 @@ func updateScenarioRequest(scenario *types.MockScenario, op *openapi3.Operation)
 			Value: &openapi3.RequestBody{
 				Required: true,
 				Content: openapi3.Content{
-					"application/json": &openapi3.MediaType{
+					scenario.Request.ContentType("application/json"): &openapi3.MediaType{
 						Schema: &openapi3.SchemaRef{
 							//Value: body,
 							Ref: "#/components/schemas/" + ref,
@@ -181,7 +181,7 @@ func updateScenarioResponse(scenario *types.MockScenario, op *openapi3.Operation
 	ref := sanitizeScenarioName(scenario.Name) + "Response"
 
 	if body != nil && len(body.Properties) > 0 && scenario.Response.StatusCode == 200 {
-		resp.Value.Content["application/json"] = &openapi3.MediaType{
+		resp.Value.Content[scenario.Response.ContentType("application/json")] = &openapi3.MediaType{
 			Schema: &openapi3.SchemaRef{
 				Ref: "#/components/schemas/" + ref,
 				//Value: body,

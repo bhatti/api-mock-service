@@ -32,7 +32,7 @@ func Test_ShouldParseAndGenerateSaveCustomerTemplate(t *testing.T) {
 	require.NoError(t, err)
 	// AND it should have expected contents
 
-	require.Contains(t, scenario.Response.ContentType(), "application/json")
+	require.Contains(t, scenario.Response.ContentType(""), "application/json")
 
 	obj, err := fuzz.UnmarshalArrayOrObject([]byte(scenario.Request.Contents))
 	require.NoError(t, err)

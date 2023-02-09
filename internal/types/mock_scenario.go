@@ -70,6 +70,16 @@ type MockHTTPRequest struct {
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 }
 
+// ContentType find content-type
+func (r MockHTTPRequest) ContentType(defContentType string) string {
+	for k, v := range r.Headers {
+		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
+			return v
+		}
+	}
+	return defContentType
+}
+
 func (r MockHTTPRequest) MatchContentOrContent() string {
 	if r.MatchContents != "" {
 		return r.MatchContents
@@ -100,13 +110,13 @@ type MockHTTPResponse struct {
 }
 
 // ContentType find content-type
-func (r MockHTTPResponse) ContentType() string {
+func (r MockHTTPResponse) ContentType(defContentType string) string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
 			return v[0]
 		}
 	}
-	return ""
+	return defContentType
 }
 
 func (r MockHTTPResponse) MatchContentOrContent() string {

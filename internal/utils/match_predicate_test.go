@@ -63,7 +63,7 @@ func Test_ShouldParseScenarioTemplate(t *testing.T) {
 		// AND it should have expected contents
 
 		require.Contains(t, scenario.Response.Headers["ETag"], "abc")
-		require.Contains(t, scenario.Response.ContentType(), "application/json",
+		require.Contains(t, scenario.Response.ContentType(""), "application/json",
 			fmt.Sprintf("%v in %s", scenario.Response.Headers, scenarioFile))
 	}
 }
@@ -86,7 +86,7 @@ func Test_ShouldParseCustomerStripeTemplate(t *testing.T) {
 	// AND it should have expected contents
 
 	require.Equal(t, "Bearer sk_test_[0-9a-fA-F]{10}$", scenario.Request.MatchHeaders["Authorization"])
-	require.Contains(t, scenario.Response.ContentType(), "application/json")
+	require.Contains(t, scenario.Response.ContentType(""), "application/json")
 }
 
 func Test_ShouldParseCommentsTemplate(t *testing.T) {
@@ -105,7 +105,7 @@ func Test_ShouldParseCommentsTemplate(t *testing.T) {
 	require.NoError(t, err)
 	// AND it should have expected contents
 	require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
-	require.Contains(t, scenario.Response.ContentType(), "application/json")
+	require.Contains(t, scenario.Response.ContentType(""), "application/json")
 }
 
 func Test_ShouldParseDevicesTemplate(t *testing.T) {
@@ -130,7 +130,7 @@ func Test_ShouldParseDevicesTemplate(t *testing.T) {
 		} else {
 			require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
 		}
-		require.Contains(t, scenario.Response.ContentType(), "application/json")
+		require.Contains(t, scenario.Response.ContentType(""), "application/json")
 	}
 }
 func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {
