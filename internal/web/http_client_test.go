@@ -143,7 +143,8 @@ func Test_ShouldRealPostBody(t *testing.T) {
 
 func Test_ShouldNotGetRemoteIPAddressFromURL(t *testing.T) {
 	require.Equal(t, "", getRemoteIPAddressFromURL("xxx"))
-	require.Equal(t, "::1 127.0.0.1", getRemoteIPAddressFromURL("http://localhost"))
+	require.Contains(t, getRemoteIPAddressFromURL("http://localhost"), "127.0.0.1")
+	require.Contains(t, getRemoteIPAddressFromURL("http://localhost"), "::1")
 	require.True(t, len(getLocalIPAddresses()) > 0)
 }
 

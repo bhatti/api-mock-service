@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz/lorem"
+	"github.com/lucasjones/reggen"
 	log "github.com/sirupsen/logrus"
 	"github.com/twinj/uuid"
 	regen "github.com/zach-klippenstein/goregen"
@@ -837,11 +838,14 @@ func RandRegex(re string) string {
 	re = replaceNumTag(re, `\d`)
 	out, err := regen.Generate(re)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"Error": err,
-			"Regex": re,
-		}).Warnf("failed to parse regex")
-		return RandSentence(1, 5)
+		out, err = reggen.Generate(re, 64)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"Error": err,
+				"Regex": re,
+			}).Warnf("failed to parse regex")
+			return RandSentence(1, 5)
+		}
 	}
 	return out
 }
@@ -902,6 +906,9 @@ func RandStringArrayMinMax(min int, max int) []string {
 func RandStringMinMax(min int, max int) string {
 	if max == 0 {
 		return RandTriString("_")
+	}
+	if max > 200 {
+		max = 200
 	}
 	return RandString(RandNumMinMax(min, max))
 }

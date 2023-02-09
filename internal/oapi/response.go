@@ -24,6 +24,11 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 	if err != nil {
 		return
 	}
+	res.Headers = append(res.Headers, Property{
+		Name:  "Content-Type",
+		Type:  "string",
+		Regex: res.ContentType,
+	})
 	var exampleContents []byte
 	if obj, err := fuzz.UnmarshalArrayOrObject(quotedContents); err == nil {
 		obj = fuzz.GenerateFuzzData(obj)

@@ -55,6 +55,29 @@ definitions:
     description: MethodType for HTTP
     type: string
     x-go-package: github.com/bhatti/api-mock-service/internal/types
+  MockAuthorization:
+    description: MockAuthorization defines mock auth parameters
+    properties:
+      format:
+        type: string
+        x-go-name: Format
+      in:
+        type: string
+        x-go-name: In
+      name:
+        type: string
+        x-go-name: Name
+      scheme:
+        type: string
+        x-go-name: Scheme
+      type:
+        type: string
+        x-go-name: Type
+      url:
+        type: string
+        x-go-name: URL
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
   MockHTTPRequest:
     description: MockHTTPRequest defines mock request for APIs
     properties:
@@ -157,6 +180,12 @@ definitions:
   MockScenario:
     description: MockScenario defines mock scenario for APIs
     properties:
+      authentication:
+        additionalProperties:
+          $ref: '#/definitions/MockAuthorization'
+        description: Authentication for the API
+        type: object
+        x-go-name: Authentication
       description:
         description: Description of scenario
         type: string
@@ -390,6 +419,13 @@ paths:
           $ref: '#/responses/mockScenarioOAPIResponse'
       tags:
       - open-api
+  /_oapi/{group}:
+    get:
+      description: Generates OpenAPI specs for the scenario
+      operationId: open-apiGetOpenAPISpecsByScenario
+      responses:
+        "200":
+          $ref: '#/responses/mockOapiSpecIResponse'
   /_proxy:
     delete:
       description: Records scenario from DELETE request
@@ -598,6 +634,13 @@ responses:
     schema:
       items:
         type: string
+      type: array
+  mockOapiSpecIResponse:
+    description: MockScenario body for update
+    schema:
+      items:
+        format: uint8
+        type: integer
       type: array
   mockScenarioContractResponse:
     description: MockScenario body for update

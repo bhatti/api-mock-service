@@ -40,6 +40,16 @@ const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 // ScenarioExt extension
 const ScenarioExt = ".scr"
 
+// MockAuthorization defines mock auth parameters
+type MockAuthorization struct {
+	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
+	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
+	In     string `json:"in,omitempty" yaml:"in,omitempty"`
+	Format string `json:"format,omitempty" yaml:"format,omitempty"`
+	Scheme string `json:"scheme,omitempty" yaml:"scheme,omitempty"`
+	URL    string `json:"url,omitempty" yaml:"url,omitempty"`
+}
+
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
 	// MatchQueryParams for the API
@@ -58,6 +68,13 @@ type MockHTTPRequest struct {
 	Contents string `yaml:"contents" json:"contents"`
 	// ExampleContents sample for request optionally
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
+}
+
+func (r MockHTTPRequest) MatchContentOrContent() string {
+	if r.MatchContents != "" {
+		return r.MatchContents
+	}
+	return r.Contents
 }
 
 // MockHTTPResponse defines mock response for APIs
@@ -92,6 +109,13 @@ func (r MockHTTPResponse) ContentType() string {
 	return ""
 }
 
+func (r MockHTTPResponse) MatchContentOrContent() string {
+	if r.MatchContents != "" {
+		return r.MatchContents
+	}
+	return r.Contents
+}
+
 // MockScenario defines mock scenario for APIs
 type MockScenario struct {
 	// Method for HTTP API
@@ -108,6 +132,8 @@ type MockScenario struct {
 	Group string `yaml:"group" json:"group"`
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
+	// Authentication for the API
+	Authentication map[string]MockAuthorization `yaml:"authentication" json:"authentication"`
 	// Request for the API
 	Request MockHTTPRequest `yaml:"request" json:"request"`
 	// Response for the API

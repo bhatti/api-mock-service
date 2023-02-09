@@ -112,10 +112,11 @@ func saveMockResponse(
 		}).Warnf("failed to unmarshal and extrate types for response")
 	}
 	scenario := &types.MockScenario{
-		Method: types.MethodType(req.Method),
-		Name:   req.Header.Get(types.MockScenarioName),
-		Path:   u.Path,
-		Group:  utils.NormalizeGroup("", u.Path),
+		Method:         types.MethodType(req.Method),
+		Name:           req.Header.Get(types.MockScenarioName),
+		Path:           u.Path,
+		Group:          utils.NormalizeGroup("", u.Path),
+		Authentication: make(map[string]types.MockAuthorization),
 		Request: types.MockHTTPRequest{
 			MatchQueryParams: make(map[string]string),
 			MatchHeaders:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},

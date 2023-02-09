@@ -59,6 +59,7 @@ func Parse(ctx context.Context, data []byte, dataTemplate fuzz.DataTemplateReque
 			} else if ref.Value.In == "query" {
 				spec.Request.QueryParams = append(spec.Request.Headers, prop)
 			}
+			spec.SecuritySchemes = doc.Components.SecuritySchemes
 		}
 	}
 	return

@@ -83,6 +83,21 @@ func Test_ShouldGetAsciiAny(t *testing.T) {
 	require.True(t, RandRegex(`[\x20-\x7F]{1,40}`) != "")
 }
 
+func Test_ShouldParseRegexAlphaNumeric(t *testing.T) {
+	out := RandRegex("[A-Za-z0-9-_=.]+")
+	require.True(t, len(out) > 0)
+}
+
+func Test_ShouldParseRegexEscapeS(t *testing.T) {
+	out := RandRegex("[\\S]+")
+	require.True(t, len(out) > 0)
+}
+
+func Test_ShouldParseRegexEscapeP(t *testing.T) {
+	out := RandRegex("[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+")
+	require.True(t, len(out) > 0)
+}
+
 func Test_ShouldBuildRandRegexWords(t *testing.T) {
 	str := RandRegex(`\w`)
 	require.Equal(t, 0, countSpaces(str))

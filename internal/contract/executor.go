@@ -237,16 +237,8 @@ func (x *Executor) execute(
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse assertion %s due to %w", assertion, err)
 		}
-		if string(b) == "true" {
-			log.WithFields(log.Fields{
-				"Component":  "Tester",
-				"URL":        url,
-				"Scenario":   scenario,
-				"StatusCode": statusCode,
-				"Assertion":  assertion,
-				"Elapsed":    elapsed,
-				"Output":     string(b)}).Debugf("successfully asserted test")
-		} else {
+
+		if contractRequest.Verbose {
 			log.WithFields(log.Fields{
 				"Component":  "Tester",
 				"URL":        url,
@@ -256,12 +248,17 @@ func (x *Executor) execute(
 				"Elapsed":    elapsed,
 				"Params":     templateParams,
 				"Request":    reqContents,
+				"Header":     reqHeaders,
 				"Response":   resContents,
-				"Output":     string(b)}).Warnf("failed to assert test")
+				"Output":     string(b)}).Infof("asserted test")
+		}
+
+		if string(b) != "true" {
 			return nil, fmt.Errorf("failed to assert '%s' with value '%s'",
 				assertion, b)
 		}
 	}
+
 	if resContents != nil {
 		if overrides == nil {
 			overrides = map[string]any{}

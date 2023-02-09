@@ -15,13 +15,14 @@ import (
 
 // APISpec structure
 type APISpec struct {
-	Title       string
-	ID          string
-	Description string
-	Path        string
-	Method      types.MethodType
-	Request     Request
-	Response    Response
+	Title           string
+	ID              string
+	Description     string
+	Path            string
+	Method          types.MethodType
+	SecuritySchemes openapi3.SecuritySchemes
+	Request         Request
+	Response        Response
 }
 
 // ParseAPISpec converts open-api operation to API specs
@@ -139,6 +140,17 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 		Request:         req,
 		Response:        res,
 		WaitBeforeReply: 0,
+		Authentication:  make(map[string]types.MockAuthorization),
+	}
+	for name, scheme := range api.SecuritySchemes {
+		spec.Authentication[name] = types.MockAuthorization{
+			Type:   scheme.Value.Type,
+			Name:   scheme.Value.Name,
+			In:     scheme.Value.In,
+			Format: scheme.Value.BearerFormat,
+			Scheme: scheme.Value.Scheme,
+			URL:    scheme.Value.OpenIdConnectUrl,
+		}
 	}
 	if res.StatusCode >= 300 {
 		spec.Predicate = "{{NthRequest 2}}"

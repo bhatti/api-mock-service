@@ -2,6 +2,7 @@ package oapi
 
 import (
 	"context"
+	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
@@ -148,5 +149,22 @@ func Test_ShouldParseSaveCustomersOpenAPI(t *testing.T) {
 		out, err := yaml.Marshal(scenario)
 		require.NoError(t, err)
 		require.True(t, len(out) > 0)
+	}
+}
+
+func Test_ShouldParseSwagger(t *testing.T) {
+	data, err := os.ReadFile("../../swagger.json")
+	require.NoError(t, err)
+	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
+	specs, err := Parse(context.Background(), data, dataTempl)
+	require.NoError(t, err)
+	require.Equal(t, 16, len(specs))
+	for _, spec := range specs {
+		scenario, err := spec.BuildMockScenario(dataTempl)
+		require.NoError(t, err)
+		out, err := yaml.Marshal(scenario)
+		require.NoError(t, err)
+		require.True(t, len(out) > 0)
+		fmt.Printf("%s\n", out)
 	}
 }
