@@ -10,11 +10,13 @@ import (
 	"strings"
 )
 
+// MarshalScenarioToOpenAPI converts open-api specs into json
 func MarshalScenarioToOpenAPI(title string, version string, scenarios ...*types.MockScenario) ([]byte, error) {
 	t := ScenarioToOpenAPI(title, version, scenarios...)
 	return t.MarshalJSON()
 }
 
+// ScenarioToOpenAPI convert scenarios to open-api specs
 func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockScenario) *openapi3.T {
 	root := &openapi3.T{
 		OpenAPI: "3.0.2",

@@ -80,6 +80,7 @@ func (r MockHTTPRequest) ContentType(defContentType string) string {
 	return defContentType
 }
 
+// MatchContentOrContent helper method
 func (r MockHTTPRequest) MatchContentOrContent() string {
 	if r.MatchContents != "" {
 		return r.MatchContents
@@ -119,6 +120,7 @@ func (r MockHTTPResponse) ContentType(defContentType string) string {
 	return defContentType
 }
 
+// MatchContentOrContent helper method
 func (r MockHTTPResponse) MatchContentOrContent() string {
 	if r.MatchContents != "" {
 		return r.MatchContents
