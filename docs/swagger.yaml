@@ -421,6 +421,15 @@ paths:
       - open-api
   /_oapi/{group}:
     get:
+      description: Generates OpenAPI specs for the scenario group
+      operationId: GetOpenAPISpecsByGroup
+      responses:
+        "200":
+          $ref: '#/responses/mockOapiSpecIResponse'
+      tags:
+      - open-api
+  /_oapi/{method}/{name}/{path}:
+    get:
       description: Generates OpenAPI specs for the scenario
       operationId: open-apiGetOpenAPISpecsByScenario
       responses:

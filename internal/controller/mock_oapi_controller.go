@@ -63,7 +63,7 @@ func (moc *MockOAPIController) GetOpenAPISpecsByGroup(c web.APIContext) (err err
 }
 
 // GetOpenAPISpecsByScenario handler
-// swagger:route GET /_oapi/{group} open-apiGetOpenAPISpecsByScenario
+// swagger:route GET /_oapi/{method}/{name}/{path} open-apiGetOpenAPISpecsByScenario
 // Generates OpenAPI specs for the scenario
 // responses:
 //
