@@ -41,7 +41,6 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 		scenarios = append(scenarios, scenario)
 	}
-	out, err := MarshalScenarioToOpenAPI("t-api", "t-version", scenarios...)
+	_, err = MarshalScenarioToOpenAPI("t-api", "t-version", scenarios...)
 	require.NoError(t, err)
-	_ = os.WriteFile("../../output.json", out, 0644)
 }
