@@ -106,8 +106,8 @@ func buildParameter(k string, v string, in string) *openapi3.Parameter {
 		Required: in == "path",
 		Schema: &openapi3.SchemaRef{
 			Value: &openapi3.Schema{
-				Type:    "string",
-				Pattern: v,
+				Type: "string",
+				//Pattern: v,
 				Example: v,
 			},
 		},
