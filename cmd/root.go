@@ -18,7 +18,6 @@ import (
 	"strings"
 )
 
-
 var cfgFile string
 var dataDir string
 var assetDir string
@@ -180,7 +179,7 @@ func buildControllers(
 	if serverConfig.AssetDir != "" {
 		webServer.Static("/_assets", serverConfig.AssetDir)
 	}
-	webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
+	webServer.Embed(SwaggerContent, "/swagger/*", "swagger-ui")
 
 	return nil
 }
