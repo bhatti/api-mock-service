@@ -997,7 +997,21 @@ Which will return summary of APIs such as:
 ```
 
 ## Swagger-UI
-The api-mock-service includes an embdded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL in your browser.
+The api-mock-service includes an embdded swagger-ui, which you can access using `http://localhost:8000/swagger/` URL in your browser. And upload OpenAPI specification using:
+
+```bash
+curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi
+```
+
+Alternatively, you can start swagger-UI as follows:
+
+
+```bash
+docker run -p 8080:8080 -e BASE_URL=/swagger -e SWAGGER_JSON=/data/jobs-openapi.json -v $(pwd)/fixtures/oapi:/data swaggerapi/swagger-ui
+```
+You can then play with APIs on your browser with URL `http://localhost:8080`:
+
+![swagger-ui](images/swagger.png)
 
 ## Contract Testing
 
@@ -1022,33 +1036,6 @@ This tool can be used for consumer-driven contract testing by generating stub re
 ### Generate stub responses for interacive API playground
 
 ![Playground for Contract Testing](images/contract_playground.png)
-
-## Integrating with Swagger-UI
-You can integrate mock service with Swagger-UI for API playground so that swagger UI invokes mock service to execute API requests. For example, you can start the mock service first:
-
-```bash
-docker run -p 8000:8000 -p 9000:9000 -e HTTP_PORT=8000 -e PROXY_PORT=9000 -e DATA_DIR=/tmp/mocks \
-	-e ASSET_DIR=/tmp/assets plexobject/api-mock-service:latest
-```
-
-Then update your OpenAPI specification to point to the mock server, e.g. we will modify `fixtures/oapi/jobs-openapi.json` as follows:
-```json
-"servers": [{"url": "http://localhost:8000"}],
-```
-
-And upload OpenAPI specification using:
-
-```bash
-curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi
-```
-
-Finally, start swagger-UI as follows
-```bash
-docker run -p 8080:8080 -e BASE_URL=/swagger -e SWAGGER_JSON=/data/jobs-openapi.json -v $(pwd)/fixtures/oapi:/data swaggerapi/swagger-ui
-```
-You can then play with APIs on your browser with URL `http://localhost:8080`:
-
-![swagger-ui](images/swagger.png)
 
 
 ## Contract Testing CLI
