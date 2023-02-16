@@ -1,6 +1,7 @@
 package web
 
 import (
+	"embed"
 	"encoding/json"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,8 @@ func Test_ShouldInvokeHTTPRequest(t *testing.T) {
 	adapter.POST("/_scenarios", adapterHandler)
 	adapter.DELETE("/_scenarios/:method/:name/:path", adapterHandler)
 	adapter.POST("/_oapi", adapterHandler)
-	adapter.Static("")
+	adapter.Static("", "")
+	adapter.Embed(embed.FS{}, "", "")
 	adapter.Start("")
 	adapter.Stop()
 

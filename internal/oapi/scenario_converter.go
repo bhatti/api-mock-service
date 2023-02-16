@@ -100,18 +100,14 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 
 func buildParameter(k string, v string, in string) *openapi3.Parameter {
 	v, _ = sanitizeRegexValue(v)
-	pattern := v
-	if strings.Contains(v, "*") {
-		pattern = ""
-	}
 	return &openapi3.Parameter{
 		Name:     k,
 		In:       in,
 		Required: in == "path",
 		Schema: &openapi3.SchemaRef{
 			Value: &openapi3.Schema{
-				Type:    "string",
-				Pattern: pattern,
+				Type: "string",
+				//Pattern: v,
 				Example: v,
 			},
 		},
@@ -351,13 +347,9 @@ func anyToSchema(val any) *openapi3.Schema {
 			Description: strVal,
 		}
 	case string:
-		pattern := strVal
-		if strings.Contains(strVal, "*") {
-			pattern = ""
-		}
 		return &openapi3.Schema{
 			Type:    "string",
-			Pattern: pattern,
+			Pattern: strVal,
 			Example: strVal,
 		}
 	default:
