@@ -5,10 +5,10 @@ order: 2
 group: user_group
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Content-Type: ""
-    match_contents: "null"
+    assert_contents_pattern: "null"
     path_params: {}
     query_params: {}
     headers:
@@ -262,7 +262,7 @@ response:
         ]
     contents_file: ""
     status_code: 200
-    match_headers: {}
-    match_contents: '{"address.city":"(__string__\\w+)","address.geo.lat":"(__string__[+-]?[0-9]{2,2}\\.[0-9]{4,4}|__string__[0-9]{2,2}\\.[0-9]{4,4})","address.geo.lng":"(__string__[0-9]{2,2}\\.[0-9]{4,4}|__string__[+-]?[0-9]{2,2}\\.[0-9]{4,4}|__string__[+-]?[0-9]{3,3}\\.[0-9]{4,4})","address.street":"(__string__\\w+)","address.suite":"(.+)","address.zipcode":"(__string__[0-9]{5,5}[-][0-9]{4,4}|__string__[0-9]{5,5})","company.bs":"(__string__\\w+[-]\\w+[-]\\w+|__string__\\w+[-]\\w+)","company.catchPhrase":"(__string__\\w+[-]\\w+[-]\\w+[-]\\w+|__string__\\w+|__string__\\w+[-]\\w+|__string__\\w+[-]\\w+[-]\\w+)","company.name":"(__string__\\w+[-]\\w+|__string__\\w+)","email":"(__string__\\w+@\\w+.?\\w+|__string__\\w+.?\\w+@\\w+.?\\w+|__string__\\w+_\\w+@\\w+.?\\w+)","id":"(__number__[+-]?[0-9]{1,10})","name":"(__string__\\w+|__string__\\w+.?\\w+)","phone":"__string__.+","username":"(__string__\\w+|__string__\\w+_\\w+|__string__\\w+.?\\w+)","website":"(__string__\\w+.?\\w+)"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"address.city":"(__string__\\w+)","address.geo.lat":"(__string__[+-]?[0-9]{2,2}\\.[0-9]{4,4}|__string__[0-9]{2,2}\\.[0-9]{4,4})","address.geo.lng":"(__string__[0-9]{2,2}\\.[0-9]{4,4}|__string__[+-]?[0-9]{2,2}\\.[0-9]{4,4}|__string__[+-]?[0-9]{3,3}\\.[0-9]{4,4})","address.street":"(__string__\\w+)","address.suite":"(.+)","address.zipcode":"(__string__[0-9]{5,5}[-][0-9]{4,4}|__string__[0-9]{5,5})","company.bs":"(__string__\\w+[-]\\w+[-]\\w+|__string__\\w+[-]\\w+)","company.catchPhrase":"(__string__\\w+[-]\\w+[-]\\w+[-]\\w+|__string__\\w+|__string__\\w+[-]\\w+|__string__\\w+[-]\\w+[-]\\w+)","company.name":"(__string__\\w+[-]\\w+|__string__\\w+)","email":"(__string__\\w+@\\w+.?\\w+|__string__\\w+.?\\w+@\\w+.?\\w+|__string__\\w+_\\w+@\\w+.?\\w+)","id":"(__number__[+-]?[0-9]{1,10})","name":"(__string__\\w+|__string__\\w+.?\\w+)","phone":"__string__.+","username":"(__string__\\w+|__string__\\w+_\\w+|__string__\\w+.?\\w+)","website":"(__string__\\w+.?\\w+)"}'
     assertions: []
 wait_before_reply: 0s

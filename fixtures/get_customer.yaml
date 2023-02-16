@@ -6,9 +6,9 @@ order: 1
 group: customers
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_contents: '{}'
+    assert_query_params_pattern: {}
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{}'
     path_params:
         id: \w+
     query_params: {}
@@ -42,8 +42,8 @@ response:
         lastName: intime
         phone: 1-832-2222-2240
     status_code: 200
-    match_headers: {}
-    match_contents: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5})","creditCard.balance.amount":"(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10})))","creditCard.balance.currency":"(__string__(USD|CAD|EUR|AUD))","creditCard.cardNumber":"(__string__\\d{4}-\\d{4}-\\d{4})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}/\\d{4})","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w)","lastName":"(__string__\\w)","phone":"(__string__1-\\d{3}-\\d{3}-\\d{4})"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5})","creditCard.balance.amount":"(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10})))","creditCard.balance.currency":"(__string__(USD|CAD|EUR|AUD))","creditCard.cardNumber":"(__string__\\d{4}-\\d{4}-\\d{4})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}/\\d{4})","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w)","lastName":"(__string__\\w)","phone":"(__string__1-\\d{3}-\\d{3}-\\d{4})"}'
     pipe_properties: 
       - id
       - email

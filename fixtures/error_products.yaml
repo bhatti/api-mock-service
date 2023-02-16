@@ -6,9 +6,9 @@ order: 0
 group: products
 predicate: '{{NthRequest 2}}'
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_contents: '{}'
+    assert_query_params_pattern: {}
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{}'
     path_params: {}
     query_params:
         category: '[\x20-\x7F]{1,128}'
@@ -19,8 +19,8 @@ response:
     contents: '{"errors":["{{RandSentence 5 10}}"]}'
     contents_file: ""
     status_code: {{EnumInt 400 415 500}}
-    match_headers: {}
-    match_contents: '{"errors":"(__string__\\w+)"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"errors":"(__string__\\w+)"}'
     pipe_properties: []
     assertions: []
 wait_before_reply: 0s

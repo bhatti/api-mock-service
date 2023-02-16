@@ -18,8 +18,8 @@ func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
 	keyData1 := buildScenario(types.Post, "test1", mockPath, 1).ToKeyData()
 	keyData2 := buildScenario(types.Post, "test2", mockPath, 2).ToKeyData()
 	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 0))
-	keyData1.MatchQueryParams = map[string]string{"a": `\d+`, "b": "abc"}
-	keyData2.MatchQueryParams = map[string]string{"a": `\d+`, "b": "abc"}
+	keyData1.AssertQueryParamsPattern = map[string]string{"a": `\d+`, "b": "abc"}
+	keyData2.AssertQueryParamsPattern = map[string]string{"a": `\d+`, "b": "abc"}
 	keyData1.Predicate = `{{NthRequest 3}}`
 	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 0))
 	require.False(t, MatchScenarioPredicate(keyData1, keyData2, 2))
@@ -85,7 +85,7 @@ func Test_ShouldParseCustomerStripeTemplate(t *testing.T) {
 	require.NoError(t, err)
 	// AND it should have expected contents
 
-	require.Equal(t, "Bearer sk_test_[0-9a-fA-F]{10}$", scenario.Request.MatchHeaders["Authorization"])
+	require.Equal(t, "Bearer sk_test_[0-9a-fA-F]{10}$", scenario.Request.AssertHeadersPattern["Authorization"])
 	require.Contains(t, scenario.Response.ContentType(""), "application/json")
 }
 
@@ -141,8 +141,8 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		Group:       path,
 		Description: name,
 		Request: types.MockHTTPRequest{
-			MatchQueryParams: map[string]string{"a": `\d+`, "b": "abc"},
-			MatchHeaders: map[string]string{
+			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
+			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/json",
 				"ETag":                  `\d{3}`,
 			},

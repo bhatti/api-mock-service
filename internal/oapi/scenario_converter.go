@@ -100,14 +100,18 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 
 func buildParameter(k string, v string, in string) *openapi3.Parameter {
 	v, _ = sanitizeRegexValue(v)
+	pattern := v
+	if strings.Contains(v, "*") {
+		pattern = ""
+	}
 	return &openapi3.Parameter{
 		Name:     k,
 		In:       in,
 		Required: in == "path",
 		Schema: &openapi3.SchemaRef{
 			Value: &openapi3.Schema{
-				Type: "string",
-				//Pattern: v,
+				Type:    "string",
+				Pattern: pattern,
 				Example: v,
 			},
 		},
@@ -140,7 +144,7 @@ func updateScenarioRequest(scenario *types.MockScenario, op *openapi3.Operation)
 		op.Parameters = addParameter(op.Parameters, k, v, "path")
 	}
 
-	res, _ := fuzz.UnmarshalArrayOrObject([]byte(scenario.Request.MatchContentOrContent()))
+	res, _ := fuzz.UnmarshalArrayOrObject([]byte(scenario.Request.AssertContentsPatternOrContent()))
 	body := anyToSchema(res)
 	ref := sanitizeScenarioName(scenario.Name) + "Request"
 	if body != nil && len(body.Properties) > 0 {
@@ -179,7 +183,7 @@ func updateScenarioResponse(scenario *types.MockScenario, op *openapi3.Operation
 			},
 		}
 	}
-	res, _ := fuzz.UnmarshalArrayOrObject([]byte(scenario.Response.MatchContentOrContent()))
+	res, _ := fuzz.UnmarshalArrayOrObject([]byte(scenario.Response.AssertContentsPatternOrContent()))
 	body := anyToSchema(res)
 	ref := sanitizeScenarioName(scenario.Name) + "Response"
 
@@ -347,9 +351,13 @@ func anyToSchema(val any) *openapi3.Schema {
 			Description: strVal,
 		}
 	case string:
+		pattern := strVal
+		if strings.Contains(strVal, "*") {
+			pattern = ""
+		}
 		return &openapi3.Schema{
 			Type:    "string",
-			Pattern: strVal,
+			Pattern: pattern,
 			Example: strVal,
 		}
 	default:

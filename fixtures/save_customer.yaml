@@ -4,9 +4,9 @@ path: /customers
 group: customers
 order: 0
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_contents: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.id":"(__string__\\w+)","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5}.?\\d{0,4})","creditCard.balance.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","creditCard.balance.currency":"(__string__\\w+)","creditCard.cardNumber":"(__string__[\\d-]{10,20})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}.\\d{4})","creditCard.id":"(__string__\\w+)","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w+)","id":"(__string__\\w+)","lastName":"(__string__\\w+)","phone":"(__string__[\\-\\w\\d]{9,15})"}'
+    assert_query_params_pattern: {}
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.id":"(__string__\\w+)","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5}.?\\d{0,4})","creditCard.balance.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","creditCard.balance.currency":"(__string__\\w+)","creditCard.cardNumber":"(__string__[\\d-]{10,20})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}.\\d{4})","creditCard.id":"(__string__\\w+)","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w+)","id":"(__string__\\w+)","lastName":"(__string__\\w+)","phone":"(__string__[\\-\\w\\d]{9,15})"}'
     path_params: {}
     query_params: {}
     headers:
@@ -39,8 +39,8 @@ response:
     contents: '{"address":{"city":"{{RandStringMinMax 2 60}}","countryCode":"{{EnumString `US CA`}}","id":"{{RandStringMinMax 0 0}}","streetAddress":"{{RandStringMinMax 2 70}}","zipCode":"{{RandRegex `\\d{5}.?\\d{0,4}`}}"},"creditCard":{"balance":{"amount":{{RandNumMinMax 0 0}},"currency":"{{RandStringMinMax 0 0}}"},"cardNumber":"{{RandRegex `[\\d-]{10,20}`}}","customerId":"{{RandStringMinMax 30 36}}","expiration":"{{RandRegex `\\d{2}.\\d{4}`}}","id":"{{RandStringMinMax 0 0}}","type":"{{EnumString `VISA MASTERCARD AMEX`}}"},"email":"{{RandRegex `.+@.+\\..+`}}","firstName":"{{RandStringMinMax 2 50}}","id":"{{RandStringMinMax 0 0}}","lastName":"{{RandStringMinMax 2 50}}","phone":"{{RandRegex `[\\-\\w\\d]{9,15}`}}"}'
     contents_file: ""
     status_code: 200
-    match_headers: {}
-    match_contents: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.id":"(__string__\\w+)","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5}.?\\d{0,4})","creditCard.balance.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","creditCard.balance.currency":"(__string__\\w+)","creditCard.cardNumber":"(__string__[\\d-]{10,20})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}.\\d{4})","creditCard.id":"(__string__\\w+)","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w+)","id":"(__string__\\w+)","lastName":"(__string__\\w+)","phone":"(__string__[\\-\\w\\d]{9,15})"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.id":"(__string__\\w+)","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5}.?\\d{0,4})","creditCard.balance.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","creditCard.balance.currency":"(__string__\\w+)","creditCard.cardNumber":"(__string__[\\d-]{10,20})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}.\\d{4})","creditCard.id":"(__string__\\w+)","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w+)","id":"(__string__\\w+)","lastName":"(__string__\\w+)","phone":"(__string__[\\-\\w\\d]{9,15})"}'
     pipe_properties: 
       - id
       - email

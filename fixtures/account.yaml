@@ -3,10 +3,10 @@ name: UpdateAuthTokenPromotion-9e6017b8883bca6ccf478e109e9784f5296d2c12f335dd9ce
 path: /v1/AuthTokens/Promote
 description: Promote the secondary Auth Token to primary. After promoting the new token, all requests to Twilio using your old primary Auth Token will result in an error.
 request:
-    match_headers: 
+    assert_headers_pattern: 
         CTag: {{.ETag}}
     match_content_type: ""
-    match_contents: ""
+    assert_contents_pattern: ""
 response:
     headers:
         ETag:

@@ -3,13 +3,13 @@ name: get_apps
 path: /apps
 description: ""
 request:
-    match_query_params:
+    assert_query_params_pattern:
       a: 1
       b: 2
-    match_headers:
+    assert_headers_pattern:
         CTag: {{.ETag}}
     match_content_type: "application/json; charset=utf-8"
-    match_contents: ""
+    assert_contents_pattern: ""
 response:
     headers:
         ETag:

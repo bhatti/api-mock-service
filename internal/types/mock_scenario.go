@@ -52,12 +52,12 @@ type MockAuthorization struct {
 
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
-	// MatchQueryParams for the API
-	MatchQueryParams map[string]string `yaml:"match_query_params" json:"match_query_params"`
-	// MatchHeaders for mock response
-	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
-	// MatchContents for request optionally
-	MatchContents string `yaml:"match_contents" json:"match_contents"`
+	// AssertQueryParamsPattern for the API
+	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
+	// AssertHeadersPattern for mock response
+	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
+	// AssertContentsPattern for request optionally
+	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
 	// PathParams sample for the API
 	PathParams map[string]string `yaml:"path_params" json:"path_params"`
 	// QueryParams sample for the API
@@ -80,10 +80,10 @@ func (r MockHTTPRequest) ContentType(defContentType string) string {
 	return defContentType
 }
 
-// MatchContentOrContent helper method
-func (r MockHTTPRequest) MatchContentOrContent() string {
-	if r.MatchContents != "" {
-		return r.MatchContents
+// AssertContentsPatternOrContent helper method
+func (r MockHTTPRequest) AssertContentsPatternOrContent() string {
+	if r.AssertContentsPattern != "" {
+		return r.AssertContentsPattern
 	}
 	return r.Contents
 }
@@ -100,10 +100,10 @@ type MockHTTPResponse struct {
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 	// StatusCode for response
 	StatusCode int `yaml:"status_code" json:"status_code"`
-	// MatchHeaders for mock response
-	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
-	// MatchContents for request optionally
-	MatchContents string `yaml:"match_contents" json:"match_contents"`
+	// AssertHeadersPattern for mock response
+	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
+	// AssertContentsPattern for request optionally
+	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
 	// PipeProperties to extract properties from response
 	PipeProperties []string `yaml:"pipe_properties" json:"pipe_properties"`
 	// Assertions for validating response
@@ -120,10 +120,10 @@ func (r MockHTTPResponse) ContentType(defContentType string) string {
 	return defContentType
 }
 
-// MatchContentOrContent helper method
-func (r MockHTTPResponse) MatchContentOrContent() string {
-	if r.MatchContents != "" {
-		return r.MatchContents
+// AssertContentsPatternOrContent helper method
+func (r MockHTTPResponse) AssertContentsPatternOrContent() string {
+	if r.AssertContentsPattern != "" {
+		return r.AssertContentsPattern
 	}
 	return r.Contents
 }
@@ -163,15 +163,15 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 		rawPath = "/" + rawPath
 	}
 	return &MockScenarioKeyData{
-		Method:           ms.Method,
-		Name:             ms.Name,
-		Path:             rawPath,
-		Group:            ms.Group,
-		Order:            ms.Order,
-		Predicate:        ms.Predicate,
-		MatchQueryParams: ms.Request.MatchQueryParams,
-		MatchContents:    ms.Request.MatchContents,
-		MatchHeaders:     ms.Request.MatchHeaders,
+		Method:                   ms.Method,
+		Name:                     ms.Name,
+		Path:                     rawPath,
+		Group:                    ms.Group,
+		Order:                    ms.Order,
+		Predicate:                ms.Predicate,
+		AssertQueryParamsPattern: ms.Request.AssertQueryParamsPattern,
+		AssertContentsPattern:    ms.Request.AssertContentsPattern,
+		AssertHeadersPattern:     ms.Request.AssertHeadersPattern,
 	}
 }
 
@@ -199,11 +199,11 @@ func (ms *MockScenario) Digest() string {
 	h.Write([]byte(ms.Method))
 	h.Write([]byte(ms.Group))
 	h.Write([]byte(ms.Path))
-	for k, v := range ms.Request.MatchQueryParams {
+	for k, v := range ms.Request.AssertQueryParamsPattern {
 		h.Write([]byte(k))
 		h.Write([]byte(v))
 	}
-	h.Write([]byte(ms.Request.MatchContents))
+	h.Write([]byte(ms.Request.AssertContentsPattern))
 	h.Write([]byte(ms.Response.Contents))
 	h.Write([]byte(ms.Response.ContentsFile))
 	return fmt.Sprintf("%x", h.Sum(nil))

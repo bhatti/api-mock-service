@@ -4,10 +4,10 @@ path: /
 group: root
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Content-Type: ""
-    match_contents: '{}'
+    assert_contents_pattern: '{}'
     path_params: {}
     query_params: {}
     headers:
@@ -35,7 +35,7 @@ response:
         }
     contents_file: ""
     status_code: 200
-    match_headers: {}
+    assert_headers_pattern: {}
     assertions:
         - VariableContains contents.id 1
         - VariableContains contents.body est

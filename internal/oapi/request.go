@@ -35,13 +35,13 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 		return res, err
 	}
 	return types.MockHTTPRequest{
-		MatchHeaders:     propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
-		Headers:          propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(false)),
-		MatchQueryParams: propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
-		QueryParams:      propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(false)),
-		Contents:         string(strippedContents),
-		ExampleContents:  string(exampleContents),
-		MatchContents:    matchContents,
-		PathParams:       propsToMap(req.PathParams, asciiPattern, dataTemplate.WithInclude(false)),
+		AssertHeadersPattern:     propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
+		Headers:                  propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(false)),
+		AssertQueryParamsPattern: propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
+		QueryParams:              propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(false)),
+		Contents:                 string(strippedContents),
+		ExampleContents:          string(exampleContents),
+		AssertContentsPattern:    matchContents,
+		PathParams:               propsToMap(req.PathParams, asciiPattern, dataTemplate.WithInclude(false)),
 	}, nil
 }

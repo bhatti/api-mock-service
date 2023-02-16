@@ -118,34 +118,34 @@ func saveMockResponse(
 		Group:          utils.NormalizeGroup("", u.Path),
 		Authentication: make(map[string]types.MockAuthorization),
 		Request: types.MockHTTPRequest{
-			MatchQueryParams: make(map[string]string),
-			MatchHeaders:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
-			MatchContents:    matchReqContents,
-			QueryParams:      make(map[string]string),
-			Headers:          make(map[string]string),
-			Contents:         string(reqBody),
+			AssertQueryParamsPattern: make(map[string]string),
+			AssertHeadersPattern:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
+			AssertContentsPattern:    matchReqContents,
+			QueryParams:              make(map[string]string),
+			Headers:                  make(map[string]string),
+			Contents:                 string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
-			Headers:       resHeaders,
-			Contents:      string(resBody),
-			StatusCode:    status,
-			MatchContents: matchResContents,
+			Headers:               resHeaders,
+			Contents:              string(resBody),
+			StatusCode:            status,
+			AssertContentsPattern: matchResContents,
 		},
 	}
 
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
 			scenario.Request.QueryParams[k] = v[0]
-			if config.MatchQueryParams(k) {
-				scenario.Request.MatchQueryParams[k] = v[0]
+			if config.AssertQueryParams(k) {
+				scenario.Request.AssertQueryParamsPattern[k] = v[0]
 			}
 		}
 	}
 	for k, v := range req.Header {
 		if len(v) > 0 {
 			scenario.Request.Headers[k] = v[0]
-			if config.MatchHeader(k) {
-				scenario.Request.MatchHeaders[k] = v[0]
+			if config.AssertHeader(k) {
+				scenario.Request.AssertHeadersPattern[k] = v[0]
 			}
 		}
 	}

@@ -165,10 +165,10 @@ description: recorded at 2022-10-29 04:26:17.24776 +0000 UTC
 group: v1_customers_cus_xx_cash_balance
 predicate: {{NthRequest 2}}
 request:
-  match_query_params: {}
-  match_headers:
+  assert_query_params_pattern: {}
+  assert_headers_pattern:
     Content-Type: ""
-  match_contents: '{}'
+  assert_contents_pattern: '{}'
   path_params: {}
   query_params: {}
   headers:
@@ -217,8 +217,8 @@ response:
     }
   contents_file: ""
   status_code: 200
-  match_headers: {}
-  match_contents: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
+  assert_headers_pattern: {}
+  assert_contents_pattern: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
   assertions: []
 wait_before_reply: 0s
 ```
@@ -239,9 +239,9 @@ You can define match parameters based on:
   
 You can use these parameters so that test scenario is executed only when the parameters match, e.g.
 ```yaml
-    match_query_params:
+    assert_query_params_pattern:
       name: [a-z0-9]{1,50}
-    match_headers:
+    assert_headers_pattern:
       Content-Type: "application/json"
 ```
 The matching request parameters will be used to select the mock scenario to execute and you can use regular expressions to validate, 
@@ -268,7 +268,7 @@ The response properties will include:
 - Assertions
 You can copy recorded scenario to another folder and use templates to customize it and then upload it for playback.
 
-The matching header and contents use `match_headers` and `match_contents` similar to request to validate response in case you want to test response from a real service for chaos testing.
+The matching header and contents use `assert_headers_pattern` and `assert_contents_pattern` similar to request to validate response in case you want to test response from a real service for chaos testing.
 Similarly, `assertions` defines a set of predicates to test against response from a real service:
 ```yaml
     assertions:
@@ -323,7 +323,7 @@ path: /v1/customers/:customer/cash_balance
 predicate: {{NthRequest 2}}
 group: my_group
 request:
-  match_headers:
+  assert_headers_pattern:
     Authorization: Bearer sk_test_[0-9a-fA-F]{10}$
 response:
   headers:
@@ -363,8 +363,8 @@ response:
       }
     }
   status_code: 200
-  match_headers: {}
-  match_contents: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
+  assert_headers_pattern: {}
+  assert_contents_pattern: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
   assertions:
     - VariableContains contents.livemode false
     - VariableContains headers.Pragma no-cache
@@ -409,7 +409,7 @@ path: /v1/customers/:customer/cash_balance
 predicate: {{NthRequest 2}}
 group: my_group
 request:
-    match_headers:
+    assert_headers_pattern:
         Authorization:
             - Bearer sk_test
 response:
@@ -454,7 +454,7 @@ description: ""
 predicate: ""
 group: devices
 request:
-    match_headers:
+    assert_headers_pattern:
       Content-Type: "application/json; charset=utf-8"
 response:
     headers:
@@ -911,9 +911,9 @@ description: Promote the secondary Auth Token to primary. After promoting the ne
 group: v1_AuthTokens_Promote
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_contents: '{}'
+    assert_query_params_pattern: {}
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{}'
     path_params: {}
     query_params: {}
     headers: {}
@@ -926,8 +926,8 @@ response:
       "date_updated":"{{Time}}","url":"{{RandURL}}"}
     contents_file: ""
     status_code: 200
-    match_headers: {}
-    match_contents: '{"account_sid":"(__string__^AC[0-9a-fA-F]{32}$)","auth_token":"(__string__\\w+)"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"account_sid":"(__string__^AC[0-9a-fA-F]{32}$)","auth_token":"(__string__\\w+)"}'
     assertions: []
 wait_before_reply: 0s
 ```
@@ -962,10 +962,10 @@ Which will return summary of APIs such as:
     "method": "GET",
     "name": "FetchCredential-8b2fcf02dfb7dc190fb735a469e1bbaa3ccb5fd1a24726976d110374b13403c6",
     "path": "/v1/Credentials/{Sid}",
-    "match_query_params": {},
-    "match_headers": {},
+    "assert_query_params_pattern": {},
+    "assert_headers_pattern": {},
     "match_content_type": "",
-    "match_contents": "",
+    "assert_contents_pattern": "",
     "LastUsageTime": 0,
     "RequestCount": 0
   },
@@ -973,10 +973,10 @@ Which will return summary of APIs such as:
     "method": "GET",
     "name": "FetchCredentialPublicKey-60a01dcea5290e6d429ce604c7acf5bd59606045fc32c0bc835e57ac2b1b8eb6",
     "path": "/v1/Credentials/PublicKeys/{Sid}",
-    "match_query_params": {},
-    "match_headers": {},
+    "assert_query_params_pattern": {},
+    "assert_headers_pattern": {},
     "match_content_type": "",
-    "match_contents": "",
+    "assert_contents_pattern": "",
     "LastUsageTime": 0,
     "RequestCount": 0
   },
@@ -984,17 +984,20 @@ Which will return summary of APIs such as:
     "method": "GET",
     "name": "ListCredential-28717701f05de4374a09ec002066d308043e73e30f25fec2dcd4c3d3c001d300",
     "path": "/v1/Credentials",
-    "match_query_params": {
+    "assert_query_params_pattern": {
       "PageSize": "\\d+"
     },
-    "match_headers": {},
+    "assert_headers_pattern": {},
     "match_content_type": "",
-    "match_contents": "",
+    "assert_contents_pattern": "",
     "LastUsageTime": 0,
     "RequestCount": 0
   },
 ...  
 ```
+
+## Swagger-UI
+The api-mock-service includes an embdded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL in your browser.
 
 ## Contract Testing
 
@@ -1069,10 +1072,10 @@ order: 0
 group: todos
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Content-Type: application/x-www-form-urlencoded
-    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     path_params: {}
     query_params: {}
     headers:
@@ -1140,8 +1143,8 @@ response:
         }
     contents_file: ""
     status_code: 201
-    match_headers: {}
-    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
     pipe_properties: []
     assertions: []
 wait_before_reply: 0s
@@ -1189,12 +1192,12 @@ order: 0
 group: todos
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/2
         x-api-key: '[\x20-\x7F]{1,128}'
         Content-Type: application/x-www-form-urlencoded
-    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     path_params:
         id: '\d{3}'
 response:
@@ -1207,7 +1210,7 @@ response:
           "id": {{RandNumMinMax 1 10}}
         }
     status_code: 200
-    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
     pipe_properties:
       - id
       - title
@@ -1224,8 +1227,8 @@ path: /todos/:id
 order: 1
 group: todos
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/10
         x-api-key: '[\x20-\x7F]{1,32}'
     headers:
@@ -1235,7 +1238,7 @@ request:
     path_params:
         id: '[0-9]{4,10}'
     match_content_type: ""
-    match_contents: ""
+    assert_contents_pattern: ""
 response:
     headers: {}
     content_type: ""
@@ -1246,7 +1249,7 @@ response:
                         "title": "illo test title",
                         "completed": true
                   }
-    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     pipe_properties:
       - id
       - userId

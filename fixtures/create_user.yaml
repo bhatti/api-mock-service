@@ -5,7 +5,7 @@ group: user_group
 order: 0
 predicate: ""
 request:
-    match_query_params: {}
+    assert_query_params_pattern: {}
     path_params: {}
     headers:
         Content-Type: application/json
@@ -21,8 +21,8 @@ response:
     pipe_properties:
       - User.Username
       - User.Directory
-    match_headers: {}
+    assert_headers_pattern: {}
     contents: '{"User": {"Directory": "{{RandString 20}}", "Username": "{{RandEmail}}", "DesiredDeliveryMediums": ["EMAIL"]}}'
-    match_contents: '{"User.Name":"(__string__\\w+)","User.UserStatus":"(__string__\\w+)","User.Username":"(__string__\\w+@\\w+.?\\w+)"}'
+    assert_contents_pattern: '{"User.Name":"(__string__\\w+)","User.UserStatus":"(__string__\\w+)","User.Username":"(__string__\\w+@\\w+.?\\w+)"}'
     assertions: []
 wait_before_reply: 0s

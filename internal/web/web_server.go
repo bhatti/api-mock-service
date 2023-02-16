@@ -1,6 +1,7 @@
 package web
 
 import (
+	"embed"
 	"net/http"
 	"os"
 
@@ -34,7 +35,8 @@ type Server interface {
 	TRACE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route
 	AddMiddleware(m echo.MiddlewareFunc)
 	Start(address string)
-	Static(dir string)
+	Static(path string, dir string)
+	Embed(content embed.FS, path string, dir string)
 	Stop()
 }
 
@@ -138,9 +140,16 @@ func (w *DefaultWebServer) TRACE(path string, h HandlerFunc, m ...echo.Middlewar
 }
 
 // Static - serve assets
-func (w *DefaultWebServer) Static(dir string) {
+func (w *DefaultWebServer) Static(path string, dir string) {
 	os.MkdirAll(dir, 0755)
-	w.e.Static("/_assets", dir)
+	w.e.Static(path, dir)
+}
+
+// Embed - serve assets
+func (w *DefaultWebServer) Embed(content embed.FS, path string, dir string) {
+	os.MkdirAll(dir, 0755)
+	var contentHandler = echo.WrapHandler(http.FileServer(http.FS(content)))
+	w.e.GET(path, contentHandler)
 }
 
 // Start - starts web server

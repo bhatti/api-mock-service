@@ -338,8 +338,8 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		Path:        path,
 		Description: name,
 		Request: types.MockHTTPRequest{
-			MatchQueryParams: map[string]string{"a": `\d+`, "b": "abc"},
-			MatchHeaders: map[string]string{
+			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
+			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/json",
 			},
 		},

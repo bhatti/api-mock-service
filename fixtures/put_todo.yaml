@@ -3,10 +3,10 @@ name: put-todo
 path: /todos/:id
 group: put_todo
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Content-Type: application/x-www-form-urlencoded
-    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     path_params: {}
     query_params: {}
     headers:
@@ -38,7 +38,7 @@ response:
         }
     contents_file: ""
     status_code: 200
-    match_headers: {}
-    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
     assertions: []
 wait_before_reply: 0s

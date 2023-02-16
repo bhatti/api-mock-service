@@ -6,9 +6,9 @@ order: 0
 group: products
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_contents: '{"category":"(BOOKS|MUSIC|TOYS)","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
+    assert_query_params_pattern: {}
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"category":"(BOOKS|MUSIC|TOYS)","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
     path_params: {}
     query_params: {}
     headers:
@@ -26,8 +26,8 @@ response:
     contents: '{"category":"{{EnumString `BOOKS MUSIC TOYS`}}","id":"{{RandStringMinMax 0 0}}","inventory":"{{RandNumMinMax 5 500}}","name":"{{RandStringMinMax 2 50}}","price":{"amount":{{RandNumMinMax 0 0}},"currency":"$"}}'
     contents_file: ""
     status_code: 200
-    match_headers: {}
-    match_contents: '{"category":"(__string__(BOOKS|MUSIC|TOYS))","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"category":"(__string__(BOOKS|MUSIC|TOYS))","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
     pipe_properties: 
       - id
       - name

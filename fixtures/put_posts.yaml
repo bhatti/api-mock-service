@@ -4,10 +4,10 @@ path: /posts/1
 group: ""
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Content-Type: application/x-www-form-urlencoded
-    match_contents: '{"body":"(__string__\\w+)","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"body":"(__string__\\w+)","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     headers:
         Accept: '*/*'
         Content-Length: "88"
@@ -38,8 +38,8 @@ response:
         }
     contents_file: ""
     status_code: 200
-    match_headers: {}
-    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
     assertions:
         - VariableContains headers.Pragma no-cache
         - VariableContains contents.id 1

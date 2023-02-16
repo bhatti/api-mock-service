@@ -47,10 +47,10 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 		return
 	}
 	return types.MockHTTPResponse{
-		StatusCode:      res.StatusCode,
-		Headers:         propsToMapArray(res.Headers, dataTemplate.WithInclude(false)),
-		Contents:        string(strippedContents),
-		ExampleContents: string(exampleContents),
-		MatchContents:   matchContents,
+		StatusCode:            res.StatusCode,
+		Headers:               propsToMapArray(res.Headers, dataTemplate.WithInclude(false)),
+		Contents:              string(strippedContents),
+		ExampleContents:       string(exampleContents),
+		AssertContentsPattern: matchContents,
 	}, nil
 }

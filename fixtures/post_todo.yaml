@@ -5,12 +5,12 @@ order: 0
 group: todos
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/2
         x-api-key: '[\x20-\x7F]{1,128}'
         Content-Type: application/x-www-form-urlencoded
-    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     path_params:
         id: '\d{3}'
 response:
@@ -23,7 +23,7 @@ response:
           "id": {{RandNumMinMax 1 10}}
         }
     status_code: 200
-    match_contents: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
     pipe_properties: 
       - id
       - title

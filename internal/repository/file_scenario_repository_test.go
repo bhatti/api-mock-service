@@ -137,10 +137,10 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 
 	// WHEN looking up todos by PUT with different query param
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/11",
-		MatchQueryParams: map[string]string{"a": "22"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/11",
+		AssertQueryParamsPattern: map[string]string{"a": "22"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -149,10 +149,10 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 
 	// WHEN looking up todos by matching path and query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/12",
-		MatchQueryParams: map[string]string{"a": "1"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/12",
+		AssertQueryParamsPattern: map[string]string{"a": "1"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -161,10 +161,10 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 
 	// WHEN looking up todos by matching path, headers and query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/12",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/12",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -177,10 +177,10 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		assert.Equal(t, 1, len(groups))
 	}
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/12",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc", "n": "0"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/12",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -190,10 +190,10 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	//
 	// WHEN looking up books by POST with topic
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc", "n": "0"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -207,10 +207,10 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		assert.Equal(t, 2, len(groups))
 	}
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc", "n": "0"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -266,10 +266,10 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 
 	// WHEN looking up todos by POST with different query param
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Post,
-		Path:             "/v3/todos",
-		MatchQueryParams: map[string]string{"a": "11"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Post,
+		Path:                     "/v3/todos",
+		AssertQueryParamsPattern: map[string]string{"a": "11"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -278,10 +278,10 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 
 	// WHEN looking up todos by matching path and query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Post,
-		Path:             "/v3/todos",
-		MatchQueryParams: map[string]string{"a": "1"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Post,
+		Path:                     "/v3/todos",
+		AssertQueryParamsPattern: map[string]string{"a": "1"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -289,10 +289,10 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 	// WHEN looking up todos by matching path, headers and query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Post,
-		Path:             "/v3/todos",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Post,
+		Path:                     "/v3/todos",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -306,10 +306,10 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	//
 	// WHEN looking up books by POST with topic
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Post,
-		Path:             "/v3/mytopic/books",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Post,
+		Path:                     "/v3/mytopic/books",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -322,10 +322,10 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 		require.Equal(t, "mytopic", groups["topic"])
 	}
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
-		Method:           types.Post,
-		Path:             "/v3/mytopic/books",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Post,
+		Path:                     "/v3/mytopic/books",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -344,10 +344,10 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	}
 	// WHEN looking up scenarios with wrong method
 	matched, _ := repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Patch,
-		Path:             "/api/todos/1",
-		MatchQueryParams: map[string]string{"a": "1"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Patch,
+		Path:                     "/api/todos/1",
+		AssertQueryParamsPattern: map[string]string{"a": "1"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -356,10 +356,10 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 
 	// WHEN looking up scenarios with wrong query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Get,
-		Path:             "/api/todos/1",
-		MatchQueryParams: map[string]string{"a": "11"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Get,
+		Path:                     "/api/todos/1",
+		AssertQueryParamsPattern: map[string]string{"a": "11"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -368,10 +368,10 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 
 	// WHEN looking up scenarios with valid params but without headers
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Get,
-		Path:             "/api/todos/2",
-		MatchQueryParams: map[string]string{"a": "1"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Get,
+		Path:                     "/api/todos/2",
+		AssertQueryParamsPattern: map[string]string{"a": "1"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -380,10 +380,10 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 
 	// WHEN looking up scenarios with valid params and headers
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Get,
-		Path:             "/api/todos/2",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Get,
+		Path:                     "/api/todos/2",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -398,10 +398,10 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	//
 	// WHEN looking up books by POST with topic
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Get,
-		Path:             "/api/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Get,
+		Path:                     "/api/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -427,10 +427,10 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	}
 	// WHEN looking up scenarios with wrong method
 	matched, _ := repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Patch,
-		Path:             "/v1/todos/1",
-		MatchQueryParams: map[string]string{"a": "1"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Patch,
+		Path:                     "/v1/todos/1",
+		AssertQueryParamsPattern: map[string]string{"a": "1"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -439,10 +439,10 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 
 	// WHEN looking up scenarios with wrong query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Delete,
-		Path:             "/v1/todos/1",
-		MatchQueryParams: map[string]string{"a": "11"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Delete,
+		Path:                     "/v1/todos/1",
+		AssertQueryParamsPattern: map[string]string{"a": "11"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -450,10 +450,10 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 
 	// WHEN looking up scenarios with valid params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Delete,
-		Path:             "/v1/todos/2",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Delete,
+		Path:                     "/v1/todos/2",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -468,10 +468,10 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	//
 	// WHEN looking up books by POST with topic
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Delete,
-		Path:             "/v1/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Delete,
+		Path:                     "/v1/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -502,10 +502,10 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 
 	// WHEN looking up todos by PUT with different query param
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/11",
-		MatchQueryParams: map[string]string{"a": "11"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/11",
+		AssertQueryParamsPattern: map[string]string{"a": "11"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	})
@@ -514,10 +514,10 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 
 	// WHEN looking up todos by matching path and query params
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/12",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/12",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -530,10 +530,10 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		assert.Equal(t, 1, len(groups))
 	}
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/todos/12",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/todos/12",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -543,10 +543,10 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 	//
 	// WHEN looking up books by POST with topic
 	matched, _ = repo.LookupAll(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -560,19 +560,19 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		assert.Equal(t, 2, len(groups))
 	}
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 		},
 	}, make(map[string]any))
 	require.Error(t, err)
 	_, err = repo.Lookup(&types.MockScenarioKeyData{
-		Method:           types.Put,
-		Path:             "/api/mytopic/books/11",
-		MatchQueryParams: map[string]string{"a": "1", "b": "abc"},
-		MatchHeaders: map[string]string{
+		Method:                   types.Put,
+		Path:                     "/api/mytopic/books/11",
+		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
+		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
 			"ETag":                  "981",
 		},
@@ -588,8 +588,8 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		Group:       path,
 		Description: name,
 		Request: types.MockHTTPRequest{
-			MatchQueryParams: map[string]string{"a": `\d+`, "b": "abc"},
-			MatchHeaders: map[string]string{
+			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
+			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/json",
 				"ETag":                  `\d{3}`,
 			},

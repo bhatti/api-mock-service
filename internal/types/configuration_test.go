@@ -29,17 +29,17 @@ func Test_ShouldMatchHeader(t *testing.T) {
 	require.NoError(t, err)
 	// WHEN matching header with empty regex
 	// THEN it should not match
-	require.False(t, c.MatchHeader("test"))
-	c.MatchHeaderRegex = "test\\d"
+	require.False(t, c.AssertHeader("test"))
+	c.AssertHeadersPattern = "test\\d"
 	// WHEN matching header with empty input
 	// THEN it should not match
-	require.False(t, c.MatchHeader(""))
+	require.False(t, c.AssertHeader(""))
 	// WHEN matching header with non matching input
 	// THEN it should not match
-	require.False(t, c.MatchHeader("test"))
+	require.False(t, c.AssertHeader("test"))
 	// WHEN matching header with matching input
 	// THEN it should not match
-	require.True(t, c.MatchHeader("test1"))
+	require.True(t, c.AssertHeader("test1"))
 }
 
 func Test_ShouldMatchQueryParameters(t *testing.T) {
@@ -48,16 +48,16 @@ func Test_ShouldMatchQueryParameters(t *testing.T) {
 	require.NoError(t, err)
 	// WHEN matching query params with empty regex
 	// THEN it should not match
-	require.False(t, c.MatchQueryParams("test"))
-	c.MatchQueryRegex = "test\\d"
+	require.False(t, c.AssertQueryParams("test"))
+	c.AssertQueryParamsPattern = "test\\d"
 	// WHEN matching query params with empty input
 	// THEN it should not match
-	require.False(t, c.MatchQueryParams(""))
+	require.False(t, c.AssertQueryParams(""))
 	// WHEN matching query params with non matching input
 	// THEN it should not match
-	require.False(t, c.MatchQueryParams("test"))
+	require.False(t, c.AssertQueryParams("test"))
 	// WHEN matching query params with matching input
 	// THEN it should not match
-	require.True(t, c.MatchQueryParams("test1"))
-	require.True(t, c.MatchQueryParams("Test1"))
+	require.True(t, c.AssertQueryParams("test1"))
+	require.True(t, c.AssertQueryParams("Test1"))
 }

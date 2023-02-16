@@ -5,9 +5,9 @@ order: 0
 group: products
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers: {}
-    match_contents: '{}'
+    assert_query_params_pattern: {}
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{}'
     path_params: {}
     query_params:
         category: '[\x20-\x7F]{1,128}'
@@ -34,7 +34,7 @@ response:
 {{ end }}
       ]
     status_code: 200
-    match_headers: {}
-    match_contents: '{"category":"(MUSIC)","id":"(__string__\\w+)","inventory":".+","name":"(__string__\\w+)","price.amount":"[\\d\\.]+","price.currency":"(USD|CAD)"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"category":"(MUSIC)","id":"(__string__\\w+)","inventory":".+","name":"(__string__\\w+)","price.amount":"[\\d\\.]+","price.currency":"(USD|CAD)"}'
     assertions: []
 wait_before_reply: 0s

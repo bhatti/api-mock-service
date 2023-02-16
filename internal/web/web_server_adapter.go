@@ -3,6 +3,7 @@ package web
 import (
 	"bytes"
 	"context"
+	"embed"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/labstack/echo/v4"
@@ -133,5 +134,8 @@ func (a *ServerAdapter) Stop() {
 }
 
 // Static serve static assets
-func (a *ServerAdapter) Static(string) {
+func (a *ServerAdapter) Static(string, string) {
+}
+
+func (a *ServerAdapter) Embed(embed.FS, string, string) {
 }

@@ -65,12 +65,12 @@ func Test_ShouldCompareEqualsMockScenarioKeyData(t *testing.T) {
 	keyData1 := buildScenario().ToKeyData()
 	keyData2 := buildScenario().ToKeyData()
 	require.NoError(t, keyData1.Equals(keyData2))
-	keyData1.MatchHeaders["abc"] = "000"
+	keyData1.AssertHeadersPattern["abc"] = "000"
 	require.Error(t, keyData1.Equals(keyData2))
-	keyData1.MatchContents = "content1"
+	keyData1.AssertContentsPattern = "content1"
 	require.Error(t, keyData1.Equals(keyData2))
-	keyData1.MatchHeaders[ContentTypeHeader] = "yaml"
+	keyData1.AssertHeadersPattern[ContentTypeHeader] = "yaml"
 	require.Error(t, keyData1.Equals(keyData2))
-	keyData1.MatchQueryParams["xyz"] = "111"
+	keyData1.AssertQueryParamsPattern["xyz"] = "111"
 	require.Error(t, keyData1.Equals(keyData2))
 }

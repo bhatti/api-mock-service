@@ -4,8 +4,8 @@ path: /todos/:id
 order: 1
 group: todos
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Mock-Url: https://jsonplaceholder.typicode.com/todos/10
         x-api-key: '[\x20-\x7F]{1,32}'
     headers:
@@ -15,7 +15,7 @@ request:
     path_params:
         id: '[0-9]{4,10}'
     match_content_type: ""
-    match_contents: ""
+    assert_contents_pattern: ""
 response:
     headers: {}
     content_type: ""
@@ -26,7 +26,7 @@ response:
         		"title": "illo test title",
         		"completed": true
         	  }
-    match_contents: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
     pipe_properties: 
       - id
       - userId

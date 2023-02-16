@@ -4,10 +4,10 @@ path: /posts
 group: ""
 predicate: ""
 request:
-    match_query_params: {}
-    match_headers:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
         Content-Type: application/x-www-form-urlencoded
-    match_contents: '{"body":"||string||\\w+ \\w+ \\w+ \\w+ \\w+","id":"||number||[+-]?[0-9]{5,10}","title":"||string||\\w+ \\w+","userId":"||number||[+-]?[0-9]{5,10}"}'
+    assert_contents_pattern: '{"body":"||string||\\w+ \\w+ \\w+ \\w+ \\w+","id":"||number||[+-]?[0-9]{5,10}","title":"||string||\\w+ \\w+","userId":"||number||[+-]?[0-9]{5,10}"}'
     path_params: {}
     query_params: {}
     headers:
@@ -26,7 +26,7 @@ response:
         }
     contents_file: ""
     status_code: 201
-    match_headers: {}
-    match_contents: '{"id":"||number||[+-]?[0-9]{5,10}"}'
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"id":"||number||[+-]?[0-9]{5,10}"}'
     assertions: []
 wait_before_reply: 0s

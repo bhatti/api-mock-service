@@ -1,6 +1,9 @@
 package main
 
-import "github.com/bhatti/api-mock-service/cmd"
+import (
+	"embed"
+	"github.com/bhatti/api-mock-service/cmd"
+)
 
 var (
 	version = "xdev"
@@ -8,6 +11,11 @@ var (
 	date    = "unknown"
 )
 
+// swaggerContent holds our swagger-ui content.
+//
+//go:embed swagger-ui/*
+var swaggerContent embed.FS
+
 func main() {
-	cmd.Execute(version, commit, date)
+	cmd.Execute(version, commit, date, swaggerContent)
 }

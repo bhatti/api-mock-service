@@ -14,10 +14,10 @@ func MatchScenarioPredicate(matched *types.MockScenarioKeyData, target *types.Mo
 	}
 	// Find any params for query params and path variables
 	params := matched.MatchGroups(target.Path)
-	for k, v := range matched.MatchQueryParams {
+	for k, v := range matched.AssertQueryParamsPattern {
 		params[k] = v
 	}
-	for k, v := range target.MatchQueryParams {
+	for k, v := range target.AssertQueryParamsPattern {
 		params[k] = v
 	}
 	params[fuzz.RequestCount] = fmt.Sprintf("%d", requestCount)

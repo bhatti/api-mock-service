@@ -82,10 +82,10 @@ func (moc *MockOAPIController) GetOpenAPISpecsByScenario(c web.APIContext) (err 
 		return fmt.Errorf("path not specified in %s", c.Request().URL)
 	}
 	keyData := &types.MockScenarioKeyData{
-		Method:           method,
-		Name:             name,
-		Path:             path,
-		MatchQueryParams: make(map[string]string),
+		Method:                   method,
+		Name:                     name,
+		Path:                     path,
+		AssertQueryParamsPattern: make(map[string]string),
 	}
 	scenario, err := moc.getScenario(keyData)
 	if err != nil {

@@ -20,21 +20,21 @@ func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKey
 	}
 
 	keyData = &types.MockScenarioKeyData{
-		Method:           method,
-		Name:             req.Header.Get(types.MockScenarioName),
-		Path:             req.URL.Path,
-		MatchQueryParams: make(map[string]string),
-		MatchHeaders:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
-		MatchContents:    string(reqBytes),
+		Method:                   method,
+		Name:                     req.Header.Get(types.MockScenarioName),
+		Path:                     req.URL.Path,
+		AssertQueryParamsPattern: make(map[string]string),
+		AssertHeadersPattern:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
+		AssertContentsPattern:    string(reqBytes),
 	}
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
-			keyData.MatchQueryParams[k] = v[0]
+			keyData.AssertQueryParamsPattern[k] = v[0]
 		}
 	}
 	for k, v := range req.Header {
 		if len(v) > 0 {
-			keyData.MatchHeaders[k] = v[0]
+			keyData.AssertHeadersPattern[k] = v[0]
 		}
 	}
 	return keyData, nil

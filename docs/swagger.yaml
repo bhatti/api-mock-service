@@ -95,17 +95,17 @@ definitions:
         description: Headers for mock response
         type: object
         x-go-name: Headers
-      match_contents:
+      assert_contents_pattern:
         description: MatchContents for request optionally
         type: string
         x-go-name: MatchContents
-      match_headers:
+      assert_headers_pattern:
         additionalProperties:
           type: string
         description: MatchHeaders for mock response
         type: object
         x-go-name: MatchHeaders
-      match_query_params:
+      assert_query_params_pattern:
         additionalProperties:
           type: string
         description: MatchQueryParams for the API
@@ -154,11 +154,11 @@ definitions:
         description: Headers for mock response
         type: object
         x-go-name: Headers
-      match_contents:
+      assert_contents_pattern:
         description: MatchContents for request optionally
         type: string
         x-go-name: MatchContents
-      match_headers:
+      assert_headers_pattern:
         additionalProperties:
           type: string
         description: MatchHeaders for mock response
@@ -236,17 +236,17 @@ definitions:
         description: Group of scenario
         type: string
         x-go-name: Group
-      match_contents:
+      assert_contents_pattern:
         description: MatchContents for request optionally
         type: string
         x-go-name: MatchContents
-      match_headers:
+      assert_headers_pattern:
         additionalProperties:
           type: string
         description: MatchHeaders for mock response
         type: object
         x-go-name: MatchHeaders
-      match_query_params:
+      assert_query_params_pattern:
         additionalProperties:
           type: string
         description: MatchQueryParams for the API

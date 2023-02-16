@@ -195,7 +195,7 @@ func (x *Executor) execute(
 			"Response":   resContents}).Infof("executed request")
 	}
 
-	for k, v := range scenario.Response.MatchHeaders {
+	for k, v := range scenario.Response.AssertHeadersPattern {
 		actualHeader := resHeaders[k]
 		if len(actualHeader) == 0 {
 			return nil, fmt.Errorf("failed to find required header %s with regex %s", k, v)
@@ -211,11 +211,11 @@ func (x *Executor) execute(
 		}
 	}
 
-	if scenario.Response.MatchContents != "" {
+	if scenario.Response.AssertContentsPattern != "" {
 		regex := make(map[string]string)
-		err := json.Unmarshal([]byte(scenario.Response.MatchContents), &regex)
+		err := json.Unmarshal([]byte(scenario.Response.AssertContentsPattern), &regex)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal response '%s' regex due to %w", scenario.Response.MatchContents, err)
+			return nil, fmt.Errorf("failed to unmarshal response '%s' regex due to %w", scenario.Response.AssertContentsPattern, err)
 		}
 		err = fuzz.ValidateRegexMap(resContents, regex)
 		if err != nil {
@@ -326,8 +326,8 @@ func buildRequestBody(
 	var contents string
 	if scenario.Request.Contents != "" {
 		contents = scenario.Request.Contents
-	} else if scenario.Request.MatchContents != "" {
-		contents = scenario.Request.MatchContents
+	} else if scenario.Request.AssertContentsPattern != "" {
+		contents = scenario.Request.AssertContentsPattern
 	}
 	if contents == "" {
 		return "", nil
@@ -371,7 +371,7 @@ func buildTemplateParams(
 		templateParams[k] = v
 		queryParams[k] = v
 	}
-	for k, v := range scenario.Request.MatchQueryParams {
+	for k, v := range scenario.Request.AssertQueryParamsPattern {
 		templateParams[k] = regexValue(v)
 		queryParams[k] = regexValue(v)
 	}
@@ -379,7 +379,7 @@ func buildTemplateParams(
 		templateParams[k] = v
 		queryParams[k] = v
 	}
-	for k, v := range scenario.Request.MatchHeaders {
+	for k, v := range scenario.Request.AssertHeadersPattern {
 		templateParams[k] = regexValue(v)
 		reqHeaders[k] = []string{regexValue(v)}
 	}

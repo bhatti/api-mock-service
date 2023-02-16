@@ -162,7 +162,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
 	require.NoError(t, err)
 	// AND bad matching header
-	scenario.Response.MatchHeaders["Content-Type"] = "application/xjson"
+	scenario.Response.AssertHeadersPattern["Content-Type"] = "application/xjson"
 	err = repo.Save(scenario)
 	require.NoError(t, err)
 
@@ -192,7 +192,7 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
 	require.NoError(t, err)
 	// AND missing header
-	scenario.Response.MatchHeaders["Abc-Content-Type"] = "application/xjson"
+	scenario.Response.AssertHeadersPattern["Abc-Content-Type"] = "application/xjson"
 	err = repo.Save(scenario)
 	require.NoError(t, err)
 
@@ -378,7 +378,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 
 func Test_ShouldParseRequestBody(t *testing.T) {
 	scenario := &types.MockScenario{}
-	scenario.Request.MatchContents = `{"PoolId": "us-west-2", "Username": "christina.perdit@sonaret.gov", "UserAttributes": [{"Name": "email", "Value": "christina.perdit@sonaret.gov"}], "DesiredDeliveryMediums": ["EMAIL"]}`
+	scenario.Request.AssertContentsPattern = `{"PoolId": "us-west-2", "Username": "christina.perdit@sonaret.gov", "UserAttributes": [{"Name": "email", "Value": "christina.perdit@sonaret.gov"}], "DesiredDeliveryMediums": ["EMAIL"]}`
 	str, _ := buildRequestBody(scenario)
 	require.Contains(t, str, "christina.perdit@sonaret.gov")
 }

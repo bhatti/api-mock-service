@@ -25,10 +25,10 @@ type Configuration struct {
 	UserAgent string `yaml:"user_agent" mapstructure:"user_agent" env:"USER_AGENT"`
 	// ProxyURL for mock server
 	ProxyURL string `yaml:"proxy_url" mapstructure:"proxy_url" env:"PROXY_URL"`
-	// MatchHeaderRegex to always match HTTP headers and store them in match-header property of mock scenario
-	MatchHeaderRegex string `yaml:"match_header_regex" mapstructure:"match_header_regex" env:"MATCH_HEADER_REGEX"`
-	// MatchQueryRegex to always match HTTP query params and store them in match-query parameters of mock scenario
-	MatchQueryRegex string `yaml:"match_query_regex" mapstructure:"match_query_regex" env:"MATCH_QUERY_REGEX"`
+	// AssertHeadersPattern to always match HTTP headers and store them in match-header property of mock scenario
+	AssertHeadersPattern string `yaml:"assert_headers_pattern" mapstructure:"assert_headers_pattern" env:"ASSERT_HEADERS_PATTERN"`
+	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of mock scenario
+	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 }
@@ -95,14 +95,14 @@ func NewConfiguration(
 	return config, nil
 }
 
-// MatchHeader match header
-func (c *Configuration) MatchHeader(h string) bool {
-	return matchRegex(c.MatchHeaderRegex, h)
+// AssertHeader match header
+func (c *Configuration) AssertHeader(h string) bool {
+	return matchRegex(c.AssertHeadersPattern, h)
 }
 
-// MatchQueryParams match query params
-func (c *Configuration) MatchQueryParams(p string) bool {
-	return matchRegex(c.MatchQueryRegex, p)
+// AssertQueryParams match query params
+func (c *Configuration) AssertQueryParams(p string) bool {
+	return matchRegex(c.AssertQueryParamsPattern, p)
 }
 
 func matchRegex(re string, str string) bool {

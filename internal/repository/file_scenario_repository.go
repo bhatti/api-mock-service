@@ -259,8 +259,8 @@ func (sr *FileMockScenarioRepository) Lookup(
 	for k, v := range matched[0].MatchGroups(target.Path) {
 		data[k] = v
 	}
-	addQueryParams(matched[0].MatchQueryParams, data)
-	addQueryParams(target.MatchQueryParams, data)
+	addQueryParams(matched[0].AssertQueryParamsPattern, data)
+	addQueryParams(target.AssertQueryParamsPattern, data)
 	data[fuzz.RequestCount] = fmt.Sprintf("%d", reqCount)
 
 	scenario, err = unmarshalMockScenario(b, dir, data)

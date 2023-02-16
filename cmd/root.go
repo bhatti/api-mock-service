@@ -1,24 +1,23 @@
 package cmd
 
 import (
+	"embed"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/contract"
-	"os"
-	"strconv"
-	"strings"
-
 	"github.com/bhatti/api-mock-service/internal/controller"
 	"github.com/bhatti/api-mock-service/internal/proxy"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
-
 	"github.com/mitchellh/go-homedir"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
+	"strconv"
+	"strings"
 )
+
 
 var cfgFile string
 var dataDir string
@@ -35,6 +34,9 @@ var Commit string
 // Date of the build
 var Date string
 
+// SwaggerContent for embedded swagger-ui
+var SwaggerContent embed.FS
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "api-mock-service",
@@ -46,10 +48,11 @@ var rootCmd = &cobra.Command{
 }
 
 // Execute is called by main.main() to start the server
-func Execute(version string, commit string, date string) {
+func Execute(version string, commit string, date string, swaggerContent embed.FS) {
 	Version = version
 	Commit = commit
 	Date = date
+	SwaggerContent = swaggerContent
 	if err := rootCmd.Execute(); err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to execute command...")
@@ -175,8 +178,9 @@ func buildControllers(
 	_ = controller.NewContractController(executor, webServer)
 	_ = controller.NewRootController(player, webServer)
 	if serverConfig.AssetDir != "" {
-		webServer.Static(serverConfig.AssetDir)
+		webServer.Static("/_assets", serverConfig.AssetDir)
 	}
+	webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
 
 	return nil
 }

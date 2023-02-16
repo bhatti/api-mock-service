@@ -24,12 +24,12 @@ type MockScenarioKeyData struct {
 	Group string `yaml:"group" json:"group"`
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
-	// MatchQueryParams for the API
-	MatchQueryParams map[string]string `yaml:"match_query_params" json:"match_query_params"`
-	// MatchHeaders for mock response
-	MatchHeaders map[string]string `yaml:"match_headers" json:"match_headers"`
-	// MatchContents for request optionally
-	MatchContents string `yaml:"match_contents" json:"match_contents"`
+	// AssertQueryParamsPattern for the API
+	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
+	// AssertHeadersPattern for mock response
+	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
+	// AssertContentsPattern for request optionally
+	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
 	// LastUsageTime of key data
 	LastUsageTime int64
 	// RequestCount for the API
@@ -63,44 +63,44 @@ func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
 	if !matched {
 		return NewNotFoundError(fmt.Sprintf("path '%s' didn't match '%s'", msd.Path, target.Path))
 	}
-	for k, msdQueryParamVal := range msd.MatchQueryParams {
-		targetQueryParamVal := target.MatchQueryParams[k]
+	for k, msdQueryParamVal := range msd.AssertQueryParamsPattern {
+		targetQueryParamVal := target.AssertQueryParamsPattern[k]
 		if targetQueryParamVal != msdQueryParamVal &&
 			!reMatch(msdQueryParamVal, targetQueryParamVal) {
 			return NewValidationError(fmt.Sprintf("request queryParam '%s' didn't match [%v == %v]",
-				k, msd.MatchQueryParams, target.MatchQueryParams))
+				k, msd.AssertQueryParamsPattern, target.AssertQueryParamsPattern))
 		}
 	}
 
-	if msd.MatchContents != "" &&
-		!strings.Contains(msd.MatchContents, target.MatchContents) &&
-		!reMatch(msd.MatchContents, target.MatchContents) {
-		if target.MatchContents == "" {
+	if msd.AssertContentsPattern != "" &&
+		!strings.Contains(msd.AssertContentsPattern, target.AssertContentsPattern) &&
+		!reMatch(msd.AssertContentsPattern, target.AssertContentsPattern) {
+		if target.AssertContentsPattern == "" {
 			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s'",
-				msd.MatchContents, target.MatchContents))
+				msd.AssertContentsPattern, target.AssertContentsPattern))
 		}
 		regex := make(map[string]string)
-		err := json.Unmarshal([]byte(msd.MatchContents), &regex)
+		err := json.Unmarshal([]byte(msd.AssertContentsPattern), &regex)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal contents '%s' regex due to %w", msd.MatchContents, err)
+			return fmt.Errorf("failed to unmarshal contents '%s' regex due to %w", msd.AssertContentsPattern, err)
 		}
-		matchContents, err := fuzz.UnmarshalArrayOrObject([]byte(target.MatchContents))
+		matchContents, err := fuzz.UnmarshalArrayOrObject([]byte(target.AssertContentsPattern))
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal target contents '%s' regex due to %w", target.MatchContents, err)
+			return fmt.Errorf("failed to unmarshal target contents '%s' regex due to %w", target.AssertContentsPattern, err)
 		}
 		err = fuzz.ValidateRegexMap(matchContents, regex)
 		if err != nil {
 			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s' due to %s",
-				msd.MatchContents, target.MatchContents, err))
+				msd.AssertContentsPattern, target.AssertContentsPattern, err))
 		}
 	}
 
-	for k, msdHeaderVal := range msd.MatchHeaders {
-		targetHeaderVal := getDictValue(k, target.MatchHeaders)
+	for k, msdHeaderVal := range msd.AssertHeadersPattern {
+		targetHeaderVal := getDictValue(k, target.AssertHeadersPattern)
 		if targetHeaderVal != msdHeaderVal &&
 			!reMatch(msdHeaderVal, targetHeaderVal) {
 			return NewValidationError(fmt.Sprintf("%s request header didn't match [%v == %v], all headers %v",
-				k, targetHeaderVal, msdHeaderVal, target.MatchHeaders))
+				k, targetHeaderVal, msdHeaderVal, target.AssertHeadersPattern))
 		}
 	}
 

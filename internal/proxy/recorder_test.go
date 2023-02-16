@@ -182,7 +182,7 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 		Header: resHeaders,
 	}
 	_, err = saveMockResponse(
-		&types.Configuration{ProxyPort: 8081, MatchQueryRegex: "target", MatchHeaderRegex: "target"}, u, req, []byte("test"), []byte("test"),
+		&types.Configuration{ProxyPort: 8081, AssertQueryParamsPattern: "target", AssertHeadersPattern: "target"}, u, req, []byte("test"), []byte("test"),
 		resHeaders, 404, mockScenarioRepository)
 	require.NoError(t, err)
 }

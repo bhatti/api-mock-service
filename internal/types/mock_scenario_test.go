@@ -153,11 +153,11 @@ func buildScenario() *MockScenario {
 		Path:        "/path1/\\\\//test1//abc////",
 		Description: "",
 		Request: MockHTTPRequest{
-			MatchQueryParams: map[string]string{
+			AssertQueryParamsPattern: map[string]string{
 				"a": "1",
 				"b": "2",
 			},
-			MatchHeaders: map[string]string{
+			AssertHeadersPattern: map[string]string{
 				"CTag": "981",
 			},
 		},

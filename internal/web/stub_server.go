@@ -1,6 +1,7 @@
 package web
 
 import (
+	"embed"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"io"
@@ -94,7 +95,10 @@ func (w *stubWebServer) Start(string) {
 func (w *stubWebServer) Stop() {
 }
 
-func (w *stubWebServer) Static(string) {
+func (w *stubWebServer) Static(string, string) {
+}
+
+func (w *stubWebServer) Embed(embed.FS, string, string) {
 }
 
 // ********************************* STUB METHODS For Echo Context ***********************************
