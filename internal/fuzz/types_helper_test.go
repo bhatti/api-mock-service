@@ -168,6 +168,16 @@ func Test_ShouldExtractTypesObject(t *testing.T) {
 	require.Equal(t, 4, len(actual))
 }
 
+func Test_ShouldExtractTypesSubArray(t *testing.T) {
+	j := `{"userId": "sample123", "id": "us-west-1-1234", "regions": ["us-west-1", "us-east-1"], "account": "2a3BC", "description": "quia et rem eveniet architecto"}`
+	res, err := UnmarshalArrayOrObject([]byte(j))
+	require.NoError(t, err)
+	actual := ExtractTypes(res, NewDataTemplateRequest(false, 1, 1)).(map[string]any)
+	require.Equal(t, 5, len(actual))
+	res = GenerateFuzzData(actual)
+	require.NotNil(t, res)
+}
+
 func Test_ShouldUnmarshalObjectArrays(t *testing.T) {
 	j := "{\"creditCard\":{\"balance\":{\"amount\":{{RandNumMinMax 0 0}},\"currency\":\"{{RandRegex `(USD|CAD|EUR|AUD)`}}\"}}}"
 	_, err := UnmarshalArrayOrObject([]byte(j))

@@ -66,7 +66,7 @@ func FlatRegexMap(val any) map[string]string {
 	regex := make(map[string]string)
 	flatRegexMap(val, regex, "")
 	for k, v := range regex {
-		if !strings.Contains(v, `[`) && len(v) > 128 {
+		if len(v) > 128 {
 			log.WithFields(log.Fields{
 				"Key": k,
 				"Val": v,
@@ -354,7 +354,7 @@ func buildFlatRegexKey(prefix string, k string) string {
 
 func addFlatRegexMapValue(res map[string]string, prefix string, k string, v string) {
 	fullKey := buildFlatRegexKey(prefix, k)
-	if !strings.Contains(v, `[`) && strings.Contains(v, `\w`) && (strings.Contains(v, `\d`) ||
+	if strings.Contains(v, `\w`) && (strings.Contains(v, `\d`) ||
 		strings.Contains(v, `[0-9]`)) {
 		v = WildRegex // mix regex are not supported
 	}

@@ -102,11 +102,11 @@ func Test_ShouldBuildRandRegexWords(t *testing.T) {
 	str := RandRegex(`\w`)
 	require.Equal(t, 0, countSpaces(str))
 	str = RandRegex(`\w+`)
-	require.True(t, countSpaces(str) >= 4)
+	require.True(t, countSpaces(str) >= 2)
 	str = RandRegex(`\\w`)
 	require.Equal(t, 0, countSpaces(str))
 	str = RandRegex(`\\w+`)
-	require.True(t, countSpaces(str) >= 4)
+	require.True(t, countSpaces(str) >= 2)
 
 	str = RandRegex(`\w{3,4}`)
 	require.True(t, countSpaces(str) >= 2, str)

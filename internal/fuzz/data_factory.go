@@ -832,6 +832,11 @@ func RandRegex(re string) string {
 		strings.Contains(re, EmailRegex4) {
 		return RandEmail()
 	}
+	re = replaceWordTag(re, `(.+)`)
+	re = replaceWordTag(re, `\\w`)
+	re = replaceWordTag(re, `\w`)
+	re = replaceNumTag(re, `\\d`)
+	re = replaceNumTag(re, `\d`)
 	if !strings.Contains(re, `\`) &&
 		!strings.Contains(re, `+`) &&
 		!strings.Contains(re, `*`) &&
@@ -839,12 +844,13 @@ func RandRegex(re string) string {
 		!strings.Contains(re, `(`) {
 		return re
 	}
-	re = replaceWordTag(re, `(.+)`)
-	re = replaceWordTag(re, `\\w`)
-	re = replaceWordTag(re, `\w`)
-	re = replaceNumTag(re, `\\d`)
-	re = replaceNumTag(re, `\d`)
-	out, err := regen.Generate(re)
+	var out string
+	var err error
+	if strings.Contains(re, ".") {
+		out, err = reggen.Generate(re, 64)
+	} else {
+		out, err = regen.Generate(re)
+	}
 	if err != nil {
 		out, err = reggen.Generate(re, 64)
 		if err != nil {
@@ -1011,48 +1017,50 @@ func parseRegexMinMax(str string, tag string, start int) (int, int, int) {
 }
 
 func replaceWordTag(str, tag string) string {
-	for {
-		start := strings.Index(str, tag+"+")
-		if start != -1 {
-			str = strings.Replace(str, tag+"+", RandSentence(5, 10), 1)
-		}
-		start = strings.Index(str, tag+"{")
-		if start != -1 {
-			min, max, i := parseRegexMinMax(str, tag, start)
-			str = str[0:start] + RandSentence(min, max) + str[i:]
-		}
-		start = strings.Index(str, tag)
-		if start == -1 {
-			return str
-		}
-		str = strings.Replace(str, tag, RandWord(5, 10), 1)
+	start := strings.Index(str, tag+"+")
+	for start != -1 {
+		str = strings.Replace(str, tag+"+", RandSentence(3, 6), 1)
+		start = strings.Index(str, tag+"+")
 	}
+	start = strings.Index(str, tag+"{")
+	for start != -1 {
+		min, max, i := parseRegexMinMax(str, tag, start)
+		str = str[0:start] + RandSentence(min, max) + str[i:]
+		start = strings.Index(str, tag+"{")
+	}
+	start = strings.Index(str, tag)
+	for start != -1 {
+		str = strings.Replace(str, tag, RandWord(3, 6), 1)
+		start = strings.Index(str, tag)
+	}
+	return str
 }
 
 func replaceNumTag(str, tag string) string {
-	for {
-		start := strings.Index(str, tag+"+")
-		if start != -1 {
-			str = strings.Replace(str, tag+"+", strconv.Itoa(RandNumMinMax(1, 10000)), 1)
-		}
-		start = strings.Index(str, tag+"{")
-		if start != -1 {
-			min, max, i := parseRegexMinMax(str, tag, start)
-			var sb strings.Builder
-			limit := RandNumMinMax(min, max)
-			for i := 0; i < limit; i++ {
-				if i == 0 {
-					sb.WriteString(strconv.Itoa(RandNumMinMax(1, 9)))
-				} else {
-					sb.WriteString(strconv.Itoa(RandNumMinMax(0, 9)))
-				}
-			}
-			str = str[0:start] + sb.String() + str[i:]
-		}
-		start = strings.Index(str, tag)
-		if start == -1 {
-			return str
-		}
-		str = strings.Replace(str, tag, strconv.Itoa(RandNumMinMax(0, 9)), 1)
+	start := strings.Index(str, tag+"+")
+	for start != -1 {
+		str = strings.Replace(str, tag+"+", strconv.Itoa(RandNumMinMax(1, 10000)), 1)
+		start = strings.Index(str, tag+"+")
 	}
+	start = strings.Index(str, tag+"{")
+	for start != -1 {
+		min, max, i := parseRegexMinMax(str, tag, start)
+		var sb strings.Builder
+		limit := RandNumMinMax(min, max)
+		for i := 0; i < limit; i++ {
+			if i == 0 {
+				sb.WriteString(strconv.Itoa(RandNumMinMax(1, 9)))
+			} else {
+				sb.WriteString(strconv.Itoa(RandNumMinMax(0, 9)))
+			}
+		}
+		str = str[0:start] + sb.String() + str[i:]
+		start = strings.Index(str, tag+"{")
+	}
+	start = strings.Index(str, tag)
+	for start != -1 {
+		str = strings.Replace(str, tag, strconv.Itoa(RandNumMinMax(0, 9)), 1)
+		start = strings.Index(str, tag)
+	}
+	return str
 }
