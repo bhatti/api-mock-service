@@ -833,9 +833,10 @@ func RandRegex(re string) string {
 		return RandEmail()
 	}
 	if !strings.Contains(re, `\`) &&
-		strings.Contains(re, `+`) &&
-		strings.Contains(re, `*`) &&
-		strings.Contains(re, `(`) {
+		!strings.Contains(re, `+`) &&
+		!strings.Contains(re, `*`) &&
+		!strings.Contains(re, `[`) &&
+		!strings.Contains(re, `(`) {
 		return re
 	}
 	re = replaceWordTag(re, `(.+)`)
