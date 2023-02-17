@@ -832,6 +832,7 @@ func RandRegex(re string) string {
 		strings.Contains(re, EmailRegex4) {
 		return RandEmail()
 	}
+	re = replaceWordTag(re, `(.+)`)
 	re = replaceWordTag(re, `\\w`)
 	re = replaceWordTag(re, `\w`)
 	re = replaceNumTag(re, `\\d`)
