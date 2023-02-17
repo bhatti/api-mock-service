@@ -21,7 +21,7 @@ type Property struct {
 	Min          float64
 	Max          float64
 	In           string
-	Regex        string
+	Pattern      string
 	Format       string
 	Required     bool
 	Children     []Property
@@ -44,13 +44,13 @@ func (prop *Property) String() string {
 func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 	if prop.Type == "number" || prop.Type == "integer" {
 		if dataTemplate.IncludeType {
-			if prop.Regex == "" {
+			if prop.Pattern == "" {
 				return map[string]string{
 					prop.Name: fuzz.NumberPrefixRegex,
 				}
 			}
 			return map[string]string{
-				prop.Name: fuzz.PrefixTypeNumber + prop.Regex,
+				prop.Name: fuzz.PrefixTypeNumber + prop.Pattern,
 			}
 		}
 		return map[string]string{
@@ -83,9 +83,9 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 				} else {
 					return `\w+`
 				}
-			} else if prop.Regex != "" {
+			} else if prop.Pattern != "" {
 				return map[string]string{
-					prop.Name: fuzz.PrefixTypeString + prop.Regex,
+					prop.Name: fuzz.PrefixTypeString + prop.Pattern,
 				}
 			} else if len(prop.Enum) > 0 {
 				var sb strings.Builder
@@ -123,7 +123,7 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 	} else if prop.In == "body" && prop.Type == "object" {
 		if dataTemplate.IncludeType {
 			return map[string]string{
-				prop.Name: fuzz.PrefixTypeObject + prop.Regex,
+				prop.Name: fuzz.PrefixTypeObject + prop.Pattern,
 			}
 		}
 		return map[string]string{
@@ -153,8 +153,8 @@ func (prop *Property) mapValue(dataTemplate fuzz.DataTemplateRequest) string {
 	switch val.(type) {
 	case map[string]string:
 		if dataTemplate.IncludeType {
-			if prop.Regex != "" {
-				return fuzz.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+			if prop.Pattern != "" {
+				return fuzz.PrefixTypeStringToRegEx(prop.Pattern, dataTemplate)
 			}
 			return fuzz.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
@@ -164,8 +164,8 @@ func (prop *Property) mapValue(dataTemplate fuzz.DataTemplateRequest) string {
 		}
 	case map[string]any:
 		if dataTemplate.IncludeType {
-			if prop.Regex != "" {
-				return fuzz.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+			if prop.Pattern != "" {
+				return fuzz.PrefixTypeStringToRegEx(prop.Pattern, dataTemplate)
 			}
 			return fuzz.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
@@ -176,8 +176,8 @@ func (prop *Property) mapValue(dataTemplate fuzz.DataTemplateRequest) string {
 		}
 	case string:
 		if dataTemplate.IncludeType {
-			if prop.Regex != "" {
-				return fuzz.PrefixTypeStringToRegEx(prop.Regex, dataTemplate)
+			if prop.Pattern != "" {
+				return fuzz.PrefixTypeStringToRegEx(prop.Pattern, dataTemplate)
 			}
 			return fuzz.PrefixTypeStringToRegEx(`\w+`, dataTemplate)
 		}
@@ -196,8 +196,8 @@ func (prop *Property) mapValue(dataTemplate fuzz.DataTemplateRequest) string {
 
 func (prop *Property) numericValue() string {
 	if prop.matchRequest || prop.In == "path" || prop.In == "query" {
-		if prop.Regex != "" {
-			return prop.Regex
+		if prop.Pattern != "" {
+			return prop.Pattern
 		}
 		return `[\d\.]+`
 	}
@@ -211,8 +211,8 @@ func (prop *Property) boolValue() string {
 
 func (prop *Property) stringValue() string {
 	if prop.matchRequest || prop.In == "path" || prop.In == "query" {
-		if prop.Regex != "" {
-			return prop.Regex
+		if prop.Pattern != "" {
+			return prop.Pattern
 		}
 		return `\w+`
 	}
@@ -237,8 +237,8 @@ func (prop *Property) stringValue() string {
 		} else {
 			return "{{RandString 20}}"
 		}
-	} else if prop.Regex != "" {
-		return fmt.Sprintf("{{RandRegex `%s`}}", prop.Regex)
+	} else if prop.Pattern != "" {
+		return fmt.Sprintf("{{RandRegex `%s`}}", prop.Pattern)
 	} else {
 		return fmt.Sprintf("{{RandStringMinMax %d %d}}", int(prop.Min), int(prop.Max))
 	}
@@ -247,8 +247,8 @@ func (prop *Property) stringValue() string {
 func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 	// TODO check if prop.matchRequest needs early exit here
 	if prop.In == "path" || prop.In == "query" {
-		if prop.Regex != "" {
-			return prop.Regex
+		if prop.Pattern != "" {
+			return prop.Pattern
 		}
 		return nil
 	}

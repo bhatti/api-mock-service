@@ -108,7 +108,7 @@ func buildParameter(k string, v string, in string) *openapi3.Parameter {
 			Value: &openapi3.Schema{
 				Type: "string",
 				//Pattern: v,
-				Example: v,
+				Example: fuzz.RandRegex(v),
 			},
 		},
 	}
@@ -350,7 +350,7 @@ func anyToSchema(val any) *openapi3.Schema {
 		return &openapi3.Schema{
 			Type:    "string",
 			Pattern: strVal,
-			Example: strVal,
+			Example: fuzz.RandRegex(strVal),
 		}
 	default:
 		return &openapi3.Schema{

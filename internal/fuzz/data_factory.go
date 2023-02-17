@@ -841,8 +841,8 @@ func RandRegex(re string) string {
 		out, err = reggen.Generate(re, 64)
 		if err != nil {
 			log.WithFields(log.Fields{
-				"Error": err,
-				"Regex": re,
+				"Error":   err,
+				"Pattern": re,
 			}).Warnf("failed to parse regex")
 			return RandSentence(1, 5)
 		}

@@ -997,7 +997,7 @@ Which will return summary of APIs such as:
 ```
 
 ## Swagger-UI
-The api-mock-service includes an embdded swagger-ui, which you can access using `http://localhost:8000/swagger/` URL in your browser. And upload OpenAPI specification using:
+The api-mock-service includes an embdded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL in your browser. And upload OpenAPI specification using:
 
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi

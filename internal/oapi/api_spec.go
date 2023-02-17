@@ -66,7 +66,13 @@ func ParseAPISpec(
 		for resContentType, resMedia := range resp.Value.Content {
 			if len(reqContent) > 0 {
 				for reqContentType, reqMedia := range reqContent {
-					reqHeaders = append(reqHeaders, Property{Name: "ContentsType", Regex: reqContentType, Type: "string", In: "header"})
+					reqHeaders = append(reqHeaders,
+						Property{
+							Name:    "ContentsType",
+							Pattern: reqContentType,
+							Type:    "string",
+							In:      "header",
+						})
 					spec := &APISpec{
 						Title:       title,
 						ID:          op.OperationID,
@@ -216,7 +222,7 @@ func schemaToProperty(
 		Description:  schema.Description,
 		Type:         schema.Type,
 		Format:       schema.Format,
-		Regex:        schema.Pattern,
+		Pattern:      schema.Pattern,
 		In:           in,
 		Children:     make([]Property, 0),
 		matchRequest: matchRequest,

@@ -99,6 +99,7 @@ func RunServer(_ *cobra.Command, args []string) {
 		_ = controller.NewMockFixtureController(fixturesRepo, adapter)
 		_ = controller.NewMockProxyController(recorder, adapter)
 		_ = controller.NewContractController(executor, adapter)
+		webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
 		log.Fatal(proxy.NewProxyHandler(serverConfig, scenarioRepo, fixturesRepo, adapter).Start())
 	}()
 
@@ -179,7 +180,7 @@ func buildControllers(
 	if serverConfig.AssetDir != "" {
 		webServer.Static("/_assets", serverConfig.AssetDir)
 	}
-	webServer.Embed(SwaggerContent, "/swagger/*", "swagger-ui")
+	webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
 
 	return nil
 }

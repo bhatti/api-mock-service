@@ -52,7 +52,7 @@ func Parse(ctx context.Context, data []byte, dataTemplate fuzz.DataTemplateReque
 				Description: ref.Value.Description,
 				Type:        ref.Value.Type,
 				In:          ref.Value.In,
-				Regex:       ref.Value.BearerFormat,
+				Pattern:     ref.Value.BearerFormat,
 			}
 			if ref.Value.In == "header" {
 				spec.Request.Headers = append(spec.Request.Headers, prop)

@@ -49,7 +49,7 @@ func (moc *MockOAPIController) GetOpenAPISpecsByGroup(c web.APIContext) (err err
 	allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
 	var scenarios []*types.MockScenario
 	for _, keyData := range allByGroup {
-		scenario, err := moc.getScenario(keyData)
+		scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func (moc *MockOAPIController) GetOpenAPISpecsByScenario(c web.APIContext) (err 
 		Path:                     path,
 		AssertQueryParamsPattern: make(map[string]string),
 	}
-	scenario, err := moc.getScenario(keyData)
+	scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
 	if err != nil {
 		return err
 	}
@@ -153,17 +153,16 @@ type mockOapiSpecIResponseBody struct {
 	Body []byte
 }
 
-func (moc *MockOAPIController) getScenario(keyData *types.MockScenarioKeyData) (scenario *types.MockScenario, err error) {
-	b, err := moc.mockScenarioRepository.LoadRaw(keyData.Method, keyData.Name, keyData.Path)
-	if err != nil {
-		return nil, err
-	}
-	scenario = &types.MockScenario{}
-	if err = yaml.Unmarshal(b, scenario); err != nil {
-		scenario, err = moc.mockScenarioRepository.Lookup(keyData, nil)
+func (moc *MockOAPIController) getScenario(keyData *types.MockScenarioKeyData, raw bool) (scenario *types.MockScenario, err error) {
+	if raw {
+		b, err := moc.mockScenarioRepository.LoadRaw(keyData.Method, keyData.Name, keyData.Path)
 		if err != nil {
 			return nil, err
 		}
+		scenario = &types.MockScenario{}
+		if err = yaml.Unmarshal(b, scenario); err == nil {
+			return scenario, err
+		}
 	}
-	return scenario, err
+	return moc.mockScenarioRepository.Lookup(keyData, nil)
 }
