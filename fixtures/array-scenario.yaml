@@ -1,0 +1,47 @@
+method: POST
+name: array-scenario
+path: /arrays
+order: 0
+group: arrays
+predicate: ""
+authentication: {}
+request:
+    assert_query_params_pattern: {}
+    assert_headers_pattern:
+        Content-Type: application/json
+    assert_contents_pattern: '{"account":"(__string__\\d{11,11})","boo":"__array__(__boolean__(false|true)|__boolean__(false|true))","id":"(__string__.+)","items":"__array__(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10}))|__number__[+-]?\\d{1,10})","name":"(__string__.+)","regions":"__array__(__string__.+)","taxes":"__array__(__number__[+-]?\\d{1,10})"}'
+    path_params: {}
+    query_params: {}
+    headers:
+        Accept: '*/*'
+        Content-Length: "167"
+        Content-Type: application/json
+        User-Agent: curl/7.65.2
+    contents: '{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "boo": [true, false]}'
+    example_contents: '{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "boo": [true, false]}'
+response:
+    headers:
+        Accept:
+            - '*/*'
+        Accept-Encoding:
+            - gzip
+        Content-Length:
+            - "167"
+        Content-Type:
+            - application/json
+        Date:
+            - Sat, 18 Feb 2023 22:35:52 GMT
+        Host:
+            - localhost:9090
+        Server:
+            - BaseHTTP/0.6 Python/3.7.3
+        User-Agent:
+            - curl/7.65.2
+    contents: '{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "boo": [true, false]}'
+    contents_file: ""
+    example_contents: '{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "boo": [true, false]}'
+    status_code: 200
+    assert_headers_pattern: {}
+    assert_contents_pattern: '{"account":"(__string__\\d{11,11})","boo":"__array__(__boolean__(false|true)|__boolean__(false|true))","id":"(__string__.+)","items":"__array__(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10}))|__number__[+-]?\\d{1,10})","name":"(__string__.+)","regions":"__array__(__string__.+)","taxes":"__array__(__number__[+-]?\\d{1,10})"}'
+    pipe_properties: []
+    assertions: []

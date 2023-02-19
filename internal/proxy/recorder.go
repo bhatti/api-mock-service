@@ -124,10 +124,12 @@ func saveMockResponse(
 			QueryParams:              make(map[string]string),
 			Headers:                  make(map[string]string),
 			Contents:                 string(reqBody),
+			ExampleContents:          string(reqBody),
 		},
 		Response: types.MockHTTPResponse{
 			Headers:               resHeaders,
 			Contents:              string(resBody),
+			ExampleContents:       string(resBody),
 			StatusCode:            status,
 			AssertContentsPattern: matchResContents,
 		},

@@ -4,8 +4,8 @@ import time
 import json
 
 proxy_servers = {
-    'http': 'http://localhost:8081',
-    'https': 'http://localhost:8081',
+    'http': 'http://localhost:9000',
+    'https': 'http://localhost:9000',
 }
 
 class TemplatesTest(unittest.TestCase):
@@ -40,21 +40,21 @@ class TemplatesTest(unittest.TestCase):
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/stripe-customer.yaml', 'r').read()
-        resp = requests.post('http://localhost:8080/_scenarios', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_scenarios', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/stripe-customer-failure.yaml', 'r').read()
-        resp = requests.post('http://localhost:8080/_scenarios', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_scenarios', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer sk_test_0123456789',
         }
-        resp = requests.get('http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55', headers = headers)
+        resp = requests.get('http://localhost:8000/v1/customers/123/cash_balance?page=2&pageSize=55', headers = headers)
         cash = json.loads(resp.text)
         self.assertEqual(55, cash['pageSize'])
         self.assertEqual(2, cash['page'])

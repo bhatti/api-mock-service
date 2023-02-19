@@ -4,8 +4,8 @@ import time
 import json
 
 proxy_servers = {
-    'http': 'http://localhost:8081',
-    'https': 'http://localhost:8081',
+    'http': 'http://localhost:9000',
+    'https': 'http://localhost:9000',
 }
 
 class HTTPProxyTest(unittest.TestCase):

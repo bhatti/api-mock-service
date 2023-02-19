@@ -76,6 +76,13 @@ func GenerateFuzzData(val any) any {
 			res[k] = GenerateFuzzData(v)
 		}
 		return res
+	case []string:
+		arr := val.([]string)
+		res := make([]string, len(arr))
+		for i, v := range arr {
+			res[i] = GenerateFuzzData(v).(string)
+		}
+		return res
 	case []any:
 		arr := val.([]any)
 		res := make([]any, len(arr))

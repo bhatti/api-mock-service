@@ -4,8 +4,8 @@ import time
 import json
 
 proxy_servers = {
-    'http': 'http://localhost:8081',
-    '': 'http://localhost:8081',
+    'http': 'http://localhost:9000',
+    '': 'http://localhost:9000',
 }
 
 class FixturesTest(unittest.TestCase):
@@ -63,27 +63,27 @@ class FixturesTest(unittest.TestCase):
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/lines.txt', 'r').read()
-        resp = requests.post('http://localhost:8080/_fixtures/GET/lines.txt/devices', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_fixtures/GET/lines.txt/devices', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/props.yaml', 'r').read()
-        resp = requests.post('http://localhost:8080/_fixtures/GET/props.yaml/devices', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_fixtures/GET/props.yaml/devices', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/devices.yaml', 'r').read()
-        resp = requests.post('http://localhost:8080/_scenarios', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_scenarios', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/json',
         }
-        resp = requests.get('http://localhost:8080/devices?page=1&pageSize=55', headers = headers)
+        resp = requests.get('http://localhost:8000/devices?page=1&pageSize=55', headers = headers)
         self.assertTrue(resp.status_code == 200 or resp.status_code == 400)
 
     def test_record_play_image_fixture(self):
@@ -91,20 +91,20 @@ class FixturesTest(unittest.TestCase):
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/mockup.png', 'rb').read()
-        resp = requests.post('http://localhost:8080/_fixtures/GET/mockup.png/images/mock_image', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_fixtures/GET/mockup.png/images/mock_image', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/yaml',
         }
         data = open('../fixtures/image.yaml', 'r').read()
-        resp = requests.post('http://localhost:8080/_scenarios', data = data, headers = headers)
+        resp = requests.post('http://localhost:8000/_scenarios', data = data, headers = headers)
         self.assertEqual(200, resp.status_code)
 
         headers = {
             'Content-Type': 'application/json',
         }
-        resp = requests.get('http://localhost:8080/images/mock_image', headers = headers)
+        resp = requests.get('http://localhost:8000/images/mock_image', headers = headers)
         self.assertEqual(200, resp.status_code)
 
 if __name__ == '__main__':

@@ -82,6 +82,9 @@ func (r MockHTTPRequest) ContentType(defContentType string) string {
 
 // AssertContentsPatternOrContent helper method
 func (r MockHTTPRequest) AssertContentsPatternOrContent() string {
+	if r.ExampleContents != "" {
+		return r.ExampleContents
+	}
 	if r.AssertContentsPattern != "" {
 		return r.AssertContentsPattern
 	}
@@ -122,6 +125,9 @@ func (r MockHTTPResponse) ContentType(defContentType string) string {
 
 // AssertContentsPatternOrContent helper method
 func (r MockHTTPResponse) AssertContentsPatternOrContent() string {
+	if r.ExampleContents != "" {
+		return r.ExampleContents
+	}
 	if r.AssertContentsPattern != "" {
 		return r.AssertContentsPattern
 	}

@@ -98,6 +98,41 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	require.Equal(t, "{}", string(saved))
 }
 
+func Test_ShouldRecordPostProxyRequestsWithArray(t *testing.T) {
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	client := web.NewStubHTTPClient()
+	reqBody := []byte(strings.TrimSpace(`
+    {"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "length": [123, 14], "ratio": [1.1, 2.0], "passed": [true, false]}
+	`))
+	resBody := strings.TrimSpace(`
+    {"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "length": [123, 14], "ratio": [1.1, 2.0], "passed": [true, false]}
+	`)
+	client.AddMapping("POST", "https://localhost/myapi", web.NewStubHTTPResponse(200, resBody))
+	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	reader := io.NopCloser(bytes.NewReader(reqBody))
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
+	ctx := web.NewStubContext(&http.Request{
+		Method: "POST",
+		URL:    u,
+		Header: map[string][]string{
+			types.MockURL:        {"https://localhost/myapi"},
+			types.MockRecordMode: {"true"},
+		},
+		Body: reader,
+	})
+
+	// WHEN invoking POST proxy API
+	err = recorder.Handle(ctx)
+
+	// THEN it should return stubbed response
+	require.NoError(t, err)
+	saved := ctx.Result.([]byte)
+	require.Equal(t, resBody, string(saved))
+}
+
 func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
@@ -110,13 +145,13 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
   "id": 201
 }
 	`)
-	client.AddMapping("PUT", "https://jsonplaceholder.typicode.com/todos/202", web.NewStubHTTPResponse(200, resBody))
+	client.AddMapping("POST", "https://jsonplaceholder.typicode.com/todos/202", web.NewStubHTTPResponse(200, resBody))
 	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
 	u, err := url.Parse("http://localhost:8080")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
-		Method: "PUT",
+		Method: "POST",
 		URL:    u,
 		Header: map[string][]string{
 			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/202"},
@@ -145,13 +180,13 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
   "id": 2
 }
 	`)
-	client.AddMapping("POST", "https://jsonplaceholder.typicode.com/todos/2", web.NewStubHTTPResponse(200, resBody))
+	client.AddMapping("PUT", "https://jsonplaceholder.typicode.com/todos/2", web.NewStubHTTPResponse(200, resBody))
 	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
 	u, err := url.Parse("http://localhost:8080")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{
-		Method: "POST",
+		Method: "PUT",
 		URL:    u,
 		Header: map[string][]string{
 			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/2"},

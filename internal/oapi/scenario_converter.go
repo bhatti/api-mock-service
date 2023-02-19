@@ -153,6 +153,7 @@ func updateScenarioRequest(scenario *types.MockScenario, op *openapi3.Operation)
 							//Value: body,
 							Ref: "#/components/schemas/" + ref,
 						},
+						Example: scenario.Request.ExampleContents,
 					},
 				},
 			},
@@ -189,6 +190,7 @@ func updateScenarioResponse(scenario *types.MockScenario, op *openapi3.Operation
 				Ref: "#/components/schemas/" + ref,
 				//Value: body,
 			},
+			Example: scenario.Response.ExampleContents,
 		}
 	}
 	return ref, body
@@ -214,15 +216,22 @@ func sanitizeRegexValue(val any) (string, any) {
 		} else if strings.Contains(strVal, fuzz.PrefixTypeObject) {
 			strVal = ""
 			val = make(map[string]string)
+		} else if strings.Contains(strVal, fuzz.PrefixTypeArray) {
+			strVal = ""
+			if strings.Contains(strVal, fuzz.PrefixTypeBoolean) {
+				val = make([]bool, 0)
+			} else if strings.Contains(strVal, fuzz.PrefixTypeNumber) {
+				val = make([]float64, 0)
+			} else {
+				val = make([]string, 0)
+			}
 		} else if strings.Contains(strVal, "{{") {
 			strVal = ""
 			val = false
 		}
 	}
 
-	pattern := `(` + fuzz.PrefixTypeNumber + `|` + fuzz.PrefixTypeBoolean + `|` +
-		fuzz.PrefixTypeString + `|` + fuzz.PrefixTypeObject + `)`
-	return regexp.MustCompile(pattern).ReplaceAllString(strVal, ""), val
+	return fuzz.StripTypeTags(strVal), val
 }
 
 // anyToProperty
@@ -230,6 +239,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	if val == nil {
 		return nil
 	}
+	maxLen := uint64(100)
 	strVal, val := sanitizeRegexValue(val)
 	switch val.(type) {
 	case map[string]string:
@@ -263,6 +273,31 @@ func anyToSchema(val any) *openapi3.Schema {
 			}
 		}
 		return prop
+	case []bool:
+		prop := &openapi3.Schema{
+			Description: "bool-array " + strVal,
+			Type:        "array",
+			Items: &openapi3.SchemaRef{Value: &openapi3.Schema{
+				Type: "boolean",
+			}},
+			MaxItems: &maxLen,
+		}
+		return prop
+	case []string:
+		arr := val.([]string)
+		prop := &openapi3.Schema{
+			Description: "string-array " + strVal,
+			Type:        "array",
+			Items: &openapi3.SchemaRef{Value: &openapi3.Schema{
+				Type: "string",
+			}},
+			MaxItems: &maxLen,
+		}
+		for _, v := range arr {
+			prop.Items.Value.Example = v
+			prop.Items.Value.Pattern = v
+		}
+		return prop
 	case []any:
 		arr := val.([]any)
 		prop := &openapi3.Schema{
@@ -271,13 +306,17 @@ func anyToSchema(val any) *openapi3.Schema {
 			Items: &openapi3.SchemaRef{Value: &openapi3.Schema{
 				Properties: make(openapi3.Schemas),
 			}},
+			MaxItems: &maxLen,
 		}
-		for i, v := range arr {
+		for _, v := range arr {
 			grandChild := anyToSchema(v)
 			if grandChild != nil {
-				prop.Items.Value.Properties[fmt.Sprintf("%d", i)] = &openapi3.SchemaRef{
-					Value: grandChild,
-				}
+				prop.Items.Value.Example = v
+				prop.Items.Value.Pattern = grandChild.Pattern
+				prop.Items.Value.Type = grandChild.Type
+				//prop.Items.Value.Properties[fmt.Sprintf("%d", i)] = &openapi3.SchemaRef{
+				//	Value: grandChild,
+				//}
 			}
 		}
 		return prop

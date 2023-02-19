@@ -46,19 +46,19 @@ func Test_ShouldFlatRegexMap(t *testing.T) {
 
 func Test_ShouldFlatRegexMapNil(t *testing.T) {
 	regex := make(map[string]string)
-	flatRegexMap(nil, regex, "")
+	flatRegexMap(nil, regex, "", false)
 	require.Equal(t, 0, len(regex))
 }
 
 func Test_ShouldFlatRegexMapStringMap(t *testing.T) {
 	regex := make(map[string]string)
-	flatRegexMap(map[string]string{"k": "v"}, regex, "")
+	flatRegexMap(map[string]string{"k": "v"}, regex, "", false)
 	require.Equal(t, "(v)", regex["k"])
 }
 
 func Test_ShouldFlatRegexMapInt(t *testing.T) {
 	regex := make(map[string]string)
-	flatRegexMap(1, regex, "")
+	flatRegexMap(1, regex, "", false)
 	require.Equal(t, 0, len(regex))
 }
 
@@ -168,13 +168,31 @@ func Test_ShouldExtractTypesObject(t *testing.T) {
 	require.Equal(t, 4, len(actual))
 }
 
-func Test_ShouldExtractTypesSubArray(t *testing.T) {
+func Test_ShouldExtractTypesNestedArray(t *testing.T) {
 	j := `{"userId": "sample123", "id": "us-west-1-1234", "regions": ["us-west-1", "us-east-1"], "account": "2a3BC", "description": "quia et rem eveniet architecto"}`
 	res, err := UnmarshalArrayOrObject([]byte(j))
 	require.NoError(t, err)
 	actual := ExtractTypes(res, NewDataTemplateRequest(false, 1, 1)).(map[string]any)
 	require.Equal(t, 5, len(actual))
 	res = GenerateFuzzData(actual)
+	require.NotNil(t, res)
+}
+
+func Test_ShouldExtractTypesNestedArrays(t *testing.T) {
+	j := `{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "passed": [true, false]}`
+	res, err := UnmarshalArrayOrObject([]byte(j))
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	actual := ExtractTypes(res, NewDataTemplateRequest(false, 1, 1)).(map[string]any)
+	require.Equal(t, 7, len(actual))
+	res = GenerateFuzzData(actual)
+	require.NotNil(t, res)
+}
+
+func Test_ShouldGenerateFuzzWithTypesNestedArrays(t *testing.T) {
+	actual := `{"account":"(__string__\\d{11,11})","passed":"__array__(__boolean__(false|true)|__boolean__(false|true))","id":"(__string__.+)","items":"__array__(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10}))|__number__[+-]?\\d{1,10})","name":"(__string__.+)","regions":"__array__(__string__.+)","taxes":"__array__(__number__[+-]?\\d{1,10})"}`
+	require.True(t, len(actual) > 5)
+	res := GenerateFuzzData(actual)
 	require.NotNil(t, res)
 }
 
