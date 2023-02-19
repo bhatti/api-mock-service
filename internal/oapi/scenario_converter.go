@@ -312,7 +312,10 @@ func anyToSchema(val any) *openapi3.Schema {
 			grandChild := anyToSchema(v)
 			if grandChild != nil {
 				prop.Items.Value.Example = v
-				prop.Items.Value.Pattern = grandChild.Pattern
+				if grandChild.Type == "integer" || grandChild.Type == "float" ||
+					grandChild.Type == "string" || grandChild.Type == "bool" {
+					prop.Items.Value.Pattern = grandChild.Pattern
+				}
 				prop.Items.Value.Type = grandChild.Type
 				//prop.Items.Value.Properties[fmt.Sprintf("%d", i)] = &openapi3.SchemaRef{
 				//	Value: grandChild,

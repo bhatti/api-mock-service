@@ -7,7 +7,7 @@ serverPort = 9090
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
         reply = '''
-{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "boo": [true, false]}
+{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "boo": [true, false], "locations": [{"lat": 12.5, "lng": 12}]}
         '''
         self.send_response(200)
         self.send_header("Content-type", "application/json")
