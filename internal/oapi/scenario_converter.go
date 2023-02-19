@@ -273,16 +273,6 @@ func anyToSchema(val any) *openapi3.Schema {
 			}
 		}
 		return prop
-	case []bool:
-		prop := &openapi3.Schema{
-			Description: "bool-array " + strVal,
-			Type:        "array",
-			Items: &openapi3.SchemaRef{Value: &openapi3.Schema{
-				Type: "boolean",
-			}},
-			MaxItems: &maxLen,
-		}
-		return prop
 	case []string:
 		arr := val.([]string)
 		prop := &openapi3.Schema{
@@ -313,13 +303,11 @@ func anyToSchema(val any) *openapi3.Schema {
 			if grandChild != nil {
 				prop.Items.Value.Example = v
 				if grandChild.Type == "integer" || grandChild.Type == "float" ||
-					grandChild.Type == "string" || grandChild.Type == "bool" {
+					grandChild.Type == "number" || grandChild.Type == "string" ||
+					grandChild.Type == "boolean" || grandChild.Type == "bool" {
 					prop.Items.Value.Pattern = grandChild.Pattern
 				}
 				prop.Items.Value.Type = grandChild.Type
-				//prop.Items.Value.Properties[fmt.Sprintf("%d", i)] = &openapi3.SchemaRef{
-				//	Value: grandChild,
-				//}
 			}
 		}
 		return prop
