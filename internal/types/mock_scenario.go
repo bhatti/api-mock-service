@@ -74,7 +74,7 @@ type MockHTTPRequest struct {
 func (r MockHTTPRequest) ContentType(defContentType string) string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
-			return v
+			return fuzz.StripTypeTags(v)
 		}
 	}
 	return defContentType
@@ -117,7 +117,7 @@ type MockHTTPResponse struct {
 func (r MockHTTPResponse) ContentType(defContentType string) string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
-			return v[0]
+			return fuzz.StripTypeTags(v[0])
 		}
 	}
 	return defContentType

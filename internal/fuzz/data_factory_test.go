@@ -97,7 +97,7 @@ func Test_ShouldGetAsciiAny(t *testing.T) {
 }
 
 func Test_ShouldGetRawRegex(t *testing.T) {
-	require.Equal(t, `[a-z]{5}`, RandRegex(PrefixTypeRaw+`[a-z]{5}`))
+	require.Equal(t, `[a-z]{5}`, RandRegex(PrefixTypeExample+`[a-z]{5}`))
 }
 
 func Test_ShouldParseRegexAlphaNumeric(t *testing.T) {

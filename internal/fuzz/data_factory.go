@@ -850,7 +850,7 @@ func SeededName(seed int64) string {
 
 // RandRegex generator
 func RandRegex(re string) string {
-	if strings.Contains(re, PrefixTypeRaw) {
+	if strings.Contains(re, PrefixTypeExample) {
 		return StripTypeTags(re)
 	}
 	re = StripTypeTags(re)

@@ -255,7 +255,7 @@ func sanitizeRegexValue(val any) (string, any) {
 		}
 	}
 
-	return fuzz.StripTypeTags(strVal), val
+	return strVal, val
 }
 
 // anyToProperty

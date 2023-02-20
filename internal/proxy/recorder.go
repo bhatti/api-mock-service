@@ -138,7 +138,7 @@ func saveMockResponse(
 
 	for k, v := range req.URL.Query() {
 		if len(v) > 0 {
-			scenario.Request.QueryParams[k] = fuzz.PrefixTypeRaw + v[0]
+			scenario.Request.QueryParams[k] = fuzz.PrefixTypeExample + v[0]
 			if config.AssertQueryParams(k) {
 				scenario.Request.AssertQueryParamsPattern[k] = v[0]
 			}
@@ -146,7 +146,7 @@ func saveMockResponse(
 	}
 	for k, v := range req.Header {
 		if len(v) > 0 {
-			scenario.Request.Headers[k] = fuzz.PrefixTypeRaw + v[0]
+			scenario.Request.Headers[k] = fuzz.PrefixTypeExample + v[0]
 			if config.AssertHeader(k) {
 				scenario.Request.AssertHeadersPattern[k] = v[0]
 			}
