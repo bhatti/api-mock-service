@@ -42,6 +42,11 @@ func (d *DefaultAPIContext) Path() string {
 	return d.request.URL.Path
 }
 
+// Host Request host
+func (d *DefaultAPIContext) Host() string {
+	return d.request.Host
+}
+
 // Request returns `*http.Request`.
 func (d *DefaultAPIContext) Request() *http.Request {
 	return d.request

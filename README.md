@@ -477,7 +477,7 @@ response:
         "AssetNumber": "{{RandString 20}}",
         "LocationGroupId": {
          "Id": {
-           "Value": {{RandNumMax 1000}},
+           "Value": {{RandIntMax 1000}},
          },
          "Name": "{{SeededCity $val}}",
          "UUID": "{{UUID}}"
@@ -490,13 +490,13 @@ response:
         "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
         "Group": {{RandCity}},
         "Date": {{TimeFormat "3:04PM"}},
-        "BatteryLevel": "{{RandNumMax 100}}%",
+        "BatteryLevel": "{{RandFloatMax 100}}%",
         "StrEnum": {{EnumString "ONE TWO THREE"}},
         "IntEnum": {{EnumInt 10 20 30}},
-        "ProcessorArchitecture": {{RandNumMax 1000}},
-        "TotalPhysicalMemory": {{RandNumMax 1000000}},
-        "VirtualMemory": {{RandNumMax 1000000}},
-        "AvailablePhysicalMemory": {{RandNumMax 1000000}},
+        "ProcessorArchitecture": {{RandIntMax 1000}},
+        "TotalPhysicalMemory": {{RandIntMax 1000000}},
+        "VirtualMemory": {{RandIntMax 1000000}},
+        "AvailablePhysicalMemory": {{RandIntMax 1000000}},
         "CompromisedStatus": {{RandBool}},
         "Add": {{Add 2 1}},
         "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
@@ -575,13 +575,13 @@ Go template allows custom functions that can provide customized behavior for gen
   "CountryCode": {{RandCountryCode}},
   "Completed": {{RandBool}},
   "Date": {{TimeFormat "3:04PM"}},
-  "BatteryLevel": "{{RandNumMax 100}}%",
+  "BatteryLevel": "{{RandFloatMax 100}}%",
   "Object": "{{RandDict}}",
   "IntHistory": {{RandIntArrayMinMax 1 10}},
   "StringHistory": {{RandStringArrayMinMax 1 10}},
   "FirstName": "{{SeededName 1 10}}",
   "LastName": "{{RandName}}",
-  "Score": "{{RandNumMinMax 1 100}}",
+  "Score": "{{RandIntMinMax 1 100}}",
   "Paragraph": "{{RandParagraph 1 10}}",
   "Word": "{{RandWord 1 1}}",
   "Sentence": "{{RandSentence 1 10}}",
@@ -716,7 +716,7 @@ response:
       "ETag":
         - {{RandString 10}}
       "Cache-Control":
-        - max-age={{RandNumMinMax 1000 5000}}
+        - max-age={{RandIntMinMax 1000 5000}}
     content_type: image/png
     contents_file: mockup.png
     status_code: 200
@@ -740,7 +740,8 @@ Following functions can be used to generate numeric data within a range or with 
 
 - Random
 - SeededRandom
-- RandNumMinMax
+- RandIntMinMax
+- RandFloatMinMax
 - RandIntArrayMinMax
 
 ### Text Random Data
@@ -1003,6 +1004,10 @@ The api-mock-service includes an embdded swagger-ui, which you can access using 
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi
 ```
 
+You can then play with APIs on your browser with URL `http://localhost:8000/swagger-ui/`, e.g., following is a screenshot for internal specifications for mock APIs:
+
+![internal-api](images/swagger_internal.png)
+
 Alternatively, you can start swagger-UI as follows:
 
 
@@ -1194,7 +1199,7 @@ response:
     content_type: ""
     contents: |-
         {
-          "id": {{RandNumMinMax 1 10}}
+          "id": {{RandIntMinMax 1 10}}
         }
     status_code: 200
     assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'

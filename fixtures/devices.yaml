@@ -27,7 +27,7 @@ response:
         "AssetNumber": "{{RandString 20}}",
         "LocationGroupId": {
          "Id": {
-           "Value": {{RandNumMax 1000}},
+           "Value": {{RandIntMax 1000}},
          },
          "Name": "{{SeededCity $val}}",
          "UUID": "{{UUID}}"
@@ -40,13 +40,13 @@ response:
         "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
         "Group": {{RandCity}},
         "Date": {{TimeFormat "3:04PM"}},
-        "BatteryLevel": "{{RandNumMax 100}}%",
+        "BatteryLevel": "{{RandFloatMax 100}}%",
         "StrEnum": {{EnumString "ONE TWO THREE"}},
         "IntEnum": {{EnumInt 10 20 30}},
-        "ProcessorArchitecture": {{RandNumMax 1000}},
-        "TotalPhysicalMemory": {{RandNumMax 1000000}},
-        "VirtualMemory": {{RandNumMax 1000000}},
-        "AvailablePhysicalMemory": {{RandNumMax 1000000}},
+        "ProcessorArchitecture": {{RandIntMax 1000}},
+        "TotalPhysicalMemory": {{RandIntMax 1000000}},
+        "VirtualMemory": {{RandIntMax 1000000}},
+        "AvailablePhysicalMemory": {{RandIntMax 1000000}},
         "CompromisedStatus": {{RandBool}},
         "Add": {{Add 2 1}},
         "Dict": {{Dict "one" 1 "two" 2 "three" 3}}

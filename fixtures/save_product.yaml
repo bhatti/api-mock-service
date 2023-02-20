@@ -16,14 +16,14 @@ request:
     contents: |
         category: {{EnumString `BOOKS MUSIC TOYS`}}
         id: {{UUID}}
-        inventory: {{RandNumMinMax 5 500}}
+        inventory: {{RandIntMinMax 5 500}}
         name: {{RandSentence 3 5}}
         price:
-            amount: {{RandNumMinMax 1 50}}
+            amount: {{RandIntMinMax 1 50}}
             currency: "{{EnumString `USD CAD`}}"
 response:
     headers: {}
-    contents: '{"category":"{{EnumString `BOOKS MUSIC TOYS`}}","id":"{{RandStringMinMax 0 0}}","inventory":"{{RandNumMinMax 5 500}}","name":"{{RandStringMinMax 2 50}}","price":{"amount":{{RandNumMinMax 0 0}},"currency":"$"}}'
+    contents: '{"category":"{{EnumString `BOOKS MUSIC TOYS`}}","id":"{{RandStringMinMax 0 0}}","inventory":"{{RandIntMinMax 5 500}}","name":"{{RandStringMinMax 2 50}}","price":{"amount":{{RandIntMinMax 0 0}},"currency":"$"}}'
     contents_file: ""
     status_code: 200
     assert_headers_pattern: {}

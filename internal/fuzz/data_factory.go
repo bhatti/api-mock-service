@@ -17,29 +17,54 @@ import (
 	"unicode"
 )
 
-// RandNumMinMax returns random number between min and max
-func RandNumMinMax(min, max int) int {
+// RandIntMinMax returns random number between min and max
+func RandIntMinMax(min, max int) int {
+	return SeededRandIntMax(0, min, max)
+}
+
+// RandIntMax returns random number between 0 and max
+func RandIntMax(max int) int {
+	return SeededRandIntMax(0, 0, max)
+}
+
+// SeededRandIntMax returns random number with seed upto a max
+func SeededRandIntMax(seed int64, min, max int) int {
+	if seed <= 0 {
+		seed = time.Now().UnixNano()
+	}
 	if max == 0 {
 		max = 100000
 	}
 	if min == max {
 		return min
 	}
-	return rand.Intn(max-min) + min
+	r := rand.New(rand.NewSource(seed))
+	return r.Intn(max-min) + min
 }
 
-// Random returns random number between 0 and max
-func Random(max int) int {
-	return RandNumMinMax(0, max)
+// RandFloatMinMax returns random number between min and max
+func RandFloatMinMax(min, max float64) float64 {
+	return SeededRandFloatMax(0, min, max)
 }
 
-// SeededRandom returns random number with seed upto a max
-func SeededRandom(seed int64, max int) int {
+// RandFloatMax returns random number between 0 and max
+func RandFloatMax(max float64) float64 {
+	return SeededRandFloatMax(0, 0, max)
+}
+
+// SeededRandFloatMax returns random number with seed upto a max
+func SeededRandFloatMax(seed int64, min, max float64) float64 {
 	if seed <= 0 {
 		seed = time.Now().UnixNano()
 	}
 	r := rand.New(rand.NewSource(seed))
-	return r.Intn(max)
+	if max == 0 {
+		max = 100000
+	}
+	if min == max {
+		return min
+	}
+	return min + r.Float64()*(max-min)
 }
 
 // UUID generator
@@ -163,7 +188,7 @@ func RandBool() bool {
 // SeededBool generator
 func SeededBool(seed int64) bool {
 	bools := []bool{true, false}
-	return bools[SeededRandom(seed, 2)]
+	return bools[SeededRandIntMax(seed, 0, 2)]
 }
 
 // RandCity generator
@@ -897,9 +922,9 @@ func RandIntArrayMinMax(min int, max int) []int {
 	if max == 0 {
 		max = min + 10
 	}
-	arr := make([]int, RandNumMinMax(min, max))
+	arr := make([]int, RandIntMinMax(min, max))
 	for i := 0; i < len(arr); i++ {
-		arr[i] = RandNumMinMax(min, max)
+		arr[i] = RandIntMinMax(min, max)
 	}
 	return arr
 }
@@ -909,7 +934,7 @@ func RandStringArrayMinMax(min int, max int) []string {
 	if max == 0 {
 		max = min + 10
 	}
-	arr := make([]string, RandNumMinMax(min, max))
+	arr := make([]string, RandIntMinMax(min, max))
 	for i := 0; i < len(arr); i++ {
 		arr[i] = RandTriString("_")
 	}
@@ -924,7 +949,7 @@ func RandStringMinMax(min int, max int) string {
 	if max > 200 {
 		max = 200
 	}
-	return RandString(RandNumMinMax(min, max))
+	return RandString(RandIntMinMax(min, max))
 }
 
 // RandString generator
@@ -971,7 +996,7 @@ func SeededFileLine(fileName string, seed int64) string {
 // PRIVATE FUNCTIONS
 
 func randomArrayElement(arr []string, seed int64) string {
-	return strings.TrimSpace(arr[SeededRandom(seed, len(arr))])
+	return strings.TrimSpace(arr[SeededRandIntMax(seed, 0, len(arr))])
 }
 
 func fileLines(fileName string) ([]string, error) {
@@ -1039,19 +1064,19 @@ func replaceWordTag(str, tag string) string {
 func replaceNumTag(str, tag string) string {
 	start := strings.Index(str, tag+"+")
 	for start != -1 {
-		str = strings.Replace(str, tag+"+", strconv.Itoa(RandNumMinMax(1, 10000)), 1)
+		str = strings.Replace(str, tag+"+", strconv.Itoa(RandIntMinMax(1, 10000)), 1)
 		start = strings.Index(str, tag+"+")
 	}
 	start = strings.Index(str, tag+"{")
 	for start != -1 {
 		min, max, i := parseRegexMinMax(str, tag, start)
 		var sb strings.Builder
-		limit := RandNumMinMax(min, max)
+		limit := RandIntMinMax(min, max)
 		for i := 0; i < limit; i++ {
 			if i == 0 {
-				sb.WriteString(strconv.Itoa(RandNumMinMax(1, 9)))
+				sb.WriteString(strconv.Itoa(RandIntMinMax(1, 9)))
 			} else {
-				sb.WriteString(strconv.Itoa(RandNumMinMax(0, 9)))
+				sb.WriteString(strconv.Itoa(RandIntMinMax(0, 9)))
 			}
 		}
 		str = str[0:start] + sb.String() + str[i:]
@@ -1059,7 +1084,7 @@ func replaceNumTag(str, tag string) string {
 	}
 	start = strings.Index(str, tag)
 	for start != -1 {
-		str = strings.Replace(str, tag, strconv.Itoa(RandNumMinMax(0, 9)), 1)
+		str = strings.Replace(str, tag, strconv.Itoa(RandIntMinMax(0, 9)), 1)
 		start = strings.Index(str, tag)
 	}
 	return str

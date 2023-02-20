@@ -16,6 +16,11 @@ var (
 //go:embed swagger-ui/*
 var swaggerContent embed.FS
 
+// docs holds our open-api specifications
+//
+//go:embed docs/*
+var internalOAPI embed.FS
+
 func main() {
-	cmd.Execute(version, commit, date, swaggerContent)
+	cmd.Execute(version, commit, date, swaggerContent, internalOAPI)
 }

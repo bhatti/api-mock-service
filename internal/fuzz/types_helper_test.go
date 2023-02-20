@@ -197,9 +197,9 @@ func Test_ShouldGenerateFuzzWithTypesNestedArrays(t *testing.T) {
 }
 
 func Test_ShouldUnmarshalObjectArrays(t *testing.T) {
-	j := "{\"creditCard\":{\"balance\":{\"amount\":{{RandNumMinMax 0 0}},\"currency\":\"{{RandRegex `(USD|CAD|EUR|AUD)`}}\"}}}"
+	j := "{\"creditCard\":{\"balance\":{\"amount\":{{RandIntMinMax 0 0}},\"currency\":\"{{RandRegex `(USD|CAD|EUR|AUD)`}}\"}}}"
 	_, err := UnmarshalArrayOrObject([]byte(j))
-	require.Error(t, err) // no quotes for {RandNumMinMax 0 0}
+	require.Error(t, err) // no quotes for {RandIntMinMax 0 0}
 }
 
 func Test_ShouldExtractTypesArray(t *testing.T) {

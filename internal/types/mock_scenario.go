@@ -142,6 +142,8 @@ type MockScenario struct {
 	Name string `yaml:"name" json:"name"`
 	// Path for the API (excluding query params)
 	Path string `yaml:"path" json:"path"`
+	// BaseURL of remote server
+	BaseURL string `yaml:"base_url" json:"base_url"`
 	// Description of scenario
 	Description string `yaml:"description" json:"description"`
 	// Order of scenario
@@ -197,6 +199,14 @@ func (ms *MockScenario) SafeName() string {
 // MethodPath helper method
 func (ms *MockScenario) MethodPath() string {
 	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_")
+}
+
+// BuildURL helper method
+func (ms *MockScenario) BuildURL(overrideBaseURL string) string {
+	if overrideBaseURL == "" {
+		overrideBaseURL = ms.BaseURL
+	}
+	return overrideBaseURL + ms.Path
 }
 
 // Digest of scenario

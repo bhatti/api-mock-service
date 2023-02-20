@@ -2,12 +2,14 @@ package controller
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"gopkg.in/yaml.v3"
 	"net/http"
+	"strings"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -16,14 +18,17 @@ import (
 
 // MockOAPIController structure
 type MockOAPIController struct {
+	internalOAPI           embed.FS
 	mockScenarioRepository repository.MockScenarioRepository
 }
 
 // NewMockOAPIController instantiates controller for updating mock-scenarios based on OpenAPI v3
 func NewMockOAPIController(
+	internalOAPI embed.FS,
 	mockScenarioRepository repository.MockScenarioRepository,
 	webserver web.Server) *MockOAPIController {
 	ctrl := &MockOAPIController{
+		internalOAPI:           internalOAPI,
 		mockScenarioRepository: mockScenarioRepository,
 	}
 
@@ -42,23 +47,31 @@ func NewMockOAPIController(
 //
 //	200: mockOapiSpecIResponse
 func (moc *MockOAPIController) GetOpenAPISpecsByGroup(c web.APIContext) (err error) {
+	u := c.Request().URL
 	group := c.Param("group")
 	if group == "" {
 		return fmt.Errorf("scenario group not specified")
 	}
-	allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
-	var scenarios []*types.MockScenario
-	for _, keyData := range allByGroup {
-		scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
-		if err != nil {
-			return err
+	var b []byte
+	if group == "_internal" {
+		b, err = moc.internalOAPI.ReadFile("docs/openapi.json")
+	} else {
+		allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
+		var scenarios []*types.MockScenario
+		for _, keyData := range allByGroup {
+			scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
+			if err != nil {
+				return err
+			}
+			scenarios = append(scenarios, scenario)
 		}
-		scenarios = append(scenarios, scenario)
+		b, err = oapi.MarshalScenarioToOpenAPI(group, "", scenarios...)
 	}
-	b, err := oapi.MarshalScenarioToOpenAPI(group, "", scenarios...)
 	if err != nil {
 		return err
 	}
+
+	b = []byte(strings.ReplaceAll(string(b), "SERVER_URL", u.Scheme+"://"+u.Host))
 	return c.Blob(http.StatusOK, "application/json", b)
 }
 

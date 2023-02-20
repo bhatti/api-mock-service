@@ -28,7 +28,8 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 		Paths: make(openapi3.Paths),
 		Servers: openapi3.Servers{
 			&openapi3.Server{
-				URL: "http://localhost:8000",
+				URL:         "SERVER_URL",
+				Description: "Mock Server",
 			},
 		},
 	}
@@ -38,6 +39,7 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 			Summary:     "",
 			Description: "",
 		}
+		addServer(scenario, root)
 		op := ops[scenario.MethodPath()]
 		if op == nil {
 			op = &openapi3.Operation{
@@ -96,6 +98,28 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 		root.AddOperation(scenario.Path, string(scenario.Method), op)
 	}
 	return root
+}
+
+func addServer(scenario *types.MockScenario, root *openapi3.T) {
+	if scenario.BaseURL == "" {
+		return
+	}
+	exists := false
+	for _, server := range root.Servers {
+		if server.URL == scenario.BaseURL {
+			exists = true
+			break
+		}
+	}
+
+	if !exists {
+		root.Servers = append(root.Servers,
+			&openapi3.Server{
+				URL:         scenario.BaseURL,
+				Description: "Real Server",
+			},
+		)
+	}
 }
 
 func buildParameter(k string, v string, in string) *openapi3.Parameter {
@@ -203,7 +227,7 @@ func sanitizeScenarioName(name string) string {
 func sanitizeRegexValue(val any) (string, any) {
 	strVal := fmt.Sprintf("%v", val)
 	if reflect.TypeOf(val).String() == "string" {
-		if strings.Contains(strVal, fuzz.PrefixTypeNumber) || strings.Contains(strVal, "RandNum") {
+		if strings.Contains(strVal, fuzz.PrefixTypeNumber) || strings.Contains(strVal, "RandInt") {
 			strVal = ""
 			if strings.Contains(strVal, ".") {
 				val = 0.0

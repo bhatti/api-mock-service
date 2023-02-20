@@ -18,7 +18,7 @@ request:
     example_contents: ""
 response:
     headers: {}
-    contents: '{"address":{"city":"{{RandStringMinMax 2 60}}","countryCode":"{{EnumString `US CA`}}","id":"{{UUID}}","streetAddress":"{{RandRegex `\\w+`}}","zipCode":"{{RandRegex `\\d{5}`}}"},"creditCard":{"balance":{"amount":{{RandNumMinMax 0 0}},"currency":"{{RandRegex `(USD|CAD|EUR|AUD)`}}"},"cardNumber":"{{RandRegex `\\d{4}-\\d{4}-\\d{4}`}}","customerId":"{{RandStringMinMax 30 36}}","expiration":"{{RandRegex `\\d{2}/\\d{4}`}}","id":"{{UUID}}","type":"{{EnumString `VISA MASTERCARD AMEX`}}"},"email":"{{RandRegex `.+@.+\\..+`}}","firstName":"{{RandRegex `\\w`}}","id":"{{UUID}}","lastName":"{{RandRegex `\\w`}}","phone":"{{RandRegex `1-\\d{3}-\\d{3}-\\d{4}`}}"}'
+    contents: '{"address":{"city":"{{RandStringMinMax 2 60}}","countryCode":"{{EnumString `US CA`}}","id":"{{UUID}}","streetAddress":"{{RandRegex `\\w+`}}","zipCode":"{{RandRegex `\\d{5}`}}"},"creditCard":{"balance":{"amount":{{RandIntMinMax 0 0}},"currency":"{{RandRegex `(USD|CAD|EUR|AUD)`}}"},"cardNumber":"{{RandRegex `\\d{4}-\\d{4}-\\d{4}`}}","customerId":"{{RandStringMinMax 30 36}}","expiration":"{{RandRegex `\\d{2}/\\d{4}`}}","id":"{{UUID}}","type":"{{EnumString `VISA MASTERCARD AMEX`}}"},"email":"{{RandRegex `.+@.+\\..+`}}","firstName":"{{RandRegex `\\w`}}","id":"{{UUID}}","lastName":"{{RandRegex `\\w`}}","phone":"{{RandRegex `1-\\d{3}-\\d{3}-\\d{4}`}}"}'
     contents_file: ""
     example_contents: |
         address:

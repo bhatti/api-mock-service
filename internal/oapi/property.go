@@ -202,7 +202,7 @@ func (prop *Property) numericValue() string {
 		return `[\d\.]+`
 	}
 
-	return fmt.Sprintf("{{RandNumMinMax %d %d}}", int(prop.Min), int(prop.Max))
+	return fmt.Sprintf("{{RandIntMinMax %d %d}}", int(prop.Min), int(prop.Max))
 }
 
 func (prop *Property) boolValue() string {
@@ -270,7 +270,7 @@ func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 				if dataTemplate.IncludeType {
 					childArr[i] = fuzz.NumberPrefixRegex
 				} else {
-					childArr[i] = "{{RandNumMinMax 0 0}}"
+					childArr[i] = "{{RandIntMinMax 0 0}}"
 				}
 			} else if prop.SubType == "boolean" {
 				if dataTemplate.IncludeType {
@@ -343,9 +343,9 @@ func (prop *Property) buildValueArray() []any {
 		prop.Min = 1
 	}
 	if prop.Max == 0 {
-		prop.Max = prop.Min + float64(fuzz.RandNumMinMax(1, 10))
+		prop.Max = prop.Min + float64(fuzz.RandIntMinMax(1, 10))
 	}
-	return make([]any, fuzz.RandNumMinMax(int(prop.Min), int(prop.Max)))
+	return make([]any, fuzz.RandIntMinMax(int(prop.Min), int(prop.Max)))
 }
 
 func propsToMap(props []Property, defVal string, dataTemplate fuzz.DataTemplateRequest) (res map[string]string) {

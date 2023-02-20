@@ -10,7 +10,7 @@ response:
       "ETag":
         - {{RandString 10}}
       "Cache-Control": 
-        - max-age={{RandNumMinMax 1000 5000}}
+        - max-age={{RandIntMinMax 1000 5000}}
     content_type: image/png
     contents_file: mockup.png
     status_code: 200

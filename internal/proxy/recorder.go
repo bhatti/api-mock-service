@@ -115,6 +115,7 @@ func saveMockResponse(
 		Method:         types.MethodType(req.Method),
 		Name:           req.Header.Get(types.MockScenarioName),
 		Path:           u.Path,
+		BaseURL:        u.Scheme + "://" + u.Host,
 		Group:          utils.NormalizeGroup("", u.Path),
 		Authentication: make(map[string]types.MockAuthorization),
 		Request: types.MockHTTPRequest{

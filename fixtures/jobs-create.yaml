@@ -12,7 +12,7 @@ response:
         "Connection": 
             - "keep-alive"
         "Retry-After": 
-            - {{RandNumMinMax 0 0}}
+            - {{RandIntMinMax 0 0}}
     content_type: application/json
     contents: >
     {{if NthRequest 3 }}
@@ -28,7 +28,7 @@ response:
     {{else}}
         "Status": "{{EnumString `Running Pending`}}",
     {{end}}
-        "Records": {{RandNumMinMax 0 0}},
+        "Records": {{RandIntMinMax 0 0}},
         "Tags": {{RandStringArrayMinMax 2 3}},
         "Completed": {{RandBool}}
      }

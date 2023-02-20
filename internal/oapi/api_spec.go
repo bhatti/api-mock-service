@@ -197,7 +197,7 @@ func marshalPropertyValue(params []Property, dataTemplate fuzz.DataTemplateReque
 }
 
 func stripNumericBooleanQuotes(b []byte) []byte {
-	re := regexp.MustCompile(`"{{(RandNumMinMax \d \d|RandStringArrayMinMax \d \d|RandDict|RandBool)}}"`)
+	re := regexp.MustCompile(`"{{(RandIntMinMax \d \d|RandStringArrayMinMax \d \d|RandDict|RandBool)}}"`)
 	return []byte(re.ReplaceAllString(string(b), `{{$1}}`))
 }
 

@@ -59,6 +59,7 @@ func NewDefaultWebServer(config *types.Configuration) Server {
 	}
 	ws.e.Use(middleware.LoggerWithConfig(defaultLoggerConfig))
 	ws.e.Use(middleware.Recover())
+
 	ws.e.HTTPErrorHandler = func(err error, c echo.Context) {
 		ws.e.DefaultHTTPErrorHandler(err, c)
 	}
@@ -79,6 +80,7 @@ func (w *DefaultWebServer) AddMiddleware(m echo.MiddlewareFunc) {
 // GET calls HTTP GET method
 func (w *DefaultWebServer) GET(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.GET(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -86,6 +88,7 @@ func (w *DefaultWebServer) GET(path string, h HandlerFunc, m ...echo.MiddlewareF
 // POST calls HTTP POST method
 func (w *DefaultWebServer) POST(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.POST(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -93,6 +96,7 @@ func (w *DefaultWebServer) POST(path string, h HandlerFunc, m ...echo.Middleware
 // PUT calls HTTP PUT method
 func (w *DefaultWebServer) PUT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.PUT(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -100,6 +104,7 @@ func (w *DefaultWebServer) PUT(path string, h HandlerFunc, m ...echo.MiddlewareF
 // DELETE calls HTTP DELETE method
 func (w *DefaultWebServer) DELETE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.DELETE(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -107,6 +112,7 @@ func (w *DefaultWebServer) DELETE(path string, h HandlerFunc, m ...echo.Middlewa
 // CONNECT calls HTTP CONNECT method
 func (w *DefaultWebServer) CONNECT(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.CONNECT(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -114,6 +120,7 @@ func (w *DefaultWebServer) CONNECT(path string, h HandlerFunc, m ...echo.Middlew
 // HEAD calls HTTP HEAD method
 func (w *DefaultWebServer) HEAD(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.HEAD(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -121,6 +128,7 @@ func (w *DefaultWebServer) HEAD(path string, h HandlerFunc, m ...echo.Middleware
 // OPTIONS calls HTTP OPTIONS method
 func (w *DefaultWebServer) OPTIONS(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.OPTIONS(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -128,6 +136,7 @@ func (w *DefaultWebServer) OPTIONS(path string, h HandlerFunc, m ...echo.Middlew
 // PATCH calls HTTP PATCH method
 func (w *DefaultWebServer) PATCH(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.PATCH(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -135,6 +144,7 @@ func (w *DefaultWebServer) PATCH(path string, h HandlerFunc, m ...echo.Middlewar
 // TRACE calls HTTP TRACE method
 func (w *DefaultWebServer) TRACE(path string, h HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	return w.e.TRACE(path, func(context echo.Context) error {
+		initializeURLProperties(context)
 		return h(context)
 	}, m...)
 }
@@ -160,4 +170,17 @@ func (w *DefaultWebServer) Start(address string) {
 // Stop - stops web server
 func (w *DefaultWebServer) Stop() {
 	_ = w.e.Close()
+}
+
+func initializeURLProperties(context echo.Context) {
+	if context.Request().URL.Host == "" {
+		context.Request().URL.Host = context.Request().Host
+	}
+	if context.Request().URL.Scheme == "" {
+		if context.Request().TLS == nil {
+			context.Request().URL.Scheme = "http"
+		} else {
+			context.Request().URL.Scheme = "https"
+		}
+	}
 }

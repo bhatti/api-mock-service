@@ -62,11 +62,12 @@ func (x *Executor) Execute(
 			res.Metrics = sli.Summary()
 			return res
 		}
-		url := contractReq.BaseURL + scenario.Path
+		url := scenario.BuildURL(contractReq.BaseURL)
 		resContents, err := x.execute(ctx, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
 		res.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
+
 	res.Metrics = sli.Summary()
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
@@ -113,7 +114,7 @@ func (x *Executor) ExecuteByGroup(
 				res.Metrics = sli.Summary()
 				return res
 			}
-			url := contractReq.BaseURL + scenario.Path
+			url := scenario.BuildURL(contractReq.BaseURL)
 			resContents, err := x.execute(ctx, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
 			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
@@ -146,8 +147,8 @@ func (x *Executor) execute(
 ) (res any, err error) {
 	started := time.Now().UnixMilli()
 	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides)
-	if fuzz.RandNumMinMax(1, 100) < 20 {
-		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandNumMinMax(2, 5))
+	if fuzz.RandIntMinMax(1, 100) < 20 {
+		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandIntMinMax(2, 5))
 	}
 	for k, v := range templateParams {
 		url = strings.ReplaceAll(url, "{"+k+"}", fmt.Sprintf("%v", v))

@@ -20,7 +20,7 @@ response:
     content_type: ""
     contents: |-
         {
-          "id": {{RandNumMinMax 1 10}}
+          "id": {{RandIntMinMax 1 10}}
         }
     status_code: 200
     assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'

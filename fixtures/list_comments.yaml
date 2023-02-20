@@ -22,8 +22,8 @@ response:
         [
 {{- range $val := Iterate 20 }}
           {
-            "postId": {{RandNumMax 1000}},
-            "id": {{RandNumMax 1000}},
+            "postId": {{RandIntMax 1000}},
+            "id": {{RandIntMax 1000}},
             "name": "{{RandSentence 2 3}}",
             "email": "{{RandEmail}}",
             "body": "{{RandParagraph 3 5}}"

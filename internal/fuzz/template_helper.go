@@ -96,11 +96,17 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"Unescape": func(s string) template.HTML {
 			return template.HTML(s)
 		},
-		"RandNumMinMax": func(min any, max any) int {
-			return RandNumMinMax(toInt(min), toInt(max))
+		"RandIntMinMax": func(min any, max any) int {
+			return RandIntMinMax(toInt(min), toInt(max))
 		},
-		"RandNumMax": func(max any) int {
-			return Random(toInt(max))
+		"RandIntMax": func(max any) int {
+			return RandIntMax(toInt(max))
+		},
+		"RandFloatMinMax": func(min any, max any) float64 {
+			return RandFloatMinMax(ToFloat64(min), ToFloat64(max))
+		},
+		"RandFloatMax": func(max any) float64 {
+			return RandFloatMax(ToFloat64(max))
 		},
 		"RandWord": func(min, max any) string {
 			return RandWord(toInt(min), toInt(max))
@@ -180,14 +186,14 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		},
 		"RandDict": func() template.HTML {
 			dict := make(map[string]any)
-			for i := 0; i < RandNumMinMax(3, 6); i += 2 {
+			for i := 0; i < RandIntMinMax(3, 6); i += 2 {
 				key := RandName()
 				if i == 0 {
 					dict[key] = RandTriString(".")
 				} else if i == 2 {
 					dict[key] = RandBool()
 				} else {
-					dict[key] = RandNumMinMax(100, 5000)
+					dict[key] = RandIntMinMax(100, 5000)
 				}
 			}
 			j, _ := json.Marshal(dict)

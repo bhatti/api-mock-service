@@ -36,6 +36,9 @@ var Date string
 // SwaggerContent for embedded swagger-ui
 var SwaggerContent embed.FS
 
+// InternalOAPI for embedded open-api specs
+var InternalOAPI embed.FS
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "api-mock-service",
@@ -47,11 +50,12 @@ var rootCmd = &cobra.Command{
 }
 
 // Execute is called by main.main() to start the server
-func Execute(version string, commit string, date string, swaggerContent embed.FS) {
+func Execute(version string, commit string, date string, swaggerContent embed.FS, internalOAPI embed.FS) {
 	Version = version
 	Commit = commit
 	Date = date
 	SwaggerContent = swaggerContent
+	InternalOAPI = internalOAPI
 	if err := rootCmd.Execute(); err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to execute command...")
@@ -94,7 +98,7 @@ func RunServer(_ *cobra.Command, args []string) {
 		adapter := web.NewWebServerAdapter()
 		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 		executor := contract.NewExecutor(scenarioRepo, httpClient)
-		_ = controller.NewMockOAPIController(scenarioRepo, adapter)
+		_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, adapter)
 		_ = controller.NewMockScenarioController(scenarioRepo, adapter)
 		_ = controller.NewMockFixtureController(fixturesRepo, adapter)
 		_ = controller.NewMockProxyController(recorder, adapter)
@@ -171,7 +175,7 @@ func buildControllers(
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 	player := proxy.NewPlayer(scenarioRepo, fixtureRepo)
 	executor := contract.NewExecutor(scenarioRepo, httpClient)
-	_ = controller.NewMockOAPIController(scenarioRepo, webServer)
+	_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, webServer)
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
 	_ = controller.NewMockProxyController(recorder, webServer)

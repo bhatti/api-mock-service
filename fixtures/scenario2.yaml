@@ -31,10 +31,10 @@ response:
         "Name": "{{SeededName $val}}",
         "Platform": "Apple",
         "AppGroupType": "Whitelist",
-        "ManagedByOrganizationGroupID": "{{RandNumMax 1000}}",
+        "ManagedByOrganizationGroupID": "{{RandIntMax 1000}}",
         "OrganizationGroups": {
          "Id": {
-           "Value": {{RandNumMax 1000}},
+           "Value": {{RandIntMax 1000}},
          },
          "Name": "{{SeededCity $val}}",
          "UUID": "{{UUID}}"
@@ -43,7 +43,7 @@ response:
         "LastSeen": "{{Time}}",
         "DeviceOwnership": "Any",
         "IsActive": {{RandBool}}
-        "AppCount": {{RandNumMax 100}},
+        "AppCount": {{RandIntMax 100}},
         "Applications": []
       }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
 {{ end }}

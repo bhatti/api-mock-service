@@ -16,25 +16,25 @@ func GenerateFuzzData(val any) any {
 	case bool:
 		return val //RandBool()
 	case int:
-		return val //RandNumMinMax(-1000, 10000)
+		return val //RandIntMinMax(-1000, 10000)
 	case int8:
-		return val //RandNumMinMax(-1000, 10000)
+		return val //RandIntMinMax(-1000, 10000)
 	case int16:
-		return val //RandNumMinMax(-1000, 10000)
+		return val //RandIntMinMax(-1000, 10000)
 	case int32:
-		return val //RandNumMinMax(-1000, 10000)
+		return val //RandIntMinMax(-1000, 10000)
 	case int64:
-		return val //RandNumMinMax(-1000, 10000)
+		return val //RandIntMinMax(-1000, 10000)
 	case uint:
-		return val //RandNumMinMax(0, 10000)
+		return val //RandIntMinMax(0, 10000)
 	case uint8:
-		return val //RandNumMinMax(0, 10000)
+		return val //RandIntMinMax(0, 10000)
 	case uint16:
-		return val //RandNumMinMax(0, 10000)
+		return val //RandIntMinMax(0, 10000)
 	case uint32:
-		return val //RandNumMinMax(0, 10000)
+		return val //RandIntMinMax(0, 10000)
 	case uint64:
-		return val //RandNumMinMax(0, 10000)
+		return val //RandIntMinMax(0, 10000)
 	case float32:
 		return val //rand.Float32()
 	case float64:
@@ -42,13 +42,13 @@ func GenerateFuzzData(val any) any {
 	case string:
 		strVal := val.(string)
 		if strVal == NumberPrefixRegex {
-			return float64(RandNumMinMax(0, 10000)) * rand.ExpFloat64()
+			return float64(RandIntMinMax(0, 10000)) * rand.ExpFloat64()
 		} else if strVal == BooleanPrefixRegex {
 			return RandBool()
 		} else if strVal == UintPrefixRegex {
-			return RandNumMinMax(0, 10000)
+			return RandIntMinMax(0, 10000)
 		} else if strVal == IntPrefixRegex {
-			return RandNumMinMax(-100, 10000)
+			return RandIntMinMax(-100, 10000)
 		} else if strings.HasPrefix(strVal, "__") || strings.HasPrefix(strVal, "(") {
 			return RandRegex(strVal)
 		} else if strings.HasPrefix(strVal, "{{") {

@@ -77,18 +77,36 @@ func Test_ShouldParseUnescape(t *testing.T) {
 	require.Equal(t, "test", string(out))
 }
 
-func Test_ShouldParseRandNumMinMax(t *testing.T) {
+func Test_ShouldParseRandIntMinMax(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{RandNumMinMax 1 10}}`)
+	b := []byte(`{{RandIntMinMax 1 10}}`)
 	// WHEN parsing random number
 	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
 	// THEN it should succeed
 	require.NoError(t, err)
 }
 
-func Test_ShouldParseRandNumMax(t *testing.T) {
+func Test_ShouldParseRandIntMax(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{RandNumMax 1}}`)
+	b := []byte(`{{RandIntMax 1}}`)
+	// WHEN parsing random number
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandFloatMinMax(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandFloatMinMax 1 10}}`)
+	// WHEN parsing random number
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandFloatMax(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandFloatMax 1}}`)
 	// WHEN parsing random number
 	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
 	// THEN it should succeed

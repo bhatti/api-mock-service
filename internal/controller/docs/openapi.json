@@ -1,0 +1,1181 @@
+{
+  "openapi": "3.0.1",
+  "servers": [
+    {
+      "url": "SERVER_URL"
+    }
+  ],
+  "paths": {
+    "/_contracts/{group}": {
+      "post": {
+        "tags": [
+          "contract"
+        ],
+        "description": "Plays contract client for a scenario by group",
+        "operationId": "PostMockContractGroupScenario",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      }
+    },
+    "/_contracts/{method}/{name}/{path}": {
+      "post": {
+        "tags": [
+          "contract"
+        ],
+        "description": "Plays contract client for a scenario by name",
+        "operationId": "PostMockContractScenario",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      }
+    },
+    "/_fixtures/{method}/{name}/{path}": {
+      "get": {
+        "tags": [
+          "mock-fixtures"
+        ],
+        "summary": "Deletes an existing mock fixtures based on name and path.",
+        "operationId": "GetMockFixture",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "mock-fixtures"
+        ],
+        "summary": "Creates new mock fixtures based on request body.",
+        "operationId": "PostMockFixture",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "uint8"
+                }
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "MockFixture body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "uint8"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      },
+      "delete": {
+        "tags": [
+          "mock-fixtures"
+        ],
+        "summary": "Deletes an existing mock fixtures based on name and path.",
+        "operationId": "GetMockFixture",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/_fixtures/{method}/fixtures/{path}": {
+      "get": {
+        "tags": [
+          "mock-fixtures"
+        ],
+        "description": "Returns mock fixture names",
+        "operationId": "getMockFixtureNames",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MockFixture names",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_oapi": {
+      "post": {
+        "tags": [
+          "open-api"
+        ],
+        "description": "Creates new mock scenarios based on Open API v3",
+        "operationId": "PostMockOAPIScenario",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "uint8"
+                }
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MockScenario"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      }
+    },
+    "/_oapi/{group}": {
+      "get": {
+        "tags": [
+          "open-api"
+        ],
+        "description": "Generates OpenAPI specs for the scenario group",
+        "operationId": "GetOpenAPISpecsByGroup",
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "uint8"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_oapi/{method}/{name}/{path}": {
+      "get": {
+        "description": "Generates OpenAPI specs for the scenario",
+        "operationId": "open-apiGetOpenAPISpecsByScenario",
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "uint8"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_proxy": {
+      "get": {
+        "tags": [
+          "mock-proxy"
+        ],
+        "description": "Records scenario from GET request",
+        "operationId": "getMockProxy"
+      },
+      "put": {
+        "tags": [
+          "mock-proxy"
+        ],
+        "description": "Records scenario from PUT request",
+        "operationId": "putMockProxy"
+      },
+      "post": {
+        "tags": [
+          "mock-proxy"
+        ],
+        "description": "Records scenario from POST request",
+        "operationId": "postMockProxy"
+      },
+      "delete": {
+        "tags": [
+          "mock-proxy"
+        ],
+        "description": "Records scenario from DELETE request",
+        "operationId": "deleteMockProxy"
+      }
+    },
+    "/_scenarios": {
+      "get": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "description": "List paths of all scenarios",
+        "operationId": "listMockScenario",
+        "responses": {
+          "200": {
+            "description": "MockScenario summary and paths",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/MockScenarioKeyData"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "summary": "Creates new mock scenario based on request body.",
+        "operationId": "PostMockScenario",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/MockScenario"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MockScenario"
+                }
+              }
+            }
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      }
+    },
+    "/_scenarios/{method}/{name}/{path}": {
+      "get": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "summary": "Deletes an existing mock scenario based on id.",
+        "operationId": "GetMockScenario",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "summary": "Deletes an existing mock scenario based on id.",
+        "operationId": "GetMockScenario",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/_scenarios/{method}/names/{path}": {
+      "get": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "description": "Returns mock scenario names",
+        "operationId": "getMockNames",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MockScenario names",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{path}": {
+      "get": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from GET request",
+        "operationId": "getRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from PUT request",
+        "operationId": "putRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from POST request",
+        "operationId": "postRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from DELETE request",
+        "operationId": "deleteRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
+      },
+      "options": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from OPTIONS request",
+        "operationId": "optionsRoot"
+      },
+      "head": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from HEAD request",
+        "operationId": "headRoot"
+      },
+      "patch": {
+        "tags": [
+          "mock-play"
+        ],
+        "description": "Play scenario from PATCH request",
+        "operationId": "patchRoot"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ContractRequest": {
+        "type": "object",
+        "properties": {
+          "base_url": {
+            "type": "string",
+            "x-go-name": "BaseURL"
+          },
+          "execution_times": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "ExecutionTimes"
+          },
+          "verbose": {
+            "type": "boolean",
+            "x-go-name": "Verbose"
+          }
+        },
+        "description": "ContractRequest for generating random requests to an API",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "ContractResponse": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "x-go-name": "Errors"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Failed"
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            },
+            "x-go-name": "Metrics"
+          },
+          "results": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "x-go-name": "Results"
+          },
+          "succeeded": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Succeeded"
+          }
+        },
+        "description": "ContractResponse for response of contract request",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "Duration": {
+        "type": "integer",
+        "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
+        "format": "int64",
+        "x-go-package": "time"
+      },
+      "MethodType": {
+        "type": "string",
+        "description": "MethodType for HTTP",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "MockAuthorization": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "x-go-name": "Format"
+          },
+          "in": {
+            "type": "string",
+            "x-go-name": "In"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "scheme": {
+            "type": "string",
+            "x-go-name": "Scheme"
+          },
+          "type": {
+            "type": "string",
+            "x-go-name": "Type"
+          },
+          "url": {
+            "type": "string",
+            "x-go-name": "URL"
+          }
+        },
+        "description": "MockAuthorization defines mock auth parameters",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "MockHTTPRequest": {
+        "type": "object",
+        "properties": {
+          "contents": {
+            "type": "string",
+            "description": "Contents for request optionally",
+            "x-go-name": "Contents"
+          },
+          "example_contents": {
+            "type": "string",
+            "description": "ExampleContents sample for request optionally",
+            "x-go-name": "ExampleContents"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Headers for mock response",
+            "x-go-name": "Headers"
+          },
+          "assert_contents_pattern": {
+            "type": "string",
+            "description": "MatchContents for request optionally",
+            "x-go-name": "MatchContents"
+          },
+          "assert_headers_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "MatchHeaders for mock response",
+            "x-go-name": "MatchHeaders"
+          },
+          "assert_query_params_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "MatchQueryParams for the API",
+            "x-go-name": "MatchQueryParams"
+          },
+          "path_params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "PathParams sample for the API",
+            "x-go-name": "PathParams"
+          },
+          "query_params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "QueryParams sample for the API",
+            "x-go-name": "QueryParams"
+          }
+        },
+        "description": "MockHTTPRequest defines mock request for APIs",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "MockHTTPResponse": {
+        "type": "object",
+        "properties": {
+          "assertions": {
+            "type": "array",
+            "description": "Assertions for validating response",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Assertions"
+          },
+          "contents": {
+            "type": "string",
+            "description": "Contents for request",
+            "x-go-name": "Contents"
+          },
+          "contents_file": {
+            "type": "string",
+            "description": "ContentsFile for request",
+            "x-go-name": "ContentsFile"
+          },
+          "example_contents": {
+            "type": "string",
+            "description": "ExampleContents sample for response optionally",
+            "x-go-name": "ExampleContents"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Headers for mock response",
+            "x-go-name": "Headers"
+          },
+          "assert_contents_pattern": {
+            "type": "string",
+            "description": "MatchContents for request optionally",
+            "x-go-name": "MatchContents"
+          },
+          "assert_headers_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "MatchHeaders for mock response",
+            "x-go-name": "MatchHeaders"
+          },
+          "pipe_properties": {
+            "type": "array",
+            "description": "PipeProperties to extract properties from response",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "PipeProperties"
+          },
+          "status_code": {
+            "type": "integer",
+            "description": "StatusCode for response",
+            "format": "int64",
+            "x-go-name": "StatusCode"
+          }
+        },
+        "description": "MockHTTPResponse defines mock response for APIs",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "MockScenario": {
+        "type": "object",
+        "properties": {
+          "authentication": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MockAuthorization"
+            },
+            "description": "Authentication for the API",
+            "x-go-name": "Authentication"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of scenario",
+            "x-go-name": "Description"
+          },
+          "group": {
+            "type": "string",
+            "description": "Group of scenario",
+            "x-go-name": "Group"
+          },
+          "method": {
+            "$ref": "#/components/schemas/MethodType"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to uniquely identify the scenario",
+            "x-go-name": "Name"
+          },
+          "order": {
+            "type": "integer",
+            "description": "Order of scenario",
+            "format": "int64",
+            "x-go-name": "Order"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path for the API (excluding query params)",
+            "x-go-name": "Path"
+          },
+          "predicate": {
+            "type": "string",
+            "description": "Predicate for the request",
+            "x-go-name": "Predicate"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MockHTTPRequest"
+          },
+          "response": {
+            "$ref": "#/components/schemas/MockHTTPResponse"
+          },
+          "wait_before_reply": {
+            "$ref": "#/components/schemas/Duration"
+          }
+        },
+        "description": "MockScenario defines mock scenario for APIs",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "MockScenarioKeyData": {
+        "type": "object",
+        "properties": {
+          "LastUsageTime": {
+            "type": "integer",
+            "description": "LastUsageTime of key data",
+            "format": "int64"
+          },
+          "RequestCount": {
+            "type": "integer",
+            "description": "RequestCount for the API",
+            "format": "uint64"
+          },
+          "group": {
+            "type": "string",
+            "description": "Group of scenario",
+            "x-go-name": "Group"
+          },
+          "assert_contents_pattern": {
+            "type": "string",
+            "description": "MatchContents for request optionally",
+            "x-go-name": "MatchContents"
+          },
+          "assert_headers_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "MatchHeaders for mock response",
+            "x-go-name": "MatchHeaders"
+          },
+          "assert_query_params_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "MatchQueryParams for the API",
+            "x-go-name": "MatchQueryParams"
+          },
+          "method": {
+            "$ref": "#/components/schemas/MethodType"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to uniquely identify the scenario",
+            "x-go-name": "Name"
+          },
+          "order": {
+            "type": "integer",
+            "description": "Order of scenario",
+            "format": "int64",
+            "x-go-name": "Order"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path for the API (excluding query params)",
+            "x-go-name": "Path"
+          },
+          "predicate": {
+            "type": "string",
+            "description": "Predicate for the request",
+            "x-go-name": "Predicate"
+          }
+        },
+        "description": "MockScenarioKeyData defines keys of mock scenario for in-memory store",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      }
+    },
+    "responses": {
+      "emptyResponse": {
+        "description": "",
+        "content": {}
+      },
+      "mockFixtureNamesResponse": {
+        "description": "MockFixture names",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "mockFixtureResponse": {
+        "description": "MockFixture body for update",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8"
+              }
+            }
+          }
+        }
+      },
+      "mockNamesResponse": {
+        "description": "MockScenario names",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "mockOapiSpecIResponse": {
+        "description": "MockScenario body for update",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8"
+              }
+            }
+          }
+        }
+      },
+      "mockScenarioContractResponse": {
+        "description": "MockScenario body for update",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/ContractResponse"
+            }
+          }
+        }
+      },
+      "mockScenarioOAPIResponse": {
+        "description": "MockScenario body for update",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/MockScenario"
+            }
+          }
+        }
+      },
+      "mockScenarioPathsResponse": {
+        "description": "MockScenario summary and paths",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/components/schemas/MockScenarioKeyData"
+              }
+            }
+          }
+        }
+      },
+      "mockScenarioResponse": {
+        "description": "MockScenario body for update",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/MockScenario"
+            }
+          }
+        }
+      }
+    }
+  }
+}

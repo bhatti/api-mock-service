@@ -9,17 +9,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_ShouldGetRandomMinMax(t *testing.T) {
-	require.True(t, RandNumMinMax(1, 0) >= 1)
-	require.True(t, RandNumMinMax(1, 10) >= 1)
+func Test_ShouldGetRandomMinMaxInt(t *testing.T) {
+	require.True(t, RandIntMinMax(1, 0) >= 1)
+	require.True(t, RandIntMinMax(1, 10) >= 1)
 }
 
-func Test_ShouldGetRandom(t *testing.T) {
-	require.True(t, Random(10) <= 10)
+func Test_ShouldGetRandomInt(t *testing.T) {
+	require.True(t, RandIntMax(10) <= 10)
 }
 
-func Test_ShouldGetSeededRandom(t *testing.T) {
-	require.True(t, SeededRandom(1, 10) <= 10)
+func Test_ShouldGetSeededRandomInt(t *testing.T) {
+	require.True(t, SeededRandIntMax(1, 0, 10) <= 10)
+}
+
+func Test_ShouldGetRandomFloatMinMax(t *testing.T) {
+	require.True(t, RandFloatMinMax(1, 0) >= 1)
+	require.True(t, RandFloatMinMax(1, 10) >= 1)
+}
+
+func Test_ShouldGetFloatRandom(t *testing.T) {
+	require.True(t, RandFloatMax(10) <= 10)
+}
+
+func Test_ShouldGetSeededFloatRandom(t *testing.T) {
+	require.True(t, SeededRandFloatMax(1, 0, 10) <= 10)
 }
 
 func Test_ShouldGetUUID(t *testing.T) {
@@ -76,7 +89,7 @@ func Test_ShouldGetRandIntArrayMinMax(t *testing.T) {
 }
 
 func Test_ShouldGetRandIntMinMax(t *testing.T) {
-	require.True(t, RandNumMinMax(-10, -1) < 0)
+	require.True(t, RandIntMinMax(-10, -1) < 0)
 }
 
 func Test_ShouldGetAsciiAny(t *testing.T) {
