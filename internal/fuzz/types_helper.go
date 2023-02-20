@@ -21,6 +21,9 @@ const PrefixTypeBoolean = "__boolean__"
 // PrefixTypeString type
 const PrefixTypeString = "__string__"
 
+// PrefixTypeRaw type
+const PrefixTypeRaw = "__raw__"
+
 // PrefixTypeObject type
 const PrefixTypeObject = "__object__"
 
@@ -403,7 +406,7 @@ func addFlatRegexMapValue(res map[string]string, prefix string, k string, v stri
 
 // StripTypeTags removes type prefixes
 func StripTypeTags(re string) string {
-	pattern := `(` + PrefixTypeNumber + `|` + PrefixTypeBoolean + `|` +
+	pattern := `(` + PrefixTypeNumber + `|` + PrefixTypeBoolean + `|` + PrefixTypeRaw + `|` +
 		PrefixTypeString + `|` + PrefixTypeObject + `|` + PrefixTypeArray + `)`
 	return regexp.MustCompile(pattern).ReplaceAllString(re, "")
 }

@@ -850,6 +850,9 @@ func SeededName(seed int64) string {
 
 // RandRegex generator
 func RandRegex(re string) string {
+	if strings.Contains(re, PrefixTypeRaw) {
+		return StripTypeTags(re)
+	}
 	re = StripTypeTags(re)
 	if strings.Contains(re, EmailRegex) ||
 		strings.Contains(re, EmailRegex2) ||
