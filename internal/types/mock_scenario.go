@@ -16,6 +16,9 @@ const MockRecordMode = "X-Mock-Record"
 // MockRecordModeDisabled disabled value
 const MockRecordModeDisabled = "false"
 
+// MockRecordModeEnabled enabled value
+const MockRecordModeEnabled = "true"
+
 // MockURL header
 const MockURL = "X-Mock-Url"
 

@@ -55,15 +55,27 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 			"Path":   req.URL,
 			"Method": req.Method,
 			"Error":  err,
-		}).Warnf("proxy server failed to fuzz existing mock scenario")
+		}).Warnf("proxy server failed to find existing mock scenario")
 	}
+	// let proxy call real server
 	return req, res
 }
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
+		log.WithFields(log.Fields{
+			"Host":    req.Host,
+			"Path":    req.URL,
+			"Method":  req.Method,
+			"Headers": req.Header,
+		}).Infof("proxy server skipped local lookup due to record-mode")
+		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
+	}
+
 	res, err := h.adapter.Invoke(req)
 	if err == nil && res != nil {
 		log.WithFields(log.Fields{
+			"Host":    req.Host,
 			"Path":    req.URL,
 			"Method":  req.Method,
 			"Headers": req.Header,
@@ -82,7 +94,8 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		"Method":          req.Method,
 		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
-	}).Infof("proxy server request received")
+		"Error":           err,
+	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
 	if err != nil {
 		return req, nil, err
 	}

@@ -115,12 +115,15 @@ func (w *DefaultHTTPClient) execute(
 			SecretAccessKey: getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY"),
 			SecurityToken:   getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECURITY_TOKEN"),
 		})
-		log.WithFields(log.Fields{
-			"Component":   "DefaultHTTPClient",
-			"URL":         req.URL,
-			"Method":      req.Method,
-			"AccessKeyID": getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID"),
-		}).Infof("added AWS signatures")
+		if req.Header.Get("X-Verbose") == "true" {
+			log.WithFields(log.Fields{
+				"Component":   "DefaultHTTPClient",
+				"URL":         req.URL,
+				"Method":      req.Method,
+				"Headers":     req.Header,
+				"AccessKeyID": getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID"),
+			}).Infof("added AWS signatures")
+		}
 	}
 	client := httpClient(w.config)
 	resp, err := client.Do(req)

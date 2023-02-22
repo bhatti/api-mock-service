@@ -146,7 +146,7 @@ func (x *Executor) execute(
 	metrics *metrics.Metrics,
 ) (res any, err error) {
 	started := time.Now().UnixMilli()
-	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides)
+	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides, contractRequest.Verbose)
 	if fuzz.RandIntMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandIntMinMax(2, 5))
 	}
@@ -358,10 +358,14 @@ func buildRequestBody(
 func buildTemplateParams(
 	scenario *types.MockScenario,
 	overrides map[string]any,
+	verbose bool,
 ) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
 	templateParams = make(map[string]any)
 	queryParams = make(map[string]string)
 	reqHeaders = make(map[string][]string)
+	if verbose {
+		reqHeaders["X-Verbose"] = []string{"true"}
+	}
 	for _, env := range os.Environ() {
 		parts := strings.Split(env, "=")
 		if len(parts) == 2 {
