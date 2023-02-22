@@ -114,23 +114,28 @@ func (w *DefaultHTTPClient) execute(
 
 	if awsAuthSig4 {
 		req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
+		req.Header.Del("Authorization")
 		awsauth.Sign4(req, awsauth.Credentials{
 			AccessKeyID:     accessKeyID,
 			SecretAccessKey: secretAccessKey,
 			SecurityToken:   securityToken,
 		})
-		if req.Header.Get("X-Verbose") == "true" {
-			log.WithFields(log.Fields{
-				"Component":   "DefaultHTTPClient",
-				"URL":         req.URL,
-				"Method":      req.Method,
-				"Headers":     req.Header,
-				"AccessKeyID": accessKeyID,
-			}).Infof("added AWS signatures")
-		}
 	}
+
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
+	if req.Header.Get("X-Verbose") == "true" {
+		log.WithFields(log.Fields{
+			"Component":       "DefaultHTTPClient",
+			"URL":             req.URL,
+			"Method":          req.Method,
+			"Headers":         req.Header,
+			"AccessKeyID":     accessKeyID,
+			"SecretAccessKey": secretAccessKey != "",
+			"AWSAuthSig4":     awsAuthSig4,
+			"Error":           err,
+		}).Infof("invoked http client")
+	}
 	if err != nil {
 		return 500, nil, make(map[string][]string), err
 	}
