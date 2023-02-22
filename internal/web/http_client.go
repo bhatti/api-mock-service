@@ -81,6 +81,21 @@ func (w *DefaultHTTPClient) execute(
 		return 500, nil, make(map[string][]string), fmt.Errorf("request not specified")
 	}
 	internalKeyMap := make(map[string]string)
+	if w.config.UserAgent != "" {
+		req.Header.Set("User-Agent", w.config.UserAgent)
+	}
+	if len(params) > 0 {
+		paramVals := url.Values{}
+		for k, v := range params {
+			if isInternalParamKeys(k) {
+				internalKeyMap[strings.ToUpper(k)] = v
+			} else {
+				paramVals.Add(k, v)
+			}
+		}
+		req.URL.RawQuery = paramVals.Encode()
+	}
+
 	awsAuthSig4 := false
 	accessKeyID := getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID")
 	secretAccessKey := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY")
@@ -96,20 +111,6 @@ func (w *DefaultHTTPClient) execute(
 				req.Header.Add(name, val)
 			}
 		}
-	}
-	if w.config.UserAgent != "" {
-		req.Header.Set("User-Agent", w.config.UserAgent)
-	}
-	if len(params) > 0 {
-		paramVals := url.Values{}
-		for k, v := range params {
-			if isInternalParamKeys(k) {
-				internalKeyMap[strings.ToUpper(k)] = v
-			} else {
-				paramVals.Add(k, v)
-			}
-		}
-		req.URL.RawQuery = paramVals.Encode()
 	}
 
 	if awsAuthSig4 {
