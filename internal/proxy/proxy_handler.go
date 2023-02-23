@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"os"
 )
 
 // Handler structure
@@ -72,13 +73,21 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
 
+	accessKeyID := os.Getenv("AWS_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	securityToken := os.Getenv("AWS_SECURITY_TOKEN")
+	awsAuthSig4 := web.CheckAWSSig4Authorization(req, accessKeyID, secretAccessKey, securityToken)
+
 	res, err := h.adapter.Invoke(req)
 	if err == nil && res != nil {
 		log.WithFields(log.Fields{
-			"Host":    req.Host,
-			"Path":    req.URL,
-			"Method":  req.Method,
-			"Headers": req.Header,
+			"Host":            req.Host,
+			"Path":            req.URL,
+			"Method":          req.Method,
+			"Headers":         req.Header,
+			"AccessKeyID":     accessKeyID,
+			"SecretAccessKey": secretAccessKey != "",
+			"AWSAuthSig4":     awsAuthSig4,
 		}).Infof("proxy server redirected request to internal controllers")
 		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 		return req, res, nil
@@ -94,6 +103,9 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		"Method":          req.Method,
 		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
+		"AccessKeyID":     accessKeyID,
+		"SecretAccessKey": secretAccessKey != "",
+		"AWSAuthSig4":     awsAuthSig4,
 		"Error":           err,
 	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
 	if err != nil {

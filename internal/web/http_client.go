@@ -95,17 +95,9 @@ func (w *DefaultHTTPClient) execute(
 		}
 		req.URL.RawQuery = paramVals.Encode()
 	}
-
-	awsAuthSig4 := false
-	accessKeyID := getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID")
-	secretAccessKey := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY")
-	securityToken := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECURITY_TOKEN")
 	for name, vals := range headers {
 		for _, val := range vals {
-			if name == "Authorization" && strings.Contains(val, "AWS4-HMAC-SHA256") &&
-				strings.Contains(val, accessKeyID) && accessKeyID != "" && secretAccessKey != "" {
-				awsAuthSig4 = true
-			} else if isInternalParamKeys(name) {
+			if isInternalParamKeys(name) {
 				internalKeyMap[strings.ToUpper(name)] = val
 			} else {
 				req.Header.Add(name, val)
@@ -113,18 +105,14 @@ func (w *DefaultHTTPClient) execute(
 		}
 	}
 
-	if awsAuthSig4 {
-		req.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
-		req.Header.Del("Authorization")
-		awsauth.Sign4(req, awsauth.Credentials{
-			AccessKeyID:     accessKeyID,
-			SecretAccessKey: secretAccessKey,
-			SecurityToken:   securityToken,
-		})
-	}
+	accessKeyID := getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID")
+	secretAccessKey := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY")
+	securityToken := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECURITY_TOKEN")
+	awsAuthSig4 := CheckAWSSig4Authorization(req, accessKeyID, secretAccessKey, securityToken)
 
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
+
 	if req.Header.Get("X-Verbose") == "true" {
 		log.WithFields(log.Fields{
 			"Component":       "DefaultHTTPClient",
@@ -141,6 +129,33 @@ func (w *DefaultHTTPClient) execute(
 		return 500, nil, make(map[string][]string), err
 	}
 	return resp.StatusCode, resp.Body, resp.Header, nil
+}
+
+// CheckAWSSig4Authorization checks sig4 and updates it if needed
+func CheckAWSSig4Authorization(
+	request *http.Request,
+	accessKeyID string,
+	secretAccessKey string,
+	securityToken string) (awsAuthSig4 bool) {
+	for name, vals := range request.Header {
+		for _, val := range vals {
+			if name == "Authorization" && strings.Contains(val, "AWS4-HMAC-SHA256") &&
+				strings.Contains(val, accessKeyID) && accessKeyID != "" && secretAccessKey != "" {
+				awsAuthSig4 = true
+			}
+		}
+	}
+
+	if awsAuthSig4 {
+		request.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
+		request.Header.Del("Authorization")
+		awsauth.Sign4(request, awsauth.Credentials{
+			AccessKeyID:     accessKeyID,
+			SecretAccessKey: secretAccessKey,
+			SecurityToken:   securityToken,
+		})
+	}
+	return
 }
 
 func getHeaderParamOrEnvValue(params map[string]string, name string) string {
