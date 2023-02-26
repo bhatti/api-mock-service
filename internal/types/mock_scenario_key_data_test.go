@@ -74,3 +74,19 @@ func Test_ShouldCompareEqualsMockScenarioKeyData(t *testing.T) {
 	keyData1.AssertQueryParamsPattern["xyz"] = "111"
 	require.Error(t, keyData1.Equals(keyData2))
 }
+
+func Test_ShouldCompareGroupEqualsMockScenarioKeyData(t *testing.T) {
+	keyData1 := buildScenario().ToKeyData()
+	keyData2 := buildScenario().ToKeyData()
+	require.NoError(t, keyData1.Equals(keyData2))
+	keyData1.Group = "new"
+	require.Error(t, keyData1.Equals(keyData2))
+}
+
+func Test_ShouldCompareTagsEqualsMockScenarioKeyData(t *testing.T) {
+	keyData1 := buildScenario().ToKeyData()
+	keyData2 := buildScenario().ToKeyData()
+	require.NoError(t, keyData1.Equals(keyData2))
+	keyData2.Tags = []string{"tag1", "tag2", "tag3"}
+	require.Error(t, keyData1.Equals(keyData2))
+}

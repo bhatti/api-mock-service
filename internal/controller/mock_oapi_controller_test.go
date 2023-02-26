@@ -117,7 +117,10 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
-	ctx := web.NewStubContext(&http.Request{Body: reader})
+	ctx := web.NewStubContext(&http.Request{
+		Body: reader,
+	})
+	ctx.Request().URL, err = url.Parse("http://localhost:8080")
 
 	// WHEN creating mock scenario from Open API
 	err = ctrl.PostMockOAPIScenario(ctx)
@@ -128,10 +131,9 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 	arrScenarios := ctx.Result.([]*types.MockScenario)
 	// WHEN fetching open-api specs without group
 	err = ctrl.GetOpenAPISpecsByGroup(ctx)
-	//  THEN it should fail
-	require.Error(t, err)
+	//  THEN it should not fail
+	require.NoError(t, err)
 	ctx.Params["group"] = arrScenarios[0].Group
-	ctx.Request().URL, err = url.Parse("http://localhost:8080")
 	// WHEN fetching open-api specs
 	err = ctrl.GetOpenAPISpecsByGroup(ctx)
 	// THEN it should return saved scenario

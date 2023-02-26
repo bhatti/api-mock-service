@@ -18,6 +18,7 @@ import (
 )
 
 func Test_InitializeSwaggerStructsForMockScenarioController(t *testing.T) {
+	_ = mockGroupsResponseBody{}
 	_ = mockNamesResponseBody{}
 	_ = mockNamesParams{}
 	_ = mockScenarioCreateParams{}
@@ -40,18 +41,18 @@ func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN creating mock scenario without method, name and path
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 
 	// THEN it should fail without name
 	require.Error(t, err)
 	ctx.Params["method"] = "POST"
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 	require.Error(t, err)
 
 	// THEN it should fail without path
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 	require.Error(t, err)
 }
 
@@ -70,19 +71,41 @@ func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN getting mock scenario without method, name and path
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 
 	// THEN it should fail without name
 	require.Error(t, err)
 	ctx.Params["method"] = "GET"
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 	require.Error(t, err)
 
 	// THEN it should fail without path
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 	require.Error(t, err)
+}
+
+func Test_ShouldGetScenarioGroups(t *testing.T) {
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	webServer := web.NewStubWebServer()
+	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	data := []byte("test data")
+	require.NoError(t, err)
+	reader := io.NopCloser(bytes.NewReader(data))
+	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
+	require.NoError(t, err)
+	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
+	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+
+	// WHEN getting mock scenario groups
+	err = ctrl.getGroups(ctx)
+	// THEN it should not fail
+	require.NoError(t, err)
+	groups := ctx.Result.([]string)
+	require.True(t, len(groups) > 0)
 }
 
 func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
@@ -129,18 +152,18 @@ func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN deleting mock scenario without method, name and path
-	err = ctrl.DeleteMockScenario(ctx)
+	err = ctrl.deleteMockScenario(ctx)
 
 	// THEN it should fail without name
 	require.Error(t, err)
 	ctx.Params["method"] = "DELETE"
-	err = ctrl.DeleteMockScenario(ctx)
+	err = ctrl.deleteMockScenario(ctx)
 	require.Error(t, err)
 
 	// THEN it should fail
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.DeleteMockScenario(ctx)
+	err = ctrl.deleteMockScenario(ctx)
 	require.Error(t, err)
 }
 
@@ -160,7 +183,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}, "Content-Type": []string{"application/json"}}
 
 	// WHEN creating mock scenario
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
@@ -172,7 +195,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 	ctx.Params["name"] = savedScenario.Name
 	ctx.Params["path"] = "/path1"
 	ctx.Params["a"] = "b"
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -181,7 +204,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 
 	// AND it should not fail with yaml output
 	ctx.Request().Header = map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}}
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 	// THEN it should not fail
 	require.NoError(t, err)
 
@@ -205,7 +228,7 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}, "Content-Type": []string{"application/yaml"}}
 
 	// WHEN creating mock scenario
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
@@ -217,7 +240,7 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 	ctx.Params["name"] = scenario.Name
 	ctx.Params["path"] = "/path1"
 	ctx.Params["a"] = "b"
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -242,7 +265,7 @@ func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 		ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 		// WHEN creating mock scenario
-		err = ctrl.PostMockScenario(ctx)
+		err = ctrl.postMockScenario(ctx)
 
 		// THEN it should return saved scenario
 		require.NoError(t, err)
@@ -277,7 +300,7 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 
 	// THEN it should succeed
 	require.NoError(t, err)
@@ -288,12 +311,12 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 	ctx.Params["method"] = string(savedScenario.Method)
 	ctx.Params["name"] = savedScenario.Name
 	ctx.Params["path"] = savedScenario.NormalPath('/')
-	err = ctrl.DeleteMockScenario(ctx)
+	err = ctrl.deleteMockScenario(ctx)
 	// THEN it should succeed
 	require.NoError(t, err)
 
 	// AND get API should fail
-	err = ctrl.GetMockScenario(ctx)
+	err = ctrl.getMockScenario(ctx)
 
 	// THEN it should not fail
 	require.Error(t, err)
@@ -315,11 +338,11 @@ func Test_ShouldListMockScenario(t *testing.T) {
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
-	err = ctrl.PostMockScenario(ctx)
+	err = ctrl.postMockScenario(ctx)
 	require.NoError(t, err)
 
 	// THEN it should be able to list
-	err = ctrl.ListMockScenarioPaths(ctx)
+	err = ctrl.listMockScenarioPaths(ctx)
 	require.NoError(t, err)
 	scenarios := ctx.Result.(map[string]*types.MockScenarioKeyData)
 	require.True(t, len(scenarios) > 0)

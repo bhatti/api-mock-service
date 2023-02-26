@@ -32,6 +32,7 @@ func NewMockOAPIController(
 		mockScenarioRepository: mockScenarioRepository,
 	}
 
+	webserver.GET("/_oapi/", ctrl.GetOpenAPISpecsByGroup)
 	webserver.GET("/_oapi/:group", ctrl.GetOpenAPISpecsByGroup)
 	webserver.GET("/_oapi/:method/:name/:path", ctrl.GetOpenAPISpecsByScenario)
 	webserver.POST("/_oapi", ctrl.PostMockOAPIScenario)
@@ -49,14 +50,15 @@ func NewMockOAPIController(
 func (moc *MockOAPIController) GetOpenAPISpecsByGroup(c web.APIContext) (err error) {
 	u := c.Request().URL
 	group := c.Param("group")
-	if group == "" {
-		return fmt.Errorf("scenario group not specified")
-	}
 	var b []byte
 	if group == "_internal" {
 		b, err = moc.internalOAPI.ReadFile("docs/openapi.json")
 	} else {
 		allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
+		if len(allByGroup) == 0 {
+			allByGroup = moc.mockScenarioRepository.LookupAllByPath(
+				strings.ReplaceAll(c.Request().URL.Path, "/_oapi", ""))
+		}
 		var scenarios []*types.MockScenario
 		for _, keyData := range allByGroup {
 			scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
@@ -71,7 +73,7 @@ func (moc *MockOAPIController) GetOpenAPISpecsByGroup(c web.APIContext) (err err
 		return err
 	}
 
-	b = []byte(strings.ReplaceAll(string(b), "SERVER_URL", u.Scheme+"://"+u.Host))
+	b = []byte(strings.ReplaceAll(string(b), oapi.MockServerBaseURL, u.Scheme+"://"+u.Host))
 	return c.Blob(http.StatusOK, "application/json", b)
 }
 

@@ -56,6 +56,25 @@ func NewFileMockScenarioRepository(
 	return
 }
 
+// GetGroups returns mock scenarios groups
+func (sr *FileMockScenarioRepository) GetGroups() (res []string, err error) {
+	sr.mutex.RLock()
+	defer func() {
+		sr.mutex.RUnlock()
+	}()
+	for _, keyDataMap := range sr.keysByMethodPath {
+		for _, keyData := range keyDataMap {
+			if keyData.Group != "" {
+				res = append(res, keyData.Group)
+			}
+		}
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i] < res[j]
+	})
+	return
+}
+
 // GetScenariosNames returns mock scenarios for given Method and Path
 func (sr *FileMockScenarioRepository) GetScenariosNames(
 	method types.MethodType,
@@ -157,6 +176,28 @@ func (sr *FileMockScenarioRepository) ListScenarioKeyData(group string) []*types
 
 }
 
+// LookupAllByPath finds matching scenarios by path
+func (sr *FileMockScenarioRepository) LookupAllByPath(path string) []*types.MockScenarioKeyData {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	sr.mutex.RLock()
+	defer func() {
+		sr.mutex.RUnlock()
+	}()
+	res := make([]*types.MockScenarioKeyData, 0)
+	for _, keyDataMap := range sr.keysByMethodPath {
+		for _, keyData := range keyDataMap {
+			if path == keyData.Path {
+				res = append(res, keyData)
+			}
+		}
+	}
+	sortByUsageTime(res)
+	return res
+}
+
 // LookupAllByGroup finds matching scenarios by group
 func (sr *FileMockScenarioRepository) LookupAllByGroup(
 	group string) []*types.MockScenarioKeyData {
@@ -172,34 +213,29 @@ func (sr *FileMockScenarioRepository) LookupAllByGroup(
 			}
 		}
 	}
-	sort.Slice(res, func(i, j int) bool {
-		if res[i].LastUsageTime == res[j].LastUsageTime {
-			return res[i].Name < res[j].Name
-		}
-		return res[i].LastUsageTime < res[j].LastUsageTime
-	})
+	sortByUsageTime(res)
 	return res
 }
 
 // LookupAll finds matching scenarios
 func (sr *FileMockScenarioRepository) LookupAll(
-	target *types.MockScenarioKeyData,
+	other *types.MockScenarioKeyData,
 ) (res []*types.MockScenarioKeyData, paramMismatchErrors int) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
 	res = make([]*types.MockScenarioKeyData, 0)
-	keyDataMap := sr.keysByMethodPath[target.PartialMethodPathKey()]
+	keyDataMap := sr.keysByMethodPath[other.PartialMethodPathKey()]
 	for _, keyData := range keyDataMap {
-		if err := keyData.Equals(target); err == nil {
+		if err := keyData.Equals(other); err == nil {
 			res = append(res, keyData)
 		} else {
 			var validationError *types.ValidationError
 			if errors.As(err, &validationError) {
 				paramMismatchErrors++
 				log.WithFields(log.Fields{
-					"Target":         target.String(),
+					"Other":          other.String(),
 					"Actual":         keyData.String(),
 					"MismatchParams": paramMismatchErrors,
 					"Error":          err,
@@ -207,27 +243,22 @@ func (sr *FileMockScenarioRepository) LookupAll(
 			}
 		}
 	}
-	sort.Slice(res, func(i, j int) bool {
-		if res[i].LastUsageTime == res[j].LastUsageTime {
-			return res[i].Name < res[j].Name
-		}
-		return res[i].LastUsageTime < res[j].LastUsageTime
-	})
-	return filterScenariosByPredicate(res, target), paramMismatchErrors
+	sortByUsageTime(res)
+	return filterScenariosByPredicate(res, other), paramMismatchErrors
 }
 
 // Lookup finds top matching scenario
 func (sr *FileMockScenarioRepository) Lookup(
-	target *types.MockScenarioKeyData,
+	other *types.MockScenarioKeyData,
 	inData map[string]any) (scenario *types.MockScenario, err error) {
-	matched, paramMismatchErrors := sr.LookupAll(target)
+	matched, paramMismatchErrors := sr.LookupAll(other)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
-			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", target.String()))
+			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", other.String()))
 		}
-		fileName := sr.buildFileName(target.Method, target.Name, target.Path)
+		fileName := sr.buildFileName(other.Method, other.Name, other.Path)
 		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s']",
-			target.String(), fileName))
+			other.String(), fileName))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)
@@ -244,7 +275,7 @@ func (sr *FileMockScenarioRepository) Lookup(
 	}).Debugf("API mock scenario found...")
 
 	// Read template file
-	dir := sr.buildDir(target.Method, target.Path)
+	dir := sr.buildDir(other.Method, other.Path)
 	fileName := sr.buildFileName(matched[0].Method, matched[0].Name, matched[0].Path)
 	b, err := os.ReadFile(fileName)
 	if err != nil {
@@ -256,11 +287,11 @@ func (sr *FileMockScenarioRepository) Lookup(
 		data[k] = v
 	}
 	// Find any params for query params and path variables
-	for k, v := range matched[0].MatchGroups(target.Path) {
+	for k, v := range matched[0].MatchGroups(other.Path) {
 		data[k] = v
 	}
 	addQueryParams(matched[0].AssertQueryParamsPattern, data)
-	addQueryParams(target.AssertQueryParamsPattern, data)
+	addQueryParams(other.AssertQueryParamsPattern, data)
 	data[fuzz.RequestCount] = fmt.Sprintf("%d", reqCount)
 
 	scenario, err = unmarshalMockScenario(b, dir, data)
@@ -315,6 +346,7 @@ func (sr *FileMockScenarioRepository) visit(
 		if err != nil {
 			return fmt.Errorf("visit failed to load '%s' due to %w", path, err)
 		}
+		keyData.LastUsageTime = info.ModTime().Unix()
 		if callback(keyData) {
 			return errStop
 		}
@@ -436,4 +468,13 @@ func sumRequestCount(all []*types.MockScenarioKeyData) uint64 {
 		sumReqCount += next.RequestCount
 	}
 	return sumReqCount
+}
+
+func sortByUsageTime(res []*types.MockScenarioKeyData) {
+	sort.Slice(res, func(i, j int) bool {
+		if res[i].LastUsageTime == res[j].LastUsageTime {
+			return res[i].Name < res[j].Name
+		}
+		return res[i].LastUsageTime < res[j].LastUsageTime
+	})
 }

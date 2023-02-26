@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "servers": [
     {
-      "url": "SERVER_URL"
+      "url": "MOCK_SERVER_BASE_URL"
     }
   ],
   "paths": {

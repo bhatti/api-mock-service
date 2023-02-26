@@ -18,6 +18,35 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 	require.True(t, scenario.Digest() != "")
 }
 
+func Test_ShouldGetRequestContentType(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	// WHEN fetching content type
+	require.Equal(t, "", scenario.Request.ContentType(""))
+	scenario.Request.Headers["content-type"] = "abc"
+	require.Equal(t, "abc", scenario.Request.ContentType(""))
+}
+
+func Test_ShouldGetResponseContentType(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	// WHEN fetching content type
+	require.Equal(t, "application/json", scenario.Response.ContentType(""))
+	scenario.Response.Headers["Content-Type"] = []string{"abc"}
+	require.Equal(t, "abc", scenario.Response.ContentType(""))
+}
+
+func Test_ShouldGetRequestTarget(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.Path = "/api/v1/"
+	// WHEN fetching target
+	require.Equal(t, "", scenario.Request.TargetHeader())
+	scenario.Request.Headers["my-target"] = "abc"
+	require.Equal(t, "abc", scenario.Request.TargetHeader())
+	require.Equal(t, "post__api_v1__abc", scenario.MethodPathTarget())
+}
+
 func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
 	// GIVEN a valid mock scenario
 	scenario := buildScenario()
@@ -152,7 +181,10 @@ func buildScenario() *MockScenario {
 		Name:        "scenario",
 		Path:        "/path1/\\\\//test1//abc////",
 		Description: "",
+		Group:       "test-group",
+		Tags:        []string{"tag1", "tag2"},
 		Request: MockHTTPRequest{
+			Headers: make(map[string]string),
 			AssertQueryParamsPattern: map[string]string{
 				"a": "1",
 				"b": "2",

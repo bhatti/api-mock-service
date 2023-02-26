@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+// MockServerBaseURL constant
+const MockServerBaseURL = "MOCK_SERVER_BASE_URL"
+
 // MarshalScenarioToOpenAPI converts open-api specs into json
 func MarshalScenarioToOpenAPI(title string, version string, scenarios ...*types.MockScenario) ([]byte, error) {
 	t := ScenarioToOpenAPI(title, version, scenarios...)
@@ -28,7 +31,7 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 		Paths: make(openapi3.Paths),
 		Servers: openapi3.Servers{
 			&openapi3.Server{
-				URL:         "SERVER_URL",
+				URL:         MockServerBaseURL,
 				Description: "Mock Server",
 			},
 		},
@@ -40,14 +43,18 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 			Description: "",
 		}
 		addServer(scenario, root)
-		op := ops[scenario.MethodPath()]
+		op := ops[scenario.MethodPathTarget()]
 		if op == nil {
 			op = &openapi3.Operation{
 				Summary:     scenario.Name,
 				Description: scenario.Description,
 				OperationID: sanitizeScenarioName(scenario.Name),
+				Tags:        scenario.Tags,
 			}
-			ops[scenario.MethodPath()] = op
+			ops[scenario.MethodPathTarget()] = op
+			if len(op.Tags) == 0 {
+				op.Tags = []string{scenario.Group}
+			}
 		}
 		reqRef, reqBody := updateScenarioRequest(scenario, op)
 		resRef, resBody := updateScenarioResponse(scenario, op)

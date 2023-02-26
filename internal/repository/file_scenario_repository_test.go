@@ -79,6 +79,41 @@ func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 	require.Error(t, err)
 }
 
+func Test_ShouldListMockScenariosGroups(t *testing.T) {
+	// GIVEN a mock scenario repository
+	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	// AND a set of mock scenarios
+	for i := 0; i < 10; i++ {
+		scenario := buildScenario(types.Post, fmt.Sprintf("test_%d", i), mockPath, 30)
+		scenario.Group = fmt.Sprintf("test-group-%v", i%2 == 0)
+		err = repo.Save(scenario)
+		require.NoError(t, err)
+	}
+	// WHEN listing scenario groups
+	groups, err := repo.GetGroups()
+	require.NoError(t, err)
+	require.True(t, len(groups) >= 2)
+}
+
+func Test_ShouldListMockScenariosByPath(t *testing.T) {
+	// GIVEN a mock scenario repository
+	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	require.NoError(t, err)
+	// AND a set of mock scenarios
+	for i := 0; i < 10; i++ {
+		scenario := buildScenario(types.Post, fmt.Sprintf("test_%d", i), mockPath, 30)
+		scenario.Group = fmt.Sprintf("test-group-%v", i%2 == 0)
+		scenario.Path = fmt.Sprintf("/api/v1/%v", i%2 == 0)
+		err = repo.Save(scenario)
+		require.NoError(t, err)
+	}
+	// WHEN listing scenarios by path
+	scenarios := repo.LookupAllByPath("api/v1/true")
+	// THEN it should return matching scenarios
+	require.Equal(t, 5, len(scenarios))
+}
+
 func Test_ShouldListMockScenariosNames(t *testing.T) {
 	// GIVEN a mock scenario repository
 	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})

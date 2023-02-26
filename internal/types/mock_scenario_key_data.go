@@ -22,6 +22,8 @@ type MockScenarioKeyData struct {
 	Order int `yaml:"order" json:"order"`
 	// Group of scenario
 	Group string `yaml:"group" json:"group"`
+	// Tags of scenario
+	Tags []string `yaml:"tags" json:"tags"`
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// AssertQueryParamsPattern for the API
@@ -37,76 +39,86 @@ type MockScenarioKeyData struct {
 }
 
 // Equals compares path and query path
-func (msd *MockScenarioKeyData) Equals(target *MockScenarioKeyData) error {
-	if msd.Method != target.Method {
-		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", msd.Method, target.Method))
+func (msd *MockScenarioKeyData) Equals(other *MockScenarioKeyData) error {
+	if msd.Method != other.Method {
+		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", msd.Method, other.Method))
 	}
-	if msd.Group != "" && target.Group != "" && msd.Group != target.Group {
-		return NewNotFoundError(fmt.Sprintf("group '%s' didn't match '%s'", msd.Group, target.Group))
+	if msd.Group != "" && other.Group != "" && msd.Group != other.Group {
+		return NewNotFoundError(fmt.Sprintf("group '%s' didn't match '%s'", msd.Group, other.Group))
 	}
-	targetPath := filterURLQueryParams(target.Path)
+	otherPath := filterURLQueryParams(other.Path)
 	rePath := rePath(msd.Path)
-	matched, err := regexp.Match(rePath, []byte(targetPath))
+	matched, err := regexp.Match(rePath, []byte(otherPath))
 	if err != nil {
 		return err
 	}
 	log.WithFields(log.Fields{
-		"Group":      msd.Group,
-		"Order":      msd.Order,
-		"Target":     target.String(),
-		"This":       msd.String(),
-		"TargetPath": targetPath,
-		"ThisPath":   msd.Path,
-		"RegexPath":  rePath,
-		"Matched":    matched,
+		"Group":     msd.Group,
+		"Order":     msd.Order,
+		"Other":     other.String(),
+		"This":      msd.String(),
+		"OtherPath": otherPath,
+		"ThisPath":  msd.Path,
+		"RegexPath": rePath,
+		"Matched":   matched,
 	}).Debugf("matching path...")
 	if !matched {
-		return NewNotFoundError(fmt.Sprintf("path '%s' didn't match '%s'", msd.Path, target.Path))
+		return NewNotFoundError(fmt.Sprintf("path '%s' didn't match '%s'", msd.Path, other.Path))
 	}
 	for k, msdQueryParamVal := range msd.AssertQueryParamsPattern {
-		targetQueryParamVal := target.AssertQueryParamsPattern[k]
+		targetQueryParamVal := other.AssertQueryParamsPattern[k]
 		if targetQueryParamVal != msdQueryParamVal &&
 			!reMatch(msdQueryParamVal, targetQueryParamVal) {
 			return NewValidationError(fmt.Sprintf("request queryParam '%s' didn't match [%v == %v]",
-				k, msd.AssertQueryParamsPattern, target.AssertQueryParamsPattern))
+				k, msd.AssertQueryParamsPattern, other.AssertQueryParamsPattern))
 		}
 	}
 
 	if msd.AssertContentsPattern != "" &&
-		!strings.Contains(msd.AssertContentsPattern, target.AssertContentsPattern) &&
-		!reMatch(msd.AssertContentsPattern, target.AssertContentsPattern) {
-		if target.AssertContentsPattern == "" {
+		!strings.Contains(msd.AssertContentsPattern, other.AssertContentsPattern) &&
+		!reMatch(msd.AssertContentsPattern, other.AssertContentsPattern) {
+		if other.AssertContentsPattern == "" {
 			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s'",
-				msd.AssertContentsPattern, target.AssertContentsPattern))
+				msd.AssertContentsPattern, other.AssertContentsPattern))
 		}
 		regex := make(map[string]string)
 		err := json.Unmarshal([]byte(msd.AssertContentsPattern), &regex)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal contents '%s' regex due to %w", msd.AssertContentsPattern, err)
 		}
-		matchContents, err := fuzz.UnmarshalArrayOrObject([]byte(target.AssertContentsPattern))
+		matchContents, err := fuzz.UnmarshalArrayOrObject([]byte(other.AssertContentsPattern))
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal target contents '%s' regex due to %w", target.AssertContentsPattern, err)
+			return fmt.Errorf("failed to unmarshal other contents '%s' regex due to %w", other.AssertContentsPattern, err)
 		}
 		err = fuzz.ValidateRegexMap(matchContents, regex)
 		if err != nil {
 			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s' due to %s",
-				msd.AssertContentsPattern, target.AssertContentsPattern, err))
+				msd.AssertContentsPattern, other.AssertContentsPattern, err))
 		}
 	}
 
 	for k, msdHeaderVal := range msd.AssertHeadersPattern {
-		targetHeaderVal := getDictValue(k, target.AssertHeadersPattern)
+		targetHeaderVal := getDictValue(k, other.AssertHeadersPattern)
 		if targetHeaderVal != msdHeaderVal &&
 			!reMatch(msdHeaderVal, targetHeaderVal) {
 			return NewValidationError(fmt.Sprintf("%s request header didn't match [%v == %v], all headers %v",
-				k, targetHeaderVal, msdHeaderVal, target.AssertHeadersPattern))
+				k, targetHeaderVal, msdHeaderVal, other.AssertHeadersPattern))
 		}
 	}
 
-	if target.Name != "" && msd.Name != target.Name {
+	if len(msd.Tags) > 0 && len(other.Tags) > 0 {
+		strMap := toStringMap(msd.Tags)
+		for _, tag := range other.Tags {
+			if !strMap[strings.ToUpper(tag)] {
+				return NewValidationError(fmt.Sprintf("%s request tag didn't match %v, all tags %v",
+					tag, msd.Tags, other.Tags))
+			}
+		}
+	}
+
+	if other.Name != "" && msd.Name != other.Name {
 		return NewValidationError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
-			msd.Name, target.Name))
+			msd.Name, other.Name))
 	}
 	return nil
 }
@@ -267,4 +279,12 @@ func getDictValue(name string, dict map[string]string) string {
 		}
 	}
 	return ""
+}
+
+func toStringMap(arr []string) (res map[string]bool) {
+	res = make(map[string]bool)
+	for _, e := range arr {
+		res[strings.ToUpper(e)] = true
+	}
+	return
 }

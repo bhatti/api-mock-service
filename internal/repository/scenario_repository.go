@@ -7,6 +7,9 @@ import (
 
 // MockScenarioRepository defines data store for mock-scenarios
 type MockScenarioRepository interface {
+	// GetGroups returns mock scenarios groups
+	GetGroups() ([]string, error)
+
 	// GetScenariosNames returns mock scenarios for given Method and Path
 	GetScenariosNames(
 		method types.MethodType,
@@ -35,6 +38,9 @@ type MockScenarioRepository interface {
 
 	// LookupAllByGroup finds matching scenarios by group
 	LookupAllByGroup(group string) []*types.MockScenarioKeyData
+
+	// LookupAllByPath finds matching scenarios by path
+	LookupAllByPath(path string) []*types.MockScenarioKeyData
 
 	// Lookup finds top matching scenario that hasn't been used recently
 	Lookup(target *types.MockScenarioKeyData, data map[string]any) (*types.MockScenario, error)

@@ -83,6 +83,16 @@ func (r MockHTTPRequest) ContentType(defContentType string) string {
 	return defContentType
 }
 
+// TargetHeader find header matching target
+func (r MockHTTPRequest) TargetHeader() string {
+	for k, v := range r.Headers {
+		if strings.Contains(strings.ToUpper(k), "TARGET") {
+			return fuzz.StripTypeTags(v)
+		}
+	}
+	return ""
+}
+
 // AssertContentsPatternOrContent helper method
 func (r MockHTTPRequest) AssertContentsPatternOrContent() string {
 	if r.ExampleContents != "" {
@@ -153,6 +163,8 @@ type MockScenario struct {
 	Order int `yaml:"order" json:"order"`
 	// Group of scenario
 	Group string `yaml:"group" json:"group"`
+	// Tags of scenario
+	Tags []string `yaml:"tags" json:"tags"`
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// Authentication for the API
@@ -178,6 +190,7 @@ func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
 		Name:                     ms.Name,
 		Path:                     rawPath,
 		Group:                    ms.Group,
+		Tags:                     ms.Tags,
 		Order:                    ms.Order,
 		Predicate:                ms.Predicate,
 		AssertQueryParamsPattern: ms.Request.AssertQueryParamsPattern,
@@ -204,6 +217,12 @@ func (ms *MockScenario) MethodPath() string {
 	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_")
 }
 
+// MethodPathTarget helper method
+func (ms *MockScenario) MethodPathTarget() string {
+	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_") +
+		"_" + strings.ToLower(ms.Request.TargetHeader())
+}
+
 // BuildURL helper method
 func (ms *MockScenario) BuildURL(overrideBaseURL string) string {
 	if overrideBaseURL == "" {
@@ -219,6 +238,10 @@ func (ms *MockScenario) Digest() string {
 	h.Write([]byte(ms.Group))
 	h.Write([]byte(ms.Path))
 	for k, v := range ms.Request.AssertQueryParamsPattern {
+		h.Write([]byte(k))
+		h.Write([]byte(v))
+	}
+	for k, v := range ms.Request.AssertHeadersPattern {
 		h.Write([]byte(k))
 		h.Write([]byte(v))
 	}
