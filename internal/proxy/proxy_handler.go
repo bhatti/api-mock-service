@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 // Handler structure
@@ -63,12 +64,14 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 }
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
-	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
+	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled ||
+		strings.Contains(strings.ToUpper(req.Header.Get("User-Agent")), "RECORD") {
 		log.WithFields(log.Fields{
-			"Host":    req.Host,
-			"Path":    req.URL,
-			"Method":  req.Method,
-			"Headers": req.Header,
+			"UserAgent": req.Header.Get("User-Agent"),
+			"Host":      req.Host,
+			"Path":      req.URL,
+			"Method":    req.Method,
+			"Headers":   req.Header,
 		}).Infof("proxy server skipped local lookup due to record-mode")
 		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
