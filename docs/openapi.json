@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "servers": [
     {
-      "url": "MOCK_SERVER_BASE_URL"
+      "url": "/"
     }
   ],
   "paths": {
@@ -419,7 +419,7 @@
           "mock-scenarios"
         ],
         "summary": "Creates new mock scenario based on request body.",
-        "operationId": "PostMockScenario",
+        "operationId": "postMockScenario",
         "parameters": [
           {
             "name": "method",
@@ -483,7 +483,7 @@
           "mock-scenarios"
         ],
         "summary": "Deletes an existing mock scenario based on id.",
-        "operationId": "GetMockScenario",
+        "operationId": "getMockScenario",
         "parameters": [
           {
             "name": "method",
@@ -528,7 +528,7 @@
           "mock-scenarios"
         ],
         "summary": "Deletes an existing mock scenario based on id.",
-        "operationId": "GetMockScenario",
+        "operationId": "getMockScenario",
         "parameters": [
           {
             "name": "method",
@@ -601,6 +601,30 @@
         "responses": {
           "200": {
             "description": "MockScenario names",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_scenarios/groups": {
+      "get": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "description": "Returns mock scenario groups",
+        "operationId": "getGroups",
+        "responses": {
+          "200": {
+            "description": "MockScenario groups",
             "content": {
               "*/*": {
                 "schema": {
@@ -722,15 +746,18 @@
         "properties": {
           "base_url": {
             "type": "string",
+            "description": "BaseURL of remote server",
             "x-go-name": "BaseURL"
           },
           "execution_times": {
             "type": "integer",
+            "description": "ExecutionTimes for contract testing",
             "format": "int64",
             "x-go-name": "ExecutionTimes"
           },
           "verbose": {
             "type": "boolean",
+            "description": "Verbose setting",
             "x-go-name": "Verbose"
           }
         },
@@ -821,6 +848,27 @@
       "MockHTTPRequest": {
         "type": "object",
         "properties": {
+          "assert_contents_pattern": {
+            "type": "string",
+            "description": "AssertContentsPattern for request optionally",
+            "x-go-name": "AssertContentsPattern"
+          },
+          "assert_headers_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AssertHeadersPattern for mock response",
+            "x-go-name": "AssertHeadersPattern"
+          },
+          "assert_query_params_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AssertQueryParamsPattern for the API",
+            "x-go-name": "AssertQueryParamsPattern"
+          },
           "contents": {
             "type": "string",
             "description": "Contents for request optionally",
@@ -838,27 +886,6 @@
             },
             "description": "Headers for mock response",
             "x-go-name": "Headers"
-          },
-          "assert_contents_pattern": {
-            "type": "string",
-            "description": "MatchContents for request optionally",
-            "x-go-name": "MatchContents"
-          },
-          "assert_headers_pattern": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "MatchHeaders for mock response",
-            "x-go-name": "MatchHeaders"
-          },
-          "assert_query_params_pattern": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "MatchQueryParams for the API",
-            "x-go-name": "MatchQueryParams"
           },
           "path_params": {
             "type": "object",
@@ -883,6 +910,19 @@
       "MockHTTPResponse": {
         "type": "object",
         "properties": {
+          "assert_contents_pattern": {
+            "type": "string",
+            "description": "AssertContentsPattern for request optionally",
+            "x-go-name": "AssertContentsPattern"
+          },
+          "assert_headers_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AssertHeadersPattern for mock response",
+            "x-go-name": "AssertHeadersPattern"
+          },
           "assertions": {
             "type": "array",
             "description": "Assertions for validating response",
@@ -917,19 +957,6 @@
             "description": "Headers for mock response",
             "x-go-name": "Headers"
           },
-          "assert_contents_pattern": {
-            "type": "string",
-            "description": "MatchContents for request optionally",
-            "x-go-name": "MatchContents"
-          },
-          "assert_headers_pattern": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "MatchHeaders for mock response",
-            "x-go-name": "MatchHeaders"
-          },
           "pipe_properties": {
             "type": "array",
             "description": "PipeProperties to extract properties from response",
@@ -958,6 +985,11 @@
             },
             "description": "Authentication for the API",
             "x-go-name": "Authentication"
+          },
+          "base_url": {
+            "type": "string",
+            "description": "BaseURL of remote server",
+            "x-go-name": "BaseURL"
           },
           "description": {
             "type": "string",
@@ -999,6 +1031,14 @@
           "response": {
             "$ref": "#/components/schemas/MockHTTPResponse"
           },
+          "tags": {
+            "type": "array",
+            "description": "Tags of scenario",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Tags"
+          },
           "wait_before_reply": {
             "$ref": "#/components/schemas/Duration"
           }
@@ -1019,31 +1059,31 @@
             "description": "RequestCount for the API",
             "format": "uint64"
           },
-          "group": {
-            "type": "string",
-            "description": "Group of scenario",
-            "x-go-name": "Group"
-          },
           "assert_contents_pattern": {
             "type": "string",
-            "description": "MatchContents for request optionally",
-            "x-go-name": "MatchContents"
+            "description": "AssertContentsPattern for request optionally",
+            "x-go-name": "AssertContentsPattern"
           },
           "assert_headers_pattern": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
             },
-            "description": "MatchHeaders for mock response",
-            "x-go-name": "MatchHeaders"
+            "description": "AssertHeadersPattern for mock response",
+            "x-go-name": "AssertHeadersPattern"
           },
           "assert_query_params_pattern": {
             "type": "object",
             "additionalProperties": {
               "type": "string"
             },
-            "description": "MatchQueryParams for the API",
-            "x-go-name": "MatchQueryParams"
+            "description": "AssertQueryParamsPattern for the API",
+            "x-go-name": "AssertQueryParamsPattern"
+          },
+          "group": {
+            "type": "string",
+            "description": "Group of scenario",
+            "x-go-name": "Group"
           },
           "method": {
             "$ref": "#/components/schemas/MethodType"
@@ -1068,6 +1108,14 @@
             "type": "string",
             "description": "Predicate for the request",
             "x-go-name": "Predicate"
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags of scenario",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Tags"
           }
         },
         "description": "MockScenarioKeyData defines keys of mock scenario for in-memory store",
@@ -1101,6 +1149,19 @@
               "items": {
                 "type": "integer",
                 "format": "uint8"
+              }
+            }
+          }
+        }
+      },
+      "mockGroupsResponse": {
+        "description": "MockScenario groups",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             }
           }

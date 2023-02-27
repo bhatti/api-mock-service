@@ -3,13 +3,16 @@ definitions:
     description: ContractRequest for generating random requests to an API
     properties:
       base_url:
+        description: BaseURL of remote server
         type: string
         x-go-name: BaseURL
       execution_times:
+        description: ExecutionTimes for contract testing
         format: int64
         type: integer
         x-go-name: ExecutionTimes
       verbose:
+        description: Verbose setting
         type: boolean
         x-go-name: Verbose
     type: object
@@ -81,6 +84,22 @@ definitions:
   MockHTTPRequest:
     description: MockHTTPRequest defines mock request for APIs
     properties:
+      assert_contents_pattern:
+        description: AssertContentsPattern for request optionally
+        type: string
+        x-go-name: AssertContentsPattern
+      assert_headers_pattern:
+        additionalProperties:
+          type: string
+        description: AssertHeadersPattern for mock response
+        type: object
+        x-go-name: AssertHeadersPattern
+      assert_query_params_pattern:
+        additionalProperties:
+          type: string
+        description: AssertQueryParamsPattern for the API
+        type: object
+        x-go-name: AssertQueryParamsPattern
       contents:
         description: Contents for request optionally
         type: string
@@ -95,22 +114,6 @@ definitions:
         description: Headers for mock response
         type: object
         x-go-name: Headers
-      assert_contents_pattern:
-        description: MatchContents for request optionally
-        type: string
-        x-go-name: MatchContents
-      assert_headers_pattern:
-        additionalProperties:
-          type: string
-        description: MatchHeaders for mock response
-        type: object
-        x-go-name: MatchHeaders
-      assert_query_params_pattern:
-        additionalProperties:
-          type: string
-        description: MatchQueryParams for the API
-        type: object
-        x-go-name: MatchQueryParams
       path_params:
         additionalProperties:
           type: string
@@ -128,6 +131,16 @@ definitions:
   MockHTTPResponse:
     description: MockHTTPResponse defines mock response for APIs
     properties:
+      assert_contents_pattern:
+        description: AssertContentsPattern for request optionally
+        type: string
+        x-go-name: AssertContentsPattern
+      assert_headers_pattern:
+        additionalProperties:
+          type: string
+        description: AssertHeadersPattern for mock response
+        type: object
+        x-go-name: AssertHeadersPattern
       assertions:
         description: Assertions for validating response
         items:
@@ -154,16 +167,6 @@ definitions:
         description: Headers for mock response
         type: object
         x-go-name: Headers
-      assert_contents_pattern:
-        description: MatchContents for request optionally
-        type: string
-        x-go-name: MatchContents
-      assert_headers_pattern:
-        additionalProperties:
-          type: string
-        description: MatchHeaders for mock response
-        type: object
-        x-go-name: MatchHeaders
       pipe_properties:
         description: PipeProperties to extract properties from response
         items:
@@ -186,6 +189,10 @@ definitions:
         description: Authentication for the API
         type: object
         x-go-name: Authentication
+      base_url:
+        description: BaseURL of remote server
+        type: string
+        x-go-name: BaseURL
       description:
         description: Description of scenario
         type: string
@@ -217,6 +224,12 @@ definitions:
         $ref: '#/definitions/MockHTTPRequest'
       response:
         $ref: '#/definitions/MockHTTPResponse'
+      tags:
+        description: Tags of scenario
+        items:
+          type: string
+        type: array
+        x-go-name: Tags
       wait_before_reply:
         $ref: '#/definitions/Duration'
     type: object
@@ -232,26 +245,26 @@ definitions:
         description: RequestCount for the API
         format: uint64
         type: integer
+      assert_contents_pattern:
+        description: AssertContentsPattern for request optionally
+        type: string
+        x-go-name: AssertContentsPattern
+      assert_headers_pattern:
+        additionalProperties:
+          type: string
+        description: AssertHeadersPattern for mock response
+        type: object
+        x-go-name: AssertHeadersPattern
+      assert_query_params_pattern:
+        additionalProperties:
+          type: string
+        description: AssertQueryParamsPattern for the API
+        type: object
+        x-go-name: AssertQueryParamsPattern
       group:
         description: Group of scenario
         type: string
         x-go-name: Group
-      assert_contents_pattern:
-        description: MatchContents for request optionally
-        type: string
-        x-go-name: MatchContents
-      assert_headers_pattern:
-        additionalProperties:
-          type: string
-        description: MatchHeaders for mock response
-        type: object
-        x-go-name: MatchHeaders
-      assert_query_params_pattern:
-        additionalProperties:
-          type: string
-        description: MatchQueryParams for the API
-        type: object
-        x-go-name: MatchQueryParams
       method:
         $ref: '#/definitions/MethodType'
       name:
@@ -271,6 +284,12 @@ definitions:
         description: Predicate for the request
         type: string
         x-go-name: Predicate
+      tags:
+        description: Tags of scenario
+        items:
+          type: string
+        type: array
+        x-go-name: Tags
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
 paths:
@@ -466,7 +485,7 @@ paths:
       tags:
       - mock-scenarios
     post:
-      operationId: PostMockScenario
+      operationId: postMockScenario
       parameters:
       - in: path
         name: method
@@ -495,7 +514,7 @@ paths:
       - mock-scenarios
   /_scenarios/{method}/{name}/{path}:
     delete:
-      operationId: GetMockScenario
+      operationId: getMockScenario
       parameters:
       - in: path
         name: method
@@ -519,7 +538,7 @@ paths:
       tags:
       - mock-scenarios
     get:
-      operationId: GetMockScenario
+      operationId: getMockScenario
       parameters:
       - in: path
         name: method
@@ -560,6 +579,15 @@ paths:
       responses:
         "200":
           $ref: '#/responses/mockNamesResponse'
+      tags:
+      - mock-scenarios
+  /_scenarios/groups:
+    get:
+      description: Returns mock scenario groups
+      operationId: getGroups
+      responses:
+        "200":
+          $ref: '#/responses/mockGroupsResponse'
       tags:
       - mock-scenarios
   /{path}:
@@ -637,6 +665,12 @@ responses:
       items:
         format: uint8
         type: integer
+      type: array
+  mockGroupsResponse:
+    description: MockScenario groups
+    schema:
+      items:
+        type: string
       type: array
   mockNamesResponse:
     description: MockScenario names
