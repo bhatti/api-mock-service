@@ -115,6 +115,8 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	res, err := h.adapter.Invoke(req)
 	if err == nil && res != nil {
 		log.WithFields(log.Fields{
+			"OriginHost":      originHost,
+			"URLHost":         urlHost,
 			"Host":            req.Host,
 			"Path":            req.URL,
 			"Method":          req.Method,
@@ -133,6 +135,9 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 
 	matchedScenario, err := h.mockScenarioRepository.Lookup(key, nil)
 	log.WithFields(log.Fields{
+		"OriginHost":      originHost,
+		"URLHost":         urlHost,
+		"Host":            req.Host,
 		"Path":            req.URL,
 		"Method":          req.Method,
 		"Headers":         req.Header,
