@@ -131,20 +131,21 @@ func (w *DefaultHTTPClient) execute(
 	return resp.StatusCode, resp.Body, resp.Header, nil
 }
 
+// IsAWSSig4Request checks sig4 is defined in auth header
+func IsAWSSig4Request(request *http.Request) (awsSig4 bool, awsSig4Resign bool) {
+	val := strings.ToUpper(request.Header.Get("Authorization"))
+	awsSig4 = strings.Contains(val, "AWS4-HMAC-SHA256")
+	awsSig4Resign = awsSig4 && strings.Contains(val, "RESIGN")
+	return
+}
+
 // CheckAWSSig4Authorization checks sig4 and updates it if needed
 func CheckAWSSig4Authorization(
 	request *http.Request,
 	accessKeyID string,
 	secretAccessKey string,
 	securityToken string) (awsAuthSig4 bool) {
-	for name, vals := range request.Header {
-		for _, val := range vals {
-			if name == "Authorization" && strings.Contains(val, "AWS4-HMAC-SHA256") &&
-				strings.Contains(val, accessKeyID) && accessKeyID != "" && secretAccessKey != "" {
-				awsAuthSig4 = true
-			}
-		}
-	}
+	awsAuthSig4, _ = IsAWSSig4Request(request)
 
 	if awsAuthSig4 {
 		request.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))

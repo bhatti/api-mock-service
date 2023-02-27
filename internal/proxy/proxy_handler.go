@@ -98,8 +98,9 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	securityToken := os.Getenv("AWS_SECURITY_TOKEN")
 	awsAuthSig4 := web.CheckAWSSig4Authorization(req, accessKeyID, secretAccessKey, securityToken)
 
-	originHost, urlHost, matchedHost := sameOrigin(req)
-	if matchedHost {
+	originHost, urlHost := originHosts(req)
+	_, sig4Resign := web.IsAWSSig4Request(req)
+	if sig4Resign {
 		log.WithFields(log.Fields{
 			"OriginHost": originHost,
 			"URLHost":    urlHost,
@@ -108,8 +109,8 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Method":     req.Method,
 			"Headers":    req.Header,
 			"Type":       reflect.TypeOf(req.Body).String(),
-		}).Infof("proxy server skipped local lookup due because origin and url matched")
-		return req, nil, types.NewNotFoundError("proxy server skipped local lookup due because origin and url matched")
+		}).Infof("proxy server skipped local lookup due because sig4 resign")
+		return req, nil, types.NewNotFoundError("proxy server skipped local lookup due because sig4 resign")
 	}
 
 	res, err := h.adapter.Invoke(req)
@@ -245,17 +246,17 @@ func proxyCondition() goproxy.ReqConditionFunc {
 	}
 }
 
-func sameOrigin(req *http.Request) (string, string, bool) {
+func originHosts(req *http.Request) (string, string) {
 	origin := req.Header.Get("Origin")
 	if origin == "" {
 		origin = req.Header.Get("Referer")
 	}
 	if origin == "" {
-		return "", "", false
+		return "", ""
 	}
 	originURL, err := url.Parse(origin)
 	if err != nil {
-		return "", "", false
+		return "", ""
 	}
-	return originURL.Host, req.URL.Host, originURL.Host == req.URL.Host
+	return originURL.Host, req.URL.Host
 }
