@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 )
 
 // Handler structure
@@ -64,13 +65,14 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
 	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled ||
-		len(req.Header.Get("User-Agent")) > 0 {
+		len(req.Header.Get("Referer")) > 0 {
 		log.WithFields(log.Fields{
 			"UserAgent": req.Header.Get("User-Agent"),
 			"Host":      req.Host,
 			"Path":      req.URL,
 			"Method":    req.Method,
 			"Headers":   req.Header,
+			"Type":      reflect.TypeOf(req.Body).String(),
 		}).Infof("proxy server skipped local lookup due to record-mode")
 		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
@@ -166,12 +168,24 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 
 	reqBytes, resp.Request.Body, err = utils.ReadAll(resp.Request.Body)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   resp.Request.URL,
+			"Method": resp.Request.Method,
+			"Type":   reflect.TypeOf(resp.Request.Body).String(),
+			"Error":  err,
+		}).Warnf("proxy server failed to read request body")
 		return resp, err
 	}
 
 	var resBytes []byte
 	resBytes, resp.Body, err = utils.ReadAll(resp.Body)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   resp.Request.URL,
+			"Method": resp.Request.Method,
+			"Type":   reflect.TypeOf(resp.Body).String(),
+			"Error":  err,
+		}).Warnf("proxy server failed to read response body")
 		return resp, err
 	}
 
