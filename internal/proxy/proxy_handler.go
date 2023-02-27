@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 )
@@ -80,8 +81,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	case utils.ResetReader:
 		_ = req.Body.(utils.ResetReader).Reset()
 	}
-	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled ||
-		len(req.Header.Get("Referer")) > 0 {
+	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
 		log.WithFields(log.Fields{
 			"UserAgent": req.Header.Get("User-Agent"),
 			"Host":      req.Host,
@@ -97,6 +97,20 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	secretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
 	securityToken := os.Getenv("AWS_SECURITY_TOKEN")
 	awsAuthSig4 := web.CheckAWSSig4Authorization(req, accessKeyID, secretAccessKey, securityToken)
+
+	originHost, urlHost, matchedHost := sameOrigin(req)
+	if matchedHost {
+		log.WithFields(log.Fields{
+			"OriginHost": originHost,
+			"URLHost":    urlHost,
+			"Host":       req.Host,
+			"Path":       req.URL,
+			"Method":     req.Method,
+			"Headers":    req.Header,
+			"Type":       reflect.TypeOf(req.Body).String(),
+		}).Infof("proxy server skipped local lookup due because origin and url matched")
+		return req, nil, types.NewNotFoundError("proxy server skipped local lookup due because origin and url matched")
+	}
 
 	res, err := h.adapter.Invoke(req)
 	if err == nil && res != nil {
@@ -224,4 +238,19 @@ func proxyCondition() goproxy.ReqConditionFunc {
 	return func(_ *http.Request, _ *goproxy.ProxyCtx) bool {
 		return true
 	}
+}
+
+func sameOrigin(req *http.Request) (string, string, bool) {
+	origin := req.Header.Get("Origin")
+	if origin == "" {
+		origin = req.Header.Get("Referer")
+	}
+	if origin == "" {
+		return "", "", false
+	}
+	originURL, err := url.Parse(origin)
+	if err != nil {
+		return "", "", false
+	}
+	return originURL.Host, req.URL.Host, originURL.Host == req.URL.Host
 }
