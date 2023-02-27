@@ -64,6 +64,22 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 }
 
 func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+	var err error
+	_, req.Body, err = utils.ReadAll(req.Body)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   req.URL,
+			"Method": req.Method,
+			"Type":   reflect.TypeOf(req.Body).String(),
+			"Error":  err,
+		}).Warnf("proxy server failed to read request body in handl-request")
+		return nil, nil, err
+	}
+
+	switch req.Body.(type) {
+	case utils.ResetReader:
+		_ = req.Body.(utils.ResetReader).Reset()
+	}
 	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled ||
 		len(req.Header.Get("Referer")) > 0 {
 		log.WithFields(log.Fields{
@@ -173,7 +189,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 			"Method": resp.Request.Method,
 			"Type":   reflect.TypeOf(resp.Request.Body).String(),
 			"Error":  err,
-		}).Warnf("proxy server failed to read request body")
+		}).Warnf("proxy server failed to read request body in handle-response")
 		return resp, err
 	}
 
@@ -185,7 +201,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 			"Method": resp.Request.Method,
 			"Type":   reflect.TypeOf(resp.Body).String(),
 			"Error":  err,
-		}).Warnf("proxy server failed to read response body")
+		}).Warnf("proxy server failed to read response body in handle-response")
 		return resp, err
 	}
 
