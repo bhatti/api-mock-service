@@ -26,7 +26,8 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &types.MockScenarioKeyData{}, dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -86,7 +87,8 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -109,7 +111,8 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -137,7 +140,8 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -171,7 +175,8 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
-	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 
 	// WHEN executing scenario
 	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
@@ -201,7 +206,8 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewExecutor(repo, web.NewHTTPClient(&types.Configuration{DataDir: "../../mock_tests"}))
+	config := &types.Configuration{DataDir: "../../mock_tests"}
+	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {

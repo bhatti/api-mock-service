@@ -3,9 +3,9 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
-	awsauth "github.com/smartystreets/go-aws-auth"
 	"io"
 	"net"
 	"net/http"
@@ -31,12 +31,16 @@ type HTTPClient interface {
 
 // DefaultHTTPClient implements HTTPClient
 type DefaultHTTPClient struct {
-	config *types.Configuration
+	config    *types.Configuration
+	awsSigner AWSSigner
 }
 
 // NewHTTPClient creates structure for HTTPClient
-func NewHTTPClient(config *types.Configuration) *DefaultHTTPClient {
-	return &DefaultHTTPClient{config: config}
+func NewHTTPClient(config *types.Configuration, awsSigner AWSSigner) *DefaultHTTPClient {
+	return &DefaultHTTPClient{
+		config:    config,
+		awsSigner: awsSigner,
+	}
 }
 
 // Handle makes HTTP request
@@ -105,58 +109,30 @@ func (w *DefaultHTTPClient) execute(
 		}
 	}
 
-	accessKeyID := getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID")
-	secretAccessKey := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY")
-	securityToken := getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECURITY_TOKEN")
-	awsAuthSig4 := CheckAWSSig4Authorization(req, accessKeyID, secretAccessKey, securityToken)
+	staticCredentials := credentials.NewStaticCredentials(
+		getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID"),
+		getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY"),
+		getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECURITY_TOKEN"),
+	)
+	awsAuthSig4, err := w.awsSigner.AWSSign(req, staticCredentials)
 
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
 
 	if req.Header.Get("X-Verbose") == "true" {
 		log.WithFields(log.Fields{
-			"Component":       "DefaultHTTPClient",
-			"URL":             req.URL,
-			"Method":          req.Method,
-			"Headers":         req.Header,
-			"AccessKeyID":     accessKeyID,
-			"SecretAccessKey": secretAccessKey != "",
-			"AWSAuthSig4":     awsAuthSig4,
-			"Error":           err,
+			"Component":   "DefaultHTTPClient",
+			"URL":         req.URL,
+			"Method":      req.Method,
+			"Headers":     req.Header,
+			"AWSAuthSig4": awsAuthSig4,
+			"Error":       err,
 		}).Infof("invoked http client")
 	}
 	if err != nil {
 		return 500, nil, make(map[string][]string), err
 	}
 	return resp.StatusCode, resp.Body, resp.Header, nil
-}
-
-// IsAWSSig4Request checks sig4 is defined in auth header
-func IsAWSSig4Request(request *http.Request) (awsSig4 bool, awsSig4Resign bool) {
-	val := strings.ToUpper(request.Header.Get("Authorization"))
-	awsSig4 = strings.Contains(val, "AWS4-HMAC-SHA256")
-	awsSig4Resign = awsSig4 && strings.Contains(val, "RESIGN")
-	return
-}
-
-// CheckAWSSig4Authorization checks sig4 and updates it if needed
-func CheckAWSSig4Authorization(
-	request *http.Request,
-	accessKeyID string,
-	secretAccessKey string,
-	securityToken string) (awsAuthSig4 bool) {
-	awsAuthSig4, _ = IsAWSSig4Request(request)
-
-	if awsAuthSig4 {
-		request.Header.Set("X-Amz-Date", time.Now().UTC().Format("20060102T150405Z"))
-		request.Header.Del("Authorization")
-		awsauth.Sign4(request, awsauth.Credentials{
-			AccessKeyID:     accessKeyID,
-			SecretAccessKey: secretAccessKey,
-			SecurityToken:   securityToken,
-		})
-	}
-	return
 }
 
 func getHeaderParamOrEnvValue(params map[string]string, name string) string {

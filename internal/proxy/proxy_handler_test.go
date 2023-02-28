@@ -21,7 +21,8 @@ func Test_ShouldNotStartProxyServer(t *testing.T) {
 	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: -1}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: -1}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	require.Error(t, handler.Start())
 }
 
@@ -39,7 +40,8 @@ func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)
 	require.Nil(t, res)
 }
@@ -58,7 +60,8 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)
 	require.Nil(t, res)
 }
@@ -80,7 +83,8 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"application/json"}},
 	}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)
 	require.NotNil(t, res)
 }
@@ -100,7 +104,8 @@ func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
 	adapter.GET("/_fixtures/:method/:name/:path", adapterHandler)
 	adapter.POST("/_fixtures/:method/:name/:path", adapterHandler)
 	adapter.DELETE("/_fixtures/:method/:name/:path", adapterHandler)
-	proxy := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, adapter)
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, adapter)
 
 	methodPaths := map[string]string{
 		"/_fixtures/POST/fixtures/my/path?a=1&b=1": "GET",
@@ -161,7 +166,8 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 	adapter.POST("/_scenarios", adapterHandler)
 	adapter.DELETE("/_scenarios/:method/:name/:path", adapterHandler)
 	adapter.POST("/_oapi", adapterHandler)
-	proxy := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, adapter)
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, adapter)
 
 	methodPaths := map[string]string{
 		"/_scenarios?a=1&b=1":                     "GET",
@@ -217,7 +223,8 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 		Request: req,
 		Header:  http.Header{},
 	}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
@@ -229,7 +236,8 @@ func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
 	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	require.Nil(t, handler.handleResponse(nil, nil))
 }
 
@@ -241,7 +249,8 @@ func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	res := &http.Response{}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
@@ -265,7 +274,8 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 		Request: req,
 		Header:  http.Header{},
 	}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
@@ -290,7 +300,8 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 		Body:    io.NopCloser(bytes.NewReader([]byte("test"))),
 		Header:  http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(&types.Configuration{ProxyPort: 8081}, scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}

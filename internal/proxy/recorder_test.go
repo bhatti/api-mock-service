@@ -227,7 +227,7 @@ func Test_ShouldRecordRealPostProxyRequests(t *testing.T) {
 	config := &types.Configuration{DataDir: "../../mock_tests"}
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	client := web.NewHTTPClient(config)
+	client := web.NewHTTPClient(config, web.NewAWSSigner(config))
 	reqBody := []byte(`{ "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }`)
 	recorder := NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))

@@ -18,7 +18,7 @@ type ResetReader interface {
 // the provided Reader r.
 // If r implements WriterTo, the returned ReadCloser will implement WriterTo
 // by forwarding calls to r.
-func NopCloser(r *bytes.Reader) io.ReadCloser {
+func NopCloser(r *bytes.Reader) io.ReadSeekCloser {
 	return &nopCloser{reader: r}
 }
 
@@ -38,14 +38,19 @@ func (nop *nopCloser) Reset() error {
 	return err
 }
 
+// Seek sets pointer of buffer
+func (nop *nopCloser) Seek(offset int64, whence int) (int64, error) {
+	return nop.reader.Seek(offset, whence)
+}
+
 // ReadAll helper method
-func ReadAll(body io.ReadCloser) (b []byte, reader io.ReadCloser, err error) {
+func ReadAll(body io.ReadCloser) (b []byte, reader io.ReadSeekCloser, err error) {
 	if body == nil {
-		return nil, body, nil
+		return nil, nil, nil
 	}
 	b, err = io.ReadAll(body)
 	if err != nil {
-		return nil, body, err
+		return nil, nil, err
 	}
 	_ = body.Close()
 	reader = NopCloser(bytes.NewReader(b))

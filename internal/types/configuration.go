@@ -31,6 +31,17 @@ type Configuration struct {
 	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
+	// AWSConfig
+	AWS AWSConfig `yaml:"aws" mapstructure:"aws"`
+}
+
+// AWSConfig config
+type AWSConfig struct {
+	StripRequestHeaders []string `yaml:"strip" mapstructure:"strip" env:"AWS_STRIP_HEADERS"`
+	SigningNameOverride string   `yaml:"name" mapstructure:"name" env:"AWS_SIGNING_NAME"`
+	SigningHostOverride string   `yaml:"sign-host" mapstructure:"sign-host" env:"AWS_SIGN_HOST"`
+	HostOverride        string   `yaml:"host" mapstructure:"host" env:"AWS_HOST"`
+	RegionOverride      string   `yaml:"region" mapstructure:"region" env:"AWS_REGION"`
 }
 
 // NewConfiguration -- Initializes the default config

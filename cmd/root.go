@@ -87,7 +87,7 @@ func RunServer(_ *cobra.Command, args []string) {
 		os.Exit(2)
 	}
 	webServer := web.NewDefaultWebServer(serverConfig)
-	httpClient := web.NewHTTPClient(serverConfig)
+	httpClient := web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig))
 	if err = buildControllers(serverConfig, scenarioRepo, fixturesRepo, httpClient, webServer); err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup controller...")
@@ -104,7 +104,7 @@ func RunServer(_ *cobra.Command, args []string) {
 		_ = controller.NewMockProxyController(recorder, adapter)
 		_ = controller.NewContractController(executor, adapter)
 		webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
-		log.Fatal(proxy.NewProxyHandler(serverConfig, scenarioRepo, fixturesRepo, adapter).Start())
+		log.Fatal(proxy.NewProxyHandler(serverConfig, web.NewAWSSigner(serverConfig), scenarioRepo, fixturesRepo, adapter).Start())
 	}()
 
 	webServer.Start(":" + strconv.Itoa(serverConfig.HTTPPort))

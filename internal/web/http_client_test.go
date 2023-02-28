@@ -154,7 +154,7 @@ func Test_ShouldGetgetProxyEnv(t *testing.T) {
 
 func Test_ShouldNotExecuteHttpClientWithNilRequest(t *testing.T) {
 	config := &types.Configuration{ProxyURL: "http://localhost:8000"}
-	status, _, _, err := NewHTTPClient(config).execute(nil, nil, nil)
+	status, _, _, err := NewHTTPClient(config, NewAWSSigner(config)).execute(nil, nil, nil)
 	require.Error(t, err)
 	require.Equal(t, 500, status)
 }
@@ -170,5 +170,5 @@ func Test_ShouldGetHttpClientWithProxy(t *testing.T) {
 
 func newTestNewHTTPClient() *DefaultHTTPClient {
 	c := types.Configuration{}
-	return NewHTTPClient(&c)
+	return NewHTTPClient(&c, NewAWSSigner(&c))
 }

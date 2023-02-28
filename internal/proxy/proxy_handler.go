@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
@@ -12,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"reflect"
 )
@@ -20,6 +20,7 @@ import (
 // Handler structure
 type Handler struct {
 	config                 *types.Configuration
+	awsSigner              web.AWSSigner
 	mockScenarioRepository repository.MockScenarioRepository
 	fixtureRepository      repository.MockFixtureRepository
 	adapter                web.Adapter
@@ -28,12 +29,14 @@ type Handler struct {
 // NewProxyHandler instantiates controller for updating mock-scenarios
 func NewProxyHandler(
 	config *types.Configuration,
+	awsSigner web.AWSSigner,
 	mockScenarioRepository repository.MockScenarioRepository,
 	fixtureRepository repository.MockFixtureRepository,
 	adapter web.Adapter,
 ) *Handler {
 	return &Handler{
 		config:                 config,
+		awsSigner:              awsSigner,
 		mockScenarioRepository: mockScenarioRepository,
 		fixtureRepository:      fixtureRepository,
 		adapter:                adapter,
@@ -93,38 +96,21 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
 
-	accessKeyID := os.Getenv("AWS_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
-	securityToken := os.Getenv("AWS_SECURITY_TOKEN")
-	awsAuthSig4 := web.CheckAWSSig4Authorization(req, accessKeyID, secretAccessKey, securityToken)
-
-	originHost, urlHost := originHosts(req)
-	_, sig4Resign := web.IsAWSSig4Request(req)
-	if sig4Resign {
-		log.WithFields(log.Fields{
-			"OriginHost": originHost,
-			"URLHost":    urlHost,
-			"Host":       req.Host,
-			"Path":       req.URL,
-			"Method":     req.Method,
-			"Headers":    req.Header,
-			"Type":       reflect.TypeOf(req.Body).String(),
-		}).Infof("proxy server skipped local lookup due because sig4 resign")
-		return req, nil, types.NewNotFoundError("proxy server skipped local lookup due because sig4 resign")
-	}
+	staticCredentials := credentials.NewStaticCredentials(
+		os.Getenv("AWS_ACCESS_KEY_ID"),
+		os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		os.Getenv("AWS_SECURITY_TOKEN"),
+	)
+	awsAuthSig4, err := h.awsSigner.AWSSign(req, staticCredentials)
 
 	res, err := h.adapter.Invoke(req)
 	if err == nil && res != nil {
 		log.WithFields(log.Fields{
-			"OriginHost":      originHost,
-			"URLHost":         urlHost,
-			"Host":            req.Host,
-			"Path":            req.URL,
-			"Method":          req.Method,
-			"Headers":         req.Header,
-			"AccessKeyID":     accessKeyID,
-			"SecretAccessKey": secretAccessKey != "",
-			"AWSAuthSig4":     awsAuthSig4,
+			"Host":        req.Host,
+			"Path":        req.URL,
+			"Method":      req.Method,
+			"Headers":     req.Header,
+			"AWSAuthSig4": awsAuthSig4,
 		}).Infof("proxy server redirected request to internal controllers")
 		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 		return req, res, nil
@@ -136,15 +122,11 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 
 	matchedScenario, err := h.mockScenarioRepository.Lookup(key, nil)
 	log.WithFields(log.Fields{
-		"OriginHost":      originHost,
-		"URLHost":         urlHost,
 		"Host":            req.Host,
 		"Path":            req.URL,
 		"Method":          req.Method,
 		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
-		"AccessKeyID":     accessKeyID,
-		"SecretAccessKey": secretAccessKey != "",
 		"AWSAuthSig4":     awsAuthSig4,
 		"Error":           err,
 	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
@@ -156,6 +138,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	if err != nil {
 		return req, nil, err
 	}
+
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 
 	resp := &http.Response{}
@@ -244,19 +227,4 @@ func proxyCondition() goproxy.ReqConditionFunc {
 	return func(_ *http.Request, _ *goproxy.ProxyCtx) bool {
 		return true
 	}
-}
-
-func originHosts(req *http.Request) (string, string) {
-	origin := req.Header.Get("Origin")
-	if origin == "" {
-		origin = req.Header.Get("Referer")
-	}
-	if origin == "" {
-		return "", ""
-	}
-	originURL, err := url.Parse(origin)
-	if err != nil {
-		return "", ""
-	}
-	return originURL.Host, req.URL.Host
 }
