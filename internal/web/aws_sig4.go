@@ -37,8 +37,9 @@ func NewAWSSigner(config *types.Configuration) AWSSigner {
 
 // AWSSign signs request header if needed
 func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credentials) (bool, error) {
-	if !s.isAWSSig4(req) {
-		return false, nil
+	credVal, err := credentials.GetWithContext(context.Background())
+	if err != nil || !credVal.HasKeys() || !s.isAWSSig4(req) {
+		return false, err
 	}
 	expired, elapsed := s.isAWSDateExpired(req)
 	if !expired {
@@ -68,8 +69,8 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	}
 
 	req.Header.Set("X-AWS-Resign", fmt.Sprintf("OK-%s-%s-%d", service.SigningRegion, service.SigningName, elapsed))
-	if val, err := credentials.GetWithContext(context.Background()); err == nil && val.SessionToken != "" {
-		req.Header.Set("X-Amz-Security-Token", val.SessionToken)
+	if credVal.SessionToken != "" {
+		req.Header.Set("X-Amz-Security-Token", credVal.SessionToken)
 	}
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
@@ -164,7 +165,6 @@ func determineAWSServiceFromHost(host string) *endpoints.ResolvedEndpoint {
 func init() {
 	// Triple nested loop - 😭
 	for _, partition := range endpoints.DefaultPartitions() {
-
 		for _, service := range partition.Services() {
 			for _, endpoint := range service.Endpoints() {
 				resolvedEndpoint, _ := endpoint.ResolveEndpoint()
