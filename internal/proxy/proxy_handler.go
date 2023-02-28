@@ -101,7 +101,20 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		os.Getenv("AWS_SECURITY_TOKEN"),
 	)
+	oldAuth := req.Header.Get("Authorization")
 	awsAuthSig4, err := h.awsSigner.AWSSign(req, staticCredentials)
+
+	if awsAuthSig4 {
+		newAuth := req.Header.Get("Authorization")
+		log.WithFields(log.Fields{
+			"Component": "DefaultHTTPClient",
+			"URL":       req.URL,
+			"Method":    req.Method,
+			"OldAuth":   oldAuth,
+			"NewAuth":   newAuth,
+		}).Infof("proxy server skipped aws-request")
+		return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
+	}
 
 	res, err := h.adapter.Invoke(req)
 	if err == nil && res != nil {

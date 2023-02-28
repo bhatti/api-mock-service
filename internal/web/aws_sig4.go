@@ -45,7 +45,6 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	}
 	signer := v4.NewSigner(credentials, func(s *v4.Signer) {})
 
-	oldAuth := req.Header.Get("Authorization")
 	if s.awsConfig.HostOverride != "" {
 		req.Host = s.awsConfig.HostOverride
 	}
@@ -62,17 +61,6 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	if err := s.sign(req, service, signer); err != nil {
 		return true, err
 	}
-
-	newAuth := req.Header.Get("Authorization")
-	log.WithFields(log.Fields{
-		"Component": "DefaultHTTPClient",
-		"URL":       req.URL,
-		"Method":    req.Method,
-		"OldAuth":   oldAuth,
-		"NewAuth":   newAuth,
-		"Service":   service.SigningName,
-		"Region":    service.SigningRegion,
-	}).Infof("resigned aws-sig4 auth header for http client")
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
 	// to magically set Transfer-Encoding: chunked. Service like S3 does not support chunk encoding.
