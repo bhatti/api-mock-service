@@ -40,7 +40,8 @@ func Test_ShouldCheckExpiredDateForAWSSig4(t *testing.T) {
 			"X-Amz-Date":       []string{"20230217T182455Z"},
 		},
 	}
-	assert.True(t, signer.isAWSDateExpired(req))
+	expired, _ := signer.isAWSDateExpired(req)
+	assert.True(t, expired)
 }
 
 func Test_ShouldSignAWSRequest(t *testing.T) {

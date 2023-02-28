@@ -40,8 +40,10 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	if !s.isAWSSig4(req) {
 		return false, nil
 	}
-	if !s.isAWSDateExpired(req) {
-		return false, nil
+	expired, elapsed := s.isAWSDateExpired(req)
+	if !expired {
+		req.Header.Set("AWS-Resign", fmt.Sprintf("Amz-Date-Time-Not-Expired-%d", elapsed))
+		return true, nil
 	}
 	signer := v4.NewSigner(credentials, func(s *v4.Signer) {})
 
@@ -61,6 +63,7 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	if err := s.sign(req, service, signer); err != nil {
 		return true, err
 	}
+	req.Header.Set("AWS-Resign", fmt.Sprintf("New-Auth-%s-%s", service.SigningRegion, service.SigningName))
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
 	// to magically set Transfer-Encoding: chunked. Service like S3 does not support chunk encoding.
@@ -86,11 +89,12 @@ func (s *awsSigner) isAWSSig4(request *http.Request) bool {
 }
 
 // IsAWSDateExpired checks if amz-date is expired
-func (s *awsSigner) isAWSDateExpired(request *http.Request) bool {
+func (s *awsSigner) isAWSDateExpired(request *http.Request) (bool, int64) {
 	dateHeader := request.Header.Get("X-Amz-Date")
 	dateVal, _ := time.Parse("20060102T150405Z", dateHeader)
 	now := time.Now().UTC().Unix()
-	return dateHeader == "" || now-dateVal.Unix() > 5
+	diff := now - dateVal.Unix()
+	return dateHeader == "" || diff > 5, diff
 }
 
 // GetAWSService parses service-region from auth header
