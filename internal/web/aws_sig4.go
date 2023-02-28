@@ -1,18 +1,18 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	log "github.com/sirupsen/logrus"
 )
 
 // borrowed basic implementation from https://github.com/awslabs/aws-sigv4-proxy
@@ -42,10 +42,11 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	}
 	expired, elapsed := s.isAWSDateExpired(req)
 	if !expired {
-		req.Header.Set("AWS-Resign", fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
+		req.Header.Set("X-AWS-Resign", fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
 			req.Header.Get("X-Amz-Date"), time.Now().UTC().Format("20060102T150405Z")))
 		return true, nil
 	}
+
 	signer := v4.NewSigner(credentials, func(s *v4.Signer) {})
 
 	if s.awsConfig.HostOverride != "" {
@@ -57,14 +58,19 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 
 	service := s.getAWSService(req)
 	if service == nil {
-		return true, fmt.Errorf("unable to determine service from host: %s", req.Host)
+		req.Header.Set("X-AWS-Resign", "no-service")
+		return false, fmt.Errorf("unable to determine service from host: %s", req.Host)
 	}
 
-	req.Header.Del("Authorization")
 	if err := s.sign(req, service, signer); err != nil {
-		return true, err
+		req.Header.Set("X-AWS-Resign", err.Error())
+		return false, err
 	}
-	req.Header.Set("AWS-Resign", fmt.Sprintf("New-Auth-%s-%s", service.SigningRegion, service.SigningName))
+
+	req.Header.Set("X-AWS-Resign", fmt.Sprintf("OK-%s-%s-%d", service.SigningRegion, service.SigningName, elapsed))
+	if val, err := credentials.GetWithContext(context.Background()); err == nil && val.SessionToken != "" {
+		req.Header.Set("X-Amz-Security-Token", val.SessionToken)
+	}
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
 	// to magically set Transfer-Encoding: chunked. Service like S3 does not support chunk encoding.

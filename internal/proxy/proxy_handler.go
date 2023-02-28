@@ -107,11 +107,14 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	if awsAuthSig4 {
 		newAuth := req.Header.Get("Authorization")
 		log.WithFields(log.Fields{
-			"Component": "DefaultHTTPClient",
-			"URL":       req.URL,
-			"Method":    req.Method,
-			"OldAuth":   oldAuth,
-			"NewAuth":   newAuth,
+			"Component":          "DefaultHTTPClient",
+			"URL":                req.URL,
+			"Method":             req.Method,
+			"OldAuth":            oldAuth,
+			"NewAuth":            newAuth,
+			"Amz-Date":           req.Header.Get("X-Amz-Date"),
+			"Amz-Security-Token": req.Header.Get("X-Amz-Security-Token"),
+			"AWS-Resign":         req.Header.Get("X-AWS-Resign"),
 		}).Infof("proxy server skipped aws-request")
 		return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
 	}
