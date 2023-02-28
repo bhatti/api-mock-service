@@ -42,7 +42,8 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	}
 	expired, elapsed := s.isAWSDateExpired(req)
 	if !expired {
-		req.Header.Set("AWS-Resign", fmt.Sprintf("Amz-Date-Time-Not-Expired-%d", elapsed))
+		req.Header.Set("AWS-Resign", fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
+			req.Header.Get("X-Amz-Date"), time.Now().UTC().Format("20060102T150405Z")))
 		return true, nil
 	}
 	signer := v4.NewSigner(credentials, func(s *v4.Signer) {})
@@ -91,10 +92,12 @@ func (s *awsSigner) isAWSSig4(request *http.Request) bool {
 // IsAWSDateExpired checks if amz-date is expired
 func (s *awsSigner) isAWSDateExpired(request *http.Request) (bool, int64) {
 	dateHeader := request.Header.Get("X-Amz-Date")
-	dateVal, _ := time.Parse("20060102T150405Z", dateHeader)
-	now := time.Now().UTC().Unix()
-	diff := now - dateVal.Unix()
-	return dateHeader == "" || diff > 5, diff
+	if dateVal, err := time.Parse("20060102T150405Z", dateHeader); err == nil {
+		now := time.Now().UTC().Unix()
+		diff := now - dateVal.Unix()
+		return diff > 5, diff
+	}
+	return true, 0
 }
 
 // GetAWSService parses service-region from auth header
