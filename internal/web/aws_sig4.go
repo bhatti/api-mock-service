@@ -76,10 +76,16 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 		return false, err
 	}
 
-	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d", service.SigningRegion, service.SigningName, elapsed))
+	addedSecurityToken := false
 	if credVal.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", credVal.SessionToken)
+		addedSecurityToken = true
+	} else {
+		req.Header.Del("X-Amz-Security-Token")
 	}
+
+	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d-security-token-%v",
+		service.SigningRegion, service.SigningName, elapsed, addedSecurityToken))
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
 	// to magically set Transfer-Encoding: chunked. Service like S3 does not support chunk encoding.
