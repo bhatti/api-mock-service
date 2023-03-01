@@ -15,7 +15,8 @@ import (
 	"time"
 )
 
-const resignHeader = "X-Mock-ReSign"
+const resignHeader = "X-Mock-Resign"
+const amzDate = "X-Amz-Date"
 
 // borrowed basic implementation from https://github.com/awslabs/aws-sigv4-proxy
 var services = map[string]endpoints.ResolvedEndpoint{}
@@ -39,15 +40,19 @@ func NewAWSSigner(config *types.Configuration) AWSSigner {
 
 // AWSSign signs request header if needed
 func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credentials) (bool, error) {
+	if !s.isAWSSig4(req) {
+		return false, nil
+	}
 	expired, elapsed := s.isAWSDateExpired(req)
 	if !expired {
 		req.Header.Set(resignHeader, fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
-			req.Header.Get("X-Amz-Date"), time.Now().UTC().Format("20060102T150405Z")))
+			req.Header.Get(amzDate), time.Now().UTC().Format("20060102T150405Z")))
 		return true, nil
 	}
 
 	credVal, err := credentials.GetWithContext(context.Background())
-	if err != nil || !credVal.HasKeys() || !s.isAWSSig4(req) {
+	if err != nil || !credVal.HasKeys() {
+		req.Header.Set(resignHeader, "no-aws-keys")
 		return false, err
 	}
 
@@ -62,12 +67,12 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 
 	service := s.getAWSService(req)
 	if service == nil {
-		req.Header.Set(resignHeader, "no-service")
+		req.Header.Set(resignHeader, "no-aws-service")
 		return false, fmt.Errorf("unable to determine service from host: %s", req.Host)
 	}
 
 	if err := s.sign(req, service, signer); err != nil {
-		req.Header.Set(resignHeader, err.Error())
+		req.Header.Set(resignHeader, "aws-sign-error-"+err.Error())
 		return false, err
 	}
 
@@ -101,7 +106,7 @@ func (s *awsSigner) isAWSSig4(request *http.Request) bool {
 
 // IsAWSDateExpired checks if amz-date is expired
 func (s *awsSigner) isAWSDateExpired(request *http.Request) (bool, int64) {
-	dateHeader := request.Header.Get("X-Amz-Date")
+	dateHeader := request.Header.Get(amzDate)
 	if dateVal, err := time.Parse("20060102T150405Z", dateHeader); err == nil {
 		now := time.Now().UTC().Unix()
 		diff := now - dateVal.Unix()
