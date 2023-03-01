@@ -373,24 +373,24 @@ func buildTemplateParams(
 		}
 	}
 	for k, v := range scenario.Request.PathParams {
-		templateParams[k] = v
-		queryParams[k] = v
+		templateParams[k] = fuzz.StripTypeTags(v)
+		queryParams[k] = fuzz.StripTypeTags(v)
 	}
 	for k, v := range scenario.Request.AssertQueryParamsPattern {
 		templateParams[k] = regexValue(v)
 		queryParams[k] = regexValue(v)
 	}
 	for k, v := range scenario.Request.QueryParams {
-		templateParams[k] = v
-		queryParams[k] = v
+		templateParams[k] = fuzz.StripTypeTags(v)
+		queryParams[k] = fuzz.StripTypeTags(v)
 	}
 	for k, v := range scenario.Request.AssertHeadersPattern {
 		templateParams[k] = regexValue(v)
 		reqHeaders[k] = []string{regexValue(v)}
 	}
 	for k, v := range scenario.Request.Headers {
-		templateParams[k] = v
-		reqHeaders[k] = []string{v}
+		templateParams[k] = fuzz.StripTypeTags(v)
+		reqHeaders[k] = []string{fuzz.StripTypeTags(v)}
 	}
 	// Find any params for query params and path variables
 	for k, v := range scenario.ToKeyData().MatchGroups(scenario.Path) {
@@ -407,5 +407,5 @@ func regexValue(val string) string {
 	if strings.HasPrefix(val, "__") || strings.HasPrefix(val, "(") {
 		return fuzz.RandRegex(val)
 	}
-	return val
+	return fuzz.StripTypeTags(val)
 }

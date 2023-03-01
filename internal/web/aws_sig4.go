@@ -46,14 +46,14 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	}
 	expired, elapsed := s.isAWSDateExpired(req)
 	if !expired {
-		req.Header.Set(resignHeader, fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
-			req.Header.Get(amzDate), time.Now().UTC().Format("20060102T150405Z")))
+		req.Header.Set(resignHeader, fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s-debug-%v", elapsed,
+			req.Header.Get(amzDate), time.Now().UTC().Format("20060102T150405Z"), s.awsConfig.Debug))
 		return true, nil
 	}
 
 	credVal, err := credentials.GetWithContext(context.Background())
 	if err != nil || !credVal.HasKeys() {
-		req.Header.Set(resignHeader, "no-aws-keys")
+		req.Header.Set(resignHeader, fmt.Sprintf("no-aws-keys-debug-%v", s.awsConfig.Debug))
 		return false, err
 	}
 
@@ -68,7 +68,7 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 
 	service := s.getAWSService(req)
 	if service == nil {
-		req.Header.Set(resignHeader, "no-aws-service")
+		req.Header.Set(resignHeader, fmt.Sprintf("no-aws-service-debug-%v", s.awsConfig.Debug))
 		return false, fmt.Errorf("unable to determine service from host: %s", req.Host)
 	}
 
@@ -81,12 +81,12 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 	}
 
 	if err := s.sign(req, service, signer); err != nil {
-		req.Header.Set(resignHeader, "aws-sign-error-"+err.Error())
+		req.Header.Set(resignHeader, fmt.Sprintf("aws-error-%s-debug-%v", err.Error(), s.awsConfig.Debug))
 		return false, err
 	}
 
-	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d-security-token-%v",
-		service.SigningRegion, service.SigningName, elapsed, addedSecurityToken))
+	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d-security-token-%v-debug-%v",
+		service.SigningRegion, service.SigningName, elapsed, addedSecurityToken, s.awsConfig.Debug))
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
 	// to magically set Transfer-Encoding: chunked. Service like S3 does not support chunk encoding.

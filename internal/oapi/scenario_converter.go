@@ -173,10 +173,10 @@ func addParameter(parameters openapi3.Parameters, k string, v string, in string)
 
 func updateScenarioRequest(scenario *types.MockScenario, op *openapi3.Operation) (string, *openapi3.Schema) {
 	for k, v := range scenario.Request.Headers {
-		op.Parameters = addParameter(op.Parameters, k, v, "header")
+		op.Parameters = addParameter(op.Parameters, k, fuzz.StripTypeTags(v), "header")
 	}
 	for k, v := range scenario.Request.QueryParams {
-		op.Parameters = addParameter(op.Parameters, k, v, "query")
+		op.Parameters = addParameter(op.Parameters, k, fuzz.StripTypeTags(v), "query")
 	}
 	for k, v := range scenario.Request.PathParams {
 		op.Parameters = addParameter(op.Parameters, k, v, "path")
