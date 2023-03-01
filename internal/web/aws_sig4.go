@@ -106,7 +106,7 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 
 // isAWSSig4 checks sig4 is defined in auth header
 func (s *awsSigner) isAWSSig4(request *http.Request) bool {
-	val := strings.ToUpper(request.Header.Get("Authorization"))
+	val := strings.ToUpper(request.Header.Get(Authorization))
 	return strings.Contains(val, "AWS4-HMAC-SHA256")
 }
 
@@ -123,7 +123,7 @@ func (s *awsSigner) isAWSDateExpired(request *http.Request) (bool, int64) {
 
 // GetAWSService parses service-region from auth header
 func (s *awsSigner) getAWSService(request *http.Request) *endpoints.ResolvedEndpoint {
-	auth := request.Header.Get("Authorization")
+	auth := request.Header.Get(Authorization)
 	if auth != "" {
 		var re = regexp.MustCompile(`Credential=.*/.*/(.*)/(.*)/aws4_request`)
 		matches := re.FindStringSubmatch(auth)

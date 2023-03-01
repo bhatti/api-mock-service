@@ -13,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"os"
 	"reflect"
 )
 
@@ -97,11 +96,12 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	}
 
 	staticCredentials := credentials.NewStaticCredentials(
-		os.Getenv("AWS_ACCESS_KEY_ID"),
-		os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		os.Getenv("AWS_SECURITY_TOKEN"),
+		web.GetHeaderParamOrEnvValue(nil, web.AWSAccessKey),
+		web.GetHeaderParamOrEnvValue(nil, web.AWSSecretKey),
+		web.GetHeaderParamOrEnvValue(nil, web.AWSSecurityToken, web.AWSSessionToken),
 	)
-	oldAuth := req.Header.Get("Authorization")
+
+	oldAuth := req.Header.Get(web.Authorization)
 	awsAuthSig4, err := h.awsSigner.AWSSign(req, staticCredentials)
 
 	if awsAuthSig4 {

@@ -17,7 +17,7 @@ func Test_ShouldParseServiceRegionForAWSSig4(t *testing.T) {
 	}
 	req := &http.Request{
 		Header: http.Header{
-			"Authorization": []string{
+			Authorization: []string{
 				"AWS4-HMAC-SHA256 Credential=ASI/20230217/us-west-2/my-service/aws4_request SignedHeaders=content-encoding;host;x-amz-date;x-amz-requestsupertrace;x-amz-target  Signature=bbb2",
 			},
 			"Content-Encoding": []string{"amz-1.0"},
@@ -82,7 +82,7 @@ func Test_ShouldSignAWSRequest(t *testing.T) {
 	req := &http.Request{
 		URL: u,
 		Header: http.Header{
-			"Authorization": []string{
+			Authorization: []string{
 				"AWS4-HMAC-SHA256 Credential=ASI/20230217/us-west-2/my-service/aws4_request SignedHeaders=content-encoding;host;x-amz-date;x-amz-requestsupertrace;x-amz-target  Signature=bbb2",
 			},
 			"Content-Type": []string{"application/json; charset=UTF-8"},
@@ -99,7 +99,7 @@ func Test_ShouldNotSignNonAWSRequest(t *testing.T) {
 	signer := NewAWSSigner(&types.Configuration{})
 	req := &http.Request{
 		Header: http.Header{
-			"Authorization": []string{
+			Authorization: []string{
 				"Blah",
 			},
 			"Content-Type": []string{"application/json; charset=UTF-8"},

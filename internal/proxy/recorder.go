@@ -166,7 +166,7 @@ func saveMockResponse(
 	if strings.Contains(authHeader, "AWS") {
 		scenario.Authentication["aws.auth.sigv4"] = types.MockAuthorization{
 			Type:   "apiKey",
-			Name:   "Authorization",
+			Name:   web.Authorization,
 			In:     "header",
 			Format: "awsSigv4",
 			Scheme: "x-amazon-apigateway-authtype",
@@ -178,7 +178,7 @@ func saveMockResponse(
 		}
 		scenario.Authentication["bearerAuth"] = types.MockAuthorization{
 			Type:   "http",
-			Name:   "Authorization",
+			Name:   web.Authorization,
 			In:     "header",
 			Scheme: "bearer",
 			Format: "JWT",
@@ -186,13 +186,13 @@ func saveMockResponse(
 	} else if authHeader != "" {
 		scenario.Authentication["basicAuth"] = types.MockAuthorization{
 			Type:   "http",
-			Name:   "Authorization",
+			Name:   web.Authorization,
 			In:     "header",
 			Scheme: "basic",
 		}
 		scenario.Authentication["bearerAuth"] = types.MockAuthorization{
 			Type:   "http",
-			Name:   "Authorization",
+			Name:   web.Authorization,
 			In:     "header",
 			Scheme: "bearer",
 			Format: "auth-scheme",

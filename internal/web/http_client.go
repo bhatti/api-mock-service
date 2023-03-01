@@ -15,7 +15,22 @@ import (
 	"time"
 )
 
-var internalParamKeys = []string{"AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SECURITY_TOKEN"}
+// Authorization constant
+const Authorization = "Authorization"
+
+// AWSAccessKey constant
+const AWSAccessKey = "AWS_ACCESS_KEY_ID"
+
+// AWSSecretKey constant
+const AWSSecretKey = "AWS_SECRET_ACCESS_KEY"
+
+// AWSSecurityToken constant
+const AWSSecurityToken = "AWS_SECURITY_TOKEN"
+
+// AWSSessionToken constant
+const AWSSessionToken = "AWS_SESSION_TOKEN"
+
+var internalParamKeys = []string{AWSAccessKey, AWSSecretKey, AWSSecurityToken, AWSSessionToken}
 
 // HTTPClient defines methods for http get and post methods
 type HTTPClient interface {
@@ -110,9 +125,9 @@ func (w *DefaultHTTPClient) execute(
 	}
 
 	staticCredentials := credentials.NewStaticCredentials(
-		getHeaderParamOrEnvValue(internalKeyMap, "AWS_ACCESS_KEY_ID"),
-		getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECRET_ACCESS_KEY"),
-		getHeaderParamOrEnvValue(internalKeyMap, "AWS_SECURITY_TOKEN"),
+		GetHeaderParamOrEnvValue(internalKeyMap, AWSAccessKey),
+		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecretKey),
+		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecurityToken, AWSSessionToken),
 	)
 	awsAuthSig4, err := w.awsSigner.AWSSign(req, staticCredentials)
 
@@ -135,11 +150,17 @@ func (w *DefaultHTTPClient) execute(
 	return resp.StatusCode, resp.Body, resp.Header, nil
 }
 
-func getHeaderParamOrEnvValue(params map[string]string, name string) string {
-	if len(params[name]) > 0 {
-		return params[name]
+// GetHeaderParamOrEnvValue searches key in map or env variables
+func GetHeaderParamOrEnvValue(params map[string]string, names ...string) string {
+	for _, name := range names {
+		if len(params[name]) > 0 {
+			return params[name]
+		}
+		if len(os.Getenv(name)) > 0 {
+			return os.Getenv(name)
+		}
 	}
-	return os.Getenv(name)
+	return ""
 }
 
 func getLocalIPAddresses() []string {
