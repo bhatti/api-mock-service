@@ -38,10 +38,11 @@ func Test_ShouldCheckExpiredDateForAWSSig4(t *testing.T) {
 		Header: http.Header{
 			"Content-Encoding": []string{"amz-1.0"},
 			"Content-Type":     []string{"application/json; charset=UTF-8"},
-			"X-Amz-Date":       []string{"20230217T182455Z"},
+			"X-Amz-Date":       []string{"20230301T175147Z"},
 		},
 	}
-	expired, _ := signer.isAWSDateExpired(req)
+	expired, diff := signer.isAWSDateExpired(req)
+	assert.True(t, diff > 5)
 	assert.True(t, expired)
 }
 
