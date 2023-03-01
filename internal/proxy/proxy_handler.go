@@ -131,6 +131,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 		return req, res, nil
 	}
+
 	key, err := web.BuildMockScenarioKeyData(req)
 	if err != nil {
 		return req, nil, err

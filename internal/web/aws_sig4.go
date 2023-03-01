@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+const resignHeader = "X-Mock-ReSign"
+
 // borrowed basic implementation from https://github.com/awslabs/aws-sigv4-proxy
 var services = map[string]endpoints.ResolvedEndpoint{}
 
@@ -37,15 +39,16 @@ func NewAWSSigner(config *types.Configuration) AWSSigner {
 
 // AWSSign signs request header if needed
 func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credentials) (bool, error) {
+	expired, elapsed := s.isAWSDateExpired(req)
+	if !expired {
+		req.Header.Set(resignHeader, fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
+			req.Header.Get("X-Amz-Date"), time.Now().UTC().Format("20060102T150405Z")))
+		return true, nil
+	}
+
 	credVal, err := credentials.GetWithContext(context.Background())
 	if err != nil || !credVal.HasKeys() || !s.isAWSSig4(req) {
 		return false, err
-	}
-	expired, elapsed := s.isAWSDateExpired(req)
-	if !expired {
-		req.Header.Set("X-AWS-Resign", fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s", elapsed,
-			req.Header.Get("X-Amz-Date"), time.Now().UTC().Format("20060102T150405Z")))
-		return true, nil
 	}
 
 	signer := v4.NewSigner(credentials, func(s *v4.Signer) {})
@@ -59,16 +62,16 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 
 	service := s.getAWSService(req)
 	if service == nil {
-		req.Header.Set("X-AWS-Resign", "no-service")
+		req.Header.Set(resignHeader, "no-service")
 		return false, fmt.Errorf("unable to determine service from host: %s", req.Host)
 	}
 
 	if err := s.sign(req, service, signer); err != nil {
-		req.Header.Set("X-AWS-Resign", err.Error())
+		req.Header.Set(resignHeader, err.Error())
 		return false, err
 	}
 
-	req.Header.Set("X-AWS-Resign", fmt.Sprintf("OK-%s-%s-%d", service.SigningRegion, service.SigningName, elapsed))
+	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d", service.SigningRegion, service.SigningName, elapsed))
 	if credVal.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", credVal.SessionToken)
 	}
