@@ -46,18 +46,6 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 			Summary:     "",
 			Description: "",
 		}
-		for authType, auth := range scenario.Authentication {
-			root.Components.SecuritySchemes[authType] = &openapi3.SecuritySchemeRef{
-				Value: &openapi3.SecurityScheme{
-					Type:             auth.Type,
-					Name:             auth.Name,
-					In:               auth.In,
-					Scheme:           auth.Scheme,
-					BearerFormat:     auth.Format,
-					OpenIdConnectUrl: auth.URL,
-				},
-			}
-		}
 		addServer(scenario, root)
 		op := ops[scenario.MethodPathTarget()]
 		if op == nil {
@@ -84,8 +72,8 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 				Value: resBody,
 			}
 		}
-		for name, auth := range scenario.Authentication {
-			root.Components.SecuritySchemes[name] = &openapi3.SecuritySchemeRef{
+		for authType, auth := range scenario.Authentication {
+			root.Components.SecuritySchemes[authType] = &openapi3.SecuritySchemeRef{
 				Value: &openapi3.SecurityScheme{
 					Type:             auth.Type,
 					Name:             auth.Name,
