@@ -19,6 +19,14 @@ import (
 const resignHeader = "X-Mock-Resign"
 const amzDate = "X-Amz-Date"
 
+type awsLoggerAdapter struct {
+}
+
+// Log implements aws.Logger.Log
+func (awsLoggerAdapter) Log(args ...interface{}) {
+	log.Info(args...)
+}
+
 // borrowed basic implementation from https://github.com/awslabs/aws-sigv4-proxy
 var services = map[string]endpoints.ResolvedEndpoint{}
 
@@ -165,6 +173,7 @@ func (s *awsSigner) sign(req *http.Request, service *endpoints.ResolvedEndpoint,
 
 	if s.awsConfig.Debug {
 		signer.Debug = aws.LogDebugWithSigning
+		signer.Logger = awsLoggerAdapter{}
 	}
 
 	_, err = signer.Sign(req, body, service.SigningName, service.SigningRegion, time.Now())
