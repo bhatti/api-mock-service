@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
@@ -71,17 +72,17 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 		return false, fmt.Errorf("unable to determine service from host: %s", req.Host)
 	}
 
-	if err := s.sign(req, service, signer); err != nil {
-		req.Header.Set(resignHeader, "aws-sign-error-"+err.Error())
-		return false, err
-	}
-
 	addedSecurityToken := false
 	if credVal.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", credVal.SessionToken)
 		addedSecurityToken = true
 	} else {
 		req.Header.Del("X-Amz-Security-Token")
+	}
+
+	if err := s.sign(req, service, signer); err != nil {
+		req.Header.Set(resignHeader, "aws-sign-error-"+err.Error())
+		return false, err
 	}
 
 	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d-security-token-%v",
@@ -160,6 +161,10 @@ func (s *awsSigner) sign(req *http.Request, service *endpoints.ResolvedEndpoint,
 		defer func() {
 			signer.DisableURIPathEscaping = false
 		}()
+	}
+
+	if s.awsConfig.Debug {
+		signer.Debug = aws.LogDebugWithSigning
 	}
 
 	_, err = signer.Sign(req, body, service.SigningName, service.SigningRegion, time.Now())

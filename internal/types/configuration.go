@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -42,6 +43,7 @@ type AWSConfig struct {
 	SigningHostOverride string   `yaml:"sign-host" mapstructure:"sign-host" env:"AWS_SIGN_HOST"`
 	HostOverride        string   `yaml:"host" mapstructure:"host" env:"AWS_HOST"`
 	RegionOverride      string   `yaml:"region" mapstructure:"region" env:"AWS_REGION"`
+	Debug               bool     `yaml:"debug" mapstructure:"debug" env:"AWS_DEBUG"`
 }
 
 // NewConfiguration -- Initializes the default config
@@ -92,6 +94,9 @@ func NewConfiguration(
 
 	if config.DataDir == "" {
 		config.DataDir = "default_mocks_data"
+	}
+	if !config.AWS.Debug {
+		config.AWS.Debug = os.Getenv("AWS_DEBUG") == "true"
 	}
 
 	config.Version = version

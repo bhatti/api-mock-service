@@ -103,6 +103,7 @@ func VariableContains(name string, target any, data any) bool {
 	reStr := fmt.Sprintf("%v", target)
 	re, err := regexp.Compile(reStr)
 	if err != nil {
+		fmt.Printf("errr '%s', err %s\n", reStr, err)
 		return false
 	}
 	return re.MatchString(valStr)

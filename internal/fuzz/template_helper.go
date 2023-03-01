@@ -256,6 +256,9 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"VariableContains": func(varName string, target any) bool {
 			return VariableContains(varName, target, data)
 		},
+		"VariableMatches": func(varName string, target any) bool {
+			return VariableContains(varName, target, data)
+		},
 		"VariableEQ": func(varName string, size any) bool {
 			return VariableNumber(varName, data) == ToFloat64(size)
 		},

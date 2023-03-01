@@ -738,6 +738,42 @@ func Test_ShouldParseVariableContains(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
+func Test_ShouldParseVariableMatches(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableMatches "contents.key" "\\d abc \\w"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "key": "123 abc ijk", "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldParseVariableMatchesRegex(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "key": "123 abc ijk", "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldNotParseVariableMatches(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{VariableMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)
+	// AND contents
+	contents := map[string]any{"userId": 1, "key": "123 abc mno", "id": 10, "title": "hello world", "completed": true}
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"contents": contents})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
 func Test_ShouldParseVariableNotContains(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{VariableContains "contents.id" "20"}}`)
