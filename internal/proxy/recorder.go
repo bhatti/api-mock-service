@@ -176,6 +176,13 @@ func saveMockResponse(
 			Name: "x-api-key",
 			In:   "header",
 		}
+		scenario.Authentication["bearerAuth"] = types.MockAuthorization{
+			Type:   "http",
+			Name:   "Authorization",
+			In:     "header",
+			Scheme: "bearer",
+			Format: "JWT",
+		}
 	} else if authHeader != "" {
 		scenario.Authentication["basicAuth"] = types.MockAuthorization{
 			Type:   "http",
