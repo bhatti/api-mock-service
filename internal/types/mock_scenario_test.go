@@ -18,6 +18,15 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 	require.True(t, scenario.Digest() != "")
 }
 
+func Test_ShouldGetRequestAuthHeader(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	// WHEN fetching content type
+	require.Equal(t, "", scenario.Request.AuthHeader())
+	scenario.Request.Headers["authorization"] = "abc"
+	require.Equal(t, "abc", scenario.Request.AuthHeader())
+}
+
 func Test_ShouldGetRequestContentType(t *testing.T) {
 	// GIVEN a valid mock scenario
 	scenario := buildScenario()

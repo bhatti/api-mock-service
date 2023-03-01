@@ -29,18 +29,34 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 			Schemas:         make(openapi3.Schemas),
 		},
 		Paths: make(openapi3.Paths),
+		ExtensionProps: openapi3.ExtensionProps{
+			Extensions: make(map[string]interface{}),
+		},
 		Servers: openapi3.Servers{
 			&openapi3.Server{
 				URL:         MockServerBaseURL,
 				Description: "Mock Server",
 			},
 		},
+		Security: make(openapi3.SecurityRequirements, 0),
 	}
 	ops := make(map[string]*openapi3.Operation)
 	for _, scenario := range scenarios {
 		path := &openapi3.PathItem{
 			Summary:     "",
 			Description: "",
+		}
+		for authType, auth := range scenario.Authentication {
+			root.Components.SecuritySchemes[authType] = &openapi3.SecuritySchemeRef{
+				Value: &openapi3.SecurityScheme{
+					Type:             auth.Type,
+					Name:             auth.Name,
+					In:               auth.In,
+					Scheme:           auth.Scheme,
+					BearerFormat:     auth.Format,
+					OpenIdConnectUrl: auth.URL,
+				},
+			}
 		}
 		addServer(scenario, root)
 		op := ops[scenario.MethodPathTarget()]
@@ -103,6 +119,13 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 			path.Trace = op
 		}
 		root.AddOperation(scenario.Path, string(scenario.Method), op)
+	}
+
+	for name, auth := range root.Components.SecuritySchemes {
+		root.Security = append(root.Security, map[string][]string{name: {}})
+		if strings.Contains(auth.Value.Scheme, "apigateway") {
+			root.ExtensionProps.Extensions["x-amazon-apigateway-api-key-source"] = "HEADER"
+		}
 	}
 	return root
 }

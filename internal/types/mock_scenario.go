@@ -83,6 +83,16 @@ func (r MockHTTPRequest) ContentType(defContentType string) string {
 	return defContentType
 }
 
+// AuthHeader finds AuthHeaderType
+func (r MockHTTPRequest) AuthHeader() string {
+	for k, v := range r.Headers {
+		if strings.ToUpper(k) == "AUTHORIZATION" {
+			return fuzz.StripTypeTags(v)
+		}
+	}
+	return ""
+}
+
 // TargetHeader find header matching target
 func (r MockHTTPRequest) TargetHeader() string {
 	for k, v := range r.Headers {

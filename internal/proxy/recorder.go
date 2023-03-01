@@ -162,6 +162,35 @@ func saveMockResponse(
 			}
 		}
 	}
+	authHeader := scenario.Request.AuthHeader()
+	if strings.Contains(authHeader, "AWS") {
+		scenario.Authentication["aws.auth.sigv4"] = types.MockAuthorization{
+			Type:   "apiKey",
+			Name:   "Authorization",
+			In:     "header",
+			Format: "awsSigv4",
+			Scheme: "x-amazon-apigateway-authtype",
+		}
+		scenario.Authentication["smithy.api.httpApiKeyAuth"] = types.MockAuthorization{
+			Type: "apiKey",
+			Name: "x-api-key",
+			In:   "header",
+		}
+	} else if authHeader != "" {
+		scenario.Authentication["basicAuth"] = types.MockAuthorization{
+			Type:   "http",
+			Name:   "Authorization",
+			In:     "header",
+			Scheme: "basic",
+		}
+		scenario.Authentication["bearerAuth"] = types.MockAuthorization{
+			Type:   "http",
+			Name:   "Authorization",
+			In:     "header",
+			Scheme: "bearer",
+			Format: "auth-scheme",
+		}
+	}
 
 	if scenario.Name == "" {
 		scenario.SetName("recorded-" + scenario.Group + "-")
