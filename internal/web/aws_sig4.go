@@ -93,6 +93,13 @@ func (s *awsSigner) AWSSign(req *http.Request, awsCred *credentials.Credentials)
 		return
 	}
 
+	service := s.getAWSService(req)
+	if service == nil {
+		info = fmt.Sprintf("no-aws-service-host-%s-debug-%v", req.Host, s.awsConfig.Debug)
+		err = fmt.Errorf(info)
+		return
+	}
+
 	// Remove any headers specified
 	for _, header := range s.awsConfig.StripRequestHeaders {
 		log.WithField("StripHeader", header).Debug("Stripping Header:")
@@ -110,13 +117,6 @@ func (s *awsSigner) AWSSign(req *http.Request, awsCred *credentials.Credentials)
 	}
 	if s.awsConfig.SigningHostOverride != "" {
 		req.Host = s.awsConfig.SigningHostOverride
-	}
-
-	service := s.getAWSService(req)
-	if service == nil {
-		info = fmt.Sprintf("no-aws-service-host-%s-debug-%v", req.Host, s.awsConfig.Debug)
-		err = fmt.Errorf(info)
-		return
 	}
 
 	addedSecurityToken := false
