@@ -170,11 +170,8 @@ func saveMockResponse(
 				scenario.Request.AssertHeadersPattern[k] = v[0]
 				parts := strings.Split(v[0], ".")
 				if u.Path == "/" {
-					if len(parts) > 2 {
+					if len(parts) >= 2 {
 						scenario.Group = parts[len(parts)-2] + "_" + parts[len(parts)-1]
-						scenario.Tags = []string{scenario.Group}
-					} else if len(parts) == 2 {
-						scenario.Group = parts[len(parts)-1] + "_" + parts[len(parts)-0]
 						scenario.Tags = []string{scenario.Group}
 					}
 				}
