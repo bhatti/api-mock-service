@@ -169,9 +169,14 @@ func saveMockResponse(
 			if strings.Contains(strings.ToUpper(k), "TARGET") {
 				scenario.Request.AssertHeadersPattern[k] = v[0]
 				parts := strings.Split(v[0], ".")
-				if u.Path == "/" && len(parts) > 2 {
-					scenario.Group = parts[len(parts)-2] + "_" + parts[len(parts)-1]
-					scenario.Tags = []string{scenario.Group}
+				if u.Path == "/" {
+					if len(parts) > 2 {
+						scenario.Group = parts[len(parts)-2] + "_" + parts[len(parts)-1]
+						scenario.Tags = []string{scenario.Group}
+					} else if len(parts) == 2 {
+						scenario.Group = parts[len(parts)-1] + "_" + parts[len(parts)-0]
+						scenario.Tags = []string{scenario.Group}
+					}
 				}
 			} else if config.AssertHeader(k) {
 				scenario.Request.AssertHeadersPattern[k] = v[0]
