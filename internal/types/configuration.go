@@ -30,6 +30,7 @@ type Configuration struct {
 	AssertHeadersPattern string `yaml:"assert_headers_pattern" mapstructure:"assert_headers_pattern" env:"ASSERT_HEADERS_PATTERN"`
 	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of mock scenario
 	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
+	Debug                    bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 	// AWSConfig
@@ -38,12 +39,13 @@ type Configuration struct {
 
 // AWSConfig config
 type AWSConfig struct {
-	StripRequestHeaders []string `yaml:"strip" mapstructure:"strip" env:"AWS_STRIP_HEADERS"`
-	SigningNameOverride string   `yaml:"name" mapstructure:"name" env:"AWS_SIGNING_NAME"`
-	SigningHostOverride string   `yaml:"sign-host" mapstructure:"sign-host" env:"AWS_SIGN_HOST"`
-	HostOverride        string   `yaml:"host" mapstructure:"host" env:"AWS_HOST"`
-	RegionOverride      string   `yaml:"region" mapstructure:"region" env:"AWS_REGION"`
-	Debug               bool     `yaml:"debug" mapstructure:"debug" env:"AWS_DEBUG"`
+	StripRequestHeaders   []string `yaml:"strip" mapstructure:"strip" env:"AWS_STRIP_HEADERS"`
+	SigningNameOverride   string   `yaml:"name" mapstructure:"name" env:"AWS_SIGNING_NAME"`
+	SigningHostOverride   string   `yaml:"sign-host" mapstructure:"sign-host" env:"AWS_SIGN_HOST"`
+	HostOverride          string   `yaml:"host" mapstructure:"host" env:"AWS_HOST"`
+	RegionOverride        string   `yaml:"region" mapstructure:"region" env:"AWS_REGION"`
+	ResignOnlyExpiredDate bool     `yaml:"resign_only_expired_date" mapstructure:"resign_only_expired_date" env:"AWS_RESIGN_ONLY_EXPIRED"`
+	Debug                 bool     `yaml:"debug" mapstructure:"debug" env:"AWS_DEBUG"`
 }
 
 // NewConfiguration -- Initializes the default config
@@ -95,8 +97,11 @@ func NewConfiguration(
 	if config.DataDir == "" {
 		config.DataDir = "default_mocks_data"
 	}
-	if !config.AWS.Debug {
+	if os.Getenv("AWS_DEBUG") != "" {
 		config.AWS.Debug = os.Getenv("AWS_DEBUG") == "true"
+	}
+	if os.Getenv("AWS_RESIGN_ONLY_EXPIRED") != "" {
+		config.AWS.ResignOnlyExpiredDate = os.Getenv("AWS_RESIGN_ONLY_EXPIRED") == "true"
 	}
 
 	config.Version = version

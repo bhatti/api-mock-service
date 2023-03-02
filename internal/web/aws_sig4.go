@@ -16,7 +16,6 @@ import (
 	"time"
 )
 
-const resignHeader = "X-Mock-Resign"
 const amzDate = "X-Amz-Date"
 
 type awsLoggerAdapter struct {
@@ -32,7 +31,7 @@ var services = map[string]endpoints.ResolvedEndpoint{}
 
 // AWSSigner is an interface to make testing http.Client calls easier
 type AWSSigner interface {
-	AWSSign(req *http.Request, credentials *credentials.Credentials) (bool, error)
+	AWSSign(req *http.Request, credentials *credentials.Credentials) (bool, string, error)
 }
 
 // awsSigner implements the AWSSigner interface
@@ -48,24 +47,35 @@ func NewAWSSigner(config *types.Configuration) AWSSigner {
 }
 
 // AWSSign signs request header if needed
-func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credentials) (bool, error) {
-	if !s.isAWSSig4(req) {
-		return false, nil
+func (s *awsSigner) AWSSign(req *http.Request, awsCred *credentials.Credentials) (awsSig4 bool, info string, err error) {
+	awsSig4 = s.isAWSSig4(req)
+	if !awsSig4 {
+		return
 	}
 	expired, elapsed := s.isAWSDateExpired(req)
-	if !expired {
-		req.Header.Set(resignHeader, fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s-debug-%v", elapsed,
-			req.Header.Get(amzDate), time.Now().UTC().Format("20060102T150405Z"), s.awsConfig.Debug))
-		return true, nil
+	if !expired && s.awsConfig.ResignOnlyExpiredDate {
+		info = fmt.Sprintf("Amz-Date-Time-Not-Expired-%d-%s-%s-debug-%v", elapsed,
+			req.Header.Get(amzDate), time.Now().UTC().Format("20060102T150405Z"), s.awsConfig.Debug)
+		return
 	}
 
-	credVal, err := credentials.GetWithContext(context.Background())
+	var credVal credentials.Value
+	credVal, err = awsCred.GetWithContext(context.Background())
 	if err != nil || !credVal.HasKeys() {
-		req.Header.Set(resignHeader, fmt.Sprintf("no-aws-keys-debug-%v", s.awsConfig.Debug))
-		return false, err
+		info = fmt.Sprintf("no-aws-keys-debug-%v", s.awsConfig.Debug)
+		if err == nil {
+			err = fmt.Errorf(info)
+		}
+		return
 	}
 
-	signer := v4.NewSigner(credentials, func(s *v4.Signer) {})
+	// Remove any headers specified
+	for _, header := range s.awsConfig.StripRequestHeaders {
+		log.WithField("StripHeader", header).Debug("Stripping Header:")
+		req.Header.Del(header)
+	}
+
+	signer := v4.NewSigner(awsCred, func(s *v4.Signer) {})
 
 	if s.awsConfig.HostOverride != "" {
 		req.Host = s.awsConfig.HostOverride
@@ -76,8 +86,9 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 
 	service := s.getAWSService(req)
 	if service == nil {
-		req.Header.Set(resignHeader, fmt.Sprintf("no-aws-service-debug-%v", s.awsConfig.Debug))
-		return false, fmt.Errorf("unable to determine service from host: %s", req.Host)
+		info = fmt.Sprintf("no-aws-service-host-%s-debug-%v", req.Host, s.awsConfig.Debug)
+		err = fmt.Errorf(info)
+		return
 	}
 
 	addedSecurityToken := false
@@ -88,13 +99,13 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 		req.Header.Del("X-Amz-Security-Token")
 	}
 
-	if err := s.sign(req, service, signer); err != nil {
-		req.Header.Set(resignHeader, fmt.Sprintf("aws-error-%s-debug-%v", err.Error(), s.awsConfig.Debug))
-		return false, err
+	if err = s.sign(req, service, signer); err != nil {
+		info = fmt.Sprintf("aws-error-%s-debug-%v", err.Error(), s.awsConfig.Debug)
+		return
 	}
 
-	req.Header.Set(resignHeader, fmt.Sprintf("OK-%s-%s-%d-security-token-%v-debug-%v",
-		service.SigningRegion, service.SigningName, elapsed, addedSecurityToken, s.awsConfig.Debug))
+	info = fmt.Sprintf("RESIGN-%s-%s-%d-security-token-%v-debug-%v",
+		service.SigningRegion, service.SigningName, elapsed, addedSecurityToken, s.awsConfig.Debug)
 
 	// When ContentLength is 0 we also need to set the body to http.NoBody to avoid Go http client
 	// to magically set Transfer-Encoding: chunked. Service like S3 does not support chunk encoding.
@@ -104,13 +115,7 @@ func (s *awsSigner) AWSSign(req *http.Request, credentials *credentials.Credenti
 		req.Body = http.NoBody
 	}
 
-	// Remove any headers specified
-	for _, header := range s.awsConfig.StripRequestHeaders {
-		log.WithField("StripHeader", header).Debug("Stripping Header:")
-		req.Header.Del(header)
-	}
-
-	return true, nil
+	return
 }
 
 // isAWSSig4 checks sig4 is defined in auth header

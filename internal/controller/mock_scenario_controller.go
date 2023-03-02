@@ -113,10 +113,7 @@ func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
 //
 //	200: mockGroupsResponse
 func (msc *MockScenarioController) getGroups(c web.APIContext) error {
-	groups, err := msc.mockScenarioRepository.GetGroups()
-	if err != nil {
-		return err
-	}
+	groups := msc.mockScenarioRepository.GetGroups()
 	return c.JSON(http.StatusOK, groups)
 }
 

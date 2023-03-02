@@ -91,8 +91,7 @@ func Test_ShouldListMockScenariosGroups(t *testing.T) {
 		require.NoError(t, err)
 	}
 	// WHEN listing scenario groups
-	groups, err := repo.GetGroups()
-	require.NoError(t, err)
+	groups := repo.GetGroups()
 	require.True(t, len(groups) >= 2)
 }
 

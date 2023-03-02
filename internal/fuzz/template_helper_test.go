@@ -750,6 +750,50 @@ func Test_ShouldParseVariableMatches(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
+func Test_ShouldNotParseResponseTime(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{ResponseTimeMillisLE 300}}`)
+	// AND contents
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"title": "hello world", "completed": true})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseResponseTime(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{ResponseTimeMillisLE 300}}`)
+	// AND contents
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"title": "hello world", "elapsed": 200})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
+func Test_ShouldNotParseStatusMatches(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{ResponseStatusMatches "(200|201)"}}`)
+	// AND contents
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"title": "hello world", "completed": true})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+}
+
+func Test_ShouldParseStatusMatches(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{ResponseStatusMatches "(200|201)"}}`)
+	// AND contents
+	// WHEN parsing string
+	b, err := ParseTemplate("", b, map[string]any{"title": "hello world", "status": 200})
+	// THEN it should succeed
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+}
+
 func Test_ShouldParseVariableMatchesRegex(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{VariableMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)

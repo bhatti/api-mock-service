@@ -274,9 +274,9 @@ Similarly, `assertions` defines a set of predicates to test against response fro
     assertions:
         - VariableGE contents.id 10
         - VariableContains contents.title illo
-        - VariableContains headers.Pragma no-cache 
+        - VariableMatches headers.Pragma no-cache 
 ```
-Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result headers include `Pragma: no-cache` header.
+Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result headers matches `Pragma: no-cache` header.
 
 ## Playback the Mock API Scenario
 
@@ -367,7 +367,7 @@ response:
   assert_contents_pattern: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
   assertions:
     - VariableContains contents.livemode false
-    - VariableContains headers.Pragma no-cache
+    - VariableMatches headers.Pragma no-cache
 wait_before_reply: 1s
 ```
 
@@ -616,6 +616,9 @@ In above example, the mock API will return HTTP status 500 or 501 for every 10th
 
 ### Variables
 ```yaml
+     {{if ResponseTimeMillisLE 300}}
+     {{if ResponseStatusMatches "(200|201)"}}
+     {{if VariableMatches "contents" "regex"}}
      {{if VariableContains "contents" "blah"}}
      {{if VariableEquals "contents" "blah"}}
      {{if VariableSizeEQ "contents" "blah"}}

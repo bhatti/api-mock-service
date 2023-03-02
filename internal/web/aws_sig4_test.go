@@ -90,7 +90,7 @@ func Test_ShouldSignAWSRequest(t *testing.T) {
 		},
 	}
 	cred := credentials.NewStaticCredentials("a", "b", "c")
-	signed, err := signer.AWSSign(req, cred)
+	signed, _, err := signer.AWSSign(req, cred)
 	require.NoError(t, err)
 	require.True(t, signed)
 }
@@ -106,7 +106,7 @@ func Test_ShouldNotSignNonAWSRequest(t *testing.T) {
 		},
 	}
 	cred := credentials.NewStaticCredentials("a", "b", "c")
-	signed, err := signer.AWSSign(req, cred)
+	signed, _, err := signer.AWSSign(req, cred)
 	require.NoError(t, err)
 	require.False(t, signed)
 }

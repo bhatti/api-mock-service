@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"bytes"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -14,6 +15,10 @@ import (
 	"io"
 	"net/http"
 )
+
+var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
+
+var noProxyClient = &http.Client{Transport: &http.Transport{TLSClientConfig: acceptAllCerts}}
 
 // Handler structure
 type Handler struct {
@@ -99,7 +104,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 	)
 
 	oldAuth := req.Header.Get(web.Authorization)
-	awsAuthSig4, err := h.awsSigner.AWSSign(req, staticCredentials)
+	awsAuthSig4, awsInfo, err := h.awsSigner.AWSSign(req, staticCredentials)
 
 	if awsAuthSig4 {
 		log.WithFields(log.Fields{
@@ -108,8 +113,12 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Method":    req.Method,
 			"OldAuth":   oldAuth,
 			"Header":    req.Header,
-		}).Infof("proxy server skipped aws-request")
-		return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
+			"Info":      awsInfo,
+			"Error":     err,
+		}).Infof("proxy server checked for aws-request")
+		if err == nil {
+			return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
+		}
 	}
 
 	res, err := h.adapter.Invoke(req)

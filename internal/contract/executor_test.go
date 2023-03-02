@@ -166,7 +166,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
 	require.NoError(t, err)
 	// AND bad matching header
-	scenario.Response.AssertHeadersPattern["Content-Type"] = "application/xjson"
+	scenario.Response.AssertHeadersPattern[types.ContentTypeHeader] = "application/xjson"
 	err = repo.Save(scenario)
 	require.NoError(t, err)
 
@@ -323,18 +323,21 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTemplate)
 		require.NoError(t, err)
+		if scenario.Response.StatusCode == 200 {
+			scenario.Group = "bad_v1_job"
+		}
 		err = repo.Save(scenario)
 		require.NoError(t, err)
 	}
 	// AND valid template for random data
 	// AND mock web client
-	client, data := buildJobsTestClient("AC1234567890", "BAD")
+	client, data := buildJobsTestClient("AC1234567890", "BAD", "", 200)
 	contractReq.Overrides = data
 	contractReq.Verbose = true
 	// AND executor
 	executor := NewExecutor(repo, client)
 	// WHEN executing scenario
-	res := executor.ExecuteByGroup(context.Background(), "v1_jobs", dataTemplate, contractReq)
+	res := executor.ExecuteByGroup(context.Background(), "bad_v1_job", dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 		// THEN it should fail to execute
@@ -356,22 +359,27 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)
 
-	// AND mock web client
-	client, data := buildJobsTestClient("AC1234567890", "RUNNING")
-	contractReq.Verbose = true
-	contractReq.Overrides = data
-	// AND executor
-	executor := NewExecutor(repo, client)
 	for i, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTemplate)
+		scenario.Path = "/good" + scenario.Path
 		require.NoError(t, err)
+		scenario.Group = fmt.Sprintf("good_spec_%d", i)
 		// WHEN saving scenario to mock scenario repository
 		err = repo.Save(scenario)
 		// THEN it should save scenario
 		require.NoError(t, err)
+		// WITH mock web client
+		client, data := buildJobsTestClient("AC1234567890", "RUNNING", "/good", scenario.Response.StatusCode)
+		contractReq.Verbose = true
+		contractReq.Overrides = data
+		// AND executor
+		executor := NewExecutor(repo, client)
 		// AND should return saved scenario
 		saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 		require.NoError(t, err)
+		if scenario.Response.StatusCode != saved.Response.StatusCode {
+			t.Fatalf("unexpected status %d != %d", scenario.Response.StatusCode, saved.Response.StatusCode)
+		}
 		// WHEN executing scenario
 		res := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, contractReq)
 		for _, err := range res.Errors {
@@ -389,7 +397,7 @@ func Test_ShouldParseRequestBody(t *testing.T) {
 	require.Contains(t, str, "christina.perdit@sonaret.gov")
 }
 
-func buildJobsTestClient(jobID string, jobStatus string) (web.HTTPClient, map[string]any) {
+func buildJobsTestClient(jobID string, jobStatus string, prefixPath string, httpStatus int) (web.HTTPClient, map[string]any) {
 	client := web.NewStubHTTPClient()
 	job := `
 {
@@ -418,14 +426,14 @@ func buildJobsTestClient(jobID string, jobStatus string) (web.HTTPClient, map[st
 }
 `
 
-	client.AddMapping("GET", baseURL+"/v1/jobs/"+jobID, web.NewStubHTTPResponse(200, job))
-	client.AddMapping("GET", baseURL+"/v1/jobs", web.NewStubHTTPResponse(200, `[`+job+`]`))
-	client.AddMapping("POST", baseURL+"/v1/jobs", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/cancel", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/pause", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/resume", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/state", web.NewStubHTTPResponse(200, jobStatusReply))
-	client.AddMapping("POST", baseURL+"/v1/jobs/"+jobID+"/state/"+jobStatus, web.NewStubHTTPResponse(200, jobStatusReply))
+	client.AddMapping("GET", baseURL+prefixPath+"/v1/jobs/"+jobID, web.NewStubHTTPResponse(httpStatus, job))
+	client.AddMapping("GET", baseURL+prefixPath+"/v1/jobs", web.NewStubHTTPResponse(httpStatus, `[`+job+`]`))
+	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs", web.NewStubHTTPResponse(httpStatus, jobStatusReply))
+	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/cancel", web.NewStubHTTPResponse(httpStatus, jobStatusReply))
+	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/pause", web.NewStubHTTPResponse(httpStatus, jobStatusReply))
+	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/resume", web.NewStubHTTPResponse(httpStatus, jobStatusReply))
+	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/state", web.NewStubHTTPResponse(httpStatus, jobStatusReply))
+	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/state/"+jobStatus, web.NewStubHTTPResponse(httpStatus, jobStatusReply))
 	return client, map[string]any{"jobId": jobID, "state": jobStatus}
 }
 

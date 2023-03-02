@@ -32,7 +32,7 @@ func Test_ShouldGetRequestContentType(t *testing.T) {
 	scenario := buildScenario()
 	// WHEN fetching content type
 	require.Equal(t, "", scenario.Request.ContentType(""))
-	scenario.Request.Headers["content-type"] = "abc"
+	scenario.Request.Headers[ContentTypeHeader] = "abc"
 	require.Equal(t, "abc", scenario.Request.ContentType(""))
 }
 
@@ -41,7 +41,7 @@ func Test_ShouldGetResponseContentType(t *testing.T) {
 	scenario := buildScenario()
 	// WHEN fetching content type
 	require.Equal(t, "application/json", scenario.Response.ContentType(""))
-	scenario.Response.Headers["Content-Type"] = []string{"abc"}
+	scenario.Response.Headers[ContentTypeHeader] = []string{"abc"}
 	require.Equal(t, "abc", scenario.Response.ContentType(""))
 }
 

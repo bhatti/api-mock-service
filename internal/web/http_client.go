@@ -129,7 +129,7 @@ func (w *DefaultHTTPClient) execute(
 		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecretKey),
 		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecurityToken, AWSSessionToken),
 	)
-	awsAuthSig4, err := w.awsSigner.AWSSign(req, staticCredentials)
+	awsAuthSig4, awsInfo, awsErr := w.awsSigner.AWSSign(req, staticCredentials)
 
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
@@ -141,6 +141,8 @@ func (w *DefaultHTTPClient) execute(
 			"Method":      req.Method,
 			"Headers":     req.Header,
 			"AWSAuthSig4": awsAuthSig4,
+			"AWSInfo":     awsInfo,
+			"AWSError":    awsErr,
 			"Error":       err,
 		}).Infof("invoked http client")
 	}

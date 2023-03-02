@@ -285,7 +285,7 @@ func (ms *MockScenario) Validate() error {
 	if len(ms.Name) > 200 {
 		return fmt.Errorf("scenario name is too long %d", len(ms.Name))
 	}
-	if matched, err := regexp.Match(`^[\w\d-_]+\.?[\w\d-_]+$`, []byte(ms.Name)); err == nil && !matched {
+	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(ms.Name)); err == nil && !matched {
 		return fmt.Errorf("scenario name is invalid with special characters %s", ms.Name)
 	}
 	if len(ms.Response.Contents) > 1024*1024*1024 {

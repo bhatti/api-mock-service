@@ -1,19 +1,65 @@
 <!-- HTML for static distribution bundle build -->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Swagger UI</title>
-    <link rel="stylesheet" type="text/css" href="./swagger-ui.css" />
-    <link rel="stylesheet" type="text/css" href="index.css" />
-    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <title>Swagger UI</title>
+  <link rel="stylesheet" type="text/css" href="./swagger-ui.css"/>
+  <link rel="stylesheet" type="text/css" href="index.css"/>
+  <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32"/>
+  <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16"/>
+</head>
 
-  <body>
-    <div id="swagger-ui"></div>
-    <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
-    <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
-    <script src="./swagger-initializer.js" charset="UTF-8"> </script>
-  </body>
+<body onload="addCustomGroup()">
+<div id="swagger-ui"></div>
+<script src="./swagger-ui-bundle.js" charset="UTF-8"></script>
+<script src="./swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+<script src="./swagger-initializer.js" charset="UTF-8"></script>
+<script>
+  function updateFormInput(form, val) {
+    if (val === '') {
+      val = "_internal";
+    }
+    const input = form.elements[1];
+    const ndx = input.value.indexOf('_oapi');
+    if (ndx === -1) {
+      return;
+    }
+    window.ui.url = input.value = input.value.substring(0, ndx) + '_oapi/' + val;
+    window.ui.specActions.updateUrl(window.ui.url);
+    window.ui.specActions.download(window.ui.url);
+  }
+
+  window.addEventListener("load", () => {
+    if (document.forms.length === 0) {
+      return;
+    }
+    const form = document.forms[0];
+    const input = form.elements[0];
+    input.style.width = '70%';
+
+    const url = location.protocol + "//" + location.host + "/_scenarios/groups";
+    const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    const s = document.createElement("select");
+    s.style.width = '35%';
+    s.setAttribute("onchange", "updateFormInput(this.form, this.value)");
+    form.insertBefore(s, input);
+
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        const opts = JSON.parse(xhr.responseText);
+        opts.unshift('');
+        for (let i = 0; i < opts.length; i++) {
+          const opt = document.createElement("option");
+          opt.innerHTML = opts[i] === '' ? 'Select API group' : opts[i];
+          opt.value = opts[i];
+          s.appendChild(opt);
+        }
+      }
+    }
+    xhr.open("GET", url, true);
+    xhr.send();
+  });
+</script>
+</body>
 </html>

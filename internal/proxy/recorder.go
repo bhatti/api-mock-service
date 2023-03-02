@@ -113,6 +113,20 @@ func saveMockResponse(
 		}).Warnf("failed to unmarshal and extrate types for response")
 	}
 
+	assertions := []string{
+		`ResponseTimeMillisLE 5000`,
+		fmt.Sprintf(`ResponseStatusMatches %d`, status),
+	}
+	reqHeaderAssertions := make(map[string]string)
+	if req.Header.Get(types.ContentTypeHeader) != "" {
+		reqHeaderAssertions[types.ContentTypeHeader] = req.Header.Get(types.ContentTypeHeader)
+	}
+	respHeaderAssertions := make(map[string]string)
+	if len(resHeaders[types.ContentTypeHeader]) > 0 {
+		assertions = append(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+			resHeaders[types.ContentTypeHeader][0]))
+		respHeaderAssertions[types.ContentTypeHeader] = resHeaders[types.ContentTypeHeader][0]
+	}
 	scenario := &types.MockScenario{
 		Method:         types.MethodType(req.Method),
 		Name:           req.Header.Get(types.MockScenarioName),
@@ -122,7 +136,7 @@ func saveMockResponse(
 		Authentication: make(map[string]types.MockAuthorization),
 		Request: types.MockHTTPRequest{
 			AssertQueryParamsPattern: make(map[string]string),
-			AssertHeadersPattern:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},
+			AssertHeadersPattern:     reqHeaderAssertions,
 			AssertContentsPattern:    matchReqContents,
 			QueryParams:              make(map[string]string),
 			Headers:                  make(map[string]string),
@@ -134,7 +148,9 @@ func saveMockResponse(
 			Contents:              string(resBody),
 			ExampleContents:       string(resBody),
 			StatusCode:            status,
+			AssertHeadersPattern:  respHeaderAssertions,
 			AssertContentsPattern: matchResContents,
+			Assertions:            assertions,
 		},
 	}
 	scenario.Tags = []string{scenario.Group}

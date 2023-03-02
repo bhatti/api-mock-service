@@ -8,7 +8,7 @@ import (
 // MockScenarioRepository defines data store for mock-scenarios
 type MockScenarioRepository interface {
 	// GetGroups returns mock scenarios groups
-	GetGroups() ([]string, error)
+	GetGroups() []string
 
 	// GetScenariosNames returns mock scenarios for given Method and Path
 	GetScenariosNames(

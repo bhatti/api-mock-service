@@ -166,34 +166,33 @@ func (x *Executor) execute(
 	if resBytes, resBody, err = utils.ReadAll(resBody); err != nil {
 		return nil, fmt.Errorf("failed to read response body for %s due to %w", scenario.Name, err)
 	}
-
-	if statusCode >= 300 {
-		log.WithFields(log.Fields{
-			"Component":  "Tester",
-			"URL":        url,
-			"Scenario":   scenario,
-			"StatusCode": statusCode,
-			"Elapsed":    elapsed,
-			"Request":    reqContents,
-			"Response":   string(resBytes)}).Warnf("failed to execute request")
-		return nil, fmt.Errorf("failed to execute request with status %d due to %s", statusCode, resBytes)
-	}
-
+	fields := log.Fields{
+		"Component":  "Tester",
+		"URL":        url,
+		"Scenario":   scenario,
+		"StatusCode": statusCode,
+		"Elapsed":    elapsed}
 	var resContents any
-	if resContents, err = updateTemplateParams(templateParams, scenario, resBytes, resHeaders, statusCode); err != nil {
+	if resContents, err = updateTemplateParams(templateParams, scenario, resBytes, resHeaders, statusCode, elapsed); err != nil {
 		return nil, err
 	}
 
 	if contractRequest.Verbose {
-		log.WithFields(log.Fields{
-			"Component":  "Tester",
-			"URL":        url,
-			"Scenario":   scenario,
-			"StatusCode": statusCode,
-			"Elapsed":    elapsed,
-			"Request":    reqContents,
-			"Headers":    reqHeaders,
-			"Response":   resContents}).Infof("executed request")
+		fields["Request"] = reqContents
+		fields["Headers"] = reqHeaders
+		fields["Response"] = resContents
+		fields["ResponseBytes"] = resBytes
+	}
+
+	if statusCode != scenario.Response.StatusCode {
+		log.WithFields(fields).Warnf("failed to execute request, status %d != %d for %s",
+			statusCode, scenario.Response.StatusCode, scenario.Path)
+		return nil, fmt.Errorf("failed to execute request with status %d didn't match expected value %d for %s (%s)",
+			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
+	}
+
+	if contractRequest.Verbose {
+		log.WithFields(fields).Infof("executed request")
 	}
 
 	for k, v := range scenario.Response.AssertHeadersPattern {
@@ -220,14 +219,7 @@ func (x *Executor) execute(
 		}
 		err = fuzz.ValidateRegexMap(resContents, regex)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"Component":  "Tester",
-				"URL":        url,
-				"Scenario":   scenario,
-				"StatusCode": statusCode,
-				"Elapsed":    elapsed,
-				"Request":    reqContents,
-				"Response":   resContents}).Warnf("failed to validate resposne")
+			log.WithFields(fields).Warnf("failed to validate resposne")
 			return nil, fmt.Errorf("failed to validate response due to %w", err)
 		}
 	}
@@ -240,23 +232,12 @@ func (x *Executor) execute(
 		}
 
 		if contractRequest.Verbose {
-			log.WithFields(log.Fields{
-				"Component":  "Tester",
-				"URL":        url,
-				"Scenario":   scenario,
-				"StatusCode": statusCode,
-				"Assertion":  assertion,
-				"Elapsed":    elapsed,
-				"Params":     templateParams,
-				"Request":    reqContents,
-				"Header":     reqHeaders,
-				"Response":   resContents,
-				"Output":     string(b)}).Infof("asserted test")
+			log.WithFields(fields).Infof("asserted test")
 		}
 
 		if string(b) != "true" {
-			return nil, fmt.Errorf("failed to assert '%s' with value '%s'",
-				assertion, b)
+			return nil, fmt.Errorf("failed to assert '%s' with value '%s', params: %v",
+				assertion, b, templateParams)
 		}
 	}
 
@@ -303,7 +284,8 @@ func updateTemplateParams(
 	scenario *types.MockScenario,
 	resBytes []byte,
 	resHeaders map[string][]string,
-	statusCode int) (any, error) {
+	statusCode int,
+	elapsed int64) (any, error) {
 	templateParams[fuzz.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
 	contents, err := fuzz.UnmarshalArrayOrObject(resBytes)
 	if err != nil {
@@ -318,6 +300,7 @@ func updateTemplateParams(
 	}
 	templateParams["headers"] = flatHeaders
 	templateParams["status"] = statusCode
+	templateParams["elapsed"] = elapsed
 	return contents, nil
 }
 

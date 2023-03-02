@@ -26,6 +26,7 @@ type FileMockScenarioRepository struct {
 	mutex            sync.RWMutex
 	dir              string
 	keysByMethodPath map[string]map[string]*types.MockScenarioKeyData
+	debug            bool
 }
 
 // NewFileMockScenarioRepository creates new instance for mock scenarios
@@ -38,6 +39,7 @@ func NewFileMockScenarioRepository(
 	repo = &FileMockScenarioRepository{
 		dir:              config.DataDir,
 		keysByMethodPath: make(map[string]map[string]*types.MockScenarioKeyData),
+		debug:            config.Debug,
 	}
 
 	err = repo.visit(func(keyData *types.MockScenarioKeyData) bool {
@@ -57,11 +59,12 @@ func NewFileMockScenarioRepository(
 }
 
 // GetGroups returns mock scenarios groups
-func (sr *FileMockScenarioRepository) GetGroups() (res []string, err error) {
+func (sr *FileMockScenarioRepository) GetGroups() (res []string) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
+	res = make([]string, 0)
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if keyData.Group != "" {
@@ -232,7 +235,7 @@ func (sr *FileMockScenarioRepository) LookupAll(
 			res = append(res, keyData)
 		} else {
 			var validationError *types.ValidationError
-			if errors.As(err, &validationError) {
+			if errors.As(err, &validationError) && sr.debug {
 				paramMismatchErrors++
 				log.WithFields(log.Fields{
 					"Other":          other.String(),

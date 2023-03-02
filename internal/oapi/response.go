@@ -1,6 +1,7 @@
 package oapi
 
 import (
+	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 		return
 	}
 	res.Headers = append(res.Headers, Property{
-		Name:    "Content-Type",
+		Name:    types.ContentTypeHeader,
 		Type:    "string",
 		Pattern: res.ContentType,
 	})
@@ -46,11 +47,22 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 	if err != nil {
 		return
 	}
+	assertions := []string{
+		`ResponseTimeMillisLE 5000`,
+		fmt.Sprintf(`ResponseStatusMatches %d`, res.StatusCode),
+	}
+	respHeaderAssertions := make(map[string]string)
+	if res.ContentType != "" {
+		assertions = append(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`, res.ContentType))
+		respHeaderAssertions[types.ContentTypeHeader] = res.ContentType
+	}
 	return types.MockHTTPResponse{
 		StatusCode:            res.StatusCode,
 		Headers:               propsToMapArray(res.Headers, dataTemplate.WithInclude(false)),
 		Contents:              string(strippedContents),
 		ExampleContents:       string(exampleContents),
+		AssertHeadersPattern:  respHeaderAssertions,
 		AssertContentsPattern: matchContents,
+		Assertions:            assertions,
 	}, nil
 }
