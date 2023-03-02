@@ -189,7 +189,7 @@ func (msd *MockScenarioKeyData) Validate() error {
 	if len(msd.Name) > 200 {
 		return fmt.Errorf("key scenario name is too long %d", len(msd.Name))
 	}
-	if matched, err := regexp.Match(`^[\w\d-_]+\.?[\w\d-_]+$`, []byte(msd.Name)); err == nil && !matched {
+	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(msd.Name)); err == nil && !matched {
 		return fmt.Errorf("key scenario name is invalid with special characters %s", msd.Name)
 	}
 	return nil
