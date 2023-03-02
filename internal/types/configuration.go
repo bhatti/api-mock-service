@@ -31,6 +31,7 @@ type Configuration struct {
 	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of mock scenario
 	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
 	Debug                    bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
+	CORS                     string `yaml:"cors" mapstructure:"cors" env:"MOCK_CORS"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 	// AWSConfig
@@ -102,6 +103,12 @@ func NewConfiguration(
 	}
 	if os.Getenv("AWS_RESIGN_ONLY_EXPIRED") != "" {
 		config.AWS.ResignOnlyExpiredDate = os.Getenv("AWS_RESIGN_ONLY_EXPIRED") == "true"
+	}
+	if os.Getenv("MOCK_CORS") != "" {
+		config.CORS = os.Getenv("MOCK_CORS")
+	}
+	if config.CORS == "" {
+		config.CORS = "*"
 	}
 
 	config.Version = version

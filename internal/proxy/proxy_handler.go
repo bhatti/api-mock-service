@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"bytes"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -16,9 +15,8 @@ import (
 	"net/http"
 )
 
-var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
-
-var noProxyClient = &http.Client{Transport: &http.Transport{TLSClientConfig: acceptAllCerts}}
+//var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
+//var noProxyClient = &http.Client{Transport: &http.Transport{TLSClientConfig: acceptAllCerts}}
 
 // Handler structure
 type Handler struct {
@@ -232,6 +230,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	}
 	resp.Body = io.NopCloser(bytes.NewReader(resBytes))
 	resp.Header[types.ContentTypeHeader] = []string{resContentType}
+	resp.Header["Access-Control-Allow-Origin"] = []string{h.config.CORS}
 	log.WithFields(log.Fields{
 		"Response": resp,
 		"Length":   len(resBytes),
