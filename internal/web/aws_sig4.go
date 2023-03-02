@@ -21,6 +21,30 @@ const amzDate = "X-Amz-Date"
 type awsLoggerAdapter struct {
 }
 
+var ignoredHeaders = map[string]struct{}{
+	Authorization:     {},
+	"User-Agent":      {},
+	"Content-Length":  {},
+	"Accept-Encoding": {},
+	"X-Amzn-Trace-Id": {},
+}
+
+// requiredSignedHeaders is a allow list for build canonical headers.
+var requiredSignedHeaders = map[string]struct{}{
+	"Cache-Control":       {},
+	"Content-Disposition": {},
+	"Content-Encoding":    {},
+	"Content-Language":    {},
+	"Content-Md5":         {},
+	"Content-Type":        {},
+	"Expires":             {},
+	"If-Match":            {},
+	"If-Modified-Since":   {},
+	"If-None-Match":       {},
+	"If-Unmodified-Since": {},
+	"Range":               {},
+}
+
 // Log implements aws.Logger.Log
 func (awsLoggerAdapter) Log(args ...interface{}) {
 	log.Info(args...)
@@ -73,6 +97,10 @@ func (s *awsSigner) AWSSign(req *http.Request, awsCred *credentials.Credentials)
 	for _, header := range s.awsConfig.StripRequestHeaders {
 		log.WithField("StripHeader", header).Debug("Stripping Header:")
 		req.Header.Del(header)
+	}
+	for name := range ignoredHeaders {
+		log.WithField("StripHeader", name).Debug("Stripping Header:")
+		req.Header.Del(name)
 	}
 
 	signer := v4.NewSigner(awsCred, func(s *v4.Signer) {})
@@ -180,7 +208,6 @@ func (s *awsSigner) sign(req *http.Request, service *endpoints.ResolvedEndpoint,
 		signer.Debug = aws.LogDebugWithSigning
 		signer.Logger = awsLoggerAdapter{}
 	}
-
 	_, err = signer.Sign(req, body, service.SigningName, service.SigningRegion, time.Now())
 
 	return err

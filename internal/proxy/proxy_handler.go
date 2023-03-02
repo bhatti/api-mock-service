@@ -79,7 +79,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Method": req.Method,
 			"Error":  err,
 		}).Warnf("proxy server failed to read request body in handl-request")
-		return nil, nil, err
+		return req, nil, err
 	}
 
 	switch req.Body.(type) {
