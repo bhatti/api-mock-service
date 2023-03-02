@@ -65,10 +65,12 @@ func (sr *FileMockScenarioRepository) GetGroups() (res []string) {
 		sr.mutex.RUnlock()
 	}()
 	res = make([]string, 0)
+	dupes := make(map[string]bool)
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
-			if keyData.Group != "" {
+			if keyData.Group != "" && !dupes[keyData.Group] {
 				res = append(res, keyData.Group)
+				dupes[keyData.Group] = true
 			}
 		}
 	}
