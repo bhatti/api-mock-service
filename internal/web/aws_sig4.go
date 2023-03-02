@@ -22,11 +22,20 @@ type awsLoggerAdapter struct {
 }
 
 var ignoredHeaders = map[string]struct{}{
-	Authorization:     {},
-	"User-Agent":      {},
-	"Content-Length":  {},
-	"Accept-Encoding": {},
-	"X-Amzn-Trace-Id": {},
+	Authorization:             {},
+	"User-Agent":              {},
+	"Content-Length":          {},
+	"Accept":                  {},
+	"Accept-Language":         {},
+	"Accept-Encoding":         {},
+	"Connection":              {},
+	"Origin":                  {},
+	"Referer":                 {},
+	"Host":                    {},
+	"X-Amzn-Trace-Id":         {},
+	"X-Requested-With":        {},
+	"X-Amz-Requestsupertrace": {},
+	"X-Amz-Security-Token":    {},
 }
 
 // requiredSignedHeaders is a allow list for build canonical headers.
