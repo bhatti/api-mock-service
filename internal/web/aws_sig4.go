@@ -29,6 +29,7 @@ var ignoredHeaders = map[string]struct{}{
 	"Accept-Language":         {},
 	"Accept-Encoding":         {},
 	"Connection":              {},
+	"Proxy-Connection":        {},
 	"Origin":                  {},
 	"Referer":                 {},
 	"Host":                    {},
