@@ -13,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"reflect"
 )
 
 // Handler structure
@@ -73,7 +72,6 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		log.WithFields(log.Fields{
 			"Path":   req.URL,
 			"Method": req.Method,
-			"Type":   reflect.TypeOf(req.Body).String(),
 			"Error":  err,
 		}).Warnf("proxy server failed to read request body in handl-request")
 		return nil, nil, err
@@ -90,7 +88,6 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Path":      req.URL,
 			"Method":    req.Method,
 			"Headers":   req.Header,
-			"Type":      reflect.TypeOf(req.Body).String(),
 		}).Infof("proxy server skipped local lookup due to record-mode")
 		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
@@ -203,7 +200,6 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 		log.WithFields(log.Fields{
 			"Path":   resp.Request.URL,
 			"Method": resp.Request.Method,
-			"Type":   reflect.TypeOf(resp.Request.Body).String(),
 			"Error":  err,
 		}).Warnf("proxy server failed to read request body in handle-response")
 		return resp, err
@@ -215,7 +211,6 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 		log.WithFields(log.Fields{
 			"Path":   resp.Request.URL,
 			"Method": resp.Request.Method,
-			"Type":   reflect.TypeOf(resp.Body).String(),
 			"Error":  err,
 		}).Warnf("proxy server failed to read response body in handle-response")
 		return resp, err
