@@ -42,9 +42,10 @@ type Configuration struct {
 type AWSConfig struct {
 	StripRequestHeaders   []string `yaml:"strip" mapstructure:"strip" env:"AWS_STRIP_HEADERS"`
 	SigningNameOverride   string   `yaml:"name" mapstructure:"name" env:"AWS_SIGNING_NAME"`
-	SigningHostOverride   string   `yaml:"sign-host" mapstructure:"sign-host" env:"AWS_SIGN_HOST"`
+	SigningRegionOverride string   `yaml:"aws_region" mapstructure:"aws_region" env:"AWS_REGION"`
+	SigningHostOverride   string   `yaml:"sign_host" mapstructure:"sign_host" env:"AWS_SIGN_HOST"`
 	HostOverride          string   `yaml:"host" mapstructure:"host" env:"AWS_HOST"`
-	RegionOverride        string   `yaml:"region" mapstructure:"region" env:"AWS_REGION"`
+	ResignAllRequests     bool     `yaml:"resign_all_requests" mapstructure:"resign_all_requests" env:"AWS_RESIGN_ALL_REQUESTS"`
 	ResignOnlyExpiredDate bool     `yaml:"resign_only_expired_date" mapstructure:"resign_only_expired_date" env:"AWS_RESIGN_ONLY_EXPIRED"`
 	Debug                 bool     `yaml:"debug" mapstructure:"debug" env:"AWS_DEBUG"`
 }
@@ -109,6 +110,15 @@ func NewConfiguration(
 	}
 	if config.CORS == "" {
 		config.CORS = "*"
+	}
+	if os.Getenv("AWS_REGION") != "" {
+		config.AWS.SigningRegionOverride = os.Getenv("AWS_REGION")
+	}
+	if os.Getenv("AWS_SIGNING_NAME") != "" {
+		config.AWS.SigningNameOverride = os.Getenv("AWS_SIGNING_NAME")
+	}
+	if os.Getenv("AWS_RESIGN_ALL_REQUESTS") != "" {
+		config.AWS.ResignAllRequests = os.Getenv("AWS_RESIGN_ALL_REQUESTS") == "true"
 	}
 
 	config.Version = version
