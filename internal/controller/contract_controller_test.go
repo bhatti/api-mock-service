@@ -26,11 +26,12 @@ func Test_InitializeSwaggerStructsForMockContractScenarioController(t *testing.T
 }
 
 func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)
@@ -45,11 +46,12 @@ func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
 }
 
 func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)
@@ -72,11 +74,12 @@ func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 }
 
 func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)
@@ -100,8 +103,9 @@ func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 }
 
 func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -117,7 +121,7 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 }
 `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)
@@ -147,8 +151,9 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	_, err = saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -157,7 +162,7 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 	client := web.NewStubHTTPClient()
 	todo := ` { } `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)
@@ -187,8 +192,9 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	_, err = saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -204,7 +210,7 @@ func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 }
 `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)
@@ -236,8 +242,9 @@ func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -256,7 +263,7 @@ func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 }
 `
 	client.AddMapping("GET", "https://localhost/todos/10", web.NewStubHTTPResponse(200, todo))
-	executor := contract.NewExecutor(mockScenarioRepository, client)
+	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
 	ctrl := NewContractController(executor, webServer)

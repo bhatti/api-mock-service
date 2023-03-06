@@ -25,11 +25,13 @@ func Test_InitializeSwaggerStructsForMockScenarioController(t *testing.T) {
 	_ = mockScenarioResponseBody{}
 	_ = mockScenarioIDParams{}
 	_ = mockScenarioPathsResponseBody{}
+	_ = mockHistoryResponseBody{}
 }
 
 func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -57,8 +59,9 @@ func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
 }
 
 func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -86,9 +89,36 @@ func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
 	require.Error(t, err)
 }
 
-func Test_ShouldGetScenarioGroups(t *testing.T) {
+func Test_ShouldGetScenarioHistory(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	webServer := web.NewStubWebServer()
+	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	data := []byte("test data")
+	require.NoError(t, err)
+	reader := io.NopCloser(bytes.NewReader(data))
+	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
+	require.NoError(t, err)
+	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
+	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+	scenario := buildScenario(types.Post, "test1", "/path1", 1)
+	err = mockScenarioRepository.SaveHistory(scenario)
+	require.NoError(t, err)
+
+	// WHEN getting mock scenario groups
+	err = ctrl.mockScenarioHistory(ctx)
+	// THEN it should not fail
+	require.NoError(t, err)
+	names := ctx.Result.([]string)
+	require.True(t, len(names) > 0)
+}
+
+func Test_ShouldGetScenarioGroups(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -109,8 +139,9 @@ func Test_ShouldGetScenarioGroups(t *testing.T) {
 }
 
 func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -139,8 +170,9 @@ func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
 }
 
 func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -168,8 +200,9 @@ func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
 }
 
 func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -213,8 +246,9 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 }
 
 func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -249,8 +283,9 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 }
 
 func Test_ShouldCreateAndGetMockNames(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -285,8 +320,9 @@ func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 }
 
 func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
@@ -323,8 +359,9 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 }
 
 func Test_ShouldListMockScenario(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)

@@ -16,16 +16,18 @@
 <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"></script>
 <script src="./swagger-initializer.js" charset="UTF-8"></script>
 <script>
-  function updateFormInput(form, val) {
-    if (val === '') {
+  function updateFormInput(form, val, num) {
+    if (val === "") {
       val = "_internal";
     }
-    const input = form.elements[1];
-    const ndx = input.value.indexOf('_oapi');
+    const input = form.elements[2];
+    const ndx = input.value.indexOf("_oapi");
     if (ndx === -1) {
       return;
     }
-    window.ui.url = input.value = input.value.substring(0, ndx) + '_oapi/' + val;
+    form.elements[num].value = '';
+
+    window.ui.url = input.value = input.value.substring(0, ndx) + "_oapi/" + val;
     window.ui.specActions.updateUrl(window.ui.url);
     window.ui.specActions.download(window.ui.url);
   }
@@ -36,29 +38,66 @@
     }
     const form = document.forms[0];
     const input = form.elements[0];
-    input.style.width = '70%';
+    input.style.width = "50%";
 
-    const url = location.protocol + "//" + location.host + "/_scenarios/groups";
-    const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-    const s = document.createElement("select");
-    s.style.width = '35%';
-    s.setAttribute("onchange", "updateFormInput(this.form, this.value)");
-    form.insertBefore(s, input);
+    const groupsSelect = document.createElement("select");
+    groupsSelect.style.width = "25%";
+    groupsSelect.setAttribute("onchange", "updateFormInput(this.form, this.value, 1)");
+    form.insertBefore(groupsSelect, input);
 
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        const opts = JSON.parse(xhr.responseText);
-        opts.unshift('');
+    const historySelect = document.createElement("select");
+    historySelect.style.width = "25%";
+    historySelect.setAttribute("onchange", "updateFormInput(this.form, this.value, 0)");
+    form.insertBefore(historySelect, input);
+
+    const xhr1 = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    xhr1.onreadystatechange = function () {
+      if (xhr1.readyState === 4 && xhr1.status === 200) {
+        const opts = JSON.parse(xhr1.responseText);
+        if (opts.length > 0) {
+          opts.unshift("");
+        } else {
+          opts.push('');
+        }
         for (let i = 0; i < opts.length; i++) {
           const opt = document.createElement("option");
-          opt.innerHTML = opts[i] === '' ? 'Select API group' : opts[i];
+          opt.innerHTML = opts[i] === "" ? "Select API group" : opts[i];
           opt.value = opts[i];
-          s.appendChild(opt);
+          groupsSelect.appendChild(opt);
         }
       }
     }
-    xhr.open("GET", url, true);
-    xhr.send();
+
+    xhr1.open("GET", location.protocol + "//" + location.host + "/_scenarios/groups", true);
+    xhr1.send();
+    const xhr2 = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    xhr2.onreadystatechange = function () {
+      if (xhr2.readyState === 4 && xhr2.status === 200) {
+        const opts = JSON.parse(xhr2.responseText);
+        if (opts.length > 0) {
+          opts.unshift("");
+        } else {
+          opts.push('');
+        }
+        while (historySelect.firstChild) {
+          historySelect.removeChild(historySelect.lastChild);
+        }
+        for (let i = 0; i < opts.length; i++) {
+          const opt = document.createElement("option");
+          opt.innerHTML = opts[i] === "" ? "Select Execution History" : opts[i];
+          opt.value = opts[i] === "" ? "" : "history/" + opts[i];
+          historySelect.appendChild(opt);
+        }
+      }
+    }
+    xhr2.open("GET", location.protocol + "//" + location.host + "/_scenarios/history", true);
+    xhr2.send();
+    window.ui.specActions._setResponse = window.ui.specActions.setResponse
+    window.ui.specActions.setResponse = function(path, method, t) {
+      window.ui.specActions._setResponse(path, method, t);
+      xhr2.open("GET", location.protocol + "//" + location.host + "/_scenarios/history", true);
+      xhr2.send();
+    };
   });
 </script>
 </body>

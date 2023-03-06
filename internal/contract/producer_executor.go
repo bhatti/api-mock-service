@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/metrics"
 	"io"
-	"os"
-	"regexp"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
@@ -22,25 +21,26 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Executor structure
-type Executor struct {
+// ProducerExecutor structure
+type ProducerExecutor struct {
 	scenarioRepository repository.MockScenarioRepository
 	client             web.HTTPClient
 }
 
-// NewExecutor instantiates controller for updating mock-scenarios
-func NewExecutor(
+// NewProducerExecutor executes contracts for producers
+func NewProducerExecutor(
 	scenarioRepository repository.MockScenarioRepository,
-	client web.HTTPClient) *Executor {
-	return &Executor{
+	client web.HTTPClient) *ProducerExecutor {
+	return &ProducerExecutor{
 		scenarioRepository: scenarioRepository,
 		client:             client,
 	}
 }
 
 // Execute an API with mock data
-func (x *Executor) Execute(
+func (x *ProducerExecutor) Execute(
 	ctx context.Context,
+	req *http.Request,
 	scenarioKey *types.MockScenarioKeyData,
 	dataTemplate fuzz.DataTemplateRequest,
 	contractReq types.ContractRequest,
@@ -63,7 +63,7 @@ func (x *Executor) Execute(
 			return res
 		}
 		url := scenario.BuildURL(contractReq.BaseURL)
-		resContents, err := x.execute(ctx, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
+		resContents, err := x.execute(ctx, req, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
 		res.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
@@ -82,8 +82,9 @@ func (x *Executor) Execute(
 }
 
 // ExecuteByGroup an API with mock data
-func (x *Executor) ExecuteByGroup(
+func (x *ProducerExecutor) ExecuteByGroup(
 	ctx context.Context,
+	req *http.Request,
 	group string,
 	dataTemplate fuzz.DataTemplateRequest,
 	contractReq types.ContractRequest,
@@ -115,7 +116,7 @@ func (x *Executor) ExecuteByGroup(
 				return res
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := x.execute(ctx, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
+			resContents, err := x.execute(ctx, req, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
 			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
@@ -136,8 +137,9 @@ func (x *Executor) ExecuteByGroup(
 }
 
 // execute an API with mock data
-func (x *Executor) execute(
+func (x *ProducerExecutor) execute(
 	ctx context.Context,
+	req *http.Request,
 	url string,
 	scenario *types.MockScenario,
 	overrides map[string]any,
@@ -146,14 +148,31 @@ func (x *Executor) execute(
 	metrics *metrics.Metrics,
 ) (res any, err error) {
 	started := time.Now().UnixMilli()
-	templateParams, queryParams, reqHeaders := buildTemplateParams(scenario, overrides, contractRequest.Verbose)
+	templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
+		req,
+		scenario.ToKeyData().MatchGroups(scenario.Path),
+		overrides,
+		contractRequest.Verbose)
 	if fuzz.RandIntMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandIntMinMax(2, 5))
 	}
 	for k, v := range templateParams {
 		url = strings.ReplaceAll(url, "{"+k+"}", fmt.Sprintf("%v", v))
 	}
-	reqContents, reqBody := buildRequestBody(scenario)
+
+	reqBodyStr, reqBody := buildRequestBody(scenario)
+
+	{
+		// check request assertions
+		reqContents, err := fuzz.UnmarshalArrayOrObject([]byte(reqBodyStr))
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", scenario.Name, err)
+		}
+
+		if err = scenario.Request.Assert(queryParams, reqHeaders, reqContents, templateParams); err != nil {
+			return nil, err
+		}
+	}
 
 	statusCode, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
@@ -162,26 +181,34 @@ func (x *Executor) execute(
 	if err != nil {
 		return nil, fmt.Errorf("failed to invoke %s for %s (%s) due to %w", scenario.Name, url, scenario.Method, err)
 	}
+
 	var resBytes []byte
 	if resBytes, resBody, err = utils.ReadAll(resBody); err != nil {
 		return nil, fmt.Errorf("failed to read response body for %s due to %w", scenario.Name, err)
 	}
+
 	fields := log.Fields{
 		"Component":  "Tester",
 		"URL":        url,
 		"Scenario":   scenario,
 		"StatusCode": statusCode,
 		"Elapsed":    elapsed}
-	var resContents any
-	if resContents, err = updateTemplateParams(templateParams, scenario, resBytes, resHeaders, statusCode, elapsed); err != nil {
-		return nil, err
+
+	// response contents
+	resContents, err := fuzz.UnmarshalArrayOrObject(resBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response for %s due to %w", scenario.Name, err)
 	}
 
+	templateParams[fuzz.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
+	templateParams["status"] = statusCode
+	templateParams["elapsed"] = elapsed
+
 	if contractRequest.Verbose {
-		fields["Request"] = reqContents
+		fields["Request"] = reqBodyStr
 		fields["Headers"] = reqHeaders
 		fields["Response"] = resContents
-		fields["ResponseBytes"] = resBytes
+		fields["ResponseBytes"] = string(resBytes)
 	}
 
 	if statusCode != scenario.Response.StatusCode {
@@ -194,51 +221,8 @@ func (x *Executor) execute(
 	if contractRequest.Verbose {
 		log.WithFields(fields).Infof("executed request")
 	}
-
-	for k, v := range scenario.Response.AssertHeadersPattern {
-		actualHeader := resHeaders[k]
-		if len(actualHeader) == 0 {
-			return nil, fmt.Errorf("failed to find required header %s with regex %s", k, v)
-		}
-		match, err := regexp.MatchString(v, actualHeader[0])
-		if err != nil {
-			return nil, fmt.Errorf("failed to fuzz required header %s with regex %s and actual value %s due to %w",
-				k, v, actualHeader[0], err)
-		}
-		if !match {
-			return nil, fmt.Errorf("didn't match required header %s with regex %s and actual value %s",
-				k, v, actualHeader[0])
-		}
-	}
-
-	if scenario.Response.AssertContentsPattern != "" {
-		regex := make(map[string]string)
-		err := json.Unmarshal([]byte(scenario.Response.AssertContentsPattern), &regex)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal response '%s' regex due to %w", scenario.Response.AssertContentsPattern, err)
-		}
-		err = fuzz.ValidateRegexMap(resContents, regex)
-		if err != nil {
-			log.WithFields(fields).Warnf("failed to validate resposne")
-			return nil, fmt.Errorf("failed to validate response due to %w", err)
-		}
-	}
-
-	for _, assertion := range scenario.Response.Assertions {
-		assertion = normalizeAssertion(assertion)
-		b, err := fuzz.ParseTemplate("", []byte(assertion), templateParams)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse assertion %s due to %w", assertion, err)
-		}
-
-		if contractRequest.Verbose {
-			log.WithFields(fields).Infof("asserted test")
-		}
-
-		if string(b) != "true" {
-			return nil, fmt.Errorf("failed to assert '%s' with value '%s', params: %v",
-				assertion, b, templateParams)
-		}
+	if err = scenario.Response.Assert(resHeaders, resContents, templateParams); err != nil {
+		return nil, err
 	}
 
 	if resContents != nil {
@@ -259,49 +243,6 @@ func (x *Executor) execute(
 		resContents = pipeProperties
 	}
 	return resContents, nil
-}
-
-func normalizeAssertion(assertion string) string {
-	if !strings.HasPrefix(assertion, "{{") {
-		parts := strings.Split(assertion, " ")
-		var sb strings.Builder
-		sb.WriteString("{{")
-		for i, next := range parts {
-			if i > 0 {
-				sb.WriteString(fmt.Sprintf(` "%s"`, next))
-			} else {
-				sb.WriteString(next)
-			}
-		}
-		sb.WriteString("}}")
-		assertion = sb.String()
-	}
-	return assertion
-}
-
-func updateTemplateParams(
-	templateParams map[string]any,
-	scenario *types.MockScenario,
-	resBytes []byte,
-	resHeaders map[string][]string,
-	statusCode int,
-	elapsed int64) (any, error) {
-	templateParams[fuzz.RequestCount] = fmt.Sprintf("%d", scenario.RequestCount)
-	contents, err := fuzz.UnmarshalArrayOrObject(resBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response for %s due to %w", scenario.Name, err)
-	}
-	if contents != nil {
-		templateParams["contents"] = contents
-	}
-	flatHeaders := make(map[string]string)
-	for k, v := range resHeaders {
-		flatHeaders[k] = v[0]
-	}
-	templateParams["headers"] = flatHeaders
-	templateParams["status"] = statusCode
-	templateParams["elapsed"] = elapsed
-	return contents, nil
 }
 
 func buildRequestBody(
@@ -336,59 +277,4 @@ func buildRequestBody(
 		return "", nil
 	}
 	return string(j), io.NopCloser(bytes.NewReader(j))
-}
-
-func buildTemplateParams(
-	scenario *types.MockScenario,
-	overrides map[string]any,
-	verbose bool,
-) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
-	templateParams = make(map[string]any)
-	queryParams = make(map[string]string)
-	reqHeaders = make(map[string][]string)
-	if verbose {
-		reqHeaders["X-Verbose"] = []string{"true"}
-	}
-	for _, env := range os.Environ() {
-		parts := strings.Split(env, "=")
-		if len(parts) == 2 {
-			templateParams[parts[0]] = parts[1]
-		}
-	}
-	for k, v := range scenario.Request.PathParams {
-		templateParams[k] = fuzz.StripTypeTags(v)
-		queryParams[k] = fuzz.StripTypeTags(v)
-	}
-	for k, v := range scenario.Request.AssertQueryParamsPattern {
-		templateParams[k] = regexValue(v)
-		queryParams[k] = regexValue(v)
-	}
-	for k, v := range scenario.Request.QueryParams {
-		templateParams[k] = fuzz.StripTypeTags(v)
-		queryParams[k] = fuzz.StripTypeTags(v)
-	}
-	for k, v := range scenario.Request.AssertHeadersPattern {
-		templateParams[k] = regexValue(v)
-		reqHeaders[k] = []string{regexValue(v)}
-	}
-	for k, v := range scenario.Request.Headers {
-		templateParams[k] = fuzz.StripTypeTags(v)
-		reqHeaders[k] = []string{fuzz.StripTypeTags(v)}
-	}
-	// Find any params for query params and path variables
-	for k, v := range scenario.ToKeyData().MatchGroups(scenario.Path) {
-		templateParams[k] = v
-	}
-	for k, v := range overrides {
-		templateParams[k] = v
-		queryParams[k] = fmt.Sprintf("%v", v)
-	}
-	return
-}
-
-func regexValue(val string) string {
-	if strings.HasPrefix(val, "__") || strings.HasPrefix(val, "(") {
-		return fuzz.RandRegex(val)
-	}
-	return fuzz.StripTypeTags(val)
 }

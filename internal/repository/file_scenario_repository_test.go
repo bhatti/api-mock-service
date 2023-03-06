@@ -20,7 +20,7 @@ const mockPath = "//abc//\\def/123/"
 
 func Test_ShouldRawSaveAndLoadMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND mock scenario
 	scenario := buildScenario(types.Post, "test1", mockPath, 10)
@@ -39,7 +39,7 @@ func Test_ShouldRawSaveAndLoadMockScenarios(t *testing.T) {
 
 func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND mock scenario
 	scenario := buildScenario(types.Post, "test1", mockPath, 10)
@@ -56,7 +56,7 @@ func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 
 func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND mock scenario
 	scenario := buildScenario(types.Post, "test1", mockPath, 20)
@@ -81,7 +81,7 @@ func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 
 func Test_ShouldListMockScenariosGroups(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -97,7 +97,7 @@ func Test_ShouldListMockScenariosGroups(t *testing.T) {
 
 func Test_ShouldListMockScenariosByPath(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -115,7 +115,7 @@ func Test_ShouldListMockScenariosByPath(t *testing.T) {
 
 func Test_ShouldListMockScenariosNames(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -135,7 +135,7 @@ func Test_ShouldListMockScenariosNames(t *testing.T) {
 
 func Test_ShouldLookupAllByGroup(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -157,7 +157,7 @@ func Test_ShouldLookupAllByGroup(t *testing.T) {
 
 func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -254,7 +254,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 
 func Test_ShouldListMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -286,7 +286,7 @@ func Test_ShouldListMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -369,7 +369,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -452,7 +452,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -522,7 +522,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
@@ -612,6 +612,31 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		},
 	}, make(map[string]any))
 	require.NoError(t, err)
+}
+
+func Test_ShouldLoadSaveMockScenariosHistory(t *testing.T) {
+	// GIVEN a mock scenario repository
+	repo, err := NewFileMockScenarioRepository(buildTestConfig())
+	require.NoError(t, err)
+	// AND a set of mock scenarios
+	for i := 0; i < 10; i++ {
+		scenario := buildScenario(types.Post, fmt.Sprintf("history_%d", i), mockPath, 30)
+		scenario.Group = fmt.Sprintf("history-group-%v", i%2 == 0)
+		scenario.Path = fmt.Sprintf("/api/v1/%d", i)
+		err = repo.SaveHistory(scenario)
+		require.NoError(t, err)
+	}
+	names := repo.HistoryNames()
+	require.Equal(t, 5, len(names))
+	for _, name := range names {
+		scenario, err := repo.LoadHistory(name)
+		require.NoError(t, err)
+		require.Contains(t, name, scenario.Name)
+	}
+}
+
+func buildTestConfig() *types.Configuration {
+	return &types.Configuration{DataDir: "../../mock_tests", HistoryDir: "../../mock_history", MaxHistory: 5}
 }
 
 func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {

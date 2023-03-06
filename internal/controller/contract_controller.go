@@ -15,12 +15,12 @@ import (
 
 // ContractController structure for producer driven contracts
 type ContractController struct {
-	executor *contract.Executor
+	executor *contract.ProducerExecutor
 }
 
 // NewContractController instantiates controller for executing contract client
 func NewContractController(
-	executor *contract.Executor,
+	executor *contract.ProducerExecutor,
 	webserver web.Server) *ContractController {
 	ctrl := &ContractController{
 		executor: executor,
@@ -49,7 +49,7 @@ func (mcc *ContractController) PostMockContractGroupScenario(c web.APIContext) (
 		return err
 	}
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
-	res := mcc.executor.ExecuteByGroup(context.Background(), group, dataTemplate, contractReq)
+	res := mcc.executor.ExecuteByGroup(context.Background(), c.Request(), group, dataTemplate, contractReq)
 	return c.JSON(http.StatusOK, res)
 }
 
@@ -89,7 +89,7 @@ func (mcc *ContractController) PostMockContractScenario(c web.APIContext) (err e
 		return err
 	}
 	dataTemplate := fuzz.NewDataTemplateRequest(true, 1, 1)
-	res := mcc.executor.Execute(context.Background(), keyData, dataTemplate, contractReq)
+	res := mcc.executor.Execute(context.Background(), c.Request(), keyData, dataTemplate, contractReq)
 	return c.JSON(http.StatusOK, res)
 }
 

@@ -225,5 +225,8 @@ func saveMockResponse(
 	if err = mockScenarioRepository.Save(scenario); err != nil {
 		return "", err
 	}
+	if err = mockScenarioRepository.SaveHistory(scenario); err != nil {
+		return "", err
+	}
 	return
 }

@@ -7,7 +7,6 @@ import (
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,9 +23,8 @@ import (
 // FileMockScenarioRepository  implements mock scenario storage based on local files
 type FileMockScenarioRepository struct {
 	mutex            sync.RWMutex
-	dir              string
+	config           *types.Configuration
 	keysByMethodPath map[string]map[string]*types.MockScenarioKeyData
-	debug            bool
 }
 
 // NewFileMockScenarioRepository creates new instance for mock scenarios
@@ -36,10 +34,12 @@ func NewFileMockScenarioRepository(
 	if err = mkdir(config.DataDir); err != nil {
 		return nil, err
 	}
+	if err = mkdir(config.HistoryDir); err != nil {
+		return nil, err
+	}
 	repo = &FileMockScenarioRepository{
-		dir:              config.DataDir,
+		config:           config,
 		keysByMethodPath: make(map[string]map[string]*types.MockScenarioKeyData),
-		debug:            config.Debug,
 	}
 
 	err = repo.visit(func(keyData *types.MockScenarioKeyData) bool {
@@ -84,9 +84,11 @@ func (sr *FileMockScenarioRepository) GetGroups() (res []string) {
 func (sr *FileMockScenarioRepository) GetScenariosNames(
 	method types.MethodType,
 	path string) (scenarioNames []string, err error) {
-	var files []fs.FileInfo
+	var files []fs.DirEntry
 	dir := sr.buildDir(method, path)
-	if files, err = ioutil.ReadDir(dir); err != nil {
+
+	files, err = os.ReadDir(dir)
+	if err != nil {
 		return nil, err
 	}
 
@@ -237,7 +239,7 @@ func (sr *FileMockScenarioRepository) LookupAll(
 			res = append(res, keyData)
 		} else {
 			var validationError *types.ValidationError
-			if errors.As(err, &validationError) && sr.debug {
+			if errors.As(err, &validationError) && sr.config.Debug {
 				paramMismatchErrors++
 				log.WithFields(log.Fields{
 					"Other":          other.String(),
@@ -307,7 +309,95 @@ func (sr *FileMockScenarioRepository) Lookup(
 	return
 }
 
-/////////// PRIVATE METHODS //////////////
+// HistoryNames returns list of mock scenarios names
+func (sr *FileMockScenarioRepository) HistoryNames() (names []string) {
+	files := sr.historyFiles()
+	for _, file := range files {
+		names = append(names, file.Name())
+	}
+	return
+}
+
+// SaveHistory saves history MockScenario
+func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) (err error) {
+	scenario.SetName(string(scenario.Method))
+	fileName := filepath.Join(sr.config.HistoryDir, scenario.Group+"_"+scenario.Name)
+	var b []byte
+	if b, err = yaml.Marshal(scenario); err != nil {
+		return err
+	}
+	err = os.WriteFile(fileName, b, 0644)
+	if err == nil {
+		sr.checkHistoryLimit()
+	}
+	log.WithFields(log.Fields{
+		"Component": "FileScenarioRepository",
+		"MaxLimit":  sr.config.MaxHistory,
+		"Dir":       sr.config.HistoryDir,
+		"File":      fileName,
+		"Error":     err,
+	}).Infof("saving history scenario")
+	return
+}
+
+// LoadHistory loads scenario
+func (sr *FileMockScenarioRepository) LoadHistory(name string) (*types.MockScenario, error) {
+	fileName := filepath.Join(sr.config.HistoryDir, name)
+	b, err := os.ReadFile(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %s due to %w", fileName, err)
+	}
+
+	data := make(map[string]any)
+
+	return unmarshalMockScenario(b, sr.config.HistoryDir, data)
+}
+
+// ///////// PRIVATE METHODS //////////////
+
+func (sr *FileMockScenarioRepository) checkHistoryLimit() {
+	infos := sr.historyFiles()
+	if len(infos) <= sr.config.MaxHistory {
+		return
+	}
+	for i := len(infos) - 1; i >= sr.config.MaxHistory; i-- {
+		fileName := filepath.Join(sr.config.HistoryDir, infos[i].Name())
+		err := os.Remove(fileName)
+		log.WithFields(log.Fields{
+			"Component": "FileScenarioRepository",
+			"MaxLimit":  sr.config.MaxHistory,
+			"InfoSize":  len(infos),
+			"Dir":       sr.config.HistoryDir,
+			"File":      fileName,
+			"I":         i,
+			"Error":     err,
+		}).Infof("removing old history scenario")
+	}
+}
+
+func (sr *FileMockScenarioRepository) historyFiles() (infos []fs.FileInfo) {
+	files, err := os.ReadDir(sr.config.HistoryDir)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Component": "FileScenarioRepository",
+			"Error":     err,
+		}).Warnf("failed to read history dir")
+		return nil
+	}
+	for _, file := range files {
+		if !file.IsDir() {
+			if info, err := file.Info(); err == nil {
+				infos = append(infos, info)
+			}
+		}
+	}
+	sort.Slice(infos, func(i, j int) bool {
+		info1 := infos[i]
+		info2 := infos[j]
+		return info1.ModTime().After(info2.ModTime())
+	})
+	return
+}
 
 func unmarshalMockScenario(
 	b []byte,
@@ -358,7 +448,7 @@ func (sr *FileMockScenarioRepository) visit(
 		return
 	}
 
-	err := filepath.Walk(sr.dir, walkFunc)
+	err := filepath.Walk(sr.config.DataDir, walkFunc)
 	if err == errStop {
 		err = nil
 	}
@@ -401,13 +491,13 @@ func (sr *FileMockScenarioRepository) buildFileName(
 	method types.MethodType,
 	scenarioName string,
 	path string) string {
-	return buildFileName(sr.dir, method, scenarioName, path) + types.ScenarioExt
+	return buildFileName(sr.config.DataDir, method, scenarioName, path) + types.ScenarioExt
 }
 
 func (sr *FileMockScenarioRepository) buildDir(
 	method types.MethodType,
 	path string) string {
-	return buildDir(sr.dir, method, path)
+	return buildDir(sr.config.DataDir, method, path)
 }
 
 func buildFileName(

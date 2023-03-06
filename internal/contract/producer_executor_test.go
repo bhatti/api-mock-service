@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gopkg.in/yaml.v3"
+	"net/http"
 	"os"
 	"testing"
 
@@ -19,17 +20,17 @@ var baseURL = "https://mocksite.local"
 
 func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	config := buildTestConfig()
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	config := &types.Configuration{DataDir: "../../mock_tests"}
-	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), &types.MockScenarioKeyData{}, dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, &types.MockScenarioKeyData{}, dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -39,7 +40,7 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 
 func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -60,10 +61,10 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	client.AddMapping("GET", baseURL+"/users", web.NewStubHTTPResponse(200,
 		`{"User": {"Directory": "my_dir3", "Username": "my_user3@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
 	// WHEN executing scenario
-	executor := NewExecutor(repo, client)
+	executor := NewProducerExecutor(repo, client)
 	// THEN it should execute saved scenario
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	res := executor.ExecuteByGroup(context.Background(), "user_group", dataTemplate, contractReq)
+	res := executor.ExecuteByGroup(context.Background(), &http.Request{}, "user_group", dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -71,8 +72,9 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 }
 
 func Test_ShouldExecuteGetTodo(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -87,10 +89,9 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	config := &types.Configuration{DataDir: "../../mock_tests"}
-	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -98,8 +99,9 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 }
 
 func Test_ShouldExecutePutPosts(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -111,10 +113,9 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	config := &types.Configuration{DataDir: "../../mock_tests"}
-	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -122,8 +123,9 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -140,26 +142,20 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	config := &types.Configuration{DataDir: "../../mock_tests"}
-	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
-	for _, err := range res.Errors {
-		t.Log(err)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
+	for k, err := range res.Errors {
+		t.Log(k, err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors["put_posts"], `failed to assert '{{VariableContains "headers.Content-Type"`)
-}
-
-func Test_ShouldParseRegexValue(t *testing.T) {
-	require.Equal(t, "__1", regexValue("__1"))
-	require.Equal(t, "1", regexValue("(1)"))
-	require.Equal(t, "1", regexValue("1"))
+	require.Contains(t, res.Errors["put_posts"], `failed to assert response '{{VariableContains "headers.Content-Type"`)
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -175,22 +171,51 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
-	config := &types.Configuration{DataDir: "../../mock_tests"}
-	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 
 	// WHEN executing scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	// THEN it should not execute saved scenario
-	for _, err := range res.Errors {
-		t.Log(err)
+	for k, err := range res.Errors {
+		t.Log(k, err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors["put_posts"], `didn't match required header Content-Type with regex application/xjson`)
+	require.Contains(t, res.Errors["put_posts"], `didn't match required response header Content-Type with regex application/xjson`)
 }
 
-func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
+func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+
+	// AND a valid scenario
+	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
+	require.NoError(t, err)
+	// AND missing header
+	scenario.Request.Headers["Content-Type"] = "blah"
+	err = repo.Save(scenario)
+	require.NoError(t, err)
+
+	// AND valid template for random data
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+
+	// WHEN executing scenario
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	// THEN it should not execute saved scenario
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
+	for k, err := range res.Errors {
+		t.Log(k, err)
+	}
+	require.Equal(t, 1, len(res.Errors))
+	require.Contains(t, res.Errors["put_posts"], `didn't match required request header 'Content-Type' with regex 'application/x-www-form-urlencoded'`)
+}
+
+func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN scenario repository
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -206,20 +231,20 @@ func Test_ShouldNotExecutePutPostsWithMissingHeaders(t *testing.T) {
 	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	config := &types.Configuration{DataDir: "../../mock_tests"}
-	executor := NewExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
-	for _, err := range res.Errors {
-		t.Log(err)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
+	for k, err := range res.Errors {
+		t.Log(k, err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors["put_posts"], `failed to find required header Abc-Content-Type`)
+	require.Contains(t, res.Errors["put_posts"], `failed to find required response header Abc-Content-Type with regex application/xjson`)
 }
 
 func Test_ShouldExecutePostProductScenario(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -234,9 +259,9 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest(baseURL, 1)
 	// WHEN executing scenario
-	executor := NewExecutor(repo, client)
+	executor := NewProducerExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -244,8 +269,9 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 }
 
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -268,19 +294,20 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest(baseURL, 1)
 	// WHEN executing scenario
-	executor := NewExecutor(repo, client)
+	executor := NewProducerExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
-	for _, err := range res.Errors {
-		t.Log(err)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
+	for k, err := range res.Errors {
+		t.Log(k, err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors["get_comment"], `failed to assert '{{VariableContains "contents.id" "1"}}`)
+	require.Contains(t, res.Errors["get_comment"], `failed to assert response '{{VariableContains "contents.id" "1"}}`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -295,9 +322,9 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewContractRequest(baseURL, 1)
 	// WHEN executing scenario
-	executor := NewExecutor(repo, client)
+	executor := NewProducerExecutor(repo, client)
 	// THEN it should not execute saved scenario
-	res := executor.Execute(context.Background(), scenario.ToKeyData(), dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -306,8 +333,9 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 }
 
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND mock scenarios from open-api specifications
@@ -335,9 +363,9 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	contractReq.Overrides = data
 	contractReq.Verbose = true
 	// AND executor
-	executor := NewExecutor(repo, client)
+	executor := NewProducerExecutor(repo, client)
 	// WHEN executing scenario
-	res := executor.ExecuteByGroup(context.Background(), "bad_v1_job", dataTemplate, contractReq)
+	res := executor.ExecuteByGroup(context.Background(), &http.Request{}, "bad_v1_job", dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 		// THEN it should fail to execute
@@ -346,11 +374,12 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 }
 
 func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN mock scenarios from open-api specifications
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	// AND scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -373,7 +402,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		contractReq.Verbose = true
 		contractReq.Overrides = data
 		// AND executor
-		executor := NewExecutor(repo, client)
+		executor := NewProducerExecutor(repo, client)
 		// AND should return saved scenario
 		saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 		require.NoError(t, err)
@@ -381,7 +410,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 			t.Fatalf("unexpected status %d != %d", scenario.Response.StatusCode, saved.Response.StatusCode)
 		}
 		// WHEN executing scenario
-		res := executor.Execute(context.Background(), saved.ToKeyData(), dataTemplate, contractReq)
+		res := executor.Execute(context.Background(), &http.Request{}, saved.ToKeyData(), dataTemplate, contractReq)
 		for _, err := range res.Errors {
 			t.Log(err)
 		}
@@ -435,6 +464,10 @@ func buildJobsTestClient(jobID string, jobStatus string, prefixPath string, http
 	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/state", web.NewStubHTTPResponse(httpStatus, jobStatusReply))
 	client.AddMapping("POST", baseURL+prefixPath+"/v1/jobs/"+jobID+"/state/"+jobStatus, web.NewStubHTTPResponse(httpStatus, jobStatusReply))
 	return client, map[string]any{"jobId": jobID, "state": jobStatus}
+}
+
+func buildTestConfig() *types.Configuration {
+	return &types.Configuration{DataDir: "../../mock_tests", HistoryDir: "../../mock_history", MaxHistory: 5}
 }
 
 func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {

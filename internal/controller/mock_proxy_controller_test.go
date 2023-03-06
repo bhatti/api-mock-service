@@ -17,8 +17,9 @@ import (
 )
 
 func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("GET", "https://jsonplaceholder.typicode.com/todos/10", web.NewStubHTTPResponse(200, `
@@ -29,7 +30,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 		"completed": true
 	  }
 	`))
-	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(config, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	ctx := web.NewStubContext(&http.Request{Method: "GET"})
@@ -42,8 +43,9 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 }
 
 func Test_ShouldRecordGetProxyRequests(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	body := strings.TrimSpace(`
@@ -55,7 +57,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	  }
 	`)
 	client.AddMapping("GET", "https://jsonplaceholder.typicode.com/todos/10", web.NewStubHTTPResponse(200, body))
-	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(config, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	u, err := url.Parse("http://localhost:8080")
@@ -78,12 +80,13 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
-	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(config, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	u, err := url.Parse("http://localhost:8080")
@@ -106,8 +109,9 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordPostProxyRequests(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	reqBody := []byte(strings.TrimSpace(`{"userId": 101, "title": "Buy milk", "completed": False}`))
@@ -118,7 +122,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 }
 	`)
 	client.AddMapping("PUT", "https://jsonplaceholder.typicode.com/todos/202", web.NewStubHTTPResponse(200, resBody))
-	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(config, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	reader := io.NopCloser(bytes.NewReader(reqBody))
@@ -143,8 +147,9 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordPutProxyRequests(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	reqBody := []byte(strings.TrimSpace(`{"id": 202, "userId": 505, "title": "Buy milk", "completed": False}`))
@@ -155,7 +160,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 }
 	`)
 	client.AddMapping("POST", "https://jsonplaceholder.typicode.com/todos/2", web.NewStubHTTPResponse(200, resBody))
-	recorder := proxy.NewRecorder(&types.Configuration{ProxyPort: 8081}, client, mockScenarioRepository)
+	recorder := proxy.NewRecorder(config, client, mockScenarioRepository)
 	webServer := web.NewStubWebServer()
 	ctrl := NewMockProxyController(recorder, webServer)
 	reader := io.NopCloser(bytes.NewReader(reqBody))

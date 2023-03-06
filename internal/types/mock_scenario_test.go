@@ -27,6 +27,12 @@ func Test_ShouldGetRequestAuthHeader(t *testing.T) {
 	require.Equal(t, "abc", scenario.Request.AuthHeader())
 }
 
+func Test_ShouldSanitizeRegexValue(t *testing.T) {
+	require.Equal(t, "__1", SanitizeRegexValue("__1"))
+	require.Equal(t, "1", SanitizeRegexValue("(1)"))
+	require.Equal(t, "1", SanitizeRegexValue("1"))
+}
+
 func Test_ShouldGetRequestContentType(t *testing.T) {
 	// GIVEN a valid mock scenario
 	scenario := buildScenario()

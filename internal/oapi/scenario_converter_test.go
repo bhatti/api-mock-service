@@ -11,11 +11,12 @@ import (
 )
 
 func Test_ShouldParseJobsOpenAPI(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN mock scenarios from open-api specifications
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	// AND scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	repo, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -43,4 +44,15 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 	}
 	_, err = MarshalScenarioToOpenAPI("t-api", "t-version", scenarios...)
 	require.NoError(t, err)
+}
+
+func buildTestConfig() *types.Configuration {
+	return &types.Configuration{
+		DataDir:                  "../../mock_tests",
+		HistoryDir:               "../../mock_history",
+		MaxHistory:               5,
+		ProxyPort:                8081,
+		AssertQueryParamsPattern: "target",
+		AssertHeadersPattern:     "target",
+	}
 }

@@ -1,9 +1,11 @@
 package types
 
 import (
-	"crypto/sha256"
+	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -30,6 +32,9 @@ const MockScenarioPath = "X-Mock-Path"
 
 // ContentTypeHeader header
 const ContentTypeHeader = "Content-Type"
+
+// Authorization constant
+const Authorization = "Authorization"
 
 // MockRequestCount header
 const MockRequestCount = "X-Mock-Request-Count"
@@ -71,6 +76,8 @@ type MockHTTPRequest struct {
 	Contents string `yaml:"contents" json:"contents"`
 	// ExampleContents sample for request optionally
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
+	// Assertions for validating response
+	Assertions []string `yaml:"assertions" json:"assertions"`
 }
 
 // ContentType find content-type
@@ -93,6 +100,74 @@ func (r MockHTTPRequest) AuthHeader() string {
 	return ""
 }
 
+// SanitizeRegexValue sanitizes (val string) string {
+func SanitizeRegexValue(val string) string {
+	if strings.HasPrefix(val, "__") || strings.HasPrefix(val, "(") {
+		return fuzz.RandRegex(val)
+	}
+	return fuzz.StripTypeTags(val)
+}
+
+// BuildTemplateParams builds template
+func (r MockHTTPRequest) BuildTemplateParams(
+	req *http.Request,
+	pathGroups map[string]string,
+	overrides map[string]any,
+	verbose bool,
+) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
+	templateParams = make(map[string]any)
+	queryParams = make(map[string]string)
+	reqHeaders = make(map[string][]string)
+	if verbose {
+		reqHeaders["X-Verbose"] = []string{"true"}
+	}
+	//for _, env := range os.Environ() {
+	//	parts := strings.Split(env, "=")
+	//	if len(parts) == 2 {
+	//		templateParams[parts[0]] = parts[1]
+	//	}
+	//}
+	for k, v := range r.PathParams {
+		templateParams[k] = fuzz.StripTypeTags(v)
+		queryParams[k] = fuzz.StripTypeTags(v)
+	}
+	for k, v := range r.AssertQueryParamsPattern {
+		templateParams[k] = SanitizeRegexValue(v)
+		queryParams[k] = SanitizeRegexValue(v)
+	}
+	for k, v := range r.QueryParams {
+		templateParams[k] = fuzz.StripTypeTags(v)
+		queryParams[k] = fuzz.StripTypeTags(v)
+	}
+	for k, v := range r.AssertHeadersPattern {
+		templateParams[k] = SanitizeRegexValue(v)
+		reqHeaders[k] = []string{SanitizeRegexValue(v)}
+	}
+	for k, v := range r.Headers {
+		templateParams[k] = fuzz.StripTypeTags(v)
+		reqHeaders[k] = []string{fuzz.StripTypeTags(v)}
+	}
+	if req.URL != nil {
+		for k, v := range req.URL.Query() {
+			templateParams[k] = fuzz.StripTypeTags(v[0])
+			queryParams[k] = fuzz.StripTypeTags(v[0])
+		}
+	}
+	for k, v := range req.Header {
+		templateParams[k] = fuzz.StripTypeTags(v[0])
+		reqHeaders[k] = []string{fuzz.StripTypeTags(v[0])}
+	}
+	// Find any params for query params and path variables
+	for k, v := range pathGroups {
+		templateParams[k] = v
+	}
+	for k, v := range overrides {
+		templateParams[k] = v
+		queryParams[k] = fmt.Sprintf("%v", v)
+	}
+	return
+}
+
 // TargetHeader find header matching target
 func (r MockHTTPRequest) TargetHeader() string {
 	for k, v := range r.Headers {
@@ -101,6 +176,75 @@ func (r MockHTTPRequest) TargetHeader() string {
 		}
 	}
 	return ""
+}
+
+// Assert asserts response
+func (r MockHTTPRequest) Assert(
+	queryParams map[string]string,
+	reqHeaders map[string][]string,
+	reqContents any,
+	templateParams map[string]any) error {
+	if reqContents != nil {
+		templateParams["contents"] = reqContents
+	}
+	templateParams["headers"] = toFlatMap(reqHeaders)
+	for k, v := range r.AssertQueryParamsPattern {
+		actual := queryParams[k]
+		if actual == "" {
+			return fmt.Errorf("failed to find required query parameter '%s' with regex '%s'", k, v)
+		}
+		match, err := regexp.MatchString(v, actual)
+		if err != nil {
+			return fmt.Errorf("failed to fuzz required request query param '%s' with regex '%s' and actual value '%s' due to '%w'",
+				k, v, actual, err)
+		}
+		if !match {
+			return fmt.Errorf("didn't match required request query param '%s' with regex '%s' and actual value '%s'",
+				k, v, actual)
+		}
+	}
+
+	for k, v := range r.AssertHeadersPattern {
+		actual := reqHeaders[k]
+		if len(actual) == 0 {
+			return fmt.Errorf("failed to find required request header '%s' with regex '%s'", k, v)
+		}
+		match, err := regexp.MatchString(v, actual[0])
+		if err != nil {
+			return fmt.Errorf("failed to fuzz required request header '%s' with regex '%s' and actual value '%s' due to '%w'",
+				k, v, actual[0], err)
+		}
+		if !match {
+			return fmt.Errorf("didn't match required request header '%s' with regex '%s' and actual value '%s'",
+				k, v, actual[0])
+		}
+	}
+
+	if r.AssertContentsPattern != "" {
+		regex := make(map[string]string)
+		err := json.Unmarshal([]byte(r.AssertContentsPattern), &regex)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal request '%s' regex due to %w", r.AssertContentsPattern, err)
+		}
+		err = fuzz.ValidateRegexMap(reqContents, regex)
+		if err != nil {
+			return fmt.Errorf("failed to validate request due to %w", err)
+		}
+	}
+
+	for _, assertion := range r.Assertions {
+		assertion = normalizeAssertion(assertion)
+		b, err := fuzz.ParseTemplate("", []byte(assertion), templateParams)
+		if err != nil {
+			return fmt.Errorf("failed to parse request assertion %s due to %w", assertion, err)
+		}
+
+		if string(b) != "true" {
+			return fmt.Errorf("failed to assert request '%s' with value '%s', params: %v",
+				assertion, b, templateParams)
+		}
+	}
+	return nil
 }
 
 // AssertContentsPatternOrContent helper method
@@ -144,6 +288,58 @@ func (r MockHTTPResponse) ContentType(defContentType string) string {
 		}
 	}
 	return defContentType
+}
+
+// Assert asserts response
+func (r MockHTTPResponse) Assert(
+	resHeaders map[string][]string,
+	resContents any,
+	templateParams map[string]any) error {
+	if resContents != nil {
+		templateParams["contents"] = resContents
+	}
+	templateParams["headers"] = toFlatMap(resHeaders)
+	for k, v := range r.AssertHeadersPattern {
+		actualHeader := resHeaders[k]
+		if len(actualHeader) == 0 {
+			return fmt.Errorf("failed to find required response header %s with regex %s", k, v)
+		}
+		match, err := regexp.MatchString(v, actualHeader[0])
+		if err != nil {
+			return fmt.Errorf("failed to fuzz required response header %s with regex %s and actual value %s due to %w",
+				k, v, actualHeader[0], err)
+		}
+		if !match {
+			return fmt.Errorf("didn't match required response header %s with regex %s and actual value %s",
+				k, v, actualHeader[0])
+		}
+	}
+
+	if r.AssertContentsPattern != "" {
+		regex := make(map[string]string)
+		err := json.Unmarshal([]byte(r.AssertContentsPattern), &regex)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal response '%s' regex due to %w", r.AssertContentsPattern, err)
+		}
+		err = fuzz.ValidateRegexMap(resContents, regex)
+		if err != nil {
+			return fmt.Errorf("failed to validate response due to %w", err)
+		}
+	}
+
+	for _, assertion := range r.Assertions {
+		assertion = normalizeAssertion(assertion)
+		b, err := fuzz.ParseTemplate("", []byte(assertion), templateParams)
+		if err != nil {
+			return fmt.Errorf("failed to parse assertion %s due to %w", assertion, err)
+		}
+
+		if string(b) != "true" {
+			return fmt.Errorf("failed to assert response '%s' with value '%s', params: %v",
+				assertion, b, templateParams)
+		}
+	}
+	return nil
 }
 
 // AssertContentsPatternOrContent helper method
@@ -216,8 +412,8 @@ func (ms *MockScenario) String() string {
 
 // SafeName strips invalid characters
 func (ms *MockScenario) SafeName() string {
-	if regexp, err := regexp.Compile(`[^a-zA-Z0-9_:]`); err == nil {
-		return regexp.ReplaceAllString(ms.Name, "")
+	if re, err := regexp.Compile(`[^a-zA-Z0-9_:]`); err == nil {
+		return re.ReplaceAllString(ms.Name, "")
 	}
 	return ms.Name
 }
@@ -243,10 +439,11 @@ func (ms *MockScenario) BuildURL(overrideBaseURL string) string {
 
 // Digest of scenario
 func (ms *MockScenario) Digest() string {
-	h := sha256.New()
+	h := sha1.New()
 	h.Write([]byte(ms.Method))
 	h.Write([]byte(ms.Group))
 	h.Write([]byte(ms.Path))
+	h.Write([]byte(ms.Request.Contents))
 	for k, v := range ms.Request.AssertQueryParamsPattern {
 		h.Write([]byte(k))
 		h.Write([]byte(v))
@@ -351,4 +548,34 @@ func reMatch(re string, str string) bool {
 		return false
 	}
 	return match
+}
+
+func normalizeAssertion(assertion string) string {
+	if !strings.HasPrefix(assertion, "{{") {
+		parts := strings.Split(assertion, " ")
+		var sb strings.Builder
+		sb.WriteString("{{")
+		for i, next := range parts {
+			if i > 0 {
+				if strings.HasPrefix(next, "\"") {
+					sb.WriteString(fmt.Sprintf(` %s`, next))
+				} else {
+					sb.WriteString(fmt.Sprintf(` "%s"`, next))
+				}
+			} else {
+				sb.WriteString(next)
+			}
+		}
+		sb.WriteString("}}")
+		assertion = sb.String()
+	}
+	return assertion
+}
+
+func toFlatMap(headers map[string][]string) map[string]string {
+	flatHeaders := make(map[string]string)
+	for k, v := range headers {
+		flatHeaders[k] = v[0]
+	}
+	return flatHeaders
 }

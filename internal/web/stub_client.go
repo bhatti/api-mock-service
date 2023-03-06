@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -100,6 +101,7 @@ func (w *StubHTTPClient) Handle(
 	log.WithFields(log.Fields{"component": "stub-web", "url": url, "method": method}).Debugf("BEGIN")
 	resp := w.getMapping(method, url)
 	if resp == nil {
+		debug.PrintStack()
 		return 404, nil, nil, fmt.Errorf("couldn't find URL '%s' method '%s' in mapping: %v",
 			url, method, w.mappingByMethodURL)
 	}

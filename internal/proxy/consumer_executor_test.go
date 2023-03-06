@@ -1,10 +1,12 @@
 package proxy
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"gopkg.in/yaml.v3"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,12 +21,13 @@ import (
 )
 
 func Test_ShouldLookupPutMockScenarios(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(scenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(buildScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)))
@@ -43,7 +46,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		},
 	)
 	// THEN it should not find it
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.Error(t, err)
 
 	u, err = url.Parse("https://jsonplaceholder.typicode.com/api/todos/202?a=123&b=abc")
@@ -58,7 +61,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 			types.ContentTypeHeader:   []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
@@ -66,12 +69,13 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupPostMockScenarios(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(scenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(buildScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books/:id", i)))
@@ -88,7 +92,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	// THEN it should not find it
 	require.Error(t, err)
 
@@ -103,7 +107,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
@@ -111,12 +115,13 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupGetMockScenarios(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(scenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(buildScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
@@ -132,7 +137,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 		},
 	})
 	// THEN it should not find it
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.Error(t, err)
 
 	u, err = url.Parse("https://books.com/api/books/topic/business/202?a=123&b=abc")
@@ -145,7 +150,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
@@ -153,12 +158,13 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository and player
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -173,7 +179,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 		},
 	})
 	// THEN it should not find it
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.Error(t, err)
 
 	// WHEN looking up todos by PUT with different query param
@@ -185,7 +191,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 			types.ContentTypeHeader: []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
@@ -193,12 +199,13 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository and player
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/{topic}/{id}", i)))
@@ -213,7 +220,7 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 		},
 	})
 	// THEN it should not find it
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.Error(t, err)
 
 	// WHEN looking up todos by PUT with different query param
@@ -225,7 +232,7 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 			types.ContentTypeHeader: []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
@@ -233,16 +240,17 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 }
 
 func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario loaded from YAML
 	b, err := os.ReadFile("../../fixtures/get_customer.yaml")
 	require.NoError(t, err)
 
 	// AND a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(scenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 
 	b, err = fuzz.ParseTemplate("../../fixtures", b, map[string]any{"id": "123"})
 	require.NoError(t, err)
@@ -264,7 +272,7 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 		},
 	)
 	// THEN it should not find it
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 
 	b = ctx.Result.([]byte)
@@ -275,12 +283,13 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 }
 
 func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewPlayer(scenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(buildScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))
@@ -297,7 +306,7 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 		},
 	)
 	// THEN it should not find it
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.Error(t, err)
 
 	u, err = url.Parse("https://jsonplaceholder.typicode.com/api/todos/202?a=123&b=abc")
@@ -310,16 +319,19 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 			types.ContentTypeHeader: []string{"application/json"},
 		},
 	})
-	err = player.Handle(ctx)
+	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
 }
 
-func Test_ShouldAddMockResponse(t *testing.T) {
-	// GIVEN a mock fixture repository
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN a mock scenario and fixture repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
@@ -327,7 +339,101 @@ func Test_ShouldAddMockResponse(t *testing.T) {
 	matchedScenario.Response.ContentsFile = "lines.txt"
 	_ = os.MkdirAll("../../mock_tests/path/POST", 0755)
 	_ = os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
-	_, err = addMockResponse(reqHeader, resHeader, matchedScenario, fixtureRepository)
+	req := &http.Request{Body: nil}
+	_, err = addMockResponse(
+		req,
+		reqHeader,
+		resHeader,
+		matchedScenario,
+		scenarioRepository,
+		fixtureRepository,
+	)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), `didn't match required request query param 'a' with regex '\d+'`)
+}
+
+func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN a mock scenario and fixture repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	reqHeader := http.Header{"X1": []string{"val1"}}
+	resHeader := http.Header{"X1": []string{"val1"}}
+	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario.Response.ContentsFile = "lines.txt"
+	_ = os.MkdirAll("../../mock_tests/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
+	u, err := url.Parse("https://jsonplaceholder.typicode.com/api/todos/202?a=123&b=abc")
+	require.NoError(t, err)
+	req := &http.Request{Body: nil, URL: u}
+	_, err = addMockResponse(
+		req,
+		reqHeader,
+		resHeader,
+		matchedScenario,
+		scenarioRepository,
+		fixtureRepository,
+	)
+	require.NoError(t, err)
+}
+
+func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN a mock scenario and fixture repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	reqHeader := http.Header{"X1": []string{"val1"}}
+	resHeader := http.Header{"X1": []string{"val1"}}
+	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario.Response.ContentsFile = "lines.txt"
+	_ = os.MkdirAll("../../mock_tests/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
+	data := []byte("test data")
+	reader := io.NopCloser(bytes.NewReader(data))
+	req := &http.Request{Body: reader}
+	_, err = addMockResponse(
+		req,
+		reqHeader,
+		resHeader,
+		matchedScenario,
+		scenarioRepository,
+		fixtureRepository,
+	)
+	require.Error(t, err)
+}
+
+func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN a mock scenario and fixture repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	reqHeader := http.Header{"X1": []string{"val1"}}
+	resHeader := http.Header{"X1": []string{"val1"}}
+	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario.Response.ContentsFile = "lines.txt"
+	_ = os.MkdirAll("../../mock_tests/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/path/POST/lines.txt.dat", []byte("test"), 0644)
+	data := []byte("test data")
+	reader := io.NopCloser(bytes.NewReader(data))
+	u, _ := url.Parse("http://localhost:8080?a=123&b=abcd")
+	req := &http.Request{
+		Body: reader,
+		URL:  u,
+	}
+	_, err = addMockResponse(
+		req,
+		reqHeader,
+		resHeader,
+		matchedScenario,
+		scenarioRepository,
+		fixtureRepository,
+	)
 	require.NoError(t, err)
 }
 

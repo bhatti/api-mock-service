@@ -15,22 +15,23 @@ import (
 )
 
 func Test_ShouldNotStartProxyServer(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: -1}
+	config.ProxyPort = -1
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	require.Error(t, handler.Start())
 }
 
 func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/path2")
@@ -40,17 +41,17 @@ func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)
 	require.Nil(t, res)
 }
 
 func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/path?a=b")
@@ -60,17 +61,17 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)
 	require.Nil(t, res)
 }
 
 func Test_ShouldHandleProxyRequest(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	scenario := buildScenario(types.Post, "todos", "/api/todos", 0)
@@ -83,17 +84,17 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"application/json"}},
 	}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, nil)
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	scenario := buildScenario(types.Post, "todos", "/api/todos", 0)
@@ -104,7 +105,6 @@ func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
 	adapter.GET("/_fixtures/:method/:name/:path", adapterHandler)
 	adapter.POST("/_fixtures/:method/:name/:path", adapterHandler)
 	adapter.DELETE("/_fixtures/:method/:name/:path", adapterHandler)
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, adapter)
 
 	methodPaths := map[string]string{
@@ -150,10 +150,11 @@ func adapterHandler(c web.APIContext) error {
 }
 
 func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	scenario := buildScenario(types.Post, "todos", "/api/todos", 0)
@@ -166,7 +167,6 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 	adapter.POST("/_scenarios", adapterHandler)
 	adapter.DELETE("/_scenarios/:method/:name/:path", adapterHandler)
 	adapter.POST("/_oapi", adapterHandler)
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, adapter)
 
 	methodPaths := map[string]string{
@@ -206,10 +206,11 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 }
 
 func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=b")
@@ -223,43 +224,43 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 		Request: req,
 		Header:  http.Header{},
 	}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	require.Nil(t, handler.handleResponse(nil, nil))
 }
 
 func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	res := &http.Response{}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=b")
@@ -274,17 +275,17 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 		Request: req,
 		Header:  http.Header{},
 	}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
+	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=b")
@@ -300,7 +301,6 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 		Body:    io.NopCloser(bytes.NewReader([]byte("test"))),
 		Header:  http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	config := &types.Configuration{DataDir: "../../mock_tests", ProxyPort: 8081}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)

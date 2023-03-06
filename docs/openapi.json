@@ -284,7 +284,7 @@
           "open-api"
         ],
         "description": "Creates new mock scenarios based on Open API v3",
-        "operationId": "PostMockOAPIScenario",
+        "operationId": "postMockOAPIScenario",
         "requestBody": {
           "content": {
             "*/*": {
@@ -320,7 +320,7 @@
           "open-api"
         ],
         "description": "Generates OpenAPI specs for the scenario group",
-        "operationId": "GetOpenAPISpecsByGroup",
+        "operationId": "getOpenAPISpecsByGroup",
         "responses": {
           "200": {
             "description": "MockScenario body for update",
@@ -343,6 +343,31 @@
       "get": {
         "description": "Generates OpenAPI specs for the scenario",
         "operationId": "open-apiGetOpenAPISpecsByScenario",
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "uint8"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_oapi/history/{name}": {
+      "get": {
+        "tags": [
+          "open-api"
+        ],
+        "description": "Generates OpenAPI specs for the scenario history",
+        "operationId": "getOpenAPISpecsByHistory",
         "responses": {
           "200": {
             "description": "MockScenario body for update",
@@ -639,6 +664,30 @@
         }
       }
     },
+    "/_scenarios/history": {
+      "get": {
+        "tags": [
+          "mock-scenarios"
+        ],
+        "description": "Fetches history of mock scenarios",
+        "operationId": "mockScenarioHistory",
+        "responses": {
+          "200": {
+            "description": "MockScenario history scenario names",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/{path}": {
       "get": {
         "tags": [
@@ -868,6 +917,14 @@
             },
             "description": "AssertQueryParamsPattern for the API",
             "x-go-name": "AssertQueryParamsPattern"
+          },
+          "assertions": {
+            "type": "array",
+            "description": "Assertions for validating response",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Assertions"
           },
           "contents": {
             "type": "string",
@@ -1156,6 +1213,19 @@
       },
       "mockGroupsResponse": {
         "description": "MockScenario groups",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "mockHistoryResponse": {
+        "description": "MockScenario history scenario names",
         "content": {
           "*/*": {
             "schema": {

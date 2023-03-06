@@ -1,6 +1,7 @@
 package oapi
 
 import (
+	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"gopkg.in/yaml.v3"
@@ -34,14 +35,36 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 	if err != nil {
 		return res, err
 	}
+
+	assertions := make([]string, 0)
+
+	for _, header := range req.Headers {
+		if val := checkRequestHeader(header.Name, header.Pattern); val != "" {
+			assertions = append(assertions, val)
+		}
+	}
+
 	return types.MockHTTPRequest{
 		AssertHeadersPattern:     propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
-		Headers:                  propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(false)),
 		AssertQueryParamsPattern: propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
+		Assertions:               assertions,
+		Headers:                  propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(false)),
 		QueryParams:              propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(false)),
 		Contents:                 string(strippedContents),
 		ExampleContents:          string(exampleContents),
 		AssertContentsPattern:    matchContents,
 		PathParams:               propsToMap(req.PathParams, asciiPattern, dataTemplate.WithInclude(false)),
 	}, nil
+}
+
+func checkRequestHeader(name string, pattern string) string {
+	validHeaders := map[string]bool{types.Authorization: true, types.ContentTypeHeader: true}
+	if validHeaders[name] {
+		if pattern == "" {
+			return fmt.Sprintf(`VariableSizeGE headers.%s 1`, name)
+		} else {
+			return fmt.Sprintf(`VariableMatches headers.%s %s`, name, pattern)
+		}
+	}
+	return ""
 }

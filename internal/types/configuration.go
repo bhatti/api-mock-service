@@ -22,6 +22,10 @@ type Configuration struct {
 	DataDir string `yaml:"data_dir" mapstructure:"data_dir" env:"DATA_DIR"`
 	// AssetDir for storing static assets
 	AssetDir string `yaml:"asset_dir" mapstructure:"asset_dir" env:"ASSET_DIR"`
+	// HistoryDir for storing mock history
+	HistoryDir string `yaml:"history_dir" mapstructure:"history_dir" env:"HISTORY_DIR"`
+	// MaxHistory for max limit of storing mock history
+	MaxHistory int `yaml:"max_history" mapstructure:"max_history" env:"MAX_HISTORY"`
 	// UserAgent for mock server
 	UserAgent string `yaml:"user_agent" mapstructure:"user_agent" env:"USER_AGENT"`
 	// ProxyURL for mock server
@@ -30,8 +34,8 @@ type Configuration struct {
 	AssertHeadersPattern string `yaml:"assert_headers_pattern" mapstructure:"assert_headers_pattern" env:"ASSERT_HEADERS_PATTERN"`
 	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of mock scenario
 	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
-	Debug                    bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
 	CORS                     string `yaml:"cors" mapstructure:"cors" env:"MOCK_CORS"`
+	Debug                    bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 	// AWSConfig
@@ -56,6 +60,7 @@ func NewConfiguration(
 	proxyPort int,
 	dataDir string,
 	assetDir string,
+	historyDir string,
 	version *Version) (config *Configuration, err error) {
 	viper.SetDefault("log_level", "info")
 	viper.SetDefault("http_port", "8080")
@@ -95,9 +100,17 @@ func NewConfiguration(
 	if assetDir != "" {
 		config.AssetDir = assetDir
 	}
-
+	if historyDir != "" {
+		config.HistoryDir = historyDir
+	}
+	if config.MaxHistory <= 0 {
+		config.MaxHistory = 100
+	}
 	if config.DataDir == "" {
 		config.DataDir = "default_mocks_data"
+	}
+	if config.HistoryDir == "" {
+		config.HistoryDir = "mock_history"
 	}
 	if os.Getenv("AWS_DEBUG") != "" {
 		config.AWS.Debug = os.Getenv("AWS_DEBUG") == "true"

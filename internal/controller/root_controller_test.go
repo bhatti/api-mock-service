@@ -18,11 +18,11 @@ import (
 func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
 	_ = rootPathParams{}
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -47,11 +47,11 @@ func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 
 func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
@@ -85,11 +85,11 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -117,11 +117,11 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Post, fmt.Sprintf("books_post_%d", i), "/api/books/:topic", i)))
@@ -148,11 +148,11 @@ func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Put, fmt.Sprintf("books_put_%d", i), "/api/books/:topic/:id", i)))
@@ -179,11 +179,11 @@ func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Connect, fmt.Sprintf("books_Connect_%d", i), "/api/books/:topic/:id", i)))
@@ -210,11 +210,11 @@ func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Head, fmt.Sprintf("books_Head_%d", i), "/api/books/:topic/:id", i)))
@@ -241,11 +241,11 @@ func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Options, fmt.Sprintf("books_Options_%d", i), "/api/books/:topic/:id", i)))
@@ -272,11 +272,11 @@ func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Patch, fmt.Sprintf("books_Patch_%d", i), "/api/books/:topic/:id", i)))
@@ -303,11 +303,11 @@ func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
+	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
-	player := proxy.NewPlayer(mockScenarioRepository, fixtureRepository)
+	player := proxy.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Trace, fmt.Sprintf("books_Trace_%d", i), "/api/books/:topic/:id", i)))
@@ -330,6 +330,17 @@ func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
+}
+
+func buildTestConfig() *types.Configuration {
+	return &types.Configuration{
+		DataDir:                  "../../mock_tests",
+		HistoryDir:               "../../mock_history",
+		MaxHistory:               5,
+		ProxyPort:                8081,
+		AssertQueryParamsPattern: "target",
+		AssertHeadersPattern:     "target",
+	}
 }
 
 func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {

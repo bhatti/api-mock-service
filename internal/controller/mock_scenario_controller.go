@@ -26,6 +26,7 @@ func NewMockScenarioController(
 	}
 
 	webserver.GET("/_scenarios", ctrl.listMockScenarioPaths)
+	webserver.GET("/_scenarios/history", ctrl.mockScenarioHistory)
 	webserver.GET("/_scenarios/:method/names/:path", ctrl.getMockNames)
 	webserver.GET("/_scenarios/groups", ctrl.getGroups)
 	webserver.GET("/_scenarios/:method/:name/:path", ctrl.getMockScenario)
@@ -55,6 +56,20 @@ func (msc *MockScenarioController) postMockScenario(c web.APIContext) (err error
 		}
 	}
 	return c.JSON(http.StatusOK, scenario)
+}
+
+// mockScenarioHistory handler
+// swagger:route GET /_scenarios/history mock-scenarios mockScenarioHistory
+// Fetches history of mock scenarios
+// responses:
+//
+//	200: mockHistoryResponse
+func (msc *MockScenarioController) mockScenarioHistory(c web.APIContext) error {
+	res := msc.mockScenarioRepository.HistoryNames()
+	if res == nil {
+		res = make([]string, 0)
+	}
+	return c.JSON(http.StatusOK, res)
 }
 
 // listMockScenarioPaths handler
@@ -113,8 +128,11 @@ func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
 //
 //	200: mockGroupsResponse
 func (msc *MockScenarioController) getGroups(c web.APIContext) error {
-	groups := msc.mockScenarioRepository.GetGroups()
-	return c.JSON(http.StatusOK, groups)
+	res := msc.mockScenarioRepository.GetGroups()
+	if res == nil {
+		res = make([]string, 0)
+	}
+	return c.JSON(http.StatusOK, res)
 }
 
 // swagger:route GET /_scenarios/{method}/names/{path} mock-scenarios getMockNames
@@ -205,6 +223,13 @@ type mockNamesResponseBody struct {
 // MockScenario groups
 // swagger:response mockGroupsResponse
 type mockGroupsResponseBody struct {
+	// in:body
+	Body []string
+}
+
+// MockScenario history scenario names
+// swagger:response mockHistoryResponse
+type mockHistoryResponseBody struct {
 	// in:body
 	Body []string
 }

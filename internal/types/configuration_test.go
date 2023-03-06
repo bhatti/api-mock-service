@@ -8,7 +8,7 @@ import (
 
 func Test_ShouldValidateConfiguration(t *testing.T) {
 	// GIVEN a configuration
-	config, err := NewConfiguration(8080, 8081, "/dir", "/asset", &Version{})
+	config, err := NewConfiguration(8080, 8081, "/dir", "/asset", "/history", &Version{})
 	// WHEN validating config
 	// THEN it should succeed
 	require.NoError(t, err)
@@ -17,7 +17,7 @@ func Test_ShouldValidateConfiguration(t *testing.T) {
 
 func Test_ShouldNotValidateConfiguration(t *testing.T) {
 	// GIVEN a configuration
-	_, err := NewConfiguration(8080, 8080, "/dir", "/asset", &Version{})
+	_, err := NewConfiguration(8080, 8080, "/dir", "/asset", "/history", &Version{})
 	// WHEN validating config
 	// THEN it should fail
 	require.Error(t, err)
@@ -25,7 +25,7 @@ func Test_ShouldNotValidateConfiguration(t *testing.T) {
 
 func Test_ShouldMatchHeader(t *testing.T) {
 	// GIVEN a configuration
-	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", &Version{})
+	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", "/history", &Version{})
 	require.NoError(t, err)
 	// WHEN matching header with empty regex
 	// THEN it should not match
@@ -44,7 +44,7 @@ func Test_ShouldMatchHeader(t *testing.T) {
 
 func Test_ShouldMatchQueryParameters(t *testing.T) {
 	// GIVEN a configuration
-	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", &Version{})
+	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", "/history", &Version{})
 	require.NoError(t, err)
 	// WHEN matching query params with empty regex
 	// THEN it should not match

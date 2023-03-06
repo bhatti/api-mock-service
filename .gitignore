@@ -12,6 +12,7 @@
 *.out
 *.sh
 mock_tests
+mock_history
 # Dependency directories (remove the comment below to include it)
 vendor/
 out

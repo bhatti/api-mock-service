@@ -21,6 +21,7 @@ import (
 var cfgFile string
 var dataDir string
 var assetDir string
+var historyDir string
 var httpPort int
 var proxyPort int
 
@@ -66,14 +67,15 @@ func Execute(version string, commit string, date string, swaggerContent embed.FS
 // RunServer starts queen server for formicary
 func RunServer(_ *cobra.Command, args []string) {
 	log.WithFields(log.Fields{
-		"Args":      args,
-		"DataDir":   dataDir,
-		"AssetDir":  assetDir,
-		"HTTPPort":  httpPort,
-		"ProxyPort": proxyPort,
+		"Args":       args,
+		"DataDir":    dataDir,
+		"AssetDir":   assetDir,
+		"HistoryDir": historyDir,
+		"HTTPPort":   httpPort,
+		"ProxyPort":  proxyPort,
 	}).Infof("starting Mock API-server...")
 
-	serverConfig, err := types.NewConfiguration(httpPort, proxyPort, dataDir, assetDir, types.NewVersion(Version, Commit, Date))
+	serverConfig, err := types.NewConfiguration(httpPort, proxyPort, dataDir, assetDir, historyDir, types.NewVersion(Version, Commit, Date))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Error": err}).
@@ -97,7 +99,7 @@ func RunServer(_ *cobra.Command, args []string) {
 		fmt.Printf("⇨ http proxy started on \x1b[32m[::]:%d\033[0m\n", serverConfig.ProxyPort)
 		adapter := web.NewWebServerAdapter()
 		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
-		executor := contract.NewExecutor(scenarioRepo, httpClient)
+		executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
 		_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, adapter)
 		_ = controller.NewMockScenarioController(scenarioRepo, adapter)
 		_ = controller.NewMockFixtureController(fixturesRepo, adapter)
@@ -115,10 +117,11 @@ func init() {
 
 	// Cobra also supports local flags, which will only run when this action is called directly.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
-	rootCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
-	rootCmd.Flags().IntVar(&httpPort, "httpPort", 0, "HTTP port to listen")
-	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 0, "Proxy port to listen")
+	rootCmd.Flags().StringVar(&dataDir, "dataDir", "mocks", "data dir to store mock scenarios")
+	rootCmd.Flags().StringVar(&assetDir, "assetDir", "assets", "asset dir to store static assets/fixtures")
+	rootCmd.Flags().StringVar(&historyDir, "historyDir", "mock_history", "asset dir to store mock history")
+	rootCmd.Flags().IntVar(&httpPort, "httpPort", 8000, "HTTP port to listen")
+	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 9000, "Proxy port to listen")
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: false,
@@ -173,8 +176,8 @@ func buildControllers(
 	webServer web.Server,
 ) (err error) {
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
-	player := proxy.NewPlayer(scenarioRepo, fixtureRepo)
-	executor := contract.NewExecutor(scenarioRepo, httpClient)
+	player := proxy.NewConsumerExecutor(scenarioRepo, fixtureRepo)
+	executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
 	_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, webServer)
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)

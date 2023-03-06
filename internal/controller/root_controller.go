@@ -7,12 +7,12 @@ import (
 
 // RootController structure
 type RootController struct {
-	player *proxy.Player
+	player *proxy.ConsumerExecutor
 }
 
 // NewRootController instantiates controller for updating mock-scenarios
 func NewRootController(
-	player *proxy.Player,
+	player *proxy.ConsumerExecutor,
 	webserver web.Server) *RootController {
 	ctrl := &RootController{
 		player: player,
@@ -47,63 +47,63 @@ func NewRootController(
 // Play scenario from POST request
 // responses: returns stubbed response based on API
 func (r *RootController) postRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route PUT /{path} mock-play putRoot
 // Play scenario from PUT request
 // responses: returns stubbed response based on API
 func (r *RootController) putRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route GET /{path} mock-play getRoot
 // Play scenario from GET request
 // responses: returns stubbed response based on API
 func (r *RootController) getRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route DELETE /{path} mock-play deleteRoot
 // Play scenario from DELETE request
 // responses: returns stubbed response based on API
 func (r *RootController) deleteRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route CONNECT /{path} mock-play connectRoot
 // Play scenario from CONNECT request
 // responses: returns stubbed response based on API
 func (r *RootController) connectRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route HEAD /{path} mock-play headRoot
 // Play scenario from HEAD request
 // responses: returns stubbed response based on API
 func (r *RootController) headRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route OPTIONS /{path} mock-play optionsRoot
 // Play scenario from OPTIONS request
 // responses: returns stubbed response based on API
 func (r *RootController) optionsRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route PATCH /{path} mock-play patchRoot
 // Play scenario from PATCH request
 // responses: returns stubbed response based on API
 func (r *RootController) patchRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:route TRACE /{path} mock-play traceRoot
 // Play scenario from TRACE request
 // responses: returns stubbed response based on API
 func (r *RootController) traceRoot(c web.APIContext) (err error) {
-	return r.player.Handle(c)
+	return r.player.Execute(c)
 }
 
 // swagger:parameters postRoot putRoot getRoot deleteRoot

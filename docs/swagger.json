@@ -128,6 +128,14 @@
           "type": "object",
           "x-go-name": "AssertQueryParamsPattern"
         },
+        "assertions": {
+          "description": "Assertions for validating response",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "x-go-name": "Assertions"
+        },
         "contents": {
           "description": "Contents for request optionally",
           "type": "string",
@@ -579,7 +587,7 @@
     "/_oapi": {
       "post": {
         "description": "Creates new mock scenarios based on Open API v3",
-        "operationId": "PostMockOAPIScenario",
+        "operationId": "postMockOAPIScenario",
         "parameters": [
           {
             "in": "body",
@@ -606,7 +614,7 @@
     "/_oapi/{group}": {
       "get": {
         "description": "Generates OpenAPI specs for the scenario group",
-        "operationId": "GetOpenAPISpecsByGroup",
+        "operationId": "getOpenAPISpecsByGroup",
         "responses": {
           "200": {
             "$ref": "#/responses/mockOapiSpecIResponse"
@@ -626,6 +634,20 @@
             "$ref": "#/responses/mockOapiSpecIResponse"
           }
         }
+      }
+    },
+    "/_oapi/history/{name}": {
+      "get": {
+        "description": "Generates OpenAPI specs for the scenario history",
+        "operationId": "getOpenAPISpecsByHistory",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/mockOapiSpecIResponse"
+          }
+        },
+        "tags": [
+          "open-api"
+        ]
       }
     },
     "/_proxy": {
@@ -830,6 +852,20 @@
         ]
       }
     },
+    "/_scenarios/history": {
+      "get": {
+        "description": "Fetches history of mock scenarios",
+        "operationId": "mockScenarioHistory",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/mockHistoryResponse"
+          }
+        },
+        "tags": [
+          "mock-scenarios"
+        ]
+      }
+    },
     "/{path}": {
       "delete": {
         "description": "Play scenario from DELETE request",
@@ -943,6 +979,15 @@
     },
     "mockGroupsResponse": {
       "description": "MockScenario groups",
+      "schema": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      }
+    },
+    "mockHistoryResponse": {
+      "description": "MockScenario history scenario names",
       "schema": {
         "items": {
           "type": "string"
