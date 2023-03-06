@@ -1,5 +1,22 @@
-http_port: 8080
+http_port: 8000
+proxy_port: 9000
 connection_timeout: 0
-data_dir: mock_tests
+data_dir: "mock_tests"
+asset_dir: "mock_assets"
+history_dir: "mock_history"
+max_history: 100
 user_agent: ""
 proxy_url: ""
+assert_headers_pattern: ""
+assert_query_params_pattern: ""
+cors: '*'
+debug: false
+aws:
+  strip: []
+  name: ""
+  aws_region: ""
+  sign_host: ""
+  host: ""
+  resign_all_requests: false
+  resign_only_expired_date: false
+  debug: false

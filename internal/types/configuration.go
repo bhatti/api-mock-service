@@ -126,14 +126,8 @@ func NewConfiguration(
 	if config.HistoryDir == "" {
 		config.HistoryDir = "mock_history"
 	}
-	if os.Getenv("AWS_DEBUG") != "" {
-		config.AWS.Debug = os.Getenv("AWS_DEBUG") == "true"
-	}
 	if os.Getenv("AWS_RESIGN_ONLY_EXPIRED") != "" {
 		config.AWS.ResignOnlyExpiredDate = os.Getenv("AWS_RESIGN_ONLY_EXPIRED") == "true"
-	}
-	if os.Getenv("MOCK_CORS") != "" {
-		config.CORS = os.Getenv("MOCK_CORS")
 	}
 	if config.CORS == "" {
 		config.CORS = "*"
