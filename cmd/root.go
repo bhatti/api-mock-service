@@ -117,9 +117,9 @@ func init() {
 
 	// Cobra also supports local flags, which will only run when this action is called directly.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	rootCmd.Flags().StringVar(&dataDir, "dataDir", "mocks", "data dir to store mock scenarios")
-	rootCmd.Flags().StringVar(&assetDir, "assetDir", "assets", "asset dir to store static assets/fixtures")
-	rootCmd.Flags().StringVar(&historyDir, "historyDir", "mock_history", "asset dir to store mock history")
+	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
+	rootCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
+	rootCmd.Flags().StringVar(&historyDir, "historyDir", "", "asset dir to store mock history")
 	rootCmd.Flags().IntVar(&httpPort, "httpPort", 8000, "HTTP port to listen")
 	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 9000, "Proxy port to listen")
 

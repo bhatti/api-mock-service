@@ -73,9 +73,9 @@ func init() {
 	rootCmd.AddCommand(contractCmd)
 
 	contractCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	contractCmd.Flags().StringVar(&dataDir, "dataDir", "mocks", "data dir to store mock scenarios")
-	contractCmd.Flags().StringVar(&assetDir, "assetDir", "assets", "asset dir to store static assets/fixtures")
-	contractCmd.Flags().StringVar(&historyDir, "historyDir", "mock_history", "asset dir to store mock history")
+	contractCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
+	contractCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
+	contractCmd.Flags().StringVar(&historyDir, "historyDir", "", "asset dir to store mock history")
 	contractCmd.Flags().StringVar(&group, "group", "", "group of service APIs")
 	contractCmd.Flags().StringVar(&baseURL, "base_url", "", "base-url for remote service")
 	contractCmd.Flags().IntVar(&executionTimes, "times", 10, "execution times")
