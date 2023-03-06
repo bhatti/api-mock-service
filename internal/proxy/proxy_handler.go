@@ -106,13 +106,15 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 
 	if awsAuthSig4 {
 		log.WithFields(log.Fields{
-			"Component": "DefaultHTTPClient",
-			"URL":       req.URL,
-			"Method":    req.Method,
-			"OldAuth":   oldAuth,
-			"Header":    req.Header,
-			"Info":      awsInfo,
-			"Error":     err,
+			"Component":    "DefaultHTTPClient",
+			"URL":          req.URL,
+			"Method":       req.Method,
+			"OldAuth":      oldAuth,
+			"Header":       req.Header,
+			"AWSInfo":      awsInfo,
+			"Error":        err,
+			"AWSKey":       web.GetHeaderParamOrEnvValue(nil, web.AWSAccessKey),
+			"HasAWSSecret": web.GetHeaderParamOrEnvValue(nil, web.AWSSecretKey) != "",
 		}).Infof("proxy server checked for aws-request")
 		if err == nil {
 			return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
@@ -127,6 +129,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Method":      req.Method,
 			"Headers":     req.Header,
 			"AWSAuthSig4": awsAuthSig4,
+			"AWSInfo":     awsInfo,
 		}).Infof("proxy server redirected request to internal controllers")
 		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 		return req, res, nil
@@ -145,6 +148,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
 		"AWSAuthSig4":     awsAuthSig4,
+		"AWSInfo":         awsInfo,
 		"Error":           err,
 	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
 	if err != nil {
