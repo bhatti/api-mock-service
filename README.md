@@ -76,7 +76,7 @@ or find installer for your OS on https://docs.docker.com/get-docker/.
 ```bash
 docker build -t api-mock-service .
 docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
-	-e ASSET_DIR=/tmp/assets api-mock-service
+	-e ASSET_DIR=/tmp/assets -e HISTORY_DIR=/tmp/history api-mock-service
 ```
 
 or pull an image from docker hub (https://hub.docker.com/r/plexobject/api-mock-service), e.g.
@@ -84,7 +84,7 @@ or pull an image from docker hub (https://hub.docker.com/r/plexobject/api-mock-s
 ```bash
 docker pull plexobject/api-mock-service:latest
 docker run -p 8000:8080 -p 8081:8081 -e HTTP_PORT=8080 -e PROXY_PORT=8081 -e DATA_DIR=/tmp/mocks \
-	-e ASSET_DIR=/tmp/assets plexobject/api-mock-service:latest
+	-e ASSET_DIR=/tmp/assets -e HISTORY_DIR=/tmp/history plexobject/api-mock-service:latest
 ```
 
 Alternatively, you can run it locally with GO environment, e.g.,
@@ -95,7 +95,6 @@ make && ./out/bin/api-mock-service
 
 For full command line options, execute api-mock-service -h that will show you command line options such as:
 ```bash
-./out/bin/api-mock-service -h
 Starts mock service
 
 Usage:
@@ -109,12 +108,13 @@ Available Commands:
   version     Version will output the current build information
 
 Flags:
-      --assetDir string   asset dir to store static assets/fixtures
-      --config string     config file
-      --dataDir string    data dir to store mock scenarios
-  -h, --help              help for api-mock-service
-      --httpPort int      HTTP port to listen
-      --proxyPort int     Proxy port to listen
+      --assetDir string     asset dir to store static assets/fixtures
+      --config string       config file
+      --dataDir string      data dir to store mock scenarios
+  -h, --help                help for api-mock-service
+      --historyDir string   asset dir to store mock history
+      --httpPort int        HTTP port to listen (default 8000)
+      --proxyPort int       Proxy port to listen (default 9000)
 
 Use "api-mock-service [command] --help" for more information about a command.
 ```
