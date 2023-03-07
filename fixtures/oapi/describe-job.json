@@ -1,0 +1,316 @@
+{
+  "components": {
+    "schemas": {
+      "AttributeMap": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/AttributeValue"
+        },
+        "description": "Shapes for selector attributes"
+      },
+      "AttributeValue": {
+        "oneOf": [
+          {
+            "type": "object",
+            "title": "stringValue",
+            "properties": {
+              "stringValue": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "stringValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "booleanValue",
+            "properties": {
+              "booleanValue": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "booleanValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "integerValue",
+            "properties": {
+              "integerValue": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "integerValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "binaryValue",
+            "properties": {
+              "binaryValue": {
+                "type": "string",
+                "format": "byte"
+              }
+            },
+            "required": [
+              "binaryValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "decimalValue",
+            "properties": {
+              "decimalValue": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "decimalValue"
+            ]
+          },
+          {
+            "type": "object",
+            "title": "dateTimeValue",
+            "properties": {
+              "dateTimeValue": {
+                "type": "number",
+                "format": "double"
+              }
+            },
+            "required": [
+              "dateTimeValue"
+            ]
+          }
+        ]
+      },
+      "Reason": {
+        "type": "string",
+        "enum": [
+          "UNAVAILABLE",
+          "CONFLICT_ERROR",
+          "THROTTLING",
+          "INTERNAL_ERROR"
+        ]
+      },
+      "Status": {
+        "type": "string",
+        "description": "An enumeration of status",
+        "enum": [
+          "PENDING",
+          "EXECUTING",
+          "SUCCEEDED",
+          "CANCELED",
+          "FAILED"
+        ]
+      },
+      "DescribeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1
+          },
+          "removed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1
+          },
+          "tableArn": {
+            "type": "string"
+          },
+          "recordSelectorAttributeMap": {
+            "$ref": "#/components/schemas/AttributeMap"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "percentCompletion": {
+            "type": "number",
+            "format": "double"
+          },
+          "estimated": {
+            "type": "number"
+          },
+          "records": {
+            "type": "number"
+          },
+          "remaining": {
+            "type": "number"
+          },
+          "verified": {
+            "type": "number"
+          },
+          "remainin": {
+            "type": "number"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/Reason"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "aws.auth.sigv4": {
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      },
+      "smithy.api.httpApiKeyAuth": {
+        "in": "header",
+        "name": "x-api-key",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "title": "v1_describe",
+    "version": ""
+  },
+  "openapi": "3.0.2",
+  "paths": {
+    "/v1/describe/{id}": {
+      "get": {
+        "description": "Describe current status of job by id",
+        "operationId": "Describe-v1-describe",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Unique identifier",
+            "schema": {
+              "type": "string",
+              "description": "Unique identifier"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DescribeResponse"
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "in": "header",
+                "name": "Content-Type",
+                "schema": {
+                  "example": "application/json",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "headers": {
+              "Content-Type": {
+                "in": "header",
+                "name": "Content-Type",
+                "schema": {
+                  "example": "application/json",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "headers": {
+              "Content-Type": {
+                "in": "header",
+                "name": "Content-Type",
+                "schema": {
+                  "example": "application/json",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "headers": {
+              "Content-Type": {
+                "in": "header",
+                "name": "Content-Type",
+                "schema": {
+                  "example": "application/json",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "429": {
+            "headers": {
+              "Content-Type": {
+                "in": "header",
+                "name": "Content-Type",
+                "schema": {
+                  "example": "application/json",
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "in": "header",
+                "name": "Retry-After",
+                "schema": {
+                  "example": "8693",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "headers": {
+              "Content-Type": {
+                "in": "header",
+                "name": "Content-Type",
+                "schema": {
+                  "example": "application/json",
+                  "type": "string"
+                }
+              },
+              "Retry-After": {
+                "in": "header",
+                "name": "Retry-After",
+                "schema": {
+                  "example": "98115",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Describe-v1-describe-200-a200ff997dd5bb72ed3261c50b5e5db7ca151dd2",
+        "tags": [
+          "v1_describe"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "aws.auth.sigv4": []
+    },
+    {
+      "smithy.api.httpApiKeyAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Mock Server",
+      "url": "http://localhost:8000"
+    }
+  ]
+}

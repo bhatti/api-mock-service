@@ -242,7 +242,9 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	resp.Body = io.NopCloser(bytes.NewReader(resBytes))
 	resp.Header[types.ContentTypeHeader] = []string{resContentType}
 	resp.Header["Access-Control-Allow-Origin"] = []string{h.config.CORS}
+	resp.Header["Access-Control-Allow-Credentials"] = []string{"true"}
 	resp.Header["Access-Control-Allow-Methods"] = []string{"GET, POST, DELETE, PUT, PATCH, OPTIONS, HEAD"}
+	resp.Header["Access-Control-Allow-Headers"] = []string{"*"}
 	//resp.Header["Access-Control-Allow-Headers"] = []string{"Content-Type, api_key, Authorization"}
 	//resp.Header["Content-Security-Policy"] = []string{"default-src 'self', form-action 'self',script-src 'self'"}
 	log.WithFields(log.Fields{

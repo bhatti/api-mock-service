@@ -1,10 +1,10 @@
 package oapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
-	"gopkg.in/yaml.v3"
 )
 
 // Request Body
@@ -27,7 +27,7 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 	var exampleContents []byte
 	if obj, err := fuzz.UnmarshalArrayOrObject(quotedContents); err == nil {
 		obj = fuzz.GenerateFuzzData(obj)
-		if out, err := yaml.Marshal(obj); err == nil && obj != nil {
+		if out, err := json.Marshal(obj); err == nil && obj != nil {
 			exampleContents = out
 		}
 	}
@@ -61,7 +61,7 @@ func checkRequestHeader(name string, pattern string) string {
 	validHeaders := map[string]bool{types.Authorization: true, types.ContentTypeHeader: true}
 	if validHeaders[name] {
 		if pattern == "" {
-			return fmt.Sprintf(`VariableSizeGE headers.%s 1`, name)
+			return fmt.Sprintf(`VariableSizeGE headers.%s 5`, name)
 		} else {
 			return fmt.Sprintf(`VariableMatches headers.%s %s`, name, pattern)
 		}

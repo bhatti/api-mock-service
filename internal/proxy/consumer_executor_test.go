@@ -2,9 +2,11 @@ package proxy
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
+	"github.com/bhatti/api-mock-service/internal/oapi"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
@@ -66,6 +68,49 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
+}
+
+func Test_ShouldExecuteDescribeAPI(t *testing.T) {
+	config := buildTestConfig()
+	// GIVEN a mock scenario repository
+	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	data, err := os.ReadFile("../../fixtures/oapi/describe-job.json")
+	require.NoError(t, err)
+	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
+	specs, err := oapi.Parse(context.Background(), data, dataTempl)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(specs))
+	// AND executor
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	for _, spec := range specs {
+		scenario, err := spec.BuildMockScenario(dataTempl)
+		require.NoError(t, err)
+		require.True(t, scenario.Request.Headers["x-api-key"] != "")
+		_, err = yaml.Marshal(scenario)
+		require.NoError(t, err)
+		require.NoError(t, scenarioRepository.Save(scenario))
+
+		// WHEN executing with GET API
+		u, err := url.Parse("https://localhost:8080/v1/describe/123")
+		require.NoError(t, err)
+		ctx := web.NewStubContext(&http.Request{
+			Method: "GET",
+			URL:    u,
+			Header: http.Header{
+				types.ContentTypeHeader: []string{"application/json"},
+				types.Authorization:     []string{"123456789"},
+			},
+		})
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+		specAgain := oapi.ScenarioToOpenAPI(spec.Title, "", scenario)
+		j, err := specAgain.MarshalJSON()
+		require.NoError(t, err)
+		require.True(t, len(j) > 0)
+	}
 }
 
 func Test_ShouldLookupPostMockScenarios(t *testing.T) {

@@ -186,8 +186,8 @@ func saveMockResponse(
 			Type:   "apiKey",
 			Name:   web.Authorization,
 			In:     "header",
-			Format: "awsSigv4",
 			Scheme: "x-amazon-apigateway-authtype",
+			Format: "awsSigv4",
 		}
 		scenario.Authentication["smithy.api.httpApiKeyAuth"] = types.MockAuthorization{
 			Type: "apiKey",

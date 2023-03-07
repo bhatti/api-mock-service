@@ -90,7 +90,7 @@ func VariableSize(name string, data any) int {
 	case []float64:
 		return len(val.([]float64))
 	default:
-		return -1
+		return len(fmt.Sprintf("%s", val))
 	}
 }
 

@@ -1,11 +1,11 @@
 package oapi
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
 // Response Body
@@ -33,7 +33,7 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 	var exampleContents []byte
 	if obj, err := fuzz.UnmarshalArrayOrObject(quotedContents); err == nil {
 		obj = fuzz.GenerateFuzzData(obj)
-		if out, err := yaml.Marshal(obj); err == nil && obj != nil {
+		if out, err := json.Marshal(obj); err == nil && obj != nil {
 			exampleContents = out
 		}
 	} else {

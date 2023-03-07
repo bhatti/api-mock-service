@@ -25,6 +25,22 @@ func Test_ShouldParseValidTwitterOpenAPI(t *testing.T) {
 	}
 }
 
+func Test_ShouldParseAndConvertValidDescribeAPI(t *testing.T) {
+	data, err := os.ReadFile("../../fixtures/oapi/describe-job.json")
+	require.NoError(t, err)
+	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
+	specs, err := Parse(context.Background(), data, dataTempl)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(specs))
+	for _, spec := range specs {
+		scenario, err := spec.BuildMockScenario(dataTempl)
+		require.NoError(t, err)
+		require.True(t, scenario.Request.Headers["x-api-key"] != "")
+		_, err = yaml.Marshal(scenario)
+		require.NoError(t, err)
+	}
+}
+
 func Test_ShouldParseValidJobsOpenAPI(t *testing.T) {
 	data, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
