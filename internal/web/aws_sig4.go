@@ -76,6 +76,7 @@ func (s *awsSigner) AWSSign(req *http.Request, awsCred *credentials.Credentials)
 			req.Header.Get(amzDate), time.Now().UTC().Format("20060102T150405Z"), s.awsConfig.Debug)
 		return
 	}
+	req.Header.Del(amzDate)
 
 	var credVal credentials.Value
 	credVal, err = awsCred.GetWithContext(context.Background())

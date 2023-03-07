@@ -212,7 +212,7 @@ func (x *ProducerExecutor) execute(
 	}
 
 	if statusCode != scenario.Response.StatusCode {
-		log.WithFields(fields).Warnf("failed to execute request, status %d != %d for %s",
+		log.WithFields(fields).Warnf("failed to execute request, actual status %d != %d (scenario) for %s",
 			statusCode, scenario.Response.StatusCode, scenario.Path)
 		return nil, fmt.Errorf("failed to execute request with status %d didn't match expected value %d for %s (%s)",
 			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
