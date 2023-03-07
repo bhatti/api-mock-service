@@ -148,6 +148,7 @@ func NewConfiguration(
 		"Port":       config.HTTPPort,
 		"DataDir":    config.DataDir,
 		"AssetDir":   config.AssetDir,
+		"HistoryDir": config.HistoryDir,
 		"Version":    version,
 		"UsedConfig": viper.ConfigFileUsed(),
 	}).Infof("loaded config file...")
