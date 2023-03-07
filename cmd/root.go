@@ -120,8 +120,8 @@ func init() {
 	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
 	rootCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
 	rootCmd.Flags().StringVar(&historyDir, "historyDir", "", "asset dir to store mock history")
-	rootCmd.Flags().IntVar(&httpPort, "httpPort", 8000, "HTTP port to listen")
-	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 9000, "Proxy port to listen")
+	rootCmd.Flags().IntVar(&httpPort, "httpPort", 0, "HTTP port to listen")
+	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 0, "Proxy port to listen")
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableColors: false,

@@ -1,5 +1,5 @@
-http_port: 8000
-proxy_port: 9000
+http_port: 8001
+proxy_port: 9001
 connection_timeout: 0
 data_dir: "mock_tests"
 asset_dir: "mock_assets"
