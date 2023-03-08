@@ -113,14 +113,10 @@ func (r MockHTTPRequest) BuildTemplateParams(
 	req *http.Request,
 	pathGroups map[string]string,
 	overrides map[string]any,
-	verbose bool,
 ) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
 	templateParams = make(map[string]any)
 	queryParams = make(map[string]string)
 	reqHeaders = make(map[string][]string)
-	if verbose {
-		reqHeaders["X-Verbose"] = []string{"true"}
-	}
 	//for _, env := range os.Environ() {
 	//	parts := strings.Split(env, "=")
 	//	if len(parts) == 2 {

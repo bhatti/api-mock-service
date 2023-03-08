@@ -134,7 +134,17 @@ func (w *DefaultHTTPClient) execute(
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
 
-	if req.Header.Get("X-Verbose") == "true" {
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Component":   "DefaultHTTPClient",
+			"URL":         req.URL,
+			"Method":      req.Method,
+			"AWSAuthSig4": awsAuthSig4,
+			"AWSInfo":     awsInfo,
+			"AWSError":    awsErr,
+			"Error":       err,
+		}).Warnf("invoked http client failed")
+	} else {
 		log.WithFields(log.Fields{
 			"Component":   "DefaultHTTPClient",
 			"URL":         req.URL,
@@ -148,6 +158,7 @@ func (w *DefaultHTTPClient) execute(
 			"Error":       err,
 		}).Infof("invoked http client")
 	}
+
 	if err != nil {
 		return 500, nil, make(map[string][]string), err
 	}

@@ -151,8 +151,7 @@ func (x *ProducerExecutor) execute(
 	templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
 		req,
 		scenario.ToKeyData().MatchGroups(scenario.Path),
-		overrides,
-		contractRequest.Verbose)
+		overrides)
 	if fuzz.RandIntMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandIntMinMax(2, 5))
 	}

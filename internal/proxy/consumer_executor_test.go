@@ -61,12 +61,30 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 			types.MockWaitBeforeReply: []string{"1"},
 			types.MockResponseStatus:  []string{"0"},
 			types.ContentTypeHeader:   []string{"application/json"},
+			"ETag":                    []string{"12"},
 		},
 	})
 	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
 	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+
+	// WHEN looking up todos by PUT with different query param
+	ctx = web.NewStubContext(&http.Request{
+		Method: "PUT",
+		URL:    u,
+		Header: http.Header{
+			types.MockWaitBeforeReply: []string{"1"},
+			types.MockResponseStatus:  []string{"0"},
+			types.ContentTypeHeader:   []string{"application/json"},
+			"ETag":                    []string{"123"},
+		},
+	})
+	err = player.Execute(ctx)
+	require.NoError(t, err)
+	// THEN it should find it
+	saved = ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
 }
 
