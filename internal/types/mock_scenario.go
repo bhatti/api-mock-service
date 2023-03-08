@@ -46,7 +46,7 @@ const MockResponseStatus = "X-Mock-Response-Status"
 const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 
 // ScenarioExt extension
-const ScenarioExt = ".scr"
+const ScenarioExt = ".yaml"
 
 // MockAuthorization defines mock auth parameters
 type MockAuthorization struct {

@@ -101,6 +101,32 @@ func UnmarshalArrayOrObjectAndExtractTypesAndMarshal(str string, dataTemplate Da
 	return string(b), nil
 }
 
+// ExtractTopPrimitiveAttributes to fetch attributes
+func ExtractTopPrimitiveAttributes(b []byte, max int) (res []string) {
+	res = make([]string, 0)
+	if len(b) == 0 {
+		return
+	}
+	str := strings.TrimSpace(string(b))
+
+	if strings.HasPrefix(str, "{") {
+		m := make(map[string]any)
+		if err := json.Unmarshal(b, &m); err == nil {
+			for k := range m {
+				val := m[k]
+				if reflect.TypeOf(val).String() == "string" ||
+					strings.HasPrefix(reflect.TypeOf(val).String(), "float") {
+					res = append(res, k)
+					if len(res) == max {
+						break
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
 // UnmarshalArrayOrObject helper function to unmarshal bytes based on object/array
 func UnmarshalArrayOrObject(b []byte) (res any, err error) {
 	if len(b) == 0 {

@@ -178,6 +178,12 @@ func Test_ShouldExtractTypesNestedArray(t *testing.T) {
 	require.NotNil(t, res)
 }
 
+func Test_ShouldExtractTopPrimitiveAttributes(t *testing.T) {
+	j := `{"account":"21212423423","int": 3, "float": 5.3, "regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": {"one": 14}, "items": [1.1, 2.0], "passed": [true, false]}`
+	res := ExtractTopPrimitiveAttributes([]byte(j), 10)
+	require.Equal(t, 5, len(res))
+}
+
 func Test_ShouldExtractTypesNestedArrays(t *testing.T) {
 	j := `{"account":"21212423423","regions":["us-east-2", "us-west-2"],"name":"sample-id5","id":"us-west2_test1", "taxes": [123, 14], "items": [1.1, 2.0], "passed": [true, false]}`
 	res, err := UnmarshalArrayOrObject([]byte(j))

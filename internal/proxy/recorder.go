@@ -113,17 +113,20 @@ func saveMockResponse(
 		}).Warnf("failed to unmarshal and extrate types for response")
 	}
 
-	assertions := []string{
+	reqAssertions := make([]string, 0)
+	resAssertions := []string{
 		`ResponseTimeMillisLE 5000`,
 		fmt.Sprintf(`ResponseStatusMatches %d`, status),
 	}
 	reqHeaderAssertions := make(map[string]string)
 	if req.Header.Get(types.ContentTypeHeader) != "" {
+		reqAssertions = append(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+			req.Header.Get(types.ContentTypeHeader)))
 		reqHeaderAssertions[types.ContentTypeHeader] = req.Header.Get(types.ContentTypeHeader)
 	}
 	respHeaderAssertions := make(map[string]string)
 	if len(resHeaders[types.ContentTypeHeader]) > 0 {
-		assertions = append(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		resAssertions = append(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
 			resHeaders[types.ContentTypeHeader][0]))
 		respHeaderAssertions[types.ContentTypeHeader] = resHeaders[types.ContentTypeHeader][0]
 	}
@@ -135,13 +138,14 @@ func saveMockResponse(
 		Group:          utils.NormalizeGroup("", u.Path),
 		Authentication: make(map[string]types.MockAuthorization),
 		Request: types.MockHTTPRequest{
-			AssertQueryParamsPattern: make(map[string]string),
-			AssertHeadersPattern:     reqHeaderAssertions,
-			AssertContentsPattern:    matchReqContents,
 			QueryParams:              make(map[string]string),
 			Headers:                  make(map[string]string),
 			Contents:                 string(reqBody),
 			ExampleContents:          string(reqBody),
+			AssertQueryParamsPattern: make(map[string]string),
+			AssertHeadersPattern:     reqHeaderAssertions,
+			AssertContentsPattern:    matchReqContents,
+			Assertions:               reqAssertions,
 		},
 		Response: types.MockHTTPResponse{
 			Headers:               resHeaders,
@@ -150,7 +154,8 @@ func saveMockResponse(
 			StatusCode:            status,
 			AssertHeadersPattern:  respHeaderAssertions,
 			AssertContentsPattern: matchResContents,
-			Assertions:            assertions,
+			Assertions:            resAssertions,
+			PipeProperties:        fuzz.ExtractTopPrimitiveAttributes(resBody, 5),
 		},
 	}
 	scenario.Tags = []string{scenario.Group}
