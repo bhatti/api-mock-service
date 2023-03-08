@@ -37,6 +37,7 @@ var ignoredHeaders = map[string]struct{}{
 	"X-Requested-With":        {},
 	"X-Amz-Requestsupertrace": {},
 	"X-Amz-Security-Token":    {},
+	"X-Verbose":               {},
 }
 
 // Log implements aws.Logger.Log
