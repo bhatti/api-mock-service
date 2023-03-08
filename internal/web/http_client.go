@@ -139,6 +139,7 @@ func (w *DefaultHTTPClient) execute(
 			"Component":   "DefaultHTTPClient",
 			"URL":         req.URL,
 			"Method":      req.Method,
+			"Headers":     req.Header,
 			"AWSAuthSig4": awsAuthSig4,
 			"AWSInfo":     awsInfo,
 			"AWSError":    awsErr,

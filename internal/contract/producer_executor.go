@@ -191,6 +191,7 @@ func (x *ProducerExecutor) execute(
 		"URL":        url,
 		"Scenario":   scenario,
 		"StatusCode": statusCode,
+		"Headers":    reqHeaders,
 		"Elapsed":    elapsed}
 
 	// response contents
@@ -205,7 +206,6 @@ func (x *ProducerExecutor) execute(
 
 	if contractRequest.Verbose {
 		fields["Request"] = reqBodyStr
-		fields["Headers"] = reqHeaders
 		fields["Response"] = resContents
 		fields["ResponseBytes"] = string(resBytes)
 	}
