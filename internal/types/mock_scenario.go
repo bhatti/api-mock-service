@@ -414,20 +414,17 @@ func (ms *MockScenario) String() string {
 
 // SafeName strips invalid characters
 func (ms *MockScenario) SafeName() string {
-	if re, err := regexp.Compile(`[^a-zA-Z0-9_:]`); err == nil {
-		return re.ReplaceAllString(ms.Name, "")
-	}
-	return ms.Name
+	return SanitizeNonAlphabet(ms.Name, "")
 }
 
 // MethodPath helper method
 func (ms *MockScenario) MethodPath() string {
-	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_")
+	return strings.ToLower(string(ms.Method)) + "_" + SanitizeNonAlphabet(ms.Path, "_")
 }
 
 // MethodPathTarget helper method
 func (ms *MockScenario) MethodPathTarget() string {
-	return strings.ToLower(string(ms.Method)) + "_" + strings.ReplaceAll(ms.Path, "/", "_") +
+	return strings.ToLower(string(ms.Method)) + "_" + SanitizeNonAlphabet(ms.Path, "_") + // replace slashes
 		"_" + strings.ToLower(ms.Request.TargetHeader())
 }
 
@@ -500,7 +497,12 @@ func (ms *MockScenario) NormalPath(sep uint8) string {
 
 // SetName sets name
 func (ms *MockScenario) SetName(prefix string) {
-	ms.Name = fmt.Sprintf("%s%s-%d-%s", prefix, NormalizeDirPath(ms.NormalName()), ms.Response.StatusCode, ms.Digest())
+	ms.Name = ms.BuildName(prefix)
+}
+
+// BuildName builds name
+func (ms *MockScenario) BuildName(prefix string) string {
+	return fmt.Sprintf("%s%s-%d-%s", prefix, NormalizeDirPath(ms.NormalName()), ms.Response.StatusCode, ms.Digest())
 }
 
 // NormalName normalizes name from path
@@ -580,4 +582,18 @@ func toFlatMap(headers map[string][]string) map[string]string {
 		flatHeaders[k] = v[0]
 	}
 	return flatHeaders
+}
+
+// SanitizeNonAlphabet helper method
+func SanitizeNonAlphabet(name string, rep string) string {
+	if re, err := regexp.Compile(`[^a-zA-Z0-9_\-:]`); err == nil {
+		name = re.ReplaceAllString(name, rep)
+	}
+	if re, err := regexp.Compile(rep + `+`); err == nil {
+		name = re.ReplaceAllString(name, rep)
+	}
+	if re, err := regexp.Compile(rep + `$`); err == nil {
+		name = re.ReplaceAllString(name, "")
+	}
+	return name
 }

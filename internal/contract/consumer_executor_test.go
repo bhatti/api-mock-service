@@ -1,4 +1,4 @@
-package proxy
+package contract
 
 import (
 	"bytes"
@@ -403,7 +403,7 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 	_ = os.MkdirAll("../../mock_tests/mock_contracts/path/POST", 0755)
 	_ = os.WriteFile("../../mock_tests/mock_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
 	req := &http.Request{Body: nil}
-	_, err = addMockResponse(
+	_, err = AddMockResponse(
 		req,
 		reqHeader,
 		resHeader,
@@ -431,7 +431,7 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 	u, err := url.Parse("https://jsonplaceholder.typicode.com/api/todos/202?a=123&b=abc")
 	require.NoError(t, err)
 	req := &http.Request{Body: nil, URL: u}
-	_, err = addMockResponse(
+	_, err = AddMockResponse(
 		req,
 		reqHeader,
 		resHeader,
@@ -458,7 +458,7 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	req := &http.Request{Body: reader}
-	_, err = addMockResponse(
+	_, err = AddMockResponse(
 		req,
 		reqHeader,
 		resHeader,
@@ -489,7 +489,7 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 		Body: reader,
 		URL:  u,
 	}
-	_, err = addMockResponse(
+	_, err = AddMockResponse(
 		req,
 		reqHeader,
 		resHeader,

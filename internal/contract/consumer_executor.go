@@ -1,4 +1,4 @@
-package proxy
+package contract
 
 import (
 	"errors"
@@ -59,7 +59,7 @@ func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		return err
 	}
 
-	respBody, err := addMockResponse(
+	respBody, err := AddMockResponse(
 		c.Request(),
 		c.Request().Header,
 		c.Response().Header(),
@@ -76,86 +76,86 @@ func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		respBody)
 }
 
-// this method is shared so it cannot be instance method
-func addMockResponse(
+// AddMockResponse method is shared so it cannot be instance method
+func AddMockResponse(
 	req *http.Request,
 	reqHeaders http.Header,
 	respHeaders http.Header,
-	matchedScenario *types.MockScenario,
+	scenario *types.MockScenario,
 	scenarioRepository repository.MockScenarioRepository,
 	fixtureRepository repository.MockFixtureRepository,
 ) (respBody []byte, err error) {
 	var inBody []byte
 	inBody, req.Body, err = utils.ReadAll(req.Body)
 	if err == nil && len(inBody) > 0 {
-		matchedScenario.Request.Contents = string(inBody)
-		matchedScenario.Request.ExampleContents = string(inBody)
+		scenario.Request.Contents = string(inBody)
+		scenario.Request.ExampleContents = string(inBody)
 	}
 
 	{
 		// check request assertions
-		templateParams, queryParams, reqHeaders := matchedScenario.Request.BuildTemplateParams(
+		templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
 			req,
-			matchedScenario.ToKeyData().MatchGroups(matchedScenario.Path),
+			scenario.ToKeyData().MatchGroups(scenario.Path),
 			reqHeaders,
 			make(map[string]any))
 		reqContents, err := fuzz.UnmarshalArrayOrObject(inBody)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", matchedScenario.Name, err)
+			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", scenario.Name, err)
 		}
-		if err = matchedScenario.Request.Assert(queryParams, reqHeaders, reqContents, templateParams); err != nil {
+		if err = scenario.Request.Assert(queryParams, reqHeaders, reqContents, templateParams); err != nil {
 			return nil, err
 		}
 	}
 
-	for k, vals := range matchedScenario.Response.Headers {
+	for k, vals := range scenario.Response.Headers {
 		for _, val := range vals {
 			respHeaders.Add(k, val)
 		}
 	}
-	respHeaders.Add(types.MockScenarioName, matchedScenario.Name)
-	respHeaders.Add(types.MockScenarioPath, matchedScenario.Path)
-	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", matchedScenario.RequestCount))
+	respHeaders.Add(types.MockScenarioName, scenario.Name)
+	respHeaders.Add(types.MockScenarioPath, scenario.Path)
+	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
 	// Override wait time from request header
 	if reqHeaders.Get(types.MockWaitBeforeReply) != "" {
-		matchedScenario.WaitBeforeReply, _ = time.ParseDuration(reqHeaders.Get(types.MockWaitBeforeReply))
+		scenario.WaitBeforeReply, _ = time.ParseDuration(reqHeaders.Get(types.MockWaitBeforeReply))
 	}
-	if matchedScenario.WaitBeforeReply > 0 {
-		time.Sleep(matchedScenario.WaitBeforeReply)
+	if scenario.WaitBeforeReply > 0 {
+		time.Sleep(scenario.WaitBeforeReply)
 	}
 	// Override response status from request header
 	if reqHeaders.Get(types.MockResponseStatus) != "" {
-		matchedScenario.Response.StatusCode, _ = strconv.Atoi(reqHeaders.Get(types.MockResponseStatus))
+		scenario.Response.StatusCode, _ = strconv.Atoi(reqHeaders.Get(types.MockResponseStatus))
 	}
-	if matchedScenario.Response.StatusCode == 0 {
-		matchedScenario.Response.StatusCode = 200
+	if scenario.Response.StatusCode == 0 {
+		scenario.Response.StatusCode = 200
 	}
 	// Build output from contents-file or contents property
-	respBody = []byte(matchedScenario.Response.Contents)
-	if matchedScenario.Response.ContentsFile != "" {
+	respBody = []byte(scenario.Response.Contents)
+	if scenario.Response.ContentsFile != "" {
 		respBody, err = fixtureRepository.Get(
-			matchedScenario.Method,
-			matchedScenario.Response.ContentsFile,
-			matchedScenario.Path)
+			scenario.Method,
+			scenario.Response.ContentsFile,
+			scenario.Path)
 	}
 
 	if err == nil {
-		matchedScenario.Response.Contents = string(respBody)
-		if matchedScenario.Request.Headers == nil {
-			matchedScenario.Request.Headers = make(map[string]string)
+		scenario.Response.Contents = string(respBody)
+		if scenario.Request.Headers == nil {
+			scenario.Request.Headers = make(map[string]string)
 		}
 		for k, vals := range reqHeaders {
 			for _, val := range vals {
-				matchedScenario.Request.Headers[k] = val
+				scenario.Request.Headers[k] = val
 			}
 		}
-		if matchedScenario.Response.Headers == nil {
-			matchedScenario.Response.Headers = make(map[string][]string)
+		if scenario.Response.Headers == nil {
+			scenario.Response.Headers = make(map[string][]string)
 		}
 		for k, vals := range respHeaders {
-			matchedScenario.Response.Headers[k] = vals
+			scenario.Response.Headers[k] = vals
 		}
-		err = scenarioRepository.SaveHistory(matchedScenario)
+		err = scenarioRepository.SaveHistory(scenario)
 	}
 
 	return

@@ -38,6 +38,39 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	require.Contains(t, res.Errors[""], `could not lookup matching API`)
 }
 
+func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
+	// GIVEN scenario repository
+	repo, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	require.NoError(t, err)
+
+	// AND a valid scenario
+	_, err = saveTestScenario("../../fixtures/create_user.yaml", repo)
+	require.NoError(t, err)
+	_, err = saveTestScenario("../../fixtures/get_user.yaml", repo)
+	require.NoError(t, err)
+	_, err = saveTestScenario("../../fixtures/users.yaml", repo)
+	require.NoError(t, err)
+
+	// AND valid template for random data
+	contractReq := types.NewContractRequest(baseURL, 1)
+	client := web.NewStubHTTPClient()
+	client.AddMapping("POST", baseURL+"/users", web.NewStubHTTPResponse(200,
+		`{"User": {"Directory": "my_dir", "Username": "my_user@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
+	client.AddMapping("GET", baseURL+"/users/1", web.NewStubHTTPResponse(200,
+		`{"User": {"Directory": "my_dir2", "Username": "my_user2@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
+	client.AddMapping("GET", baseURL+"/users", web.NewStubHTTPResponse(200,
+		`{"User": {"Directory": "my_dir3", "Username": "my_user3@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
+	// WHEN executing scenario
+	executor := NewProducerExecutor(repo, client)
+	// THEN it should execute saved scenario
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	res := executor.ExecuteByHistory(context.Background(), &http.Request{}, "user_group", dataTemplate, contractReq)
+	for _, err := range res.Errors {
+		t.Log(err)
+	}
+	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("%v", res.Errors))
+}
+
 func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	// GIVEN scenario repository
 	repo, err := repository.NewFileMockScenarioRepository(buildTestConfig())
@@ -476,7 +509,10 @@ func buildTestConfig() *types.Configuration {
 	}
 }
 
-func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {
+func saveTestScenario(
+	name string,
+	scenarioRepo repository.MockScenarioRepository,
+) (*types.MockScenario, error) {
 	// GIVEN a mock scenario loaded from YAML
 	b, err := os.ReadFile(name)
 	if err != nil {
@@ -488,7 +524,11 @@ func saveTestScenario(name string, repo repository.MockScenarioRepository) (*typ
 	if err != nil {
 		return nil, err
 	}
-	err = repo.Save(&scenario)
+	err = scenarioRepo.Save(&scenario)
+	if err != nil {
+		return nil, err
+	}
+	err = scenarioRepo.SaveHistory(&scenario)
 	if err != nil {
 		return nil, err
 	}

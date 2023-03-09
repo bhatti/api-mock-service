@@ -35,18 +35,18 @@ func Test_ShouldFailPostFixtureWithoutNameOrPath(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock fixture without name and path
-	err = ctrl.PostMockFixture(ctx)
+	err = ctrl.postMockFixture(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
 	ctx.Params["method"] = "POST"
-	err = ctrl.PostMockFixture(ctx)
+	err = ctrl.postMockFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.PostMockFixture(ctx)
+	err = ctrl.postMockFixture(ctx)
 	require.Error(t, err)
 }
 
@@ -62,23 +62,23 @@ func Test_ShouldFailGetFixtureWithoutNameOrPath(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN getting mock fixture without name and path
-	err = ctrl.GetMockFixture(ctx)
+	err = ctrl.getMockFixture(ctx)
 	// THEN it should fail
 	require.Error(t, err)
 
 	// AND it should fail given method but without name
 	ctx.Params["method"] = "GET"
-	err = ctrl.GetMockFixture(ctx)
+	err = ctrl.getMockFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail to post given method but without name
-	err = ctrl.PostMockFixture(ctx)
+	err = ctrl.postMockFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.GetMockFixture(ctx)
+	err = ctrl.getMockFixture(ctx)
 	require.Error(t, err)
 }
 
@@ -122,18 +122,18 @@ func Test_ShouldFailDeleteFixtureWithoutNameOrPath(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN deleting mock fixture without name and path
-	err = ctrl.DeleteMockFixture(ctx)
+	err = ctrl.deleteMockFixture(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
 	ctx.Params["method"] = "DELETE"
-	err = ctrl.DeleteMockFixture(ctx)
+	err = ctrl.deleteMockFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.DeleteMockFixture(ctx)
+	err = ctrl.deleteMockFixture(ctx)
 	require.Error(t, err)
 }
 
@@ -152,13 +152,13 @@ func Test_ShouldCreateAndGetMockFixture(t *testing.T) {
 	ctx.Params["method"] = "POST"
 	ctx.Params["name"] = "data1"
 	ctx.Params["path"] = "/ghi/klm"
-	err = ctrl.PostMockFixture(ctx)
+	err = ctrl.postMockFixture(ctx)
 
 	// THEN it should return saved fixture
 	require.NoError(t, err)
 
 	// WHEN getting mock scenario by path
-	err = ctrl.GetMockFixture(ctx)
+	err = ctrl.getMockFixture(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -179,7 +179,7 @@ func Test_ShouldCreateAndGetMockFixtureNames(t *testing.T) {
 		ctx.Params["path"] = "/qfc/klm"
 
 		// WHEN creating mock fixture
-		err = ctrl.PostMockFixture(ctx)
+		err = ctrl.postMockFixture(ctx)
 		// THEN it should return saved scenario
 		require.NoError(t, err)
 	}
@@ -210,18 +210,18 @@ func Test_ShouldCreateAndDeleteMockFixture(t *testing.T) {
 	ctx.Params["method"] = "DELETE"
 	ctx.Params["name"] = "data1"
 	ctx.Params["path"] = "/ghi/klm"
-	err = ctrl.PostMockFixture(ctx)
+	err = ctrl.postMockFixture(ctx)
 
 	// THEN it should succeed
 	require.NoError(t, err)
 
 	// WHEN deleting mock scenario
-	err = ctrl.DeleteMockFixture(ctx)
+	err = ctrl.deleteMockFixture(ctx)
 	// THEN it should succeed
 	require.NoError(t, err)
 
 	// AND get API should fail
-	err = ctrl.GetMockFixture(ctx)
+	err = ctrl.getMockFixture(ctx)
 
 	// THEN it should not fail
 	require.Error(t, err)

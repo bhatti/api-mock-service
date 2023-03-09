@@ -10,8 +10,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func Test_ShouldNotStartProxyServer(t *testing.T) {
@@ -307,4 +309,28 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 	res = handler.handleResponse(res, nil)
 	require.NotNil(t, res)
+}
+
+func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {
+	return &types.MockScenario{
+		Method:      method,
+		Name:        name,
+		Path:        path,
+		Description: name,
+		Request: types.MockHTTPRequest{
+			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
+			AssertHeadersPattern: map[string]string{
+				types.ContentTypeHeader: "application/json",
+			},
+		},
+		Response: types.MockHTTPResponse{
+			Headers: map[string][]string{
+				"ETag":                  {strconv.Itoa(n)},
+				types.ContentTypeHeader: {"application/json"},
+			},
+			Contents:   "test body",
+			StatusCode: 200,
+		},
+		WaitBeforeReply: time.Duration(1) * time.Second,
+	}
 }

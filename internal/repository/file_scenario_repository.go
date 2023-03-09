@@ -319,19 +319,22 @@ func (sr *FileMockScenarioRepository) Lookup(
 }
 
 // HistoryNames returns list of mock scenarios names
-func (sr *FileMockScenarioRepository) HistoryNames() (names []string) {
+func (sr *FileMockScenarioRepository) HistoryNames(group string) (names []string) {
 	names = make([]string, 0)
+	sanitizedGroup := types.SanitizeNonAlphabet(group, "_")
 	files := sr.historyFiles()
 	for _, file := range files {
-		names = append(names, strings.ReplaceAll(file.Name(), types.ScenarioExt, ""))
+		if group == "" || strings.Contains(file.Name(), group) || strings.Contains(file.Name(), sanitizedGroup) {
+			names = append(names, strings.ReplaceAll(file.Name(), types.ScenarioExt, ""))
+		}
 	}
 	return
 }
 
 // SaveHistory saves history MockScenario
 func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) (err error) {
-	scenario.SetName(string(scenario.Method))
-	fileName := filepath.Join(sr.historyDir, scenario.Group+"_"+scenario.Name+types.ScenarioExt)
+	name := scenario.BuildName(string(scenario.Method))
+	fileName := filepath.Join(sr.historyDir, types.SanitizeNonAlphabet(scenario.Group, "_")+"_"+name+types.ScenarioExt)
 	var b []byte
 	if b, err = yaml.Marshal(scenario); err != nil {
 		return err

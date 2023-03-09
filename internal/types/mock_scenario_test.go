@@ -59,7 +59,7 @@ func Test_ShouldGetRequestTarget(t *testing.T) {
 	require.Equal(t, "", scenario.Request.TargetHeader())
 	scenario.Request.Headers["my-target"] = "abc"
 	require.Equal(t, "abc", scenario.Request.TargetHeader())
-	require.Equal(t, "post__api_v1__abc", scenario.MethodPathTarget())
+	require.Equal(t, "post__api_v1_abc", scenario.MethodPathTarget())
 }
 
 func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
@@ -123,7 +123,7 @@ func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 	require.Equal(t, "history", groups["cat"])
 	require.Equal(t, "101", groups["id"])
 	require.Equal(t, "POSTabc*/v1/category/{cat}/books/{id}", scenario.String())
-	require.Equal(t, "post__v1_category_{cat}_books_{id}", scenario.MethodPath())
+	require.Equal(t, "post__v1_category_cat_books_id", scenario.MethodPath())
 	require.Equal(t, "abc", scenario.SafeName())
 }
 

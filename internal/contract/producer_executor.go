@@ -50,7 +50,7 @@ func (x *ProducerExecutor) Execute(
 	sli.RegisterHistogram(scenarioKey.SafeName())
 	res := types.NewContractResponse()
 	log.WithFields(log.Fields{
-		"Component":       "Tester",
+		"Component":       "ProducerExecutor",
 		"Scenario":        scenarioKey,
 		"ContractRequest": contractReq.String(),
 	}).Infof("execute BEGIN")
@@ -71,7 +71,7 @@ func (x *ProducerExecutor) Execute(
 	res.Metrics = sli.Summary()
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
-		"Component":       "Tester",
+		"Component":       "ProducerExecutor",
 		"Scenario":        scenarioKey,
 		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
@@ -81,7 +81,59 @@ func (x *ProducerExecutor) Execute(
 	return res
 }
 
-// ExecuteByGroup an API with mock data
+// ExecuteByHistory executes execution history for an API with mock data
+func (x *ProducerExecutor) ExecuteByHistory(
+	ctx context.Context,
+	req *http.Request,
+	group string,
+	dataTemplate fuzz.DataTemplateRequest,
+	contractReq *types.ContractRequest,
+) *types.ContractResponse {
+	started := time.Now()
+	execHistory := x.scenarioRepository.HistoryNames(group)
+	res := types.NewContractResponse()
+	log.WithFields(log.Fields{
+		"Component":       "ProducerExecutor",
+		"Group":           group,
+		"ContractRequest": contractReq.String(),
+		"History":         len(execHistory),
+	}).Infof("execute-by-history BEGIN")
+
+	sli := metrics.NewMetrics()
+	registered := make(map[string]bool)
+
+	for i := 0; i < contractReq.ExecutionTimes; i++ {
+		for _, scenarioName := range execHistory {
+			scenario, err := x.scenarioRepository.LoadHistory(scenarioName)
+			if err != nil {
+				res.Add(fmt.Sprintf("%s_%d", scenario.Name, i), nil, err)
+				res.Metrics = sli.Summary()
+				return res
+			}
+			if !registered[scenario.SafeName()] {
+				sli.RegisterHistogram(scenario.SafeName())
+			}
+			url := scenario.BuildURL(contractReq.BaseURL)
+			resContents, err := x.execute(ctx, req, url, scenario, contractReq, dataTemplate, sli)
+			res.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
+			time.Sleep(scenario.WaitBeforeReply)
+		}
+	}
+
+	elapsed := time.Since(started).String()
+	res.Metrics = sli.Summary()
+	log.WithFields(log.Fields{
+		"Component":       "ProducerExecutor",
+		"Group":           group,
+		"ContractRequest": contractReq.String(),
+		"Elapsed":         elapsed,
+		"Errors":          len(res.Errors),
+		"Metrics":         res.Metrics,
+	}).Infof("execute-by-history COMPLETED")
+	return res
+}
+
+// ExecuteByGroup executes an API with mock data
 func (x *ProducerExecutor) ExecuteByGroup(
 	ctx context.Context,
 	req *http.Request,
@@ -93,7 +145,7 @@ func (x *ProducerExecutor) ExecuteByGroup(
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
 	res := types.NewContractResponse()
 	log.WithFields(log.Fields{
-		"Component":       "Tester",
+		"Component":       "ProducerExecutor",
 		"Group":           group,
 		"ContractRequest": contractReq.String(),
 		"ScenarioKeys":    scenarioKeys,
@@ -125,7 +177,7 @@ func (x *ProducerExecutor) ExecuteByGroup(
 	elapsed := time.Since(started).String()
 	res.Metrics = sli.Summary()
 	log.WithFields(log.Fields{
-		"Component":       "Tester",
+		"Component":       "ProducerExecutor",
 		"Group":           group,
 		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
@@ -174,7 +226,7 @@ func (x *ProducerExecutor) execute(
 	}
 
 	log.WithFields(log.Fields{
-		"Component":   "Tester",
+		"Component":   "ProducerExecutor",
 		"URL":         url,
 		"Scenario":    scenario,
 		"Headers":     reqHeaders,
@@ -195,7 +247,7 @@ func (x *ProducerExecutor) execute(
 	}
 
 	fields := log.Fields{
-		"Component":   "Tester",
+		"Component":   "ProducerExecutor",
 		"URL":         url,
 		"Scenario":    scenario,
 		"StatusCode":  statusCode,
@@ -268,7 +320,7 @@ func buildRequestBody(
 	res, err := fuzz.UnmarshalArrayOrObject([]byte(contents))
 	if err != nil {
 		log.WithFields(log.Fields{
-			"Component": "Tester",
+			"Component": "ProducerExecutor",
 			"Scenario":  scenario,
 			"Error":     err,
 		}).Infof("failed to unmarshal request")
@@ -277,7 +329,7 @@ func buildRequestBody(
 	j, err := json.Marshal(fuzz.GenerateFuzzData(res))
 	if err != nil {
 		log.WithFields(log.Fields{
-			"Component": "Tester",
+			"Component": "ProducerExecutor",
 			"Scenario":  scenario,
 			"Error":     err,
 		}).Infof("failed to marshal populated request")

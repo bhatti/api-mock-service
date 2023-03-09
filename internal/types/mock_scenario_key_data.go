@@ -202,15 +202,12 @@ func (msd *MockScenarioKeyData) String() string {
 
 // MethodPath helper method
 func (msd *MockScenarioKeyData) MethodPath() string {
-	return strings.ToLower(string(msd.Method)) + "_" + strings.ReplaceAll(msd.Path, "/", "_")
+	return strings.ToLower(string(msd.Method)) + "_" + SanitizeNonAlphabet(msd.Path, "_") // replace slash
 }
 
 // SafeName strips invalid characters
 func (msd *MockScenarioKeyData) SafeName() string {
-	if regexp, err := regexp.Compile(`[^a-zA-Z0-9_:]`); err == nil {
-		return regexp.ReplaceAllString(msd.Name, "")
-	}
-	return msd.Name
+	return SanitizeNonAlphabet(msd.Name, "")
 }
 
 // MethodNamePathPrefixKey returns full key for the scenario

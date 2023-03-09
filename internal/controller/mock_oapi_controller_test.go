@@ -112,7 +112,7 @@ func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 	err = mockScenarioRepository.SaveHistory(scenario)
 	require.NoError(t, err)
 
-	names := mockScenarioRepository.HistoryNames()
+	names := mockScenarioRepository.HistoryNames(scenario.Group)
 	require.True(t, len(names) > 0)
 	// WHEN fetching open-api specs without name
 	ctx.Request().URL, err = url.Parse("http://localhost:8080")

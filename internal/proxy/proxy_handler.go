@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
@@ -155,7 +156,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		return req, nil, err
 	}
 	respHeader := make(http.Header)
-	respBody, err := addMockResponse(
+	respBody, err := contract.AddMockResponse(
 		req,
 		req.Header,
 		respHeader,

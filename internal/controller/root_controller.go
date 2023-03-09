@@ -1,18 +1,18 @@
 package controller
 
 import (
-	"github.com/bhatti/api-mock-service/internal/proxy"
+	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/web"
 )
 
 // RootController structure
 type RootController struct {
-	player *proxy.ConsumerExecutor
+	player *contract.ConsumerExecutor
 }
 
 // NewRootController instantiates controller for updating mock-scenarios
 func NewRootController(
-	player *proxy.ConsumerExecutor,
+	player *contract.ConsumerExecutor,
 	webserver web.Server) *RootController {
 	ctrl := &RootController{
 		player: player,

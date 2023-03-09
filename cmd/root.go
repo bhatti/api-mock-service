@@ -177,7 +177,7 @@ func buildControllers(
 	webServer web.Server,
 ) (err error) {
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
-	player := proxy.NewConsumerExecutor(scenarioRepo, fixtureRepo)
+	player := contract.NewConsumerExecutor(scenarioRepo, fixtureRepo)
 	executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
 	_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, oapiRepo, webServer)
 	_ = controller.NewMockScenarioController(scenarioRepo, oapiRepo, webServer)

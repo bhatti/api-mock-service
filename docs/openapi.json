@@ -12,7 +12,7 @@
           "contract"
         ],
         "description": "Plays contract client for a scenario by group",
-        "operationId": "PostMockContractGroupScenario",
+        "operationId": "postMockContractGroupScenario",
         "requestBody": {
           "content": {
             "*/*": {
@@ -44,7 +44,7 @@
           "contract"
         ],
         "description": "Plays contract client for a scenario by name",
-        "operationId": "PostMockContractScenario",
+        "operationId": "postMockContractScenario",
         "requestBody": {
           "content": {
             "*/*": {
@@ -70,13 +70,34 @@
         "x-codegen-request-body-name": "Body"
       }
     },
+    "/_contracts/history/{group}": {
+      "post": {
+        "tags": [
+          "contract"
+        ],
+        "description": "Plays contract client for a scenario by history",
+        "operationId": "postMockContractHistory",
+        "responses": {
+          "200": {
+            "description": "MockScenario body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/_fixtures/{method}/{name}/{path}": {
       "get": {
         "tags": [
           "mock-fixtures"
         ],
         "summary": "Deletes an existing mock fixtures based on name and path.",
-        "operationId": "GetMockFixture",
+        "operationId": "getMockFixture",
         "parameters": [
           {
             "name": "method",
@@ -121,7 +142,7 @@
           "mock-fixtures"
         ],
         "summary": "Creates new mock fixtures based on request body.",
-        "operationId": "PostMockFixture",
+        "operationId": "postMockFixture",
         "parameters": [
           {
             "name": "method",
@@ -191,7 +212,7 @@
           "mock-fixtures"
         ],
         "summary": "Deletes an existing mock fixtures based on name and path.",
-        "operationId": "GetMockFixture",
+        "operationId": "getMockFixture",
         "parameters": [
           {
             "name": "method",

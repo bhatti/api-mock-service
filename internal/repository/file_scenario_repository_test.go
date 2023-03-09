@@ -626,12 +626,16 @@ func Test_ShouldLoadSaveMockScenariosHistory(t *testing.T) {
 		err = repo.SaveHistory(scenario)
 		require.NoError(t, err)
 	}
-	names := repo.HistoryNames()
+	names := repo.HistoryNames("history-group-false")
+	require.Equal(t, 3, len(names))
+	names = repo.HistoryNames("unknown")
+	require.Equal(t, 0, len(names))
+	names = repo.HistoryNames("")
 	require.Equal(t, 5, len(names))
 	for _, name := range names {
 		scenario, err := repo.LoadHistory(name)
 		require.NoError(t, err)
-		require.Contains(t, name, scenario.Name)
+		require.Contains(t, name, scenario.Group)
 	}
 }
 

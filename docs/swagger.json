@@ -393,7 +393,7 @@
     "/_contracts/{group}": {
       "post": {
         "description": "Plays contract client for a scenario by group",
-        "operationId": "PostMockContractGroupScenario",
+        "operationId": "postMockContractGroupScenario",
         "parameters": [
           {
             "in": "body",
@@ -416,7 +416,7 @@
     "/_contracts/{method}/{name}/{path}": {
       "post": {
         "description": "Plays contract client for a scenario by name",
-        "operationId": "PostMockContractScenario",
+        "operationId": "postMockContractScenario",
         "parameters": [
           {
             "in": "body",
@@ -436,9 +436,23 @@
         ]
       }
     },
+    "/_contracts/history/{group}": {
+      "post": {
+        "description": "Plays contract client for a scenario by history",
+        "operationId": "postMockContractHistory",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/mockScenarioContractResponse"
+          }
+        },
+        "tags": [
+          "contract"
+        ]
+      }
+    },
     "/_fixtures/{method}/{name}/{path}": {
       "delete": {
-        "operationId": "GetMockFixture",
+        "operationId": "getMockFixture",
         "parameters": [
           {
             "in": "path",
@@ -473,7 +487,7 @@
         ]
       },
       "get": {
-        "operationId": "GetMockFixture",
+        "operationId": "getMockFixture",
         "parameters": [
           {
             "in": "path",
@@ -508,7 +522,7 @@
         ]
       },
       "post": {
-        "operationId": "PostMockFixture",
+        "operationId": "postMockFixture",
         "parameters": [
           {
             "in": "path",

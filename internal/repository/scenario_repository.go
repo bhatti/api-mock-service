@@ -8,7 +8,7 @@ import (
 // MockScenarioRepository defines data store for mock-scenarios
 type MockScenarioRepository interface {
 	// HistoryNames returns list of mock scenarios names
-	HistoryNames() []string
+	HistoryNames(group string) []string
 
 	// SaveHistory saves history MockScenario
 	SaveHistory(scenario *types.MockScenario) (err error)

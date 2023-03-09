@@ -69,7 +69,7 @@ func (msc *MockScenarioController) postMockScenario(c web.APIContext) (err error
 //
 //	200: mockHistoryResponse
 func (msc *MockScenarioController) mockScenarioHistory(c web.APIContext) error {
-	res := msc.mockScenarioRepository.HistoryNames()
+	res := msc.mockScenarioRepository.HistoryNames(c.QueryParam("group"))
 	if res == nil {
 		res = make([]string, 0)
 	}
