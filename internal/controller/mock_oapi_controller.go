@@ -20,16 +20,19 @@ import (
 type MockOAPIController struct {
 	internalOAPI           embed.FS
 	mockScenarioRepository repository.MockScenarioRepository
+	oapiRepository         repository.OAPIRepository
 }
 
 // NewMockOAPIController instantiates controller for updating mock-scenarios based on OpenAPI v3
 func NewMockOAPIController(
 	internalOAPI embed.FS,
 	mockScenarioRepository repository.MockScenarioRepository,
+	oapiRepository repository.OAPIRepository,
 	webserver web.Server) *MockOAPIController {
 	ctrl := &MockOAPIController{
 		internalOAPI:           internalOAPI,
 		mockScenarioRepository: mockScenarioRepository,
+		oapiRepository:         oapiRepository,
 	}
 
 	webserver.GET("/_oapi/", ctrl.getOpenAPISpecsByGroup)
@@ -55,20 +58,23 @@ func (moc *MockOAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err err
 	if group == "_internal" {
 		b, err = moc.internalOAPI.ReadFile("docs/openapi.json")
 	} else {
-		allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
-		if len(allByGroup) == 0 {
-			allByGroup = moc.mockScenarioRepository.LookupAllByPath(
-				strings.ReplaceAll(c.Request().URL.Path, "/_oapi", ""))
-		}
-		var scenarios []*types.MockScenario
-		for _, keyData := range allByGroup {
-			scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
-			if err != nil {
-				return err
+		b, err = moc.oapiRepository.LoadRaw(group)
+		if err != nil {
+			allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
+			if len(allByGroup) == 0 {
+				allByGroup = moc.mockScenarioRepository.LookupAllByPath(
+					strings.ReplaceAll(c.Request().URL.Path, "/_oapi", ""))
 			}
-			scenarios = append(scenarios, scenario)
+			var scenarios []*types.MockScenario
+			for _, keyData := range allByGroup {
+				scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
+				if err != nil {
+					return err
+				}
+				scenarios = append(scenarios, scenario)
+			}
+			b, err = oapi.MarshalScenarioToOpenAPI(group, "", scenarios...)
 		}
-		b, err = oapi.MarshalScenarioToOpenAPI(group, "", scenarios...)
 	}
 	if err != nil {
 		return err
@@ -166,6 +172,12 @@ func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error
 			return err
 		}
 		scenarios = append(scenarios, scenario)
+	}
+	if len(specs) > 0 {
+		err = moc.oapiRepository.SaveRaw(specs[0].Title, data)
+		if err != nil {
+			return err
+		}
 	}
 	return c.JSON(http.StatusOK, scenarios)
 }

@@ -8,7 +8,7 @@ import (
 
 func Test_ShouldValidateConfiguration(t *testing.T) {
 	// GIVEN a configuration
-	config, err := NewConfiguration(8080, 8081, "/dir", "/asset", "/history", &Version{})
+	config, err := NewConfiguration(8080, 8081, "/dir", &Version{})
 	// WHEN validating config
 	// THEN it should succeed
 	require.NoError(t, err)
@@ -17,7 +17,7 @@ func Test_ShouldValidateConfiguration(t *testing.T) {
 
 func Test_ShouldNotValidateConfiguration(t *testing.T) {
 	// GIVEN a configuration
-	_, err := NewConfiguration(8080, 8080, "/dir", "/asset", "/history", &Version{})
+	_, err := NewConfiguration(8080, 8080, "/dir", &Version{})
 	// WHEN validating config
 	// THEN it should fail
 	require.Error(t, err)
@@ -25,7 +25,7 @@ func Test_ShouldNotValidateConfiguration(t *testing.T) {
 
 func Test_ShouldMatchHeader(t *testing.T) {
 	// GIVEN a configuration
-	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", "/history", &Version{})
+	c, err := NewConfiguration(8080, 8081, "/dir", &Version{})
 	require.NoError(t, err)
 	// WHEN matching header with empty regex
 	// THEN it should not match
@@ -34,7 +34,7 @@ func Test_ShouldMatchHeader(t *testing.T) {
 	// WHEN matching header with empty input
 	// THEN it should not match
 	require.False(t, c.AssertHeader(""))
-	// WHEN matching header with non matching input
+	// WHEN matching header with a non-matching input
 	// THEN it should not match
 	require.False(t, c.AssertHeader("test"))
 	// WHEN matching header with matching input
@@ -44,7 +44,7 @@ func Test_ShouldMatchHeader(t *testing.T) {
 
 func Test_ShouldMatchQueryParameters(t *testing.T) {
 	// GIVEN a configuration
-	c, err := NewConfiguration(8080, 8081, "/dir", "/asset", "/history", &Version{})
+	c, err := NewConfiguration(8080, 8081, "/dir", &Version{})
 	require.NoError(t, err)
 	// WHEN matching query params with empty regex
 	// THEN it should not match
@@ -53,7 +53,7 @@ func Test_ShouldMatchQueryParameters(t *testing.T) {
 	// WHEN matching query params with empty input
 	// THEN it should not match
 	require.False(t, c.AssertQueryParams(""))
-	// WHEN matching query params with non matching input
+	// WHEN matching query params with a non-matching input
 	// THEN it should not match
 	require.False(t, c.AssertQueryParams("test"))
 	// WHEN matching query params with matching input

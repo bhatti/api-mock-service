@@ -62,9 +62,8 @@ func checkRequestHeader(name string, pattern string) string {
 	if validHeaders[name] {
 		if pattern == "" {
 			return fmt.Sprintf(`VariableSizeGE headers.%s 5`, name)
-		} else {
-			return fmt.Sprintf(`VariableMatches headers.%s %s`, name, pattern)
 		}
+		return fmt.Sprintf(`VariableMatches headers.%s %s`, name, pattern)
 	}
 	return ""
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
@@ -15,14 +16,17 @@ import (
 // MockScenarioController structure
 type MockScenarioController struct {
 	mockScenarioRepository repository.MockScenarioRepository
+	oapiRepository         repository.OAPIRepository
 }
 
 // NewMockScenarioController instantiates controller for updating mock-scenarios
 func NewMockScenarioController(
 	mockScenarioRepository repository.MockScenarioRepository,
+	oapiRepository repository.OAPIRepository,
 	webserver web.Server) *MockScenarioController {
 	ctrl := &MockScenarioController{
 		mockScenarioRepository: mockScenarioRepository,
+		oapiRepository:         oapiRepository,
 	}
 
 	webserver.GET("/_scenarios", ctrl.listMockScenarioPaths)
@@ -128,11 +132,27 @@ func (msc *MockScenarioController) getMockScenario(c web.APIContext) error {
 //
 //	200: mockGroupsResponse
 func (msc *MockScenarioController) getGroups(c web.APIContext) error {
-	res := msc.mockScenarioRepository.GetGroups()
-	if res == nil {
-		res = make([]string, 0)
+	groups := msc.mockScenarioRepository.GetGroups()
+	for _, name := range msc.oapiRepository.GetNames() {
+		if name == "" {
+			continue
+		}
+		dup := false
+		for _, group := range groups {
+			if name == group {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			groups = append(groups, name)
+		}
 	}
-	return c.JSON(http.StatusOK, res)
+	sort.Slice(groups, func(i, j int) bool {
+		return groups[i] < groups[j]
+	})
+
+	return c.JSON(http.StatusOK, groups)
 }
 
 // swagger:route GET /_scenarios/{method}/names/{path} mock-scenarios getMockNames

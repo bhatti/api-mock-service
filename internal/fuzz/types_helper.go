@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -117,12 +118,16 @@ func ExtractTopPrimitiveAttributes(b []byte, max int) (res []string) {
 				if reflect.TypeOf(val).String() == "string" ||
 					strings.HasPrefix(reflect.TypeOf(val).String(), "float") {
 					res = append(res, k)
-					if len(res) == max {
-						break
-					}
 				}
 			}
 		}
+	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i] < res[j]
+	})
+	if len(res) > max {
+		res = res[:max]
 	}
 	return
 }

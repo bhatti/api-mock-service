@@ -360,7 +360,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	// AND valid template for random data
 	// AND mock web client
 	client, data := buildJobsTestClient("AC1234567890", "BAD", "", 200)
-	contractReq.Overrides = data
+	contractReq.Params = data
 	contractReq.Verbose = true
 	// AND executor
 	executor := NewProducerExecutor(repo, client)
@@ -400,7 +400,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		// WITH mock web client
 		client, data := buildJobsTestClient("AC1234567890", "RUNNING", "/good", scenario.Response.StatusCode)
 		contractReq.Verbose = true
-		contractReq.Overrides = data
+		contractReq.Params = data
 		// AND executor
 		executor := NewProducerExecutor(repo, client)
 		// AND should return saved scenario
@@ -467,7 +467,13 @@ func buildJobsTestClient(jobID string, jobStatus string, prefixPath string, http
 }
 
 func buildTestConfig() *types.Configuration {
-	return &types.Configuration{DataDir: "../../mock_tests", HistoryDir: "../../mock_history", MaxHistory: 5}
+	return &types.Configuration{
+		DataDir:                  "../../mock_tests",
+		MaxHistory:               5,
+		ProxyPort:                8081,
+		AssertQueryParamsPattern: "target",
+		AssertHeadersPattern:     "target",
+	}
 }
 
 func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {

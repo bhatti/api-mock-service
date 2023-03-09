@@ -33,8 +33,10 @@ func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
@@ -63,8 +65,10 @@ func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -94,8 +98,10 @@ func Test_ShouldGetScenarioHistory(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -120,8 +126,10 @@ func Test_ShouldGetScenarioGroups(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -143,8 +151,10 @@ func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -174,8 +184,10 @@ func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
@@ -204,8 +216,10 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	b, err := json.Marshal(scenario)
 	require.NoError(t, err)
@@ -250,8 +264,10 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	b, err := yaml.Marshal(scenario)
 	require.NoError(t, err)
@@ -287,8 +303,10 @@ func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
 	require.NoError(t, err)
 	for i := 0; i < 10; i++ {
@@ -324,8 +342,10 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 
 	// WHEN creating mock scenario
 	scenario := buildScenario(types.Post, "test2", "/abc/123/456", 1)
@@ -363,8 +383,10 @@ func Test_ShouldListMockScenario(t *testing.T) {
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
 	require.NoError(t, err)
+	oapiRepository, err := repository.NewFileOAPIRepository(config)
+	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, webServer)
+	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
 
 	// WHEN creating mock scenario
 	scenario := buildScenario(types.Post, "test2", "/abc/123/456", 1)

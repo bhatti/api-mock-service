@@ -1,12 +1,21 @@
 package web
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/url"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 )
@@ -109,4 +118,97 @@ func Test_ShouldNotSignNonAWSRequest(t *testing.T) {
 	signed, _, err := signer.AWSSign(req, cred)
 	require.NoError(t, err)
 	require.False(t, signed)
+}
+
+func Test_ShouldSignAndVerifySignature4(t *testing.T) {
+	u, err := url.Parse("https://cognito-idp.us-west-2.amazonaws.com")
+	require.NoError(t, err)
+	req := &http.Request{
+		Header: http.Header{
+			Authorization:  []string{"AWS4-HMAC-SHA256 Credential"},
+			"X-Amz-Date":   []string{"20230308T024331Z"},
+			"X-Amz-Target": []string{"AWSCognitoIdentityProviderService.AdminGetUser"},
+			"Content-Type": []string{"application/x-amz-json-1.1"},
+		},
+		Method: "POST",
+		URL:    u,
+	}
+	awsCred := credentials.NewStaticCredentials(
+		"ABC",
+		"XYZ",
+		"",
+	)
+	signer := v4.NewSigner(awsCred)
+	signer.Debug = aws.LogDebugWithSigning
+	signer.Logger = awsLoggerAdapter{}
+	_, body, err := utils.ReadAll(io.NopCloser(bytes.NewReader([]byte(`{"UserPoolId":"us-west-2_xxxx","Username":"bob@gmail.com"}`))))
+	require.NoError(t, err)
+	headers, err := signer.Sign(req, body, "cognito-idp", "us-west-2", time.Now())
+	require.NoError(t, err)
+	require.True(t, len(headers) > 0)
+	ctx := parseAuthHeader(req)
+	require.NotNil(t, ctx)
+}
+
+type signingCtx struct {
+	ServiceName      string
+	Region           string
+	Request          *http.Request `yaml:"-" json:"-"`
+	Body             io.ReadSeeker `yaml:"-" json:"-"`
+	Query            url.Values
+	Time             time.Time
+	ExpireTime       time.Duration
+	SignedHeaderVals http.Header
+	HeaderNames      []string
+	BodyDigest       string
+	Authorization    string
+
+	key              string
+	date             string
+	signedHeaders    string
+	canonicalHeaders string
+	canonicalString  string
+	credentialString string
+	stringToSign     string
+	signature        string
+}
+
+func parseAuthHeader(req *http.Request) *signingCtx {
+	auth := req.Header.Get("Authorization")
+
+	var re = regexp.MustCompile(`AWS4-HMAC-SHA256 Credential=(.*)/(.*)/(.*)/(.*)/aws4_request, SignedHeaders=(.*), Signature=(.*)`)
+	matches := re.FindStringSubmatch(auth)
+
+	if len(matches) < 6 {
+		return nil
+	}
+	b, body, err := utils.ReadAll(req.Body)
+	if err != nil {
+		return nil
+	}
+	time, err := time.Parse("20060102T150405Z", req.Header.Get("X-Amz-Date"))
+	if err != nil {
+		return nil
+	}
+	return &signingCtx{
+		key:              matches[1],
+		date:             matches[2],
+		Region:           matches[3],
+		ServiceName:      matches[4],
+		HeaderNames:      strings.Split(matches[5], ";"),
+		signature:        matches[6],
+		Request:          req,
+		Body:             body,
+		Query:            req.URL.Query(),
+		SignedHeaderVals: req.Header,
+		Authorization:    auth,
+		BodyDigest:       fmt.Sprintf("%x", sha256.Sum256(b)),
+		Time:             time,
+		//ExpireTime, time.Duration
+		//signedHeaders    string
+		//canonicalHeaders string
+		//canonicalString  string
+		//credentialString string
+		//stringToSign     string
+	}
 }

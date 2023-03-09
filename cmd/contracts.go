@@ -43,14 +43,12 @@ var contractCmd = &cobra.Command{
 			httpPort,
 			proxyPort,
 			dataDir,
-			assetDir,
-			historyDir,
 			types.NewVersion(Version, Commit, Date))
 		if err != nil {
 			log.Errorf("failed to parse config %s", err)
 			os.Exit(3)
 		}
-		scenarioRepo, _, err := buildRepos(serverConfig)
+		scenarioRepo, _, _, err := buildRepos(serverConfig)
 		if err != nil {
 			log.Errorf("failed to setup scenario repository %s", err)
 			os.Exit(4)
@@ -74,8 +72,6 @@ func init() {
 
 	contractCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
 	contractCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
-	contractCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
-	contractCmd.Flags().StringVar(&historyDir, "historyDir", "", "asset dir to store mock history")
 	contractCmd.Flags().StringVar(&group, "group", "", "group of service APIs")
 	contractCmd.Flags().StringVar(&baseURL, "base_url", "", "base-url for remote service")
 	contractCmd.Flags().IntVar(&executionTimes, "times", 10, "execution times")

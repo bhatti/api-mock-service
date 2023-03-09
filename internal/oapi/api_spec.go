@@ -74,11 +74,11 @@ func ParseAPISpec(
 							In:      "header",
 						})
 					spec := &APISpec{
-						Title:       title,
 						ID:          op.OperationID,
 						Description: op.Description,
 						Method:      method,
 						Path:        path,
+						Title:       title,
 						Request: Request{
 							Headers:     reqHeaders,
 							QueryParams: queryParams,
@@ -106,6 +106,7 @@ func ParseAPISpec(
 					Description: op.Description,
 					Method:      method,
 					Path:        path,
+					Title:       title,
 					Request: Request{
 						Headers:     reqHeaders,
 						QueryParams: queryParams,

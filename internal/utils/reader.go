@@ -48,11 +48,21 @@ func ReadAll(body io.ReadCloser) (b []byte, reader io.ReadSeekCloser, err error)
 	if body == nil {
 		return nil, nil, nil
 	}
-	b, err = io.ReadAll(body)
-	if err != nil {
-		return nil, nil, err
+	switch body.(type) {
+	case io.ReadSeekCloser:
+		reader = body.(io.ReadSeekCloser)
+		b, err = io.ReadAll(body)
+		if err != nil {
+			return nil, nil, err
+		}
+		reader.Seek(0, 0)
+	default:
+		b, err = io.ReadAll(body)
+		if err != nil {
+			return nil, nil, err
+		}
+		_ = body.Close()
+		reader = NopCloser(bytes.NewReader(b))
 	}
-	_ = body.Close()
-	reader = NopCloser(bytes.NewReader(b))
 	return
 }

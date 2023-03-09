@@ -239,7 +239,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	if err != nil {
 		return resp, err
 	}
-	resp.Body = io.NopCloser(bytes.NewReader(resBytes))
+	resp.Body = utils.NopCloser(bytes.NewReader(resBytes))
 	resp.Header[types.ContentTypeHeader] = []string{resContentType}
 	resp.Header["Access-Control-Allow-Origin"] = []string{h.config.CORS}
 	resp.Header["Access-Control-Allow-Credentials"] = []string{"true"}
@@ -252,6 +252,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 		"Length":   len(resBytes),
 		"Headers":  resp.Header,
 	}).Infof("proxy server recorded response")
+
 	resp.Request.Header = make(http.Header) // reset headers for next request in case we are using it.
 	return resp, nil
 }

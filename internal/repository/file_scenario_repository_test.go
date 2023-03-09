@@ -636,7 +636,13 @@ func Test_ShouldLoadSaveMockScenariosHistory(t *testing.T) {
 }
 
 func buildTestConfig() *types.Configuration {
-	return &types.Configuration{DataDir: "../../mock_tests", HistoryDir: "../../mock_history", MaxHistory: 5}
+	return &types.Configuration{
+		DataDir:                  "../../mock_tests",
+		MaxHistory:               5,
+		ProxyPort:                8081,
+		AssertQueryParamsPattern: "target",
+		AssertHeadersPattern:     "target",
+	}
 }
 
 func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {

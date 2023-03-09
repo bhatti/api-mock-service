@@ -14,14 +14,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
 
 var cfgFile string
 var dataDir string
-var assetDir string
-var historyDir string
 var httpPort int
 var proxyPort int
 
@@ -67,22 +66,20 @@ func Execute(version string, commit string, date string, swaggerContent embed.FS
 // RunServer starts queen server for formicary
 func RunServer(_ *cobra.Command, args []string) {
 	log.WithFields(log.Fields{
-		"Args":       args,
-		"DataDir":    dataDir,
-		"AssetDir":   assetDir,
-		"HistoryDir": historyDir,
-		"HTTPPort":   httpPort,
-		"ProxyPort":  proxyPort,
+		"Args":      args,
+		"DataDir":   dataDir,
+		"HTTPPort":  httpPort,
+		"ProxyPort": proxyPort,
 	}).Infof("starting Mock API-server...")
 
-	serverConfig, err := types.NewConfiguration(httpPort, proxyPort, dataDir, assetDir, historyDir, types.NewVersion(Version, Commit, Date))
+	serverConfig, err := types.NewConfiguration(httpPort, proxyPort, dataDir, types.NewVersion(Version, Commit, Date))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Error": err}).
 			Errorf("Failed to parse config...")
 		os.Exit(1)
 	}
-	scenarioRepo, fixturesRepo, err := buildRepos(serverConfig)
+	scenarioRepo, fixturesRepo, oapiRepo, err := buildRepos(serverConfig)
 	if err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup repositories...")
@@ -90,7 +87,7 @@ func RunServer(_ *cobra.Command, args []string) {
 	}
 	webServer := web.NewDefaultWebServer(serverConfig)
 	httpClient := web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig))
-	if err = buildControllers(serverConfig, scenarioRepo, fixturesRepo, httpClient, webServer); err != nil {
+	if err = buildControllers(serverConfig, scenarioRepo, fixturesRepo, oapiRepo, httpClient, webServer); err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup controller...")
 		os.Exit(3)
@@ -100,8 +97,8 @@ func RunServer(_ *cobra.Command, args []string) {
 		adapter := web.NewWebServerAdapter()
 		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 		executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
-		_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, adapter)
-		_ = controller.NewMockScenarioController(scenarioRepo, adapter)
+		_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, oapiRepo, adapter)
+		_ = controller.NewMockScenarioController(scenarioRepo, oapiRepo, adapter)
 		_ = controller.NewMockFixtureController(fixturesRepo, adapter)
 		_ = controller.NewMockProxyController(recorder, adapter)
 		_ = controller.NewContractController(executor, adapter)
@@ -117,9 +114,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run when this action is called directly.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
-	rootCmd.Flags().StringVar(&assetDir, "assetDir", "", "asset dir to store static assets/fixtures")
-	rootCmd.Flags().StringVar(&historyDir, "historyDir", "", "asset dir to store mock history")
+	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock contracts and history")
 	rootCmd.Flags().IntVar(&httpPort, "httpPort", 0, "HTTP port to listen")
 	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 0, "Proxy port to listen")
 
@@ -159,12 +154,17 @@ func initConfig() {
 func buildRepos(serverConfig *types.Configuration) (
 	scenarioRepo repository.MockScenarioRepository,
 	fixtureRepo repository.MockFixtureRepository,
+	oapiRepo repository.OAPIRepository,
 	err error) {
 	scenarioRepo, err = repository.NewFileMockScenarioRepository(serverConfig)
 	if err != nil {
 		return
 	}
 	fixtureRepo, err = repository.NewFileFixtureRepository(serverConfig)
+	if err != nil {
+		return
+	}
+	oapiRepo, err = repository.NewFileOAPIRepository(serverConfig)
 	return
 }
 
@@ -172,21 +172,21 @@ func buildControllers(
 	serverConfig *types.Configuration,
 	scenarioRepo repository.MockScenarioRepository,
 	fixtureRepo repository.MockFixtureRepository,
+	oapiRepo repository.OAPIRepository,
 	httpClient web.HTTPClient,
 	webServer web.Server,
 ) (err error) {
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 	player := proxy.NewConsumerExecutor(scenarioRepo, fixtureRepo)
 	executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
-	_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, webServer)
-	_ = controller.NewMockScenarioController(scenarioRepo, webServer)
+	_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, oapiRepo, webServer)
+	_ = controller.NewMockScenarioController(scenarioRepo, oapiRepo, webServer)
 	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
 	_ = controller.NewMockProxyController(recorder, webServer)
 	_ = controller.NewContractController(executor, webServer)
 	_ = controller.NewRootController(player, webServer)
-	if serverConfig.AssetDir != "" {
-		webServer.Static("/_assets", serverConfig.AssetDir)
-	}
+	assetDir := filepath.Join(serverConfig.DataDir, "assets")
+	webServer.Static("/_assets", assetDir)
 	webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
 
 	return nil

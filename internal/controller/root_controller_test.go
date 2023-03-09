@@ -335,7 +335,6 @@ func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 func buildTestConfig() *types.Configuration {
 	return &types.Configuration{
 		DataDir:                  "../../mock_tests",
-		HistoryDir:               "../../mock_history",
 		MaxHistory:               5,
 		ProxyPort:                8081,
 		AssertQueryParamsPattern: "target",

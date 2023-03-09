@@ -43,7 +43,7 @@ func (x *ProducerExecutor) Execute(
 	req *http.Request,
 	scenarioKey *types.MockScenarioKeyData,
 	dataTemplate fuzz.DataTemplateRequest,
-	contractReq types.ContractRequest,
+	contractReq *types.ContractRequest,
 ) *types.ContractResponse {
 	started := time.Now()
 	sli := metrics.NewMetrics()
@@ -56,14 +56,14 @@ func (x *ProducerExecutor) Execute(
 	}).Infof("execute BEGIN")
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
-		scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides)
+		scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 		if err != nil {
 			res.Add(scenarioKey.Name, nil, err)
 			res.Metrics = sli.Summary()
 			return res
 		}
 		url := scenario.BuildURL(contractReq.BaseURL)
-		resContents, err := x.execute(ctx, req, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
+		resContents, err := x.execute(ctx, req, url, scenario, contractReq, dataTemplate, sli)
 		res.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
@@ -87,7 +87,7 @@ func (x *ProducerExecutor) ExecuteByGroup(
 	req *http.Request,
 	group string,
 	dataTemplate fuzz.DataTemplateRequest,
-	contractReq types.ContractRequest,
+	contractReq *types.ContractRequest,
 ) *types.ContractResponse {
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
@@ -109,14 +109,14 @@ func (x *ProducerExecutor) ExecuteByGroup(
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioKey := range scenarioKeys {
-			scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides)
+			scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 			if err != nil {
 				res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
 				res.Metrics = sli.Summary()
 				return res
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := x.execute(ctx, req, url, scenario, contractReq.Overrides, dataTemplate, contractReq, sli)
+			resContents, err := x.execute(ctx, req, url, scenario, contractReq, dataTemplate, sli)
 			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
@@ -142,16 +142,16 @@ func (x *ProducerExecutor) execute(
 	req *http.Request,
 	url string,
 	scenario *types.MockScenario,
-	overrides map[string]any,
+	contractReq *types.ContractRequest,
 	dataTemplate fuzz.DataTemplateRequest,
-	contractRequest types.ContractRequest,
 	metrics *metrics.Metrics,
 ) (res any, err error) {
 	started := time.Now().UnixMilli()
 	templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
 		req,
 		scenario.ToKeyData().MatchGroups(scenario.Path),
-		overrides)
+		contractReq.Headers,
+		contractReq.Params)
 	if fuzz.RandIntMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandIntMinMax(2, 5))
 	}
@@ -173,6 +173,14 @@ func (x *ProducerExecutor) execute(
 		}
 	}
 
+	log.WithFields(log.Fields{
+		"Component":   "Tester",
+		"URL":         url,
+		"Scenario":    scenario,
+		"Headers":     reqHeaders,
+		"QueryParams": queryParams,
+	}).Debugf("before execute")
+
 	statusCode, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	elapsed := time.Now().UnixMilli() - started
@@ -187,12 +195,13 @@ func (x *ProducerExecutor) execute(
 	}
 
 	fields := log.Fields{
-		"Component":  "Tester",
-		"URL":        url,
-		"Scenario":   scenario,
-		"StatusCode": statusCode,
-		"Headers":    reqHeaders,
-		"Elapsed":    elapsed}
+		"Component":   "Tester",
+		"URL":         url,
+		"Scenario":    scenario,
+		"StatusCode":  statusCode,
+		"Headers":     reqHeaders,
+		"QueryParams": queryParams,
+		"Elapsed":     elapsed}
 
 	// response contents
 	resContents, err := fuzz.UnmarshalArrayOrObject(resBytes)
@@ -204,7 +213,7 @@ func (x *ProducerExecutor) execute(
 	templateParams["status"] = statusCode
 	templateParams["elapsed"] = elapsed
 
-	if contractRequest.Verbose {
+	if contractReq.Verbose {
 		fields["Request"] = reqBodyStr
 		fields["Response"] = resContents
 		fields["ResponseBytes"] = string(resBytes)
@@ -217,7 +226,7 @@ func (x *ProducerExecutor) execute(
 			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
 	}
 
-	if contractRequest.Verbose {
+	if contractReq.Verbose {
 		log.WithFields(fields).Infof("executed request")
 	}
 	if err = scenario.Response.Assert(resHeaders, resContents, templateParams); err != nil {
@@ -225,8 +234,8 @@ func (x *ProducerExecutor) execute(
 	}
 
 	if resContents != nil {
-		if overrides == nil {
-			overrides = map[string]any{}
+		if contractReq.Params == nil {
+			contractReq.Params = map[string]any{}
 		}
 		pipeProperties := map[string]any{}
 
@@ -235,7 +244,7 @@ func (x *ProducerExecutor) execute(
 			if val != nil {
 				n := strings.Index(propName, ".")
 				propName = propName[n+1:]
-				overrides[propName] = val
+				contractReq.Params[propName] = val
 				pipeProperties[propName] = val
 			}
 		}
@@ -265,8 +274,7 @@ func buildRequestBody(
 		}).Infof("failed to unmarshal request")
 		return "", nil
 	}
-	res = fuzz.GenerateFuzzData(res)
-	j, err := json.Marshal(res)
+	j, err := json.Marshal(fuzz.GenerateFuzzData(res))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Component": "Tester",
@@ -275,5 +283,5 @@ func buildRequestBody(
 		}).Infof("failed to marshal populated request")
 		return "", nil
 	}
-	return string(j), io.NopCloser(bytes.NewReader(j))
+	return string(j), utils.NopCloser(bytes.NewReader(j))
 }

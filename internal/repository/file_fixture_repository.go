@@ -19,11 +19,12 @@ type FileMockFixtureRepository struct {
 func NewFileFixtureRepository(
 	config *types.Configuration,
 ) (*FileMockFixtureRepository, error) {
-	if err := mkdir(config.DataDir); err != nil {
+	dir := buildContractsDir(config)
+	if err := mkdir(dir); err != nil {
 		return nil, err
 	}
 	return &FileMockFixtureRepository{
-		dir: config.DataDir,
+		dir: dir,
 	}, nil
 }
 

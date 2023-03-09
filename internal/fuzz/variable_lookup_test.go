@@ -42,11 +42,11 @@ func Test_ShouldCompareVariableNumber(t *testing.T) {
 
 func Test_ShouldContainsVariable(t *testing.T) {
 	require.False(t, VariableContains("k", nil, 1))
-	require.False(t, VariableContains("k", "", 1))
-	require.True(t, VariableContains("k", "1", map[string]string{"k": "1"}))
-	require.False(t, VariableContains("k", "1", map[string]string{"x": "1"}))
-	require.True(t, VariableContains("k.a", "b", map[string]any{"k": map[string]string{"a": "abc"}}))
-	require.False(t, VariableContains("k.a", "abcd", map[string]any{"k": map[string]string{"a": "abc"}}))
+	require.False(t, VariableContains("k", []any{""}, 1))
+	require.True(t, VariableContains("k", []any{"1"}, map[string]string{"k": "1"}))
+	require.False(t, VariableContains("k", []any{"1"}, map[string]string{"x": "1"}))
+	require.True(t, VariableContains("k.a", []any{"b"}, map[string]any{"k": map[string]string{"a": "abc"}}))
+	require.False(t, VariableContains("k.a", []any{"abcd"}, map[string]any{"k": map[string]string{"a": "abc"}}))
 }
 
 func Test_ShouldFindVariableInMap(t *testing.T) {

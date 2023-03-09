@@ -109,28 +109,26 @@ type mockScenarioContractResponseBody struct {
 	Body types.ContractResponse
 }
 
-func buildContractRequest(c web.APIContext) (types.ContractRequest, error) {
+func buildContractRequest(c web.APIContext) (*types.ContractRequest, error) {
 	b, _, err := utils.ReadAll(c.Request().Body)
 	if err != nil {
-		return types.ContractRequest{}, err
+		return nil, err
 	}
-	contractReq := types.ContractRequest{}
+	contractReq := &types.ContractRequest{}
 	err = json.Unmarshal(b, &contractReq)
 	if err != nil {
-		return types.ContractRequest{}, err
+		return nil, err
 	}
 	if contractReq.BaseURL == "" {
-		return types.ContractRequest{}, fmt.Errorf("baseURL is not specified in %s", b)
+		return nil, fmt.Errorf("baseURL is not specified in %s", b)
 	}
 	if contractReq.ExecutionTimes <= 0 {
 		contractReq.ExecutionTimes = 5
 	}
-	contractReq.Overrides = make(map[string]any)
-	for k, v := range c.Request().Header {
-		contractReq.Overrides[k] = v[0]
-	}
+	contractReq.Params = make(map[string]any)
+	contractReq.Headers = c.Request().Header
 	for k, v := range c.QueryParams() {
-		contractReq.Overrides[k] = v[0]
+		contractReq.Params[k] = v[0]
 	}
 	return contractReq, nil
 }

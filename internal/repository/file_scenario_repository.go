@@ -23,22 +23,30 @@ import (
 // FileMockScenarioRepository  implements mock scenario storage based on local files
 type FileMockScenarioRepository struct {
 	mutex            sync.RWMutex
-	config           *types.Configuration
 	keysByMethodPath map[string]map[string]*types.MockScenarioKeyData
+	contractDir      string
+	historyDir       string
+	maxHistory       int
+	debug            bool
 }
 
 // NewFileMockScenarioRepository creates new instance for mock scenarios
 func NewFileMockScenarioRepository(
 	config *types.Configuration,
 ) (repo *FileMockScenarioRepository, err error) {
-	if err = mkdir(config.DataDir); err != nil {
+	contractDir := buildContractsDir(config)
+	historyDir := filepath.Join(config.DataDir, "exec_history")
+	if err = mkdir(contractDir); err != nil {
 		return nil, err
 	}
-	if err = mkdir(config.HistoryDir); err != nil {
+	if err = mkdir(historyDir); err != nil {
 		return nil, err
 	}
 	repo = &FileMockScenarioRepository{
-		config:           config,
+		contractDir:      contractDir,
+		historyDir:       historyDir,
+		maxHistory:       config.MaxHistory,
+		debug:            config.Debug,
 		keysByMethodPath: make(map[string]map[string]*types.MockScenarioKeyData),
 	}
 
@@ -84,6 +92,7 @@ func (sr *FileMockScenarioRepository) GetGroups() (res []string) {
 func (sr *FileMockScenarioRepository) GetScenariosNames(
 	method types.MethodType,
 	path string) (scenarioNames []string, err error) {
+	scenarioNames = make([]string, 0)
 	var files []fs.DirEntry
 	dir := sr.buildDir(method, path)
 
@@ -239,7 +248,7 @@ func (sr *FileMockScenarioRepository) LookupAll(
 			res = append(res, keyData)
 		} else {
 			var validationError *types.ValidationError
-			if errors.As(err, &validationError) && sr.config.Debug {
+			if errors.As(err, &validationError) && sr.debug {
 				paramMismatchErrors++
 				log.WithFields(log.Fields{
 					"Other":          other.String(),
@@ -311,9 +320,10 @@ func (sr *FileMockScenarioRepository) Lookup(
 
 // HistoryNames returns list of mock scenarios names
 func (sr *FileMockScenarioRepository) HistoryNames() (names []string) {
+	names = make([]string, 0)
 	files := sr.historyFiles()
 	for _, file := range files {
-		names = append(names, file.Name())
+		names = append(names, strings.ReplaceAll(file.Name(), types.ScenarioExt, ""))
 	}
 	return
 }
@@ -321,7 +331,7 @@ func (sr *FileMockScenarioRepository) HistoryNames() (names []string) {
 // SaveHistory saves history MockScenario
 func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) (err error) {
 	scenario.SetName(string(scenario.Method))
-	fileName := filepath.Join(sr.config.HistoryDir, scenario.Group+"_"+scenario.Name)
+	fileName := filepath.Join(sr.historyDir, scenario.Group+"_"+scenario.Name+types.ScenarioExt)
 	var b []byte
 	if b, err = yaml.Marshal(scenario); err != nil {
 		return err
@@ -332,8 +342,8 @@ func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) 
 	}
 	log.WithFields(log.Fields{
 		"Component": "FileScenarioRepository",
-		"MaxLimit":  sr.config.MaxHistory,
-		"Dir":       sr.config.HistoryDir,
+		"MaxLimit":  sr.maxHistory,
+		"Dir":       sr.historyDir,
 		"File":      fileName,
 		"Error":     err,
 	}).Infof("saving history scenario")
@@ -342,7 +352,10 @@ func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) 
 
 // LoadHistory loads scenario
 func (sr *FileMockScenarioRepository) LoadHistory(name string) (*types.MockScenario, error) {
-	fileName := filepath.Join(sr.config.HistoryDir, name)
+	if !strings.HasSuffix(name, types.ScenarioExt) {
+		name = name + types.ScenarioExt
+	}
+	fileName := filepath.Join(sr.historyDir, name)
 	b, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read %s due to %w", fileName, err)
@@ -350,24 +363,24 @@ func (sr *FileMockScenarioRepository) LoadHistory(name string) (*types.MockScena
 
 	data := make(map[string]any)
 
-	return unmarshalMockScenario(b, sr.config.HistoryDir, data)
+	return unmarshalMockScenario(b, sr.historyDir, data)
 }
 
 // ///////// PRIVATE METHODS //////////////
 
 func (sr *FileMockScenarioRepository) checkHistoryLimit() {
 	infos := sr.historyFiles()
-	if len(infos) <= sr.config.MaxHistory {
+	if len(infos) <= sr.maxHistory {
 		return
 	}
-	for i := len(infos) - 1; i >= sr.config.MaxHistory; i-- {
-		fileName := filepath.Join(sr.config.HistoryDir, infos[i].Name())
+	for i := len(infos) - 1; i >= sr.maxHistory; i-- {
+		fileName := filepath.Join(sr.historyDir, infos[i].Name())
 		err := os.Remove(fileName)
 		log.WithFields(log.Fields{
 			"Component": "FileScenarioRepository",
-			"MaxLimit":  sr.config.MaxHistory,
+			"MaxLimit":  sr.maxHistory,
 			"InfoSize":  len(infos),
-			"Dir":       sr.config.HistoryDir,
+			"Dir":       sr.historyDir,
 			"File":      fileName,
 			"I":         i,
 			"Error":     err,
@@ -376,7 +389,7 @@ func (sr *FileMockScenarioRepository) checkHistoryLimit() {
 }
 
 func (sr *FileMockScenarioRepository) historyFiles() (infos []fs.FileInfo) {
-	files, err := os.ReadDir(sr.config.HistoryDir)
+	files, err := os.ReadDir(sr.historyDir)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Component": "FileScenarioRepository",
@@ -448,7 +461,7 @@ func (sr *FileMockScenarioRepository) visit(
 		return
 	}
 
-	err := filepath.Walk(sr.config.DataDir, walkFunc)
+	err := filepath.Walk(sr.contractDir, walkFunc)
 	if err == errStop {
 		err = nil
 	}
@@ -491,13 +504,13 @@ func (sr *FileMockScenarioRepository) buildFileName(
 	method types.MethodType,
 	scenarioName string,
 	path string) string {
-	return buildFileName(sr.config.DataDir, method, scenarioName, path) + types.ScenarioExt
+	return buildFileName(sr.contractDir, method, scenarioName, path) + types.ScenarioExt
 }
 
 func (sr *FileMockScenarioRepository) buildDir(
 	method types.MethodType,
 	path string) string {
-	return buildDir(sr.config.DataDir, method, path)
+	return buildDir(sr.contractDir, method, path)
 }
 
 func buildFileName(
@@ -572,4 +585,9 @@ func sortByUsageTime(res []*types.MockScenarioKeyData) {
 		}
 		return res[i].LastUsageTime < res[j].LastUsageTime
 	})
+}
+
+func buildContractsDir(config *types.Configuration) string {
+	contractDir := filepath.Join(config.DataDir, "mock_contracts")
+	return contractDir
 }

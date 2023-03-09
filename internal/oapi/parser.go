@@ -2,6 +2,7 @@ package oapi
 
 import (
 	"context"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
@@ -26,6 +27,12 @@ func Parse(ctx context.Context, data []byte, dataTemplate fuzz.DataTemplateReque
 	var title string
 	if doc.Info != nil {
 		title = doc.Info.Title
+		if doc.Info.Version != "" {
+			title += "v" + doc.Info.Version
+		}
+	}
+	if title == "" {
+		title = fmt.Sprintf("OAPI_%x", sha1.Sum(data))
 	}
 
 	for k, v := range doc.Paths {

@@ -189,7 +189,7 @@ func (s *awsSigner) getAWSService(request *http.Request) *endpoints.ResolvedEndp
 }
 
 func (s *awsSigner) sign(req *http.Request, service *endpoints.ResolvedEndpoint, signer *v4.Signer) error {
-	_, body, err := utils.ReadAll(req.Body)
+	b, body, err := utils.ReadAll(req.Body)
 	req.Body = body
 
 	// S3 service should not have any escaping applied.
@@ -207,7 +207,13 @@ func (s *awsSigner) sign(req *http.Request, service *endpoints.ResolvedEndpoint,
 		signer.Debug = aws.LogDebugWithSigning
 		signer.Logger = awsLoggerAdapter{}
 	}
-	_, err = signer.Sign(req, body, service.SigningName, service.SigningRegion, time.Now())
+	headers, err := signer.Sign(req, body, service.SigningName, service.SigningRegion, time.Now())
+	log.WithFields(log.Fields{
+		"Component": "AwsSigner",
+		"Body":      string(b),
+		"Headers":   headers,
+		"URL":       req.URL,
+		"Query":     req.URL.Query()}).Debug("signed headers")
 
 	return err
 }

@@ -20,10 +20,6 @@ type Configuration struct {
 	ConnectionTimeout int `yaml:"connection_timeout" mapstructure:"connection_timeout"`
 	// DataDir for storing mock responses
 	DataDir string `yaml:"data_dir" mapstructure:"data_dir" env:"DATA_DIR"`
-	// AssetDir for storing static assets
-	AssetDir string `yaml:"asset_dir" mapstructure:"asset_dir" env:"ASSET_DIR"`
-	// HistoryDir for storing mock history
-	HistoryDir string `yaml:"history_dir" mapstructure:"history_dir" env:"HISTORY_DIR"`
 	// MaxHistory for max limit of storing mock history
 	MaxHistory int `yaml:"max_history" mapstructure:"max_history" env:"MAX_HISTORY"`
 	// UserAgent for mock server
@@ -59,17 +55,13 @@ func NewConfiguration(
 	httpPort int,
 	proxyPort int,
 	dataDir string,
-	assetDir string,
-	historyDir string,
 	version *Version) (config *Configuration, err error) {
 	viper.SetDefault("log_level", "info")
 	viper.SetDefault("http_port", "8080")
 	viper.SetDefault("proxy_port", "8081")
 	viper.SetDefault("data_dir", "default_mocks_data")
-	viper.SetDefault("history_dir", "")
 	viper.SetDefault("match_header_regex", "Target")
 	viper.SetDefault("match_query_regex", "Target")
-	viper.SetDefault("asset_dir", "")
 	viper.SetDefault("max_history", "100")
 	viper.SetDefault("assert_headers_pattern", "")
 	viper.SetDefault("assert_query_params_pattern", "")
@@ -111,20 +103,11 @@ func NewConfiguration(
 	if dataDir != "" {
 		config.DataDir = dataDir
 	}
-	if assetDir != "" {
-		config.AssetDir = assetDir
-	}
-	if historyDir != "" {
-		config.HistoryDir = historyDir
-	}
 	if config.MaxHistory <= 0 {
 		config.MaxHistory = 100
 	}
 	if config.DataDir == "" {
 		config.DataDir = "default_mocks_data"
-	}
-	if config.HistoryDir == "" {
-		config.HistoryDir = "mock_history"
 	}
 	if os.Getenv("AWS_RESIGN_ONLY_EXPIRED") != "" {
 		config.AWS.ResignOnlyExpiredDate = os.Getenv("AWS_RESIGN_ONLY_EXPIRED") == "true"
@@ -147,8 +130,6 @@ func NewConfiguration(
 		"Component":  "Mock-API-Service",
 		"Port":       config.HTTPPort,
 		"DataDir":    config.DataDir,
-		"AssetDir":   config.AssetDir,
-		"HistoryDir": config.HistoryDir,
 		"Version":    version,
 		"UsedConfig": viper.ConfigFileUsed(),
 	}).Infof("loaded config file...")

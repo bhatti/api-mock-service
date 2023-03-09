@@ -253,10 +253,10 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"VariableEquals": func(varName string, target any) bool {
 			return VariableEquals(varName, data, target)
 		},
-		"VariableContains": func(varName string, target any) bool {
+		"VariableContains": func(varName string, target ...any) bool {
 			return VariableContains(varName, target, data)
 		},
-		"VariableMatches": func(varName string, target any) bool {
+		"VariableMatches": func(varName string, target ...any) bool {
 			return VariableContains(varName, target, data)
 		},
 		"VariableEQ": func(varName string, size any) bool {
@@ -277,7 +277,7 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"VariableSizeGE": func(varName string, size any) bool {
 			return VariableSize(varName, data) >= toInt(size)
 		},
-		"ResponseStatusMatches": func(val any) bool {
+		"ResponseStatusMatches": func(val ...any) bool {
 			return VariableContains("status", val, data)
 		},
 		"ResponseTimeMillisLE": func(val any) bool {

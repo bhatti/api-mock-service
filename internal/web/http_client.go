@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
@@ -73,11 +74,14 @@ func (w *DefaultHTTPClient) Handle(
 		"Method":    method,
 		"URL":       url,
 	}).Debug("handle BEGIN")
+	var bodyB []byte
+	bodyB, body, err = utils.ReadAll(body)
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return 500, nil, make(map[string][]string), err
 	}
+	req.ContentLength = int64(len(bodyB))
 	statusCode, respBody, respHeader, err = w.execute(req, headers, params)
 
 	elapsed := time.Since(started).String()
@@ -130,7 +134,7 @@ func (w *DefaultHTTPClient) execute(
 		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecurityToken, AWSSessionToken),
 	)
 	awsAuthSig4, awsInfo, awsErr := w.awsSigner.AWSSign(req, staticCredentials)
-
+	headers = req.Header
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
 
@@ -140,11 +144,12 @@ func (w *DefaultHTTPClient) execute(
 			"URL":         req.URL,
 			"Method":      req.Method,
 			"Headers":     req.Header,
+			"Params":      params,
 			"AWSAuthSig4": awsAuthSig4,
 			"AWSInfo":     awsInfo,
 			"AWSError":    awsErr,
 			"Error":       err,
-		}).Warnf("invoked http client failed")
+		}).Warnf("failed to invoke http client")
 	} else {
 		log.WithFields(log.Fields{
 			"Component":   "DefaultHTTPClient",
@@ -153,6 +158,7 @@ func (w *DefaultHTTPClient) execute(
 			"StatusCode":  resp.StatusCode,
 			"Status":      resp.Status,
 			"Headers":     req.Header,
+			"Params":      params,
 			"AWSAuthSig4": awsAuthSig4,
 			"AWSInfo":     awsInfo,
 			"AWSError":    awsErr,

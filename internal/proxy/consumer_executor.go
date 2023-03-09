@@ -94,11 +94,11 @@ func addMockResponse(
 
 	{
 		// check request assertions
-		overrides := make(map[string]any)
 		templateParams, queryParams, reqHeaders := matchedScenario.Request.BuildTemplateParams(
 			req,
 			matchedScenario.ToKeyData().MatchGroups(matchedScenario.Path),
-			overrides)
+			reqHeaders,
+			make(map[string]any))
 		reqContents, err := fuzz.UnmarshalArrayOrObject(inBody)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", matchedScenario.Name, err)

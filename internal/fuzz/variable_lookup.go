@@ -95,24 +95,29 @@ func VariableSize(name string, data any) int {
 }
 
 // VariableContains checks if variable contains value
-func VariableContains(name string, target any, data any) bool {
+func VariableContains(name string, targets []any, data any) bool {
 	val := FindVariable(name, data)
 	if val == nil {
 		return false
 	}
 	valStr := fmt.Sprintf("%v", val)
-	reStr := fmt.Sprintf("%v", target)
-	re, err := regexp.Compile(reStr)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"Name":   name,
-			"Target": target,
-			"Regex":  reStr,
-			"Error":  err,
-		}).Warnf("failed to compile regex")
-		return false
+	for _, target := range targets {
+		reStr := fmt.Sprintf("%v", target)
+		re, err := regexp.Compile(reStr)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"Name":   name,
+				"Target": target,
+				"Regex":  reStr,
+				"Error":  err,
+			}).Warnf("failed to compile regex")
+			return false
+		}
+		if !re.MatchString(valStr) {
+			return false
+		}
 	}
-	return re.MatchString(valStr)
+	return true
 }
 
 // VariableNumber returns numeric value for variable

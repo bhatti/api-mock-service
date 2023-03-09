@@ -112,6 +112,7 @@ func SanitizeRegexValue(val string) string {
 func (r MockHTTPRequest) BuildTemplateParams(
 	req *http.Request,
 	pathGroups map[string]string,
+	inHeaders map[string][]string,
 	overrides map[string]any,
 ) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
 	templateParams = make(map[string]any)
@@ -123,6 +124,11 @@ func (r MockHTTPRequest) BuildTemplateParams(
 	//		templateParams[parts[0]] = parts[1]
 	//	}
 	//}
+
+	for k, v := range inHeaders {
+		reqHeaders[k] = v
+	}
+
 	for k, v := range r.PathParams {
 		templateParams[k] = fuzz.StripTypeTags(v)
 		queryParams[k] = fuzz.StripTypeTags(v)
