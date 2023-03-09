@@ -1142,6 +1142,8 @@ response:
 wait_before_reply: 0s
 ```
 
+### Producer Contract Testing By Group
+
 You can then customize this scenario with additional assertions and you may remove all response contents as they won't be used. Note that
 above scenario is defined with group `todos`. You can then submit a request for contract testing as follows:
 ```bash
@@ -1171,6 +1173,15 @@ If you have a local captured data, you can also run contract client with a comma
 ```bash
 go run main.go contract --base_url https://jsonplaceholder.typicode.com --group todos --times 10
 ```
+
+### Producer Contract Testing By History
+You can also execute producer contracts by history of previously executed contracts, e.g.,
+```bash
+curl -k -v -X POST http://localhost:8080/_contracts/history/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'
+```
+
+Note: the group path parameter in above URL is optional and you can omit if you just want to execute all execution history.
+
 
 ## Chaining Scenarios for Group Contract Testing
 A mock scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 

@@ -28,6 +28,7 @@ func NewContractController(
 
 	webserver.POST("/_contracts/:group", ctrl.postMockContractGroupScenario)
 	webserver.POST("/_contracts/history/:group", ctrl.postMockContractHistory)
+	webserver.POST("/_contracts/history", ctrl.postMockContractHistory)
 	webserver.POST("/_contracts/:method/:name/:path", ctrl.postMockContractScenario)
 	return ctrl
 }
