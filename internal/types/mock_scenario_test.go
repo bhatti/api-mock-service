@@ -84,6 +84,16 @@ func Test_ShouldSetName(t *testing.T) {
 	require.Contains(t, scenario.Name, "2-openapi.json-200-", scenario.Name)
 }
 
+func Test_ShouldSetNameWithPathVariables(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.Path = "{var}/2/openapi.json"
+	// WHEN setting name
+	scenario.SetName("prefix")
+	// THEN it should succeed
+	require.Contains(t, scenario.Name, "prefix/-200-")
+}
+
 func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 	// GIVEN a empty mock scenario
 	scenario := &MockScenario{}

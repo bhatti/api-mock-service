@@ -519,6 +519,8 @@ func NormalizeDirPath(path string) string {
 	}
 	if ndx > 1 {
 		path = path[0 : ndx-1]
+	} else if ndx == 0 {
+		path = "/"
 	}
 	return path
 }
