@@ -91,7 +91,7 @@ func Test_ShouldSetNameWithPathVariables(t *testing.T) {
 	// WHEN setting name
 	scenario.SetName("prefix")
 	// THEN it should succeed
-	require.Contains(t, scenario.Name, "prefix/-200-")
+	require.Contains(t, scenario.Name, "prefix-200-")
 }
 
 func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
