@@ -196,7 +196,7 @@ func (x *ProducerExecutor) execute(
 	scenario *types.MockScenario,
 	contractReq *types.ContractRequest,
 	dataTemplate fuzz.DataTemplateRequest,
-	metrics *metrics.Metrics,
+	sli *metrics.Metrics,
 ) (res any, err error) {
 	started := time.Now().UnixMilli()
 	templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
@@ -236,7 +236,7 @@ func (x *ProducerExecutor) execute(
 	statusCode, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	elapsed := time.Now().UnixMilli() - started
-	metrics.AddHistogram(scenario.SafeName(), float64(elapsed)/1000.0, nil)
+	sli.AddHistogram(scenario.SafeName(), float64(elapsed)/1000.0, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to invoke %s for %s (%s) due to %w", scenario.Name, url, scenario.Method, err)
 	}

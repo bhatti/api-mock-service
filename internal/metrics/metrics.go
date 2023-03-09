@@ -5,6 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	dto "github.com/prometheus/client_model/go"
 	log "github.com/sirupsen/logrus"
+	"regexp"
 	"strings"
 	"sync"
 )
@@ -39,6 +40,7 @@ func NewMetrics() *Metrics {
 
 // RegisterHistogram registers a new metric
 func (m *Metrics) RegisterHistogram(name string) {
+	name = sanitizeName(name)
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	if m.histograms[name] != nil {
@@ -71,6 +73,7 @@ func (m *Metrics) RegisterHistogram(name string) {
 
 // AddHistogram adds latency
 func (m *Metrics) AddHistogram(name string, value float64, labels map[string]string) {
+	name = sanitizeName(name)
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 	requestDurations := m.histograms[name]
@@ -98,4 +101,11 @@ func (m *Metrics) Summary() map[string]float64 {
 		}
 	}
 	return res
+}
+
+func sanitizeName(name string) string {
+	if re, err := regexp.Compile(`[^a-zA-Z0-9_]`); err == nil {
+		name = re.ReplaceAllString(name, "")
+	}
+	return name
 }

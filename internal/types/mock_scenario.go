@@ -60,12 +60,6 @@ type MockAuthorization struct {
 
 // MockHTTPRequest defines mock request for APIs
 type MockHTTPRequest struct {
-	// AssertQueryParamsPattern for the API
-	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
-	// AssertHeadersPattern for mock response
-	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
-	// AssertContentsPattern for request optionally
-	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
 	// PathParams sample for the API
 	PathParams map[string]string `yaml:"path_params" json:"path_params"`
 	// QueryParams sample for the API
@@ -76,6 +70,12 @@ type MockHTTPRequest struct {
 	Contents string `yaml:"contents" json:"contents"`
 	// ExampleContents sample for request optionally
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
+	// AssertQueryParamsPattern for the API
+	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
+	// AssertHeadersPattern for mock response
+	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
+	// AssertContentsPattern for request optionally
+	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
 	// Assertions for validating response
 	Assertions []string `yaml:"assertions" json:"assertions"`
 }
@@ -272,12 +272,12 @@ type MockHTTPResponse struct {
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 	// StatusCode for response
 	StatusCode int `yaml:"status_code" json:"status_code"`
+	// PipeProperties to extract properties from response
+	PipeProperties []string `yaml:"pipe_properties" json:"pipe_properties"`
 	// AssertHeadersPattern for mock response
 	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
 	// AssertContentsPattern for request optionally
 	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
-	// PipeProperties to extract properties from response
-	PipeProperties []string `yaml:"pipe_properties" json:"pipe_properties"`
 	// Assertions for validating response
 	Assertions []string `yaml:"assertions" json:"assertions"`
 }
