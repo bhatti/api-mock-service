@@ -31,13 +31,9 @@ var contractCmd = &cobra.Command{
 			"ExecTimes": executionTimes,
 			"Verbose":   verbose}).
 			Infof("executing contracts...")
-		if baseURL == "" {
-			log.Errorf("baseURL is not specified")
-			os.Exit(1)
-		}
 		if group == "" {
 			log.Errorf("group is not specified")
-			os.Exit(2)
+			os.Exit(1)
 		}
 		serverConfig, err := types.NewConfiguration(
 			httpPort,
@@ -46,12 +42,12 @@ var contractCmd = &cobra.Command{
 			types.NewVersion(Version, Commit, Date))
 		if err != nil {
 			log.Errorf("failed to parse config %s", err)
-			os.Exit(3)
+			os.Exit(2)
 		}
 		scenarioRepo, _, _, err := buildRepos(serverConfig)
 		if err != nil {
 			log.Errorf("failed to setup scenario repository %s", err)
-			os.Exit(4)
+			os.Exit(3)
 		}
 
 		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)

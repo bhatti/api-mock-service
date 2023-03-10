@@ -155,6 +155,8 @@ func AddMockResponse(
 		for k, vals := range respHeaders {
 			scenario.Response.Headers[k] = vals
 		}
+
+		scenario.Description = fmt.Sprintf("executed at %v for %s", time.Now().UTC(), req.URL)
 		err = scenarioRepository.SaveHistory(scenario)
 	}
 

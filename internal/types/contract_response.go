@@ -7,6 +7,7 @@ type ContractResponse struct {
 	Results   map[string]string  `yaml:"results" json:"results"`
 	Errors    map[string]string  `yaml:"errors" json:"errors"`
 	Metrics   map[string]float64 `yaml:"metrics" json:"metrics"`
+	URLs      map[string]int     `yaml:"urls" json:"urls"`
 	Succeeded int                `yaml:"succeeded" json:"succeeded"`
 	Failed    int                `yaml:"failed" json:"failed"`
 }
@@ -17,6 +18,7 @@ func NewContractResponse() *ContractResponse {
 		Errors:    make(map[string]string),
 		Results:   make(map[string]string),
 		Metrics:   make(map[string]float64),
+		URLs:      make(map[string]int),
 		Succeeded: 0,
 		Failed:    0,
 	}

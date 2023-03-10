@@ -138,9 +138,7 @@ func buildContractRequest(c web.APIContext) (*types.ContractRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	if contractReq.BaseURL == "" {
-		return nil, fmt.Errorf("baseURL is not specified in %s", b)
-	}
+	// contractReq.BaseURL may be nil
 	if contractReq.ExecutionTimes <= 0 {
 		contractReq.ExecutionTimes = 5
 	}

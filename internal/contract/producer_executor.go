@@ -48,7 +48,7 @@ func (x *ProducerExecutor) Execute(
 	started := time.Now()
 	sli := metrics.NewMetrics()
 	sli.RegisterHistogram(scenarioKey.SafeName())
-	res := types.NewContractResponse()
+	contractResponse := types.NewContractResponse()
 	log.WithFields(log.Fields{
 		"Component":       "ProducerExecutor",
 		"Scenario":        scenarioKey,
@@ -58,27 +58,27 @@ func (x *ProducerExecutor) Execute(
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 		if err != nil {
-			res.Add(scenarioKey.Name, nil, err)
-			res.Metrics = sli.Summary()
-			return res
+			contractResponse.Add(scenarioKey.Name, nil, err)
+			contractResponse.Metrics = sli.Summary()
+			return contractResponse
 		}
 		url := scenario.BuildURL(contractReq.BaseURL)
-		resContents, err := x.execute(ctx, req, url, scenario, contractReq, dataTemplate, sli)
-		res.Add(scenario.Name, resContents, err)
+		resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+		contractResponse.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
 
-	res.Metrics = sli.Summary()
+	contractResponse.Metrics = sli.Summary()
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
 		"Component":       "ProducerExecutor",
 		"Scenario":        scenarioKey,
 		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
-		"Errors":          len(res.Errors),
-		"Metrics":         res.Metrics,
+		"Errors":          len(contractResponse.Errors),
+		"Metrics":         contractResponse.Metrics,
 	}).Infof("execute COMPLETED")
-	return res
+	return contractResponse
 }
 
 // ExecuteByHistory executes execution history for an API with mock data
@@ -91,7 +91,7 @@ func (x *ProducerExecutor) ExecuteByHistory(
 ) *types.ContractResponse {
 	started := time.Now()
 	execHistory := x.scenarioRepository.HistoryNames(group)
-	res := types.NewContractResponse()
+	contractResponse := types.NewContractResponse()
 	log.WithFields(log.Fields{
 		"Component":       "ProducerExecutor",
 		"Group":           group,
@@ -106,31 +106,31 @@ func (x *ProducerExecutor) ExecuteByHistory(
 		for _, scenarioName := range execHistory {
 			scenario, err := x.scenarioRepository.LoadHistory(scenarioName)
 			if err != nil {
-				res.Add(fmt.Sprintf("%s_%d", scenario.Name, i), nil, err)
-				res.Metrics = sli.Summary()
-				return res
+				contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), nil, err)
+				contractResponse.Metrics = sli.Summary()
+				return contractResponse
 			}
 			if !registered[scenario.SafeName()] {
 				sli.RegisterHistogram(scenario.SafeName())
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := x.execute(ctx, req, url, scenario, contractReq, dataTemplate, sli)
-			res.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
+			resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+			contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
 	}
 
 	elapsed := time.Since(started).String()
-	res.Metrics = sli.Summary()
+	contractResponse.Metrics = sli.Summary()
 	log.WithFields(log.Fields{
 		"Component":       "ProducerExecutor",
 		"Group":           group,
 		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
-		"Errors":          len(res.Errors),
-		"Metrics":         res.Metrics,
+		"Errors":          len(contractResponse.Errors),
+		"Metrics":         contractResponse.Metrics,
 	}).Infof("execute-by-history COMPLETED")
-	return res
+	return contractResponse
 }
 
 // ExecuteByGroup executes an API with mock data
@@ -143,7 +143,7 @@ func (x *ProducerExecutor) ExecuteByGroup(
 ) *types.ContractResponse {
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
-	res := types.NewContractResponse()
+	contractResponse := types.NewContractResponse()
 	log.WithFields(log.Fields{
 		"Component":       "ProducerExecutor",
 		"Group":           group,
@@ -163,29 +163,29 @@ func (x *ProducerExecutor) ExecuteByGroup(
 		for _, scenarioKey := range scenarioKeys {
 			scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 			if err != nil {
-				res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
-				res.Metrics = sli.Summary()
-				return res
+				contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
+				contractResponse.Metrics = sli.Summary()
+				return contractResponse
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := x.execute(ctx, req, url, scenario, contractReq, dataTemplate, sli)
-			res.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
+			resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+			contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
 	}
 
 	elapsed := time.Since(started).String()
-	res.Metrics = sli.Summary()
+	contractResponse.Metrics = sli.Summary()
 	log.WithFields(log.Fields{
 		"Component":       "ProducerExecutor",
 		"Group":           group,
 		"ContractRequest": contractReq.String(),
 		"Elapsed":         elapsed,
-		"Errors":          len(res.Errors),
+		"Errors":          len(contractResponse.Errors),
 		"ScenarioKeys":    scenarioKeys,
-		"Metrics":         res.Metrics,
+		"Metrics":         contractResponse.Metrics,
 	}).Infof("execute-by-group COMPLETED")
-	return res
+	return contractResponse
 }
 
 // execute an API with mock data
@@ -195,9 +195,28 @@ func (x *ProducerExecutor) execute(
 	url string,
 	scenario *types.MockScenario,
 	contractReq *types.ContractRequest,
+	contractRes *types.ContractResponse,
 	dataTemplate fuzz.DataTemplateRequest,
 	sli *metrics.Metrics,
 ) (res any, err error) {
+	if req == nil {
+		return nil, fmt.Errorf("http request is not specified")
+	}
+	if url == "" {
+		return nil, fmt.Errorf("http URL is not specified")
+	}
+	if scenario == nil {
+		return nil, fmt.Errorf("scenario is not specified")
+	}
+	if contractReq == nil {
+		return nil, fmt.Errorf("contract request is not specified")
+	}
+	if contractRes == nil {
+		return nil, fmt.Errorf("contract response is not specified")
+	}
+	if !strings.HasPrefix(url, "http") {
+		return nil, fmt.Errorf("http URL is not valid %s, scenario url %s", url, scenario.BaseURL)
+	}
 	started := time.Now().UnixMilli()
 	templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
 		req,
@@ -237,6 +256,7 @@ func (x *ProducerExecutor) execute(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	elapsed := time.Now().UnixMilli() - started
 	sli.AddHistogram(scenario.SafeName(), float64(elapsed)/1000.0, nil)
+	contractRes.URLs[url] = contractRes.URLs[url] + 1
 	if err != nil {
 		return nil, fmt.Errorf("failed to invoke %s for %s (%s) due to %w", scenario.Name, url, scenario.Method, err)
 	}

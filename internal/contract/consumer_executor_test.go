@@ -400,8 +400,8 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 	resHeader := http.Header{"X1": []string{"val1"}}
 	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
-	_ = os.MkdirAll("../../mock_tests/mock_contracts/path/POST", 0755)
-	_ = os.WriteFile("../../mock_tests/mock_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
+	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
 	req := &http.Request{Body: nil}
 	_, err = AddMockResponse(
 		req,
@@ -426,8 +426,8 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 	resHeader := http.Header{"X1": []string{"val1"}}
 	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
-	_ = os.MkdirAll("../../mock_tests/mock_contracts/path/POST", 0755)
-	_ = os.WriteFile("../../mock_tests/mock_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
+	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
 	u, err := url.Parse("https://jsonplaceholder.typicode.com/api/todos/202?a=123&b=abc")
 	require.NoError(t, err)
 	req := &http.Request{Body: nil, URL: u}
@@ -453,8 +453,8 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 	resHeader := http.Header{"X1": []string{"val1"}}
 	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
-	_ = os.MkdirAll("../../mock_tests/mock_contracts/path/POST", 0755)
-	_ = os.WriteFile("../../mock_tests/mock_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
+	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	req := &http.Request{Body: reader}
@@ -480,8 +480,8 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 	resHeader := http.Header{"X1": []string{"val1"}}
 	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
-	_ = os.MkdirAll("../../mock_tests/mock_contracts/path/POST", 0755)
-	_ = os.WriteFile("../../mock_tests/mock_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
+	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
+	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	u, _ := url.Parse("http://localhost:8080?a=123&b=abcd")

@@ -146,8 +146,12 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 	err = ctrl.postMockContractScenario(ctx)
 
 	// THEN it should fail
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "baseURL is not specified")
+	require.NoError(t, err)
+	res := ctx.Result.(*types.ContractResponse)
+	require.Equal(t, 1, len(res.Errors))
+	for _, err := range res.Errors {
+		require.Contains(t, err, "http URL is not valid ")
+	}
 }
 
 func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {

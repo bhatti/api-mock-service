@@ -591,6 +591,6 @@ func sortByUsageTime(res []*types.MockScenarioKeyData) {
 }
 
 func buildContractsDir(config *types.Configuration) string {
-	contractDir := filepath.Join(config.DataDir, "mock_contracts")
+	contractDir := filepath.Join(config.DataDir, "api_contracts")
 	return contractDir
 }
