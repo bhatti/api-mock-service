@@ -60,6 +60,7 @@ func NewConfiguration(
 	viper.SetDefault("http_port", "8080")
 	viper.SetDefault("proxy_port", "8081")
 	viper.SetDefault("data_dir", "default_mocks_data")
+	viper.SetDefault("user_agent", "MocService_"+version.Version)
 	viper.SetDefault("match_header_regex", "Target")
 	viper.SetDefault("match_query_regex", "Target")
 	viper.SetDefault("max_history", "100")

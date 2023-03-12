@@ -260,7 +260,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	resp.Header["Access-Control-Max-Age"] = []string{"1728000"}
 	resp.Header["Content-Length"] = []string{"0"}
 	resp.Header["Access-Control-Expose-Headers"] = []string{"Content-Length,Content-Range"}
-	//resp.Header["Via"] = []string{h.config.UserAgent}
+	resp.Header["Via"] = []string{h.config.UserAgent}
 	//resp.Header["Vary"] = []string{"Origin, Accept-Encoding""}
 	//resp.Header["Access-Control-Allow-Headers"] = []string{"Content-Type, api_key, Authorization"}
 	//resp.Header["Content-Security-Policy"] = []string{"default-src 'self', form-action 'self',script-src 'self'"}
