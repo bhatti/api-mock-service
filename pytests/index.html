@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<link rel="stylesheet" href="/style.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/themes/prism-tomorrow.min.css" />
+<title>Test REST API</title>
+</head>
+<body class="px-2">
+<header class="container mx-auto max-w-4xl flex flex-col md:flex-row justify-between py-one mb-three">
+<h1>
+<a href="/" class="font-bold no-underline">Test REST APIs</a>
+</h1>
+
+<section class="container mx-auto max-w-4xl mb-four">
+<h2 class="text-2xl mb-one">Try it</h2>
+<p>Run this code here, in a console or from any site:</p>
+<select id="resource">
+    <option>posts</a>
+    <option>comments</a>
+    <option>albums</a>
+    <option>photos</a>
+    <option>todos</a>
+    <option>users</a>
+    <option>posts/1</a>
+    <option>comments/1</a>
+    <option>albums/1</a>
+    <option>photos/1</a>
+    <option>todos/1</a>
+    <option>users/1</a>
+</select>
+<button id="run-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Fetch</button>
+<pre><code id="result" class="language-javascript">{}</code></pre>
+<p id="run-message" class="invisible">
+Congrats you've made your first call to REST APIs! 😃 🎉
+</p>
+</section>
+<script>
+  var result = document.getElementById('result')
+
+  var runButton = document.getElementById('run-button')
+  runButton.onclick = function () {
+    var root = location.protocol + '//jsonplaceholder.typicode.com/';
+    var resource = document.getElementById('resource').value;
+    var runMessage = document.getElementById('run-message');
+
+    const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        result.innerHTML = Prism.highlight(
+          xhr.responseText,
+          Prism.languages.javascript,
+          'javascript',
+        )
+        runMessage.className = ''
+      }
+    }
+    xhr.open("GET", root + resource, true);
+    xhr.send();
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/prism.min.js"></script>
+</body>
+</html>
+
+

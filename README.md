@@ -133,6 +133,32 @@ curl -k -v -H "Authorization: Bearer sk_test_xxxx" https://api.stripe.com/v1/cus
 Above curl command will automatically record all requests and responses and create mock scenario to play it back. For example, if you call the same 
 API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `X-Mock-Record: true`  header to your request.
 
+### Proxy Settings in other languages
+In addition to specifying HTTP proxy as environment variables, here is how you can specify in other languages:
+
+#### Java
+```java
+System.getProperties().put("http.proxyHost", "<HOST>"); // Use https prefix if running mock-service behind TLS
+System.getProperties().put("http.proxyPort", "<PORT>");
+System.getProperties().put("http.proxyUser", "");
+System.getProperties().put("http.proxyPassword", "");
+
+```
+
+#### Python
+```python
+proxy_servers = {
+    'http': 'http://localhost:9000',
+    'https': 'http://localhost:9000',
+}
+
+headers = { 'Content-Type': 'application/json' }
+resp = requests.post(API_URL, json = DATA , headers = headers, proxies = proxy_servers, verify = False)
+```
+
+Note: You may need to disable strict origin policy in your browser if testing via browser, e.g. set 
+`about:config -> security.fileuri.strict_origin_policy` to `false` in Firefox.
+
 ## Recording a Mock Scenario via API 
 Alternatively, you can use invoke an internal API as a pass through to invoke a remote API so that you can 
 automatically record API behavior and play it back later, e.g.
