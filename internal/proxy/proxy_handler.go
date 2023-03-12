@@ -19,6 +19,18 @@ import (
 //var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
 //var noProxyClient = &http.Client{Transport: &http.Transport{TLSClientConfig: acceptAllCerts}}
 
+var ignoredResponseHeaders = map[string]struct{}{
+	"Access-Control-Expose-Headers":   {},
+	"Referrer-Policy":                 {},
+	"Report-To":                       {},
+	"Strict-Transport":                {},
+	"Strict-Origin-When-Cross-Origin": {},
+	"Strict-Transport-Security":       {},
+	"X-Frame-Options":                 {},
+	"X-Content-Type-Options":          {},
+	"Timing-Allow-Origin":             {},
+}
+
 // Handler structure
 type Handler struct {
 	config                 *types.Configuration
@@ -130,7 +142,6 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Method":      req.Method,
 			"Headers":     req.Header,
 			"AWSAuthSig4": awsAuthSig4,
-			"AWSInfo":     awsInfo,
 		}).Infof("proxy server redirected request to internal controllers")
 		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 		return req, res, nil
@@ -149,7 +160,6 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
 		"AWSAuthSig4":     awsAuthSig4,
-		"AWSInfo":         awsInfo,
 		"Error":           err,
 	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
 	if err != nil {
@@ -246,14 +256,21 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	resp.Header["Access-Control-Allow-Credentials"] = []string{"true"}
 	resp.Header["Access-Control-Allow-Methods"] = []string{"GET, POST, DELETE, PUT, PATCH, OPTIONS, HEAD"}
 	resp.Header["Access-Control-Allow-Headers"] = []string{"*"}
+	resp.Header["Access-Control-Max-Age"] = []string{"1728000"}
+	resp.Header["Content-Length"] = []string{"0"}
+	resp.Header["Access-Control-Expose-Headers"] = []string{"Content-Length,Content-Range"}
 	//resp.Header["Access-Control-Allow-Headers"] = []string{"Content-Type, api_key, Authorization"}
 	//resp.Header["Content-Security-Policy"] = []string{"default-src 'self', form-action 'self',script-src 'self'"}
-	log.WithFields(log.Fields{
-		"Response": resp,
-		"Length":   len(resBytes),
-		"Headers":  resp.Header,
-	}).Infof("proxy server recorded response")
 
+	for k := range ignoredResponseHeaders {
+		resp.Header.Del(k)
+	}
+	log.WithFields(log.Fields{
+		"Response":    resp,
+		"Length":      len(resBytes),
+		"ReqHeaders":  resp.Request.Header,
+		"RespHeaders": resp.Header,
+	}).Infof("proxy server recorded response")
 	resp.Request.Header = make(http.Header) // reset headers for next request in case we are using it.
 	return resp, nil
 }
