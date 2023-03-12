@@ -302,7 +302,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	case map[string]any:
 		hm := val.(map[string]any)
 		prop := &openapi3.Schema{
-			Description: "object-any-map " + strVal,
+			Description: "object-any-map, example " + strVal,
 			Properties:  make(openapi3.Schemas),
 			Type:        "object",
 		}
