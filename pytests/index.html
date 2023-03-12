@@ -30,24 +30,26 @@
     <option>todos/1</a>
     <option>users/1</a>
 </select>
-<button id="run-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Fetch</button>
+<button id="fetch-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Query Data</button>
 <pre><code id="result" class="language-javascript">{}</code></pre>
+<button id="update-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Update Changes</button>
 <p id="run-message" class="invisible">
-Congrats you've made your first call to REST APIs! 😃 🎉
+Congrats you've made successful call to REST APIs! 😃 🎉
 </p>
 </section>
 <script>
-  var result = document.getElementById('result')
-
-  var runButton = document.getElementById('run-button')
-  runButton.onclick = function () {
-    var root = location.protocol + '//jsonplaceholder.typicode.com/';
-    var resource = document.getElementById('resource').value;
-    var runMessage = document.getElementById('run-message');
+  const result = document.getElementById('result')
+  let jsonResp = {}
+  const fetchButton = document.getElementById('fetch-button')
+  fetchButton.onclick = function () {
+    const root = location.protocol + '//jsonplaceholder.typicode.com/';
+    const resource = document.getElementById('resource').value;
+    const runMessage = document.getElementById('run-message');
 
     const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4 && xhr.status === 200) {
+        jsonResp = JSON.parse(xhr.responseText);
         result.innerHTML = Prism.highlight(
           xhr.responseText,
           Prism.languages.javascript,
@@ -58,6 +60,38 @@ Congrats you've made your first call to REST APIs! 😃 🎉
     }
     xhr.open("GET", root + resource, true);
     xhr.send();
+  };
+
+  const updateButton = document.getElementById('update-button')
+  updateButton.onclick = function () {
+    const root = location.protocol + '//jsonplaceholder.typicode.com/';
+    let resource = document.getElementById('resource').value;
+    const lastSlashIndex = resource.lastIndexOf('/');
+    if (lastSlashIndex !== -1) {
+        resource = resource.substring(0, lastSlashIndex);
+    }
+    const runMessage = document.getElementById('run-message');
+
+    const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        result.innerHTML = Prism.highlight(
+          xhr.responseText,
+          Prism.languages.javascript,
+          'javascript',
+        )
+        runMessage.className = '';
+      }
+    }
+    xhr.open("POST", root + resource, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    if (Array.isArray(jsonResp)) {
+        for (let i=0; i<jsonResp.length && i<1; i++) {
+          xhr.send(JSON.stringify(jsonResp[i]));
+        }
+    } else {
+       xhr.send(JSON.stringify(jsonResp));
+    }
   };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/prism.min.js"></script>
