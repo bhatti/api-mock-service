@@ -43,63 +43,63 @@ func NewRootController(
 
 // ********************************* HTTP Handlers ***********************************
 
-// swagger:route POST /{path} api-consumer postRoot
+// swagger:route POST /{path} consumer-contract postRoot
 // Play scenario from POST request
 // responses: returns stubbed response based on API
 func (r *RootController) postRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route PUT /{path} api-consumer putRoot
+// swagger:route PUT /{path} consumer-contract putRoot
 // Play scenario from PUT request
 // responses: returns stubbed response based on API
 func (r *RootController) putRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route GET /{path} api-consumer getRoot
+// swagger:route GET /{path} consumer-contract getRoot
 // Play scenario from GET request
 // responses: returns stubbed response based on API
 func (r *RootController) getRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route DELETE /{path} api-consumer deleteRoot
+// swagger:route DELETE /{path} consumer-contract deleteRoot
 // Play scenario from DELETE request
 // responses: returns stubbed response based on API
 func (r *RootController) deleteRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route CONNECT /{path} api-consumer connectRoot
+// swagger:route CONNECT /{path} consumer-contract connectRoot
 // Play scenario from CONNECT request
 // responses: returns stubbed response based on API
 func (r *RootController) connectRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route HEAD /{path} api-consumer headRoot
+// swagger:route HEAD /{path} consumer-contract headRoot
 // Play scenario from HEAD request
 // responses: returns stubbed response based on API
 func (r *RootController) headRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route OPTIONS /{path} api-consumer optionsRoot
+// swagger:route OPTIONS /{path} consumer-contract optionsRoot
 // Play scenario from OPTIONS request
 // responses: returns stubbed response based on API
 func (r *RootController) optionsRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route PATCH /{path} api-consumer patchRoot
+// swagger:route PATCH /{path} consumer-contract patchRoot
 // Play scenario from PATCH request
 // responses: returns stubbed response based on API
 func (r *RootController) patchRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route TRACE /{path} api-consumer traceRoot
+// swagger:route TRACE /{path} consumer-contract traceRoot
 // Play scenario from TRACE request
 // responses: returns stubbed response based on API
 func (r *RootController) traceRoot(c web.APIContext) (err error) {

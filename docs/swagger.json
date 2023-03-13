@@ -905,7 +905,7 @@
           }
         ],
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       },
       "get": {
@@ -921,28 +921,28 @@
           }
         ],
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       },
       "head": {
         "description": "Play scenario from HEAD request",
         "operationId": "headRoot",
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       },
       "options": {
         "description": "Play scenario from OPTIONS request",
         "operationId": "optionsRoot",
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       },
       "patch": {
         "description": "Play scenario from PATCH request",
         "operationId": "patchRoot",
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       },
       "post": {
@@ -958,7 +958,7 @@
           }
         ],
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       },
       "put": {
@@ -974,7 +974,7 @@
           }
         ],
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ]
       }
     }

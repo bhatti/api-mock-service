@@ -647,7 +647,7 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - api-consumer
+      - consumer-contract
     get:
       description: Play scenario from GET request
       operationId: getRoot
@@ -658,22 +658,22 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - api-consumer
+      - consumer-contract
     head:
       description: Play scenario from HEAD request
       operationId: headRoot
       tags:
-      - api-consumer
+      - consumer-contract
     options:
       description: Play scenario from OPTIONS request
       operationId: optionsRoot
       tags:
-      - api-consumer
+      - consumer-contract
     patch:
       description: Play scenario from PATCH request
       operationId: patchRoot
       tags:
-      - api-consumer
+      - consumer-contract
     post:
       description: Play scenario from POST request
       operationId: postRoot
@@ -684,7 +684,7 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - api-consumer
+      - consumer-contract
     put:
       description: Play scenario from PUT request
       operationId: putRoot
@@ -695,7 +695,7 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - api-consumer
+      - consumer-contract
 responses:
   apiFixtureNamesResponse:
     description: APIFixture names

@@ -725,7 +725,7 @@
     "/{path}": {
       "get": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from GET request",
         "operationId": "getRoot",
@@ -744,7 +744,7 @@
       },
       "put": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from PUT request",
         "operationId": "putRoot",
@@ -763,7 +763,7 @@
       },
       "post": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from POST request",
         "operationId": "postRoot",
@@ -782,7 +782,7 @@
       },
       "delete": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from DELETE request",
         "operationId": "deleteRoot",
@@ -801,21 +801,21 @@
       },
       "options": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from OPTIONS request",
         "operationId": "optionsRoot"
       },
       "head": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from HEAD request",
         "operationId": "headRoot"
       },
       "patch": {
         "tags": [
-          "api-consumer"
+          "consumer-contract"
         ],
         "description": "Play scenario from PATCH request",
         "operationId": "patchRoot"
