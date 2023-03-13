@@ -13,35 +13,35 @@ import (
 	"net/http"
 )
 
-// ContractController structure for producer driven contracts
-type ContractController struct {
+// ProducerContractController structure for producer driven contracts
+type ProducerContractController struct {
 	executor *contract.ProducerExecutor
 }
 
-// NewContractController instantiates controller for executing contract client
-func NewContractController(
+// NewProducerContractController instantiates controller for executing contract client
+func NewProducerContractController(
 	executor *contract.ProducerExecutor,
-	webserver web.Server) *ContractController {
-	ctrl := &ContractController{
+	webserver web.Server) *ProducerContractController {
+	ctrl := &ProducerContractController{
 		executor: executor,
 	}
 
-	webserver.POST("/_contracts/:group", ctrl.postMockContractGroupScenario)
-	webserver.POST("/_contracts/history/:group", ctrl.postMockContractHistory)
-	webserver.POST("/_contracts/history", ctrl.postMockContractHistory)
-	webserver.POST("/_contracts/:method/:name/:path", ctrl.postMockContractScenario)
+	webserver.POST("/_contracts/:group", ctrl.postProducerContractGroupScenario)
+	webserver.POST("/_contracts/history/:group", ctrl.postProducerContractHistory)
+	webserver.POST("/_contracts/history", ctrl.postProducerContractHistory)
+	webserver.POST("/_contracts/:method/:name/:path", ctrl.postProducerContractScenario)
 	return ctrl
 }
 
 // ********************************* HTTP Handlers ***********************************
 
-// postMockContractHistory handler
-// swagger:route POST /_contracts/history/{group} contract postMockContractHistory
+// postProducerContractHistory handler
+// swagger:route POST /_contracts/history/{group} contract postProducerContractHistory
 // Plays contract client for a scenario by history
 // responses:
 //
-//	200: mockScenarioContractResponse
-func (mcc *ContractController) postMockContractHistory(c web.APIContext) (err error) {
+//	200: apiScenarioContractResponse
+func (mcc *ProducerContractController) postProducerContractHistory(c web.APIContext) (err error) {
 	group := c.Param("group")
 	contractReq, err := buildContractRequest(c)
 	if err != nil {
@@ -52,13 +52,13 @@ func (mcc *ContractController) postMockContractHistory(c web.APIContext) (err er
 	return c.JSON(http.StatusOK, res)
 }
 
-// postMockContractGroupScenario handler
-// swagger:route POST /_contracts/{group} contract postMockContractGroupScenario
+// postProducerContractGroupScenario handler
+// swagger:route POST /_contracts/{group} contract postProducerContractGroupScenario
 // Plays contract client for a scenario by group
 // responses:
 //
-//	200: mockScenarioContractResponse
-func (mcc *ContractController) postMockContractGroupScenario(c web.APIContext) (err error) {
+//	200: apiScenarioContractResponse
+func (mcc *ProducerContractController) postProducerContractGroupScenario(c web.APIContext) (err error) {
 	group := c.Param("group")
 	if group == "" {
 		return fmt.Errorf("scenario group not specified")
@@ -72,13 +72,13 @@ func (mcc *ContractController) postMockContractGroupScenario(c web.APIContext) (
 	return c.JSON(http.StatusOK, res)
 }
 
-// postMockContractScenario handler
-// swagger:route POST /_contracts/{method}/{name}/{path} contract postMockContractScenario
+// postProducerContractScenario handler
+// swagger:route POST /_contracts/{method}/{name}/{path} contract postProducerContractScenario
 // Plays contract client for a scenario by name
 // responses:
 //
-//	200: mockScenarioContractResponse
-func (mcc *ContractController) postMockContractScenario(c web.APIContext) (err error) {
+//	200: apiScenarioContractResponse
+func (mcc *ProducerContractController) postProducerContractScenario(c web.APIContext) (err error) {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return fmt.Errorf("method name not specified in %s due to %w", c.Request().URL, err)
@@ -102,7 +102,7 @@ func (mcc *ContractController) postMockContractScenario(c web.APIContext) (err e
 		"Method": method,
 		"Name":   name,
 		"Path":   path,
-	}).Debugf("contract mocking scenario...")
+	}).Debugf("contract api scenario...")
 	contractReq, err := buildContractRequest(c)
 	if err != nil {
 		return err
@@ -114,26 +114,26 @@ func (mcc *ContractController) postMockContractScenario(c web.APIContext) (err e
 
 // ********************************* Swagger types ***********************************
 
-// swagger:parameters postMockContractScenario postMockContractGroupScenario
-// The params for mock-scenario based on OpenAPI v3
-type mockScenarioContractCreateParams struct {
+// swagger:parameters postProducerContractScenario postProducerContractGroupScenario
+// The params for api-contract based on OpenAPI v3
+type apiScenarioContractCreateParams struct {
 	// in:body
-	Body types.ContractRequest
+	Body types.ProducerContractRequest
 }
 
-// MockScenario body for update
-// swagger:response mockScenarioContractResponse
-type mockScenarioContractResponseBody struct {
+// APIScenario body for update
+// swagger:response apiScenarioContractResponse
+type apiScenarioContractResponseBody struct {
 	// in:body
-	Body types.ContractResponse
+	Body types.ProducerContractResponse
 }
 
-func buildContractRequest(c web.APIContext) (*types.ContractRequest, error) {
+func buildContractRequest(c web.APIContext) (*types.ProducerContractRequest, error) {
 	b, _, err := utils.ReadAll(c.Request().Body)
 	if err != nil {
 		return nil, err
 	}
-	contractReq := &types.ContractRequest{}
+	contractReq := &types.ProducerContractRequest{}
 	err = json.Unmarshal(b, &contractReq)
 	if err != nil {
 		return nil, err

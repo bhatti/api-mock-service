@@ -18,25 +18,25 @@ import (
 )
 
 func Test_InitializeSwaggerStructsForMockScenarioController(t *testing.T) {
-	_ = mockGroupsResponseBody{}
-	_ = mockNamesResponseBody{}
-	_ = mockNamesParams{}
-	_ = mockScenarioCreateParams{}
-	_ = mockScenarioResponseBody{}
-	_ = mockScenarioIDParams{}
-	_ = mockScenarioPathsResponseBody{}
-	_ = mockHistoryResponseBody{}
+	_ = apiGroupsResponseBody{}
+	_ = apiNamesResponseBody{}
+	_ = apiNamesParams{}
+	_ = apiScenarioCreateParams{}
+	_ = apiScenarioResponseBody{}
+	_ = apiScenarioIDParams{}
+	_ = apiScenarioPathsResponseBody{}
+	_ = apiHistoryResponseBody{}
 }
 
 func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
@@ -63,12 +63,12 @@ func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
 func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -78,30 +78,30 @@ func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN getting mock scenario without method, name and path
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 
 	// THEN it should fail without name
 	require.Error(t, err)
 	ctx.Params["method"] = "GET"
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 	require.Error(t, err)
 
 	// THEN it should fail without path
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 	require.Error(t, err)
 }
 
 func Test_ShouldGetScenarioHistory(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -114,7 +114,7 @@ func Test_ShouldGetScenarioHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN getting mock scenario groups
-	err = ctrl.mockScenarioHistory(ctx)
+	err = ctrl.apiScenarioHistory(ctx)
 	// THEN it should not fail
 	require.NoError(t, err)
 	names := ctx.Result.([]string)
@@ -124,12 +124,12 @@ func Test_ShouldGetScenarioHistory(t *testing.T) {
 func Test_ShouldGetScenarioGroups(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -139,7 +139,7 @@ func Test_ShouldGetScenarioGroups(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN getting mock scenario groups
-	err = ctrl.getGroups(ctx)
+	err = ctrl.getAPIGroups(ctx)
 	// THEN it should not fail
 	require.NoError(t, err)
 	groups := ctx.Result.([]string)
@@ -149,12 +149,12 @@ func Test_ShouldGetScenarioGroups(t *testing.T) {
 func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -164,30 +164,30 @@ func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN getting mock scenario without method, name and path
-	err = ctrl.getMockNames(ctx)
+	err = ctrl.getAPIScenarioNames(ctx)
 
 	// THEN it should fail without name
 	require.Error(t, err)
 	ctx.Params["method"] = "GET"
-	err = ctrl.getMockNames(ctx)
+	err = ctrl.getAPIScenarioNames(ctx)
 	require.Error(t, err)
 
 	// THEN it should fail without path
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.getMockNames(ctx)
+	err = ctrl.getAPIScenarioNames(ctx)
 	require.Error(t, err)
 }
 
 func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	reader := io.NopCloser(bytes.NewReader(data))
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
@@ -196,30 +196,30 @@ func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 
 	// WHEN deleting mock scenario without method, name and path
-	err = ctrl.deleteMockScenario(ctx)
+	err = ctrl.deleteAPIScenario(ctx)
 
 	// THEN it should fail without name
 	require.Error(t, err)
 	ctx.Params["method"] = "DELETE"
-	err = ctrl.deleteMockScenario(ctx)
+	err = ctrl.deleteAPIScenario(ctx)
 	require.Error(t, err)
 
 	// THEN it should fail
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.deleteMockScenario(ctx)
+	err = ctrl.deleteAPIScenario(ctx)
 	require.Error(t, err)
 }
 
 func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	b, err := json.Marshal(scenario)
 	require.NoError(t, err)
@@ -234,7 +234,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
-	savedScenario := ctx.Result.(*types.MockScenario)
+	savedScenario := ctx.Result.(*types.APIScenario)
 	require.NoError(t, scenario.ToKeyData().Equals(savedScenario.ToKeyData()))
 
 	// WHEN getting mock scenario by path
@@ -242,7 +242,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 	ctx.Params["name"] = savedScenario.Name
 	ctx.Params["path"] = "/path1"
 	ctx.Params["a"] = "b"
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -251,7 +251,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 
 	// AND it should not fail with yaml output
 	ctx.Request().Header = map[string][]string{types.ContentTypeHeader: {"application/yaml"}, "Auth": {"01234567890"}}
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 	// THEN it should not fail
 	require.NoError(t, err)
 
@@ -262,12 +262,12 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	b, err := yaml.Marshal(scenario)
 	require.NoError(t, err)
@@ -282,7 +282,7 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
-	savedScenario := ctx.Result.(*types.MockScenario)
+	savedScenario := ctx.Result.(*types.APIScenario)
 	require.Equal(t, "", string(savedScenario.Method))
 
 	// WHEN getting mock scenario by path
@@ -290,7 +290,7 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 	ctx.Params["name"] = scenario.Name
 	ctx.Params["path"] = "/path1"
 	ctx.Params["a"] = "b"
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -301,12 +301,12 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
 	require.NoError(t, err)
 	for i := 0; i < 10; i++ {
@@ -329,7 +329,7 @@ func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 	ctx.Params["method"] = "Post"
 	ctx.Params["path"] = "/123/456"
-	err = ctrl.getMockNames(ctx)
+	err = ctrl.getAPIScenarioNames(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -340,12 +340,12 @@ func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 
 	// WHEN creating mock scenario
 	scenario := buildScenario(types.Post, "test2", "/abc/123/456", 1)
@@ -360,19 +360,19 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 
 	// THEN it should succeed
 	require.NoError(t, err)
-	savedScenario := ctx.Result.(*types.MockScenario)
+	savedScenario := ctx.Result.(*types.APIScenario)
 	require.NoError(t, scenario.ToKeyData().Equals(savedScenario.ToKeyData()))
 
 	// WHEN deleting mock scenario
 	ctx.Params["method"] = string(savedScenario.Method)
 	ctx.Params["name"] = savedScenario.Name
 	ctx.Params["path"] = savedScenario.NormalPath('/')
-	err = ctrl.deleteMockScenario(ctx)
+	err = ctrl.deleteAPIScenario(ctx)
 	// THEN it should succeed
 	require.NoError(t, err)
 
 	// AND get API should fail
-	err = ctrl.getMockScenario(ctx)
+	err = ctrl.getAPIScenario(ctx)
 
 	// THEN it should not fail
 	require.Error(t, err)
@@ -381,12 +381,12 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 func Test_ShouldListMockScenario(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockScenarioController(mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 
 	// WHEN creating mock scenario
 	scenario := buildScenario(types.Post, "test2", "/abc/123/456", 1)
@@ -401,8 +401,8 @@ func Test_ShouldListMockScenario(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN it should be able to list
-	err = ctrl.listMockScenarioPaths(ctx)
+	err = ctrl.listAPIScenarioPaths(ctx)
 	require.NoError(t, err)
-	scenarios := ctx.Result.(map[string]*types.MockScenarioKeyData)
+	scenarios := ctx.Result.(map[string]*types.APIKeyData)
 	require.True(t, len(scenarios) > 0)
 }

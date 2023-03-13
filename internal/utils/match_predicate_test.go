@@ -12,11 +12,11 @@ import (
 	"time"
 )
 
-const mockPath = "//abc//\\def/123/"
+const apiPath = "//abc//\\def/123/"
 
 func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
-	keyData1 := buildScenario(types.Post, "test1", mockPath, 1).ToKeyData()
-	keyData2 := buildScenario(types.Post, "test2", mockPath, 2).ToKeyData()
+	keyData1 := buildScenario(types.Post, "test1", apiPath, 1).ToKeyData()
+	keyData2 := buildScenario(types.Post, "test2", apiPath, 2).ToKeyData()
 	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 0))
 	keyData1.AssertQueryParamsPattern = map[string]string{"a": `\d+`, "b": "abc"}
 	keyData2.AssertQueryParamsPattern = map[string]string{"a": `\d+`, "b": "abc"}
@@ -27,12 +27,12 @@ func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
 }
 
 func Test_ShouldMatchScenarioPredicate(t *testing.T) {
-	keyData := &types.MockScenarioKeyData{}
-	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
+	keyData := &types.APIKeyData{}
+	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 0))
 	keyData.Predicate = `{{NthRequest 3}}`
-	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 0))
-	require.False(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 2))
-	require.True(t, MatchScenarioPredicate(keyData, &types.MockScenarioKeyData{}, 3))
+	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 0))
+	require.False(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 2))
+	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 3))
 }
 
 func Test_ShouldParseScenarioTemplate(t *testing.T) {
@@ -53,7 +53,7 @@ func Test_ShouldParseScenarioTemplate(t *testing.T) {
 
 		// THEN it should not fail
 		require.NoError(t, err)
-		scenario := types.MockScenario{}
+		scenario := types.APIScenario{}
 		// AND it should return valid mock scenario
 		err = yaml.Unmarshal(body, &scenario)
 		if err != nil {
@@ -79,7 +79,7 @@ func Test_ShouldParseCustomerStripeTemplate(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	scenario := types.MockScenario{}
+	scenario := types.APIScenario{}
 	// AND it should return valid mock scenario
 	err = yaml.Unmarshal(body, &scenario)
 	require.NoError(t, err)
@@ -99,7 +99,7 @@ func Test_ShouldParseCommentsTemplate(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	scenario := types.MockScenario{}
+	scenario := types.APIScenario{}
 	// AND it should return valid mock scenario
 	err = yaml.Unmarshal(body, &scenario)
 	require.NoError(t, err)
@@ -120,7 +120,7 @@ func Test_ShouldParseDevicesTemplate(t *testing.T) {
 
 		// THEN it should not fail
 		require.NoError(t, err)
-		scenario := types.MockScenario{}
+		scenario := types.APIScenario{}
 		// AND it should return valid mock scenario
 		err = yaml.Unmarshal(body, &scenario)
 		require.NoError(t, err)
@@ -133,21 +133,21 @@ func Test_ShouldParseDevicesTemplate(t *testing.T) {
 		require.Contains(t, scenario.Response.ContentType(""), "application/json")
 	}
 }
-func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {
-	return &types.MockScenario{
+func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
+	return &types.APIScenario{
 		Method:      method,
 		Name:        name,
 		Path:        path,
 		Group:       path,
 		Description: name,
-		Request: types.MockHTTPRequest{
+		Request: types.APIRequest{
 			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
 			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/json",
 				"ETag":                  `\d{3}`,
 			},
 		},
-		Response: types.MockHTTPResponse{
+		Response: types.APIResponse{
 			Headers: map[string][]string{
 				"ETag":                  {strconv.Itoa(n)},
 				types.ContentTypeHeader: {"application/json"},

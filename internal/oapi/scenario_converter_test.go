@@ -16,7 +16,7 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	// AND scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -36,7 +36,7 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 		_, err = repo.Lookup(scenario.ToKeyData(), nil)
 		require.NoError(t, err)
 	}
-	scenarios := make([]*types.MockScenario, 0)
+	scenarios := make([]*types.APIScenario, 0)
 	for _, key := range repo.LookupAllByGroup("SpecConvert") {
 		scenario, err := repo.Lookup(key, nil)
 		require.NoError(t, err)

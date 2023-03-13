@@ -6,8 +6,8 @@ import (
 	"net/http"
 )
 
-// BuildMockScenarioKeyData creates mock-scenario key from HTTP request
-func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKeyData, err error) {
+// BuildMockScenarioKeyData creates api-scenario key from HTTP request
+func BuildMockScenarioKeyData(req *http.Request) (keyData *types.APIKeyData, err error) {
 	var reqBytes []byte
 	reqBytes, req.Body, err = utils.ReadAll(req.Body)
 	if err != nil {
@@ -19,7 +19,7 @@ func BuildMockScenarioKeyData(req *http.Request) (keyData *types.MockScenarioKey
 		return nil, err
 	}
 
-	keyData = &types.MockScenarioKeyData{
+	keyData = &types.APIKeyData{
 		Method:                   method,
 		Name:                     req.Header.Get(types.MockScenarioName),
 		Path:                     req.URL.Path,

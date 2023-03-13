@@ -22,20 +22,20 @@ import (
 var internalOAPI embed.FS
 
 func Test_InitializeSwaggerStructsForMockOAPIScenarioController(t *testing.T) {
-	_ = mockScenarioOAPICreateParams{}
-	_ = mockScenarioOAPIResponseBody{}
-	_ = mockOapiSpecIResponseBody{}
+	_ = apiScenarioOAPICreateParams{}
+	_ = apiScenarioOAPIResponseBody{}
+	_ = apiOapiSpecIResponseBody{}
 }
 
 func Test_ShouldFailPostScenarioWithBadOAPIInput(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -51,12 +51,12 @@ func Test_ShouldFailPostScenarioWithBadOAPIInput(t *testing.T) {
 func Test_ShouldCreateTwitterMockScenarioFromOAPI(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/twitter.yaml")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
@@ -67,19 +67,19 @@ func Test_ShouldCreateTwitterMockScenarioFromOAPI(t *testing.T) {
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
-	arrScenarios := ctx.Result.([]*types.MockScenario)
+	arrScenarios := ctx.Result.([]*types.APIScenario)
 	require.Equal(t, 112, len(arrScenarios))
 }
 
 func Test_ShouldCreatePetsMockScenarioFromOAPI(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/pets.yaml")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
@@ -90,19 +90,19 @@ func Test_ShouldCreatePetsMockScenarioFromOAPI(t *testing.T) {
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
-	arrScenarios := ctx.Result.([]*types.MockScenario)
+	arrScenarios := ctx.Result.([]*types.APIScenario)
 	require.Equal(t, 10, len(arrScenarios))
 }
 
 func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
@@ -133,12 +133,12 @@ func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 func Test_ShouldDownloadInternalSpecs(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
@@ -159,12 +159,12 @@ func Test_ShouldDownloadInternalSpecs(t *testing.T) {
 func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
@@ -179,7 +179,7 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 	// THEN it should return saved scenario
 	require.NoError(t, err)
 
-	arrScenarios := ctx.Result.([]*types.MockScenario)
+	arrScenarios := ctx.Result.([]*types.APIScenario)
 	// WHEN fetching open-api specs without group
 	err = ctrl.getOpenAPISpecsByGroup(ctx)
 	//  THEN it should not fail
@@ -196,12 +196,12 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 func Test_ShouldGetOpenAPIByScenario(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
+	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
@@ -213,7 +213,7 @@ func Test_ShouldGetOpenAPIByScenario(t *testing.T) {
 	// THEN it should return saved scenario
 	require.NoError(t, err)
 
-	arrScenarios := ctx.Result.([]*types.MockScenario)
+	arrScenarios := ctx.Result.([]*types.APIScenario)
 
 	// WHEN fetching open-api specs without method, path, name
 	err = ctrl.getOpenAPISpecsByScenario(ctx)

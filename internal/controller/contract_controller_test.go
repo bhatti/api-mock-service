@@ -21,26 +21,26 @@ import (
 )
 
 func Test_InitializeSwaggerStructsForMockContractScenarioController(t *testing.T) {
-	_ = mockScenarioContractCreateParams{}
-	_ = mockScenarioContractResponseBody{}
+	_ = apiScenarioContractCreateParams{}
+	_ = apiScenarioContractResponseBody{}
 }
 
 func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("test")))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.postMockContractScenario(ctx)
+	err = ctrl.postProducerContractScenario(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid method")
 }
@@ -48,13 +48,13 @@ func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
 func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("test")))
 	ctx := web.NewStubContext(&http.Request{
@@ -68,7 +68,7 @@ func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 	ctx.Params["method"] = "POST"
 
 	// WHEN creating mock scenario with without method
-	err = ctrl.postMockContractScenario(ctx)
+	err = ctrl.postProducerContractScenario(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scenario name")
 }
@@ -76,13 +76,13 @@ func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("test")))
 	ctx := web.NewStubContext(&http.Request{
@@ -97,7 +97,7 @@ func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 	ctx.Params["name"] = "name"
 
 	// WHEN creating mock scenario with without method
-	err = ctrl.postMockContractScenario(ctx)
+	err = ctrl.postProducerContractScenario(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "path not specified")
 }
@@ -105,7 +105,7 @@ func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -124,7 +124,7 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
 	reader := io.NopCloser(bytes.NewReader([]byte("{}")))
 	u, err := url.Parse("http://localhost:8080/_contracts/GET/todo-get/todos/10")
@@ -143,11 +143,11 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 	ctx.Params["path"] = "/todos/10"
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.postMockContractScenario(ctx)
+	err = ctrl.postProducerContractScenario(ctx)
 
 	// THEN it should fail
 	require.NoError(t, err)
-	res := ctx.Result.(*types.ContractResponse)
+	res := ctx.Result.(*types.ProducerContractResponse)
 	require.Equal(t, 1, len(res.Errors))
 	for _, err := range res.Errors {
 		require.Contains(t, err, "http URL is not valid ")
@@ -157,7 +157,7 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	_, err = saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -169,9 +169,9 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -189,7 +189,7 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 	ctx.Params["group"] = ""
 
 	// WHEN creating mock scenario without group
-	err = ctrl.postMockContractGroupScenario(ctx)
+	err = ctrl.postProducerContractGroupScenario(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
@@ -198,7 +198,7 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	_, err = saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -217,9 +217,9 @@ func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -237,18 +237,18 @@ func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
 	ctx.Params["group"] = "/todos/10"
 
 	// WHEN creating mock scenario with group
-	err = ctrl.postMockContractHistory(ctx)
+	err = ctrl.postProducerContractHistory(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(*types.ContractResponse)
+	res := ctx.Result.(*types.ProducerContractResponse)
 	require.Equal(t, 0, len(res.Errors))
 }
 
 func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	_, err = saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -267,9 +267,9 @@ func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -287,18 +287,18 @@ func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 	ctx.Params["group"] = "/todos/10"
 
 	// WHEN creating mock scenario with group
-	err = ctrl.postMockContractGroupScenario(ctx)
+	err = ctrl.postProducerContractGroupScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(*types.ContractResponse)
+	res := ctx.Result.(*types.ProducerContractResponse)
 	require.Equal(t, 0, len(res.Errors))
 }
 
 func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a valid scenario
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", mockScenarioRepository)
@@ -320,9 +320,9 @@ func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 	executor := contract.NewProducerExecutor(mockScenarioRepository, client)
 
 	webServer := web.NewStubWebServer()
-	ctrl := NewContractController(executor, webServer)
+	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -346,24 +346,24 @@ func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 	ctx.Params["id"] = "10"
 
 	// WHEN creating mock scenario with method, name and path
-	err = ctrl.postMockContractScenario(ctx)
+	err = ctrl.postProducerContractScenario(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	res := ctx.Result.(*types.ContractResponse)
+	res := ctx.Result.(*types.ProducerContractResponse)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
 	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("errors %v", res.Errors))
 }
 
-func saveTestScenario(name string, repo repository.MockScenarioRepository) (*types.MockScenario, error) {
+func saveTestScenario(name string, repo repository.APIScenarioRepository) (*types.APIScenario, error) {
 	// GIVEN a mock scenario loaded from YAML
 	b, err := os.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}
-	scenario := types.MockScenario{}
+	scenario := types.APIScenario{}
 	// AND valid template for random data
 	err = yaml.Unmarshal(b, &scenario)
 	if err != nil {

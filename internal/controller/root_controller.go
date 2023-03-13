@@ -7,15 +7,15 @@ import (
 
 // RootController structure
 type RootController struct {
-	player *contract.ConsumerExecutor
+	consumerExecutor *contract.ConsumerExecutor
 }
 
-// NewRootController instantiates controller for updating mock-scenarios
+// NewRootController instantiates controller for updating api-scenarios
 func NewRootController(
-	player *contract.ConsumerExecutor,
+	consumerExecutor *contract.ConsumerExecutor,
 	webserver web.Server) *RootController {
 	ctrl := &RootController{
-		player: player,
+		consumerExecutor: consumerExecutor,
 	}
 
 	webserver.GET("/:path", ctrl.getRoot)
@@ -43,71 +43,71 @@ func NewRootController(
 
 // ********************************* HTTP Handlers ***********************************
 
-// swagger:route POST /{path} mock-play postRoot
+// swagger:route POST /{path} api-consumer postRoot
 // Play scenario from POST request
 // responses: returns stubbed response based on API
 func (r *RootController) postRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route PUT /{path} mock-play putRoot
+// swagger:route PUT /{path} api-consumer putRoot
 // Play scenario from PUT request
 // responses: returns stubbed response based on API
 func (r *RootController) putRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route GET /{path} mock-play getRoot
+// swagger:route GET /{path} api-consumer getRoot
 // Play scenario from GET request
 // responses: returns stubbed response based on API
 func (r *RootController) getRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route DELETE /{path} mock-play deleteRoot
+// swagger:route DELETE /{path} api-consumer deleteRoot
 // Play scenario from DELETE request
 // responses: returns stubbed response based on API
 func (r *RootController) deleteRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route CONNECT /{path} mock-play connectRoot
+// swagger:route CONNECT /{path} api-consumer connectRoot
 // Play scenario from CONNECT request
 // responses: returns stubbed response based on API
 func (r *RootController) connectRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route HEAD /{path} mock-play headRoot
+// swagger:route HEAD /{path} api-consumer headRoot
 // Play scenario from HEAD request
 // responses: returns stubbed response based on API
 func (r *RootController) headRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route OPTIONS /{path} mock-play optionsRoot
+// swagger:route OPTIONS /{path} api-consumer optionsRoot
 // Play scenario from OPTIONS request
 // responses: returns stubbed response based on API
 func (r *RootController) optionsRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route PATCH /{path} mock-play patchRoot
+// swagger:route PATCH /{path} api-consumer patchRoot
 // Play scenario from PATCH request
 // responses: returns stubbed response based on API
 func (r *RootController) patchRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:route TRACE /{path} mock-play traceRoot
+// swagger:route TRACE /{path} api-consumer traceRoot
 // Play scenario from TRACE request
 // responses: returns stubbed response based on API
 func (r *RootController) traceRoot(c web.APIContext) (err error) {
-	return r.player.Execute(c)
+	return r.consumerExecutor.Execute(c)
 }
 
 // swagger:parameters postRoot putRoot getRoot deleteRoot
-// The parameters for playing APIs by path
+// The parameters for consumer-based API testing by path
 type rootPathParams struct {
 	// in:path
 	Path string `json:"path"`

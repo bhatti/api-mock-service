@@ -34,27 +34,27 @@ var ignoredResponseHeaders = map[string]struct{}{
 
 // Handler structure
 type Handler struct {
-	config                 *types.Configuration
-	awsSigner              web.AWSSigner
-	mockScenarioRepository repository.MockScenarioRepository
-	fixtureRepository      repository.MockFixtureRepository
-	adapter                web.Adapter
+	config             *types.Configuration
+	awsSigner          web.AWSSigner
+	scenarioRepository repository.APIScenarioRepository
+	fixtureRepository  repository.APIFixtureRepository
+	adapter            web.Adapter
 }
 
-// NewProxyHandler instantiates controller for updating mock-scenarios
+// NewProxyHandler instantiates controller for updating api-scenarios
 func NewProxyHandler(
 	config *types.Configuration,
 	awsSigner web.AWSSigner,
-	mockScenarioRepository repository.MockScenarioRepository,
-	fixtureRepository repository.MockFixtureRepository,
+	scenarioRepository repository.APIScenarioRepository,
+	fixtureRepository repository.APIFixtureRepository,
 	adapter web.Adapter,
 ) *Handler {
 	return &Handler{
-		config:                 config,
-		awsSigner:              awsSigner,
-		mockScenarioRepository: mockScenarioRepository,
-		fixtureRepository:      fixtureRepository,
-		adapter:                adapter,
+		config:             config,
+		awsSigner:          awsSigner,
+		scenarioRepository: scenarioRepository,
+		fixtureRepository:  fixtureRepository,
+		adapter:            adapter,
 	}
 }
 
@@ -76,7 +76,7 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 			"Path":   req.URL,
 			"Method": req.Method,
 			"Error":  err,
-		}).Warnf("proxy server failed to find existing mock scenario")
+		}).Warnf("proxy server failed to find existing api scenario")
 	}
 	// let proxy call real server
 	return req, res
@@ -153,7 +153,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		return req, nil, err
 	}
 
-	matchedScenario, err := h.mockScenarioRepository.Lookup(key, nil)
+	matchedScenario, err := h.scenarioRepository.Lookup(key, nil)
 	log.WithFields(log.Fields{
 		"Host":            req.Host,
 		"Path":            req.URL,
@@ -172,7 +172,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		req.Header,
 		respHeader,
 		matchedScenario,
-		h.mockScenarioRepository,
+		h.scenarioRepository,
 		h.fixtureRepository,
 	)
 	if err != nil {
@@ -201,7 +201,7 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 			"Path":   resp.Request.URL,
 			"Method": resp.Request.Method,
 			"Error":  err,
-		}).Warnf("proxy server failed to record mock scenario")
+		}).Warnf("proxy server failed to record api scenario")
 	}
 	return resp
 }
@@ -247,7 +247,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	}
 
 	resContentType, err := saveMockResponse(
-		h.config, resp.Request.URL, resp.Request, reqBytes, resBytes, resp.Header, resp.StatusCode, h.mockScenarioRepository)
+		h.config, resp.Request.URL, resp.Request, reqBytes, resBytes, resp.Header, resp.StatusCode, h.scenarioRepository)
 	if err != nil {
 		return resp, err
 	}

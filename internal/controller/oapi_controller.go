@@ -16,23 +16,23 @@ import (
 	"github.com/bhatti/api-mock-service/internal/web"
 )
 
-// MockOAPIController structure
-type MockOAPIController struct {
-	internalOAPI           embed.FS
-	mockScenarioRepository repository.MockScenarioRepository
-	oapiRepository         repository.OAPIRepository
+// OAPIController structure
+type OAPIController struct {
+	internalOAPI       embed.FS
+	scenarioRepository repository.APIScenarioRepository
+	oapiRepository     repository.OAPIRepository
 }
 
-// NewMockOAPIController instantiates controller for updating mock-scenarios based on OpenAPI v3
-func NewMockOAPIController(
+// NewOAPIController instantiates controller for updating api-scenarios based on OpenAPI v3
+func NewOAPIController(
 	internalOAPI embed.FS,
-	mockScenarioRepository repository.MockScenarioRepository,
+	scenarioRepository repository.APIScenarioRepository,
 	oapiRepository repository.OAPIRepository,
-	webserver web.Server) *MockOAPIController {
-	ctrl := &MockOAPIController{
-		internalOAPI:           internalOAPI,
-		mockScenarioRepository: mockScenarioRepository,
-		oapiRepository:         oapiRepository,
+	webserver web.Server) *OAPIController {
+	ctrl := &OAPIController{
+		internalOAPI:       internalOAPI,
+		scenarioRepository: scenarioRepository,
+		oapiRepository:     oapiRepository,
 	}
 
 	webserver.GET("/_oapi/", ctrl.getOpenAPISpecsByGroup)
@@ -50,8 +50,8 @@ func NewMockOAPIController(
 // Generates OpenAPI specs for the scenario group
 // responses:
 //
-//	200: mockOapiSpecIResponse
-func (moc *MockOAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err error) {
+//	200: apiOapiSpecIResponse
+func (moc *OAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err error) {
 	u := c.Request().URL
 	group := c.Param("group")
 	var b []byte
@@ -60,12 +60,12 @@ func (moc *MockOAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err err
 	} else {
 		b, err = moc.oapiRepository.LoadRaw(group)
 		if err != nil {
-			allByGroup := moc.mockScenarioRepository.LookupAllByGroup(group)
+			allByGroup := moc.scenarioRepository.LookupAllByGroup(group)
 			if len(allByGroup) == 0 {
-				allByGroup = moc.mockScenarioRepository.LookupAllByPath(
+				allByGroup = moc.scenarioRepository.LookupAllByPath(
 					strings.ReplaceAll(c.Request().URL.Path, "/_oapi", ""))
 			}
-			var scenarios []*types.MockScenario
+			var scenarios []*types.APIScenario
 			for _, keyData := range allByGroup {
 				scenario, err := moc.getScenario(keyData, c.QueryParam("raw") == "true")
 				if err != nil {
@@ -89,14 +89,14 @@ func (moc *MockOAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err err
 // Generates OpenAPI specs for the scenario history
 // responses:
 //
-//	200: mockOapiSpecIResponse
-func (moc *MockOAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err error) {
+//	200: apiOapiSpecIResponse
+func (moc *OAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err error) {
 	u := c.Request().URL
 	name := c.Param("name")
 	if name == "" {
 		return fmt.Errorf("history name not specified in %s", c.Request().URL)
 	}
-	scenario, err := moc.mockScenarioRepository.LoadHistory(name)
+	scenario, err := moc.scenarioRepository.LoadHistory(name)
 	if err != nil {
 		return err
 	}
@@ -113,8 +113,8 @@ func (moc *MockOAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err e
 // Generates OpenAPI specs for the scenario
 // responses:
 //
-//	200: mockOapiSpecIResponse
-func (moc *MockOAPIController) getOpenAPISpecsByScenario(c web.APIContext) (err error) {
+//	200: apiOapiSpecIResponse
+func (moc *OAPIController) getOpenAPISpecsByScenario(c web.APIContext) (err error) {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return fmt.Errorf("method name not specified in %s due to %w", c.Request().URL, err)
@@ -127,7 +127,7 @@ func (moc *MockOAPIController) getOpenAPISpecsByScenario(c web.APIContext) (err 
 	if path == "" {
 		return fmt.Errorf("path not specified in %s", c.Request().URL)
 	}
-	keyData := &types.MockScenarioKeyData{
+	keyData := &types.APIKeyData{
 		Method:                   method,
 		Name:                     name,
 		Path:                     path,
@@ -146,11 +146,11 @@ func (moc *MockOAPIController) getOpenAPISpecsByScenario(c web.APIContext) (err 
 
 // postMockOAPIScenario handler
 // swagger:route POST /_oapi open-api postMockOAPIScenario
-// Creates new mock scenarios based on Open API v3
+// Creates new api scenarios based on Open API v3
 // responses:
 //
-//	200: mockScenarioOAPIResponse
-func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
+//	200: apiScenarioOAPIResponse
+func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 	var data []byte
 	data, c.Request().Body, err = utils.ReadAll(c.Request().Body)
 	if err != nil {
@@ -161,13 +161,13 @@ func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error
 	if err != nil {
 		return err
 	}
-	scenarios := make([]*types.MockScenario, 0)
+	scenarios := make([]*types.APIScenario, 0)
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		if err != nil {
 			return err
 		}
-		err = moc.mockScenarioRepository.Save(scenario)
+		err = moc.scenarioRepository.Save(scenario)
 		if err != nil {
 			return err
 		}
@@ -185,36 +185,36 @@ func (moc *MockOAPIController) postMockOAPIScenario(c web.APIContext) (err error
 // ********************************* Swagger types ***********************************
 
 // swagger:parameters postMockOAPIScenario
-// The params for mock-scenario based on OpenAPI v3
-type mockScenarioOAPICreateParams struct {
+// The params for api-scenario based on OpenAPI v3
+type apiScenarioOAPICreateParams struct {
 	// in:body
 	Body []byte
 }
 
-// MockScenario body for update
-// swagger:response mockScenarioOAPIResponse
-type mockScenarioOAPIResponseBody struct {
+// APIScenario body for update
+// swagger:response apiScenarioOAPIResponse
+type apiScenarioOAPIResponseBody struct {
 	// in:body
-	Body types.MockScenario
+	Body types.APIScenario
 }
 
-// MockScenario body for update
-// swagger:response mockOapiSpecIResponse
-type mockOapiSpecIResponseBody struct {
+// APIScenario body for update
+// swagger:response apiOapiSpecIResponse
+type apiOapiSpecIResponseBody struct {
 	// in:body
 	Body []byte
 }
 
-func (moc *MockOAPIController) getScenario(keyData *types.MockScenarioKeyData, raw bool) (scenario *types.MockScenario, err error) {
+func (moc *OAPIController) getScenario(keyData *types.APIKeyData, raw bool) (scenario *types.APIScenario, err error) {
 	if raw {
-		b, err := moc.mockScenarioRepository.LoadRaw(keyData.Method, keyData.Name, keyData.Path)
+		b, err := moc.scenarioRepository.LoadRaw(keyData.Method, keyData.Name, keyData.Path)
 		if err != nil {
 			return nil, err
 		}
-		scenario = &types.MockScenario{}
+		scenario = &types.APIScenario{}
 		if err = yaml.Unmarshal(b, scenario); err == nil {
 			return scenario, err
 		}
 	}
-	return moc.mockScenarioRepository.Lookup(keyData, nil)
+	return moc.scenarioRepository.Lookup(keyData, nil)
 }

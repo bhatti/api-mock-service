@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Configuration for mock services
+// Configuration for mock api service
 type Configuration struct {
 	// HTTPPort for server
 	HTTPPort int `yaml:"http_port" mapstructure:"http_port" env:"HTTP_PORT"`
@@ -18,17 +18,17 @@ type Configuration struct {
 	ProxyPort int `yaml:"proxy_port" mapstructure:"proxy_port" env:"PROXY_PORT"`
 	// ConnectionTimeout for remote server
 	ConnectionTimeout int `yaml:"connection_timeout" mapstructure:"connection_timeout"`
-	// DataDir for storing mock responses
+	// DataDir for storing api scenarios, history, fixtures, assets, etc.
 	DataDir string `yaml:"data_dir" mapstructure:"data_dir" env:"DATA_DIR"`
-	// MaxHistory for max limit of storing mock history
+	// MaxHistory for max limit of storing execution history
 	MaxHistory int `yaml:"max_history" mapstructure:"max_history" env:"MAX_HISTORY"`
-	// UserAgent for mock server
+	// UserAgent for mock api server
 	UserAgent string `yaml:"user_agent" mapstructure:"user_agent" env:"USER_AGENT"`
-	// ProxyURL for mock server
+	// ProxyURL for mock api server
 	ProxyURL string `yaml:"proxy_url" mapstructure:"proxy_url" env:"PROXY_URL"`
-	// AssertHeadersPattern to always match HTTP headers and store them in match-header property of mock scenario
+	// AssertHeadersPattern to always match HTTP headers and store them in match-header property of api scenario
 	AssertHeadersPattern string `yaml:"assert_headers_pattern" mapstructure:"assert_headers_pattern" env:"ASSERT_HEADERS_PATTERN"`
-	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of mock scenario
+	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of api scenario
 	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
 	CORS                     string `yaml:"cors" mapstructure:"cors" env:"MOCK_CORS"`
 	Debug                    bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`

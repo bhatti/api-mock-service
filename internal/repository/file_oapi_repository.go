@@ -32,7 +32,7 @@ func NewFileOAPIRepository(
 	}, nil
 }
 
-// GetNames returns list of mock scenarios names
+// GetNames returns list of open-api spec names
 func (or *FileOAPIRepository) GetNames() (names []string) {
 	files, err := os.ReadDir(or.dir)
 	if err != nil {

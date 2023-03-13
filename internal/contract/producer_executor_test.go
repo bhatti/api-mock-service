@@ -21,16 +21,16 @@ var baseURL = "https://mocksite.local"
 func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	// GIVEN scenario repository
 	config := buildTestConfig()
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
-	res := executor.Execute(context.Background(), &http.Request{}, &types.MockScenarioKeyData{}, dataTemplate, contractReq)
+	res := executor.Execute(context.Background(), &http.Request{}, &types.APIKeyData{}, dataTemplate, contractReq)
 	for _, err := range res.Errors {
 		t.Log(err)
 	}
@@ -40,7 +40,7 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 
 func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	repo, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -52,7 +52,7 @@ func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	contractReq := types.NewContractRequest(baseURL, 1)
+	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("POST", baseURL+"/users", web.NewStubHTTPResponse(200,
 		`{"User": {"Directory": "my_dir", "Username": "my_user@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
@@ -73,7 +73,7 @@ func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 
 func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	repo, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -85,7 +85,7 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND valid template for random data
-	contractReq := types.NewContractRequest(baseURL, 1)
+	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("POST", baseURL+"/users", web.NewStubHTTPResponse(200,
 		`{"User": {"Directory": "my_dir", "Username": "my_user@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
@@ -107,7 +107,7 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 func Test_ShouldExecuteGetTodo(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -120,7 +120,7 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
@@ -134,7 +134,7 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 func Test_ShouldExecutePutPosts(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -143,7 +143,7 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
@@ -158,7 +158,7 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -172,7 +172,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
@@ -188,7 +188,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -201,7 +201,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
@@ -219,7 +219,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -232,7 +232,7 @@ func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
@@ -248,7 +248,7 @@ func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -261,7 +261,7 @@ func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest("https://jsonplaceholder.typicode.com", 1)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
@@ -277,7 +277,7 @@ func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 func Test_ShouldExecutePostProductScenario(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -290,7 +290,7 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest(baseURL, 1)
+	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, client)
 	// THEN it should not execute saved scenario
@@ -304,7 +304,7 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -325,7 +325,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest(baseURL, 1)
+	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, client)
 	// THEN it should not execute saved scenario
@@ -340,7 +340,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -353,7 +353,7 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest(baseURL, 1)
+	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	// WHEN executing scenario
 	executor := NewProducerExecutor(repo, client)
 	// THEN it should not execute saved scenario
@@ -368,7 +368,7 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND mock scenarios from open-api specifications
@@ -376,7 +376,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
-	contractReq := types.NewContractRequest(baseURL, 5)
+	contractReq := types.NewProducerContractRequest(baseURL, 5)
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)
 
@@ -412,12 +412,12 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	// AND scenario repository
-	repo, err := repository.NewFileMockScenarioRepository(config)
+	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	contractReq := types.NewContractRequest(baseURL, 5)
+	contractReq := types.NewProducerContractRequest(baseURL, 5)
 	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
 	require.NoError(t, err)
 
@@ -453,7 +453,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 }
 
 func Test_ShouldParseRequestBody(t *testing.T) {
-	scenario := &types.MockScenario{}
+	scenario := &types.APIScenario{}
 	scenario.Request.AssertContentsPattern = `{"PoolId": "us-west-2", "Username": "christina.perdit@sonaret.gov", "UserAttributes": [{"Name": "email", "Value": "christina.perdit@sonaret.gov"}], "DesiredDeliveryMediums": ["EMAIL"]}`
 	str, _ := buildRequestBody(scenario)
 	require.Contains(t, str, "christina.perdit@sonaret.gov")
@@ -511,14 +511,14 @@ func buildTestConfig() *types.Configuration {
 
 func saveTestScenario(
 	name string,
-	scenarioRepo repository.MockScenarioRepository,
-) (*types.MockScenario, error) {
+	scenarioRepo repository.APIScenarioRepository,
+) (*types.APIScenario, error) {
 	// GIVEN a mock scenario loaded from YAML
 	b, err := os.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}
-	scenario := types.MockScenario{}
+	scenario := types.APIScenario{}
 	// AND valid template for random data
 	err = yaml.Unmarshal(b, &scenario)
 	if err != nil {

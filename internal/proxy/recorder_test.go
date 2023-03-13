@@ -17,7 +17,7 @@ import (
 func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("GET", "https://jsonplaceholder.typicode.com/todos/10", web.NewStubHTTPResponse(200, `
@@ -42,7 +42,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	body := strings.TrimSpace(`
@@ -77,7 +77,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
@@ -104,7 +104,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 func Test_ShouldRecordPostProxyRequestsWithArray(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	reqBody := []byte(strings.TrimSpace(`
@@ -140,7 +140,7 @@ func Test_ShouldRecordPostProxyRequestsWithArray(t *testing.T) {
 func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	reqBody := []byte(strings.TrimSpace(`{"userId": 101, "title": "Buy milk", "completed": False}`))
@@ -176,7 +176,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	reqBody := []byte(strings.TrimSpace(`{"id": 202, "userId": 505, "title": "Buy milk", "completed": False}`))
@@ -212,7 +212,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 func Test_ShouldSaveMockResponse(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	u, err := url.Parse("http://localhost:8080/path?a=b&target=2")
 	require.NoError(t, err)
@@ -232,7 +232,7 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 func Test_ShouldRecordRealPostProxyRequests(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	client := web.NewHTTPClient(config, web.NewAWSSigner(config))
 	reqBody := []byte(`{ "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }`)

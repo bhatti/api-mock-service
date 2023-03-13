@@ -42,8 +42,8 @@ var InternalOAPI embed.FS
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "api-mock-service",
-	Short: "Starts mock service",
-	Long:  "Starts mock service",
+	Short: "Starts api mock service",
+	Long:  "Starts api mock service",
 	Run: func(cmd *cobra.Command, args []string) {
 		RunServer(cmd, args)
 	},
@@ -97,11 +97,11 @@ func RunServer(_ *cobra.Command, args []string) {
 		adapter := web.NewWebServerAdapter()
 		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 		executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
-		_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, oapiRepo, adapter)
-		_ = controller.NewMockScenarioController(scenarioRepo, oapiRepo, adapter)
-		_ = controller.NewMockFixtureController(fixturesRepo, adapter)
-		_ = controller.NewMockProxyController(recorder, adapter)
-		_ = controller.NewContractController(executor, adapter)
+		_ = controller.NewOAPIController(InternalOAPI, scenarioRepo, oapiRepo, adapter)
+		_ = controller.NewAPIScenarioController(scenarioRepo, oapiRepo, adapter)
+		_ = controller.NewAPIFixtureController(fixturesRepo, adapter)
+		_ = controller.NewAPIProxyController(recorder, adapter)
+		_ = controller.NewProducerContractController(executor, adapter)
 		webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
 		log.Fatal(proxy.NewProxyHandler(serverConfig, web.NewAWSSigner(serverConfig), scenarioRepo, fixturesRepo, adapter).Start())
 	}()
@@ -114,7 +114,7 @@ func init() {
 
 	// Cobra also supports local flags, which will only run when this action is called directly.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock contracts and history")
+	rootCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store API contracts and history")
 	rootCmd.Flags().IntVar(&httpPort, "httpPort", 0, "HTTP port to listen")
 	rootCmd.Flags().IntVar(&proxyPort, "proxyPort", 0, "Proxy port to listen")
 
@@ -152,11 +152,11 @@ func initConfig() {
 }
 
 func buildRepos(serverConfig *types.Configuration) (
-	scenarioRepo repository.MockScenarioRepository,
-	fixtureRepo repository.MockFixtureRepository,
+	scenarioRepo repository.APIScenarioRepository,
+	fixtureRepo repository.APIFixtureRepository,
 	oapiRepo repository.OAPIRepository,
 	err error) {
-	scenarioRepo, err = repository.NewFileMockScenarioRepository(serverConfig)
+	scenarioRepo, err = repository.NewFileAPIScenarioRepository(serverConfig)
 	if err != nil {
 		return
 	}
@@ -170,8 +170,8 @@ func buildRepos(serverConfig *types.Configuration) (
 
 func buildControllers(
 	serverConfig *types.Configuration,
-	scenarioRepo repository.MockScenarioRepository,
-	fixtureRepo repository.MockFixtureRepository,
+	scenarioRepo repository.APIScenarioRepository,
+	fixtureRepo repository.APIFixtureRepository,
 	oapiRepo repository.OAPIRepository,
 	httpClient web.HTTPClient,
 	webServer web.Server,
@@ -179,11 +179,11 @@ func buildControllers(
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
 	player := contract.NewConsumerExecutor(scenarioRepo, fixtureRepo)
 	executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
-	_ = controller.NewMockOAPIController(InternalOAPI, scenarioRepo, oapiRepo, webServer)
-	_ = controller.NewMockScenarioController(scenarioRepo, oapiRepo, webServer)
-	_ = controller.NewMockFixtureController(fixtureRepo, webServer)
-	_ = controller.NewMockProxyController(recorder, webServer)
-	_ = controller.NewContractController(executor, webServer)
+	_ = controller.NewOAPIController(InternalOAPI, scenarioRepo, oapiRepo, webServer)
+	_ = controller.NewAPIScenarioController(scenarioRepo, oapiRepo, webServer)
+	_ = controller.NewAPIFixtureController(fixtureRepo, webServer)
+	_ = controller.NewAPIProxyController(recorder, webServer)
+	_ = controller.NewProducerContractController(executor, webServer)
 	_ = controller.NewRootController(player, webServer)
 	assetDir := filepath.Join(serverConfig.DataDir, "assets")
 	webServer.Static("/_assets", assetDir)

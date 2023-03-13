@@ -14,13 +14,13 @@ import (
 const MockServerBaseURL = "MOCK_SERVER_BASE_URL"
 
 // MarshalScenarioToOpenAPI converts open-api specs into json
-func MarshalScenarioToOpenAPI(title string, version string, scenarios ...*types.MockScenario) ([]byte, error) {
+func MarshalScenarioToOpenAPI(title string, version string, scenarios ...*types.APIScenario) ([]byte, error) {
 	t := ScenarioToOpenAPI(title, version, scenarios...)
 	return t.MarshalJSON()
 }
 
 // ScenarioToOpenAPI convert scenarios to open-api specs
-func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockScenario) *openapi3.T {
+func ScenarioToOpenAPI(title string, version string, scenarios ...*types.APIScenario) *openapi3.T {
 	root := &openapi3.T{
 		OpenAPI: "3.0.2",
 		Info:    &openapi3.Info{Title: title, Version: version},
@@ -118,7 +118,7 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.MockSce
 	return root
 }
 
-func addServer(scenario *types.MockScenario, root *openapi3.T) {
+func addServer(scenario *types.APIScenario, root *openapi3.T) {
 	if scenario.BaseURL == "" {
 		return
 	}
@@ -171,7 +171,7 @@ func addParameter(parameters openapi3.Parameters, k string, v string, in string)
 	return append(parameters, buildParameterRef(k, v, in))
 }
 
-func updateScenarioRequest(scenario *types.MockScenario, op *openapi3.Operation) (string, *openapi3.Schema) {
+func updateScenarioRequest(scenario *types.APIScenario, op *openapi3.Operation) (string, *openapi3.Schema) {
 	for k, v := range scenario.Request.Headers {
 		op.Parameters = addParameter(op.Parameters, k, fuzz.StripTypeTags(v), "header")
 	}
@@ -204,7 +204,7 @@ func updateScenarioRequest(scenario *types.MockScenario, op *openapi3.Operation)
 	return ref, body
 }
 
-func updateScenarioResponse(scenario *types.MockScenario, op *openapi3.Operation) (string, *openapi3.Schema) {
+func updateScenarioResponse(scenario *types.APIScenario, op *openapi3.Operation) (string, *openapi3.Schema) {
 	if op.Responses == nil {
 		op.Responses = make(openapi3.Responses)
 	}

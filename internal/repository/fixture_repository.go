@@ -2,8 +2,8 @@ package repository
 
 import "github.com/bhatti/api-mock-service/internal/types"
 
-// MockFixtureRepository defines data store for content for mocking purpose
-type MockFixtureRepository interface {
+// APIFixtureRepository defines data store for content for mocking purpose
+type APIFixtureRepository interface {
 	// Get Content data by id
 	Get(
 		method types.MethodType,

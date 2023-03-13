@@ -10,7 +10,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-// Parse parses Open-API and generates mock scenarios
+// Parse parses Open-API and generates api scenarios
 func Parse(ctx context.Context, data []byte, dataTemplate fuzz.DataTemplateRequest) (specs []*APISpec, err error) {
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 

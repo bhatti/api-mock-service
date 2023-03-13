@@ -96,7 +96,7 @@ func Test_ShouldSetNameWithPathVariables(t *testing.T) {
 
 func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 	// GIVEN a empty mock scenario
-	scenario := &MockScenario{}
+	scenario := &APIScenario{}
 	// WHEN validating scenario
 	// THEN it should fail
 	require.Error(t, scenario.Validate())
@@ -122,7 +122,7 @@ func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 
 func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 	// GIVEN a empty mock scenario
-	scenario := MockScenario{
+	scenario := APIScenario{
 		Name:   "abc*",
 		Method: Post,
 		Path:   "/v1/category/{cat}/books/{id}",
@@ -139,7 +139,7 @@ func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 
 func Test_ShouldMatchGroupsInMockScenarioKeyDataWithColon(t *testing.T) {
 	// GIVEN a empty mock scenario
-	scenario := MockScenario{
+	scenario := APIScenario{
 		Path: "/v1/category/:cat/books/:id",
 	}
 	keyData := scenario.ToKeyData()
@@ -200,15 +200,15 @@ func Test_ToMethodShouldValidateMethod(t *testing.T) {
 	require.Error(t, err)
 }
 
-func buildScenario() *MockScenario {
-	scenario := &MockScenario{
+func buildScenario() *APIScenario {
+	scenario := &APIScenario{
 		Method:      Post,
 		Name:        "scenario",
 		Path:        "/path1/\\\\//test1//abc////",
 		Description: "",
 		Group:       "test-group",
 		Tags:        []string{"tag1", "tag2"},
-		Request: MockHTTPRequest{
+		Request: APIRequest{
 			Headers: make(map[string]string),
 			AssertQueryParamsPattern: map[string]string{
 				"a": "1",
@@ -218,7 +218,7 @@ func buildScenario() *MockScenario {
 				"CTag": "981",
 			},
 		},
-		Response: MockHTTPResponse{
+		Response: APIResponse{
 			Headers: map[string][]string{
 				"ETag":            {"123"},
 				ContentTypeHeader: {"application/json"},

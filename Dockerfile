@@ -21,5 +21,5 @@ ENV \
 
 COPY --from=go-builder /src/out/bin/api-mock-service /api-mock-service
 RUN apk add --no-cache ca-certificates
-RUN adduser -S -D -H -h /api-mock-service mock-user
-USER mock-user
+RUN adduser -S -D -H -h /api-mock-service svc-user
+USER svc-user

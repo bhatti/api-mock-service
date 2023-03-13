@@ -16,17 +16,17 @@ import (
 
 // ConsumerExecutor structure
 type ConsumerExecutor struct {
-	scenarioRepository repository.MockScenarioRepository
-	fixtureRepository  repository.MockFixtureRepository
+	scenarioRepository repository.APIScenarioRepository
+	fixtureRepository  repository.APIFixtureRepository
 }
 
-// NewConsumerExecutor instantiates controller for updating mock-scenarios
+// NewConsumerExecutor instantiates controller for updating api-scenarios
 func NewConsumerExecutor(
-	mockScenarioRepository repository.MockScenarioRepository,
-	fixtureRepository repository.MockFixtureRepository,
+	scenarioRepository repository.APIScenarioRepository,
+	fixtureRepository repository.APIFixtureRepository,
 ) *ConsumerExecutor {
 	return &ConsumerExecutor{
-		scenarioRepository: mockScenarioRepository,
+		scenarioRepository: scenarioRepository,
 		fixtureRepository:  fixtureRepository,
 	}
 }
@@ -81,9 +81,9 @@ func AddMockResponse(
 	req *http.Request,
 	reqHeaders http.Header,
 	respHeaders http.Header,
-	scenario *types.MockScenario,
-	scenarioRepository repository.MockScenarioRepository,
-	fixtureRepository repository.MockFixtureRepository,
+	scenario *types.APIScenario,
+	scenarioRepository repository.APIScenarioRepository,
+	fixtureRepository repository.APIFixtureRepository,
 ) (respBody []byte, err error) {
 	var inBody []byte
 	inBody, req.Body, err = utils.ReadAll(req.Body)

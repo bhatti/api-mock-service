@@ -1,7 +1,7 @@
 package types
 
-// ContractRequest for generating random requests to an API
-type ContractRequest struct {
+// ProducerContractRequest for generating fuzz-data requests to an API implementation for producer based contract testing
+type ProducerContractRequest struct {
 	// BaseURL of remote server
 	BaseURL string `yaml:"base_url" json:"base_url"`
 	// ExecutionTimes for contract testing
@@ -14,9 +14,9 @@ type ContractRequest struct {
 	Params map[string]any `yaml:"-" json:"-"`
 }
 
-// NewContractRequest constructor
-func NewContractRequest(baseURL string, execTimes int) *ContractRequest {
-	return &ContractRequest{
+// NewProducerContractRequest constructor
+func NewProducerContractRequest(baseURL string, execTimes int) *ProducerContractRequest {
+	return &ProducerContractRequest{
 		BaseURL:        baseURL,
 		ExecutionTimes: execTimes,
 		Headers:        make(map[string][]string),
@@ -25,7 +25,7 @@ func NewContractRequest(baseURL string, execTimes int) *ContractRequest {
 }
 
 // Overrides helper methods to aggregate headers and params
-func (req *ContractRequest) Overrides() map[string]any {
+func (req *ProducerContractRequest) Overrides() map[string]any {
 	res := make(map[string]any)
 	for k, v := range req.Headers {
 		res[k] = v[0]
@@ -36,6 +36,6 @@ func (req *ContractRequest) Overrides() map[string]any {
 	return res
 }
 
-func (req *ContractRequest) String() string {
-	return "ContractRequest(" + req.BaseURL + ")"
+func (req *ProducerContractRequest) String() string {
+	return "ProducerContractRequest(" + req.BaseURL + ")"
 }

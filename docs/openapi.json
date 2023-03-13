@@ -12,12 +12,12 @@
           "contract"
         ],
         "description": "Plays contract client for a scenario by group",
-        "operationId": "postMockContractGroupScenario",
+        "operationId": "postProducerContractGroupScenario",
         "requestBody": {
           "content": {
             "*/*": {
               "schema": {
-                "$ref": "#/components/schemas/ContractRequest"
+                "$ref": "#/components/schemas/ProducerContractRequest"
               }
             }
           },
@@ -25,11 +25,11 @@
         },
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContractResponse"
+                  "$ref": "#/components/schemas/ProducerContractResponse"
                 }
               }
             }
@@ -44,12 +44,12 @@
           "contract"
         ],
         "description": "Plays contract client for a scenario by name",
-        "operationId": "postMockContractScenario",
+        "operationId": "postProducerContractScenario",
         "requestBody": {
           "content": {
             "*/*": {
               "schema": {
-                "$ref": "#/components/schemas/ContractRequest"
+                "$ref": "#/components/schemas/ProducerContractRequest"
               }
             }
           },
@@ -57,11 +57,11 @@
         },
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContractResponse"
+                  "$ref": "#/components/schemas/ProducerContractResponse"
                 }
               }
             }
@@ -76,14 +76,14 @@
           "contract"
         ],
         "description": "Plays contract client for a scenario by history",
-        "operationId": "postMockContractHistory",
+        "operationId": "postProducerContractHistory",
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/ContractResponse"
+                  "$ref": "#/components/schemas/ProducerContractResponse"
                 }
               }
             }
@@ -94,10 +94,10 @@
     "/_fixtures/{method}/{name}/{path}": {
       "get": {
         "tags": [
-          "mock-fixtures"
+          "api-test-fixtures"
         ],
-        "summary": "Deletes an existing mock fixtures based on name and path.",
-        "operationId": "getMockFixture",
+        "description": "Finds an existing api-test-fixtures based on name and path",
+        "operationId": "getAPITestFixture",
         "parameters": [
           {
             "name": "method",
@@ -132,17 +132,27 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {}
+            "description": "APIFixture body for update",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "uint8"
+                  }
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "tags": [
-          "mock-fixtures"
+          "api-test-fixtures"
         ],
-        "summary": "Creates new mock fixtures based on request body.",
-        "operationId": "postMockFixture",
+        "summary": "Creates new api-test-fixtures based on request body.",
+        "operationId": "postAPITestFixture",
         "parameters": [
           {
             "name": "method",
@@ -191,7 +201,7 @@
         },
         "responses": {
           "200": {
-            "description": "MockFixture body for update",
+            "description": "APIFixture body for update",
             "content": {
               "*/*": {
                 "schema": {
@@ -209,10 +219,10 @@
       },
       "delete": {
         "tags": [
-          "mock-fixtures"
+          "api-test-fixtures"
         ],
-        "summary": "Deletes an existing mock fixtures based on name and path.",
-        "operationId": "getMockFixture",
+        "summary": "Deletes an existing api-test-fixtures based on name and path.",
+        "operationId": "deleteAPITestFixture",
         "parameters": [
           {
             "name": "method",
@@ -256,10 +266,10 @@
     "/_fixtures/{method}/fixtures/{path}": {
       "get": {
         "tags": [
-          "mock-fixtures"
+          "api-test-fixtures"
         ],
-        "description": "Returns mock fixture names",
-        "operationId": "getMockFixtureNames",
+        "description": "Returns api test-fixture names",
+        "operationId": "getAPITestFixtureNames",
         "parameters": [
           {
             "name": "method",
@@ -284,7 +294,7 @@
         ],
         "responses": {
           "200": {
-            "description": "MockFixture names",
+            "description": "APIFixture names",
             "content": {
               "*/*": {
                 "schema": {
@@ -304,7 +314,7 @@
         "tags": [
           "open-api"
         ],
-        "description": "Creates new mock scenarios based on Open API v3",
+        "description": "Creates new api scenarios based on Open API v3",
         "operationId": "postMockOAPIScenario",
         "requestBody": {
           "content": {
@@ -322,11 +332,11 @@
         },
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/MockScenario"
+                  "$ref": "#/components/schemas/APIScenario"
                 }
               }
             }
@@ -344,7 +354,7 @@
         "operationId": "getOpenAPISpecsByGroup",
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
@@ -366,7 +376,7 @@
         "operationId": "open-apiGetOpenAPISpecsByScenario",
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
@@ -391,7 +401,7 @@
         "operationId": "getOpenAPISpecsByHistory",
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
@@ -410,49 +420,49 @@
     "/_proxy": {
       "get": {
         "tags": [
-          "mock-proxy"
+          "api-proxy"
         ],
         "description": "Records scenario from GET request",
-        "operationId": "getMockProxy"
+        "operationId": "getAPIProxy"
       },
       "put": {
         "tags": [
-          "mock-proxy"
+          "api-proxy"
         ],
         "description": "Records scenario from PUT request",
-        "operationId": "putMockProxy"
+        "operationId": "putAPIProxy"
       },
       "post": {
         "tags": [
-          "mock-proxy"
+          "api-proxy"
         ],
         "description": "Records scenario from POST request",
-        "operationId": "postMockProxy"
+        "operationId": "postAPIProxy"
       },
       "delete": {
         "tags": [
-          "mock-proxy"
+          "api-proxy"
         ],
         "description": "Records scenario from DELETE request",
-        "operationId": "deleteMockProxy"
+        "operationId": "deleteAPIProxy"
       }
     },
     "/_scenarios": {
       "get": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
         "description": "List paths of all scenarios",
         "operationId": "listMockScenario",
         "responses": {
           "200": {
-            "description": "MockScenario summary and paths",
+            "description": "APIScenario summary and paths",
             "content": {
               "*/*": {
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "$ref": "#/components/schemas/MockScenarioKeyData"
+                    "$ref": "#/components/schemas/APIKeyData"
                   }
                 }
               }
@@ -462,9 +472,9 @@
       },
       "post": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
-        "summary": "Creates new mock scenario based on request body.",
+        "summary": "Creates new api scenario based on request body.",
         "operationId": "postMockScenario",
         "parameters": [
           {
@@ -502,7 +512,7 @@
           "content": {
             "*/*": {
               "schema": {
-                "$ref": "#/components/schemas/MockScenario"
+                "$ref": "#/components/schemas/APIScenario"
               }
             }
           },
@@ -510,11 +520,11 @@
         },
         "responses": {
           "200": {
-            "description": "MockScenario body for update",
+            "description": "APIScenario body for update",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/MockScenario"
+                  "$ref": "#/components/schemas/APIScenario"
                 }
               }
             }
@@ -526,10 +536,10 @@
     "/_scenarios/{method}/{name}/{path}": {
       "get": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
-        "summary": "Deletes an existing mock scenario based on id.",
-        "operationId": "getMockScenario",
+        "summary": "Deletes an existing api scenario based on id.",
+        "operationId": "getAPIScenario",
         "parameters": [
           {
             "name": "method",
@@ -571,10 +581,10 @@
       },
       "delete": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
-        "summary": "Deletes an existing mock scenario based on id.",
-        "operationId": "getMockScenario",
+        "summary": "Deletes an existing api scenario based on id.",
+        "operationId": "getAPIScenario",
         "parameters": [
           {
             "name": "method",
@@ -618,10 +628,10 @@
     "/_scenarios/{method}/names/{path}": {
       "get": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
-        "description": "Returns mock scenario names",
-        "operationId": "getMockNames",
+        "description": "Returns api scenario names",
+        "operationId": "getAPIScenarioNames",
         "parameters": [
           {
             "name": "method",
@@ -646,7 +656,7 @@
         ],
         "responses": {
           "200": {
-            "description": "MockScenario names",
+            "description": "APIScenario names",
             "content": {
               "*/*": {
                 "schema": {
@@ -664,13 +674,13 @@
     "/_scenarios/groups": {
       "get": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
-        "description": "Returns mock scenario groups",
-        "operationId": "getGroups",
+        "description": "Returns api scenario groups",
+        "operationId": "getAPIGroups",
         "responses": {
           "200": {
-            "description": "MockScenario groups",
+            "description": "APIScenario groups",
             "content": {
               "*/*": {
                 "schema": {
@@ -688,13 +698,13 @@
     "/_scenarios/history": {
       "get": {
         "tags": [
-          "mock-scenarios"
+          "api-scenarios"
         ],
-        "description": "Fetches history of mock scenarios",
-        "operationId": "mockScenarioHistory",
+        "description": "Fetches history of api scenarios",
+        "operationId": "apiScenarioHistory",
         "responses": {
           "200": {
-            "description": "MockScenario history scenario names",
+            "description": "APIScenario history scenario names",
             "content": {
               "*/*": {
                 "schema": {
@@ -712,7 +722,7 @@
     "/{path}": {
       "get": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from GET request",
         "operationId": "getRoot",
@@ -731,7 +741,7 @@
       },
       "put": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from PUT request",
         "operationId": "putRoot",
@@ -750,7 +760,7 @@
       },
       "post": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from POST request",
         "operationId": "postRoot",
@@ -769,7 +779,7 @@
       },
       "delete": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from DELETE request",
         "operationId": "deleteRoot",
@@ -788,21 +798,21 @@
       },
       "options": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from OPTIONS request",
         "operationId": "optionsRoot"
       },
       "head": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from HEAD request",
         "operationId": "headRoot"
       },
       "patch": {
         "tags": [
-          "mock-play"
+          "api-consumer"
         ],
         "description": "Play scenario from PATCH request",
         "operationId": "patchRoot"
@@ -811,80 +821,7 @@
   },
   "components": {
     "schemas": {
-      "ContractRequest": {
-        "type": "object",
-        "properties": {
-          "base_url": {
-            "type": "string",
-            "description": "BaseURL of remote server",
-            "x-go-name": "BaseURL"
-          },
-          "execution_times": {
-            "type": "integer",
-            "description": "ExecutionTimes for contract testing",
-            "format": "int64",
-            "x-go-name": "ExecutionTimes"
-          },
-          "verbose": {
-            "type": "boolean",
-            "description": "Verbose setting",
-            "x-go-name": "Verbose"
-          }
-        },
-        "description": "ContractRequest for generating random requests to an API",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-      },
-      "ContractResponse": {
-        "type": "object",
-        "properties": {
-          "errors": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "x-go-name": "Errors"
-          },
-          "failed": {
-            "type": "integer",
-            "format": "int64",
-            "x-go-name": "Failed"
-          },
-          "metrics": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "number",
-              "format": "double"
-            },
-            "x-go-name": "Metrics"
-          },
-          "results": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "x-go-name": "Results"
-          },
-          "succeeded": {
-            "type": "integer",
-            "format": "int64",
-            "x-go-name": "Succeeded"
-          }
-        },
-        "description": "ContractResponse for response of contract request",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-      },
-      "Duration": {
-        "type": "integer",
-        "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
-        "format": "int64",
-        "x-go-package": "time"
-      },
-      "MethodType": {
-        "type": "string",
-        "description": "MethodType for HTTP",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-      },
-      "MockAuthorization": {
+      "APIAuthorization": {
         "type": "object",
         "properties": {
           "format": {
@@ -912,10 +849,85 @@
             "x-go-name": "URL"
           }
         },
-        "description": "MockAuthorization defines mock auth parameters",
+        "description": "APIAuthorization defines mock auth parameters",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
-      "MockHTTPRequest": {
+      "APIKeyData": {
+        "type": "object",
+        "properties": {
+          "LastUsageTime": {
+            "type": "integer",
+            "description": "LastUsageTime of key data",
+            "format": "int64"
+          },
+          "RequestCount": {
+            "type": "integer",
+            "description": "RequestCount for the API",
+            "format": "uint64"
+          },
+          "assert_contents_pattern": {
+            "type": "string",
+            "description": "AssertContentsPattern for request optionally",
+            "x-go-name": "AssertContentsPattern"
+          },
+          "assert_headers_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AssertHeadersPattern for api response",
+            "x-go-name": "AssertHeadersPattern"
+          },
+          "assert_query_params_pattern": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AssertQueryParamsPattern for the API",
+            "x-go-name": "AssertQueryParamsPattern"
+          },
+          "group": {
+            "type": "string",
+            "description": "Group of scenario",
+            "x-go-name": "Group"
+          },
+          "method": {
+            "$ref": "#/components/schemas/MethodType"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to uniquely identify the scenario",
+            "x-go-name": "Name"
+          },
+          "order": {
+            "type": "integer",
+            "description": "Order of scenario",
+            "format": "int64",
+            "x-go-name": "Order"
+          },
+          "path": {
+            "type": "string",
+            "description": "Path for the API (excluding query params)",
+            "x-go-name": "Path"
+          },
+          "predicate": {
+            "type": "string",
+            "description": "Predicate for the request",
+            "x-go-name": "Predicate"
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags of scenario",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Tags"
+          }
+        },
+        "description": "APIKeyData defines keys of api scenario for in-memory store",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "APIRequest": {
         "type": "object",
         "properties": {
           "assert_contents_pattern": {
@@ -982,10 +994,10 @@
             "x-go-name": "QueryParams"
           }
         },
-        "description": "MockHTTPRequest defines mock request for APIs",
+        "description": "APIRequest defines mock request for APIs",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
-      "MockHTTPResponse": {
+      "APIResponse": {
         "type": "object",
         "properties": {
           "assert_contents_pattern": {
@@ -1050,16 +1062,16 @@
             "x-go-name": "StatusCode"
           }
         },
-        "description": "MockHTTPResponse defines mock response for APIs",
+        "description": "APIResponse defines mock response for APIs",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
-      "MockScenario": {
+      "APIScenario": {
         "type": "object",
         "properties": {
           "authentication": {
             "type": "object",
             "additionalProperties": {
-              "$ref": "#/components/schemas/MockAuthorization"
+              "$ref": "#/components/schemas/APIAuthorization"
             },
             "description": "Authentication for the API",
             "x-go-name": "Authentication"
@@ -1104,10 +1116,10 @@
             "x-go-name": "Predicate"
           },
           "request": {
-            "$ref": "#/components/schemas/MockHTTPRequest"
+            "$ref": "#/components/schemas/APIRequest"
           },
           "response": {
-            "$ref": "#/components/schemas/MockHTTPResponse"
+            "$ref": "#/components/schemas/APIResponse"
           },
           "tags": {
             "type": "array",
@@ -1121,92 +1133,94 @@
             "$ref": "#/components/schemas/Duration"
           }
         },
-        "description": "MockScenario defines mock scenario for APIs",
+        "description": "APIScenario defines mock scenario for APIs",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
-      "MockScenarioKeyData": {
+      "Duration": {
+        "type": "integer",
+        "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
+        "format": "int64",
+        "x-go-package": "time"
+      },
+      "MethodType": {
+        "type": "string",
+        "description": "MethodType for HTTP",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "ProducerContractRequest": {
         "type": "object",
         "properties": {
-          "LastUsageTime": {
-            "type": "integer",
-            "description": "LastUsageTime of key data",
-            "format": "int64"
-          },
-          "RequestCount": {
-            "type": "integer",
-            "description": "RequestCount for the API",
-            "format": "uint64"
-          },
-          "assert_contents_pattern": {
+          "base_url": {
             "type": "string",
-            "description": "AssertContentsPattern for request optionally",
-            "x-go-name": "AssertContentsPattern"
+            "description": "BaseURL of remote server",
+            "x-go-name": "BaseURL"
           },
-          "assert_headers_pattern": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "AssertHeadersPattern for mock response",
-            "x-go-name": "AssertHeadersPattern"
-          },
-          "assert_query_params_pattern": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "AssertQueryParamsPattern for the API",
-            "x-go-name": "AssertQueryParamsPattern"
-          },
-          "group": {
-            "type": "string",
-            "description": "Group of scenario",
-            "x-go-name": "Group"
-          },
-          "method": {
-            "$ref": "#/components/schemas/MethodType"
-          },
-          "name": {
-            "type": "string",
-            "description": "Name to uniquely identify the scenario",
-            "x-go-name": "Name"
-          },
-          "order": {
+          "execution_times": {
             "type": "integer",
-            "description": "Order of scenario",
+            "description": "ExecutionTimes for contract testing",
             "format": "int64",
-            "x-go-name": "Order"
+            "x-go-name": "ExecutionTimes"
           },
-          "path": {
-            "type": "string",
-            "description": "Path for the API (excluding query params)",
-            "x-go-name": "Path"
-          },
-          "predicate": {
-            "type": "string",
-            "description": "Predicate for the request",
-            "x-go-name": "Predicate"
-          },
-          "tags": {
-            "type": "array",
-            "description": "Tags of scenario",
-            "items": {
-              "type": "string"
-            },
-            "x-go-name": "Tags"
+          "verbose": {
+            "type": "boolean",
+            "description": "Verbose setting",
+            "x-go-name": "Verbose"
           }
         },
-        "description": "MockScenarioKeyData defines keys of mock scenario for in-memory store",
+        "description": "ProducerContractRequest for generating fuzz-data requests to an API implementation for producer based contract testing",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "ProducerContractResponse": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "x-go-name": "Errors"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Failed"
+          },
+          "metrics": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            },
+            "x-go-name": "Metrics"
+          },
+          "results": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "x-go-name": "Results"
+          },
+          "succeeded": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Succeeded"
+          },
+          "urls": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "x-go-name": "URLs"
+          }
+        },
+        "description": "ProducerContractResponse for returning summary of producer based test results",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       }
     },
     "responses": {
-      "emptyResponse": {
-        "description": "",
-        "content": {}
-      },
-      "mockFixtureNamesResponse": {
-        "description": "MockFixture names",
+      "apiFixtureNamesResponse": {
+        "description": "APIFixture names",
         "content": {
           "*/*": {
             "schema": {
@@ -1218,8 +1232,8 @@
           }
         }
       },
-      "mockFixtureResponse": {
-        "description": "MockFixture body for update",
+      "apiFixtureResponse": {
+        "description": "APIFixture body for update",
         "content": {
           "*/*": {
             "schema": {
@@ -1232,8 +1246,8 @@
           }
         }
       },
-      "mockGroupsResponse": {
-        "description": "MockScenario groups",
+      "apiGroupsResponse": {
+        "description": "APIScenario groups",
         "content": {
           "*/*": {
             "schema": {
@@ -1245,8 +1259,8 @@
           }
         }
       },
-      "mockHistoryResponse": {
-        "description": "MockScenario history scenario names",
+      "apiHistoryResponse": {
+        "description": "APIScenario history scenario names",
         "content": {
           "*/*": {
             "schema": {
@@ -1258,8 +1272,8 @@
           }
         }
       },
-      "mockNamesResponse": {
-        "description": "MockScenario names",
+      "apiNamesResponse": {
+        "description": "APIScenario names",
         "content": {
           "*/*": {
             "schema": {
@@ -1271,8 +1285,8 @@
           }
         }
       },
-      "mockOapiSpecIResponse": {
-        "description": "MockScenario body for update",
+      "apiOapiSpecIResponse": {
+        "description": "APIScenario body for update",
         "content": {
           "*/*": {
             "schema": {
@@ -1285,48 +1299,52 @@
           }
         }
       },
-      "mockScenarioContractResponse": {
-        "description": "MockScenario body for update",
+      "apiScenarioContractResponse": {
+        "description": "APIScenario body for update",
         "content": {
           "*/*": {
             "schema": {
-              "$ref": "#/components/schemas/ContractResponse"
+              "$ref": "#/components/schemas/ProducerContractResponse"
             }
           }
         }
       },
-      "mockScenarioOAPIResponse": {
-        "description": "MockScenario body for update",
+      "apiScenarioOAPIResponse": {
+        "description": "APIScenario body for update",
         "content": {
           "*/*": {
             "schema": {
-              "$ref": "#/components/schemas/MockScenario"
+              "$ref": "#/components/schemas/APIScenario"
             }
           }
         }
       },
-      "mockScenarioPathsResponse": {
-        "description": "MockScenario summary and paths",
+      "apiScenarioPathsResponse": {
+        "description": "APIScenario summary and paths",
         "content": {
           "*/*": {
             "schema": {
               "type": "object",
               "additionalProperties": {
-                "$ref": "#/components/schemas/MockScenarioKeyData"
+                "$ref": "#/components/schemas/APIKeyData"
               }
             }
           }
         }
       },
-      "mockScenarioResponse": {
-        "description": "MockScenario body for update",
+      "apiScenarioResponse": {
+        "description": "APIScenario body for update",
         "content": {
           "*/*": {
             "schema": {
-              "$ref": "#/components/schemas/MockScenario"
+              "$ref": "#/components/schemas/APIScenario"
             }
           }
         }
+      },
+      "emptyResponse": {
+        "description": "",
+        "content": {}
       }
     }
   }

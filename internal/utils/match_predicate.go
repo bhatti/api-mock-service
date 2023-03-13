@@ -8,7 +8,7 @@ import (
 )
 
 // MatchScenarioPredicate checks if predicate match
-func MatchScenarioPredicate(matched *types.MockScenarioKeyData, target *types.MockScenarioKeyData, requestCount uint64) bool {
+func MatchScenarioPredicate(matched *types.APIKeyData, target *types.APIKeyData, requestCount uint64) bool {
 	if matched.Predicate == "" {
 		return true
 	}

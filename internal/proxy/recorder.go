@@ -18,20 +18,20 @@ import (
 
 // Recorder structure
 type Recorder struct {
-	config                 *types.Configuration
-	client                 web.HTTPClient
-	mockScenarioRepository repository.MockScenarioRepository
+	config             *types.Configuration
+	client             web.HTTPClient
+	scenarioRepository repository.APIScenarioRepository
 }
 
-// NewRecorder instantiates controller for updating mock-scenarios
+// NewRecorder instantiates controller for updating api -scenarios
 func NewRecorder(
 	config *types.Configuration,
 	client web.HTTPClient,
-	mockScenarioRepository repository.MockScenarioRepository) *Recorder {
+	scenarioRepository repository.APIScenarioRepository) *Recorder {
 	return &Recorder{
-		config:                 config,
-		client:                 client,
-		mockScenarioRepository: mockScenarioRepository,
+		config:             config,
+		client:             client,
+		scenarioRepository: scenarioRepository,
 	}
 }
 
@@ -70,7 +70,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	}
 
 	resContentType, err := saveMockResponse(
-		r.config, u, c.Request(), reqBody, resBytes, resHeaders, status, r.mockScenarioRepository)
+		r.config, u, c.Request(), reqBody, resBytes, resHeaders, status, r.scenarioRepository)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func saveMockResponse(
 	resBody []byte,
 	resHeaders map[string][]string,
 	status int,
-	mockScenarioRepository repository.MockScenarioRepository) (resContentType string, err error) {
+	scenarioRepository repository.APIScenarioRepository) (resContentType string, err error) {
 
 	if resHeaders != nil {
 		val := resHeaders[types.ContentTypeHeader]
@@ -130,14 +130,14 @@ func saveMockResponse(
 			resHeaders[types.ContentTypeHeader][0]))
 		respHeaderAssertions[types.ContentTypeHeader] = resHeaders[types.ContentTypeHeader][0]
 	}
-	scenario := &types.MockScenario{
+	scenario := &types.APIScenario{
 		Method:         types.MethodType(req.Method),
 		Name:           req.Header.Get(types.MockScenarioName),
 		Path:           u.Path,
 		BaseURL:        u.Scheme + "://" + u.Host,
 		Group:          utils.NormalizeGroup("", u.Path),
-		Authentication: make(map[string]types.MockAuthorization),
-		Request: types.MockHTTPRequest{
+		Authentication: make(map[string]types.APIAuthorization),
+		Request: types.APIRequest{
 			QueryParams:              make(map[string]string),
 			Headers:                  make(map[string]string),
 			Contents:                 string(reqBody),
@@ -147,7 +147,7 @@ func saveMockResponse(
 			AssertContentsPattern:    matchReqContents,
 			Assertions:               reqAssertions,
 		},
-		Response: types.MockHTTPResponse{
+		Response: types.APIResponse{
 			Headers:               resHeaders,
 			Contents:              string(resBody),
 			ExampleContents:       string(resBody),
@@ -187,19 +187,19 @@ func saveMockResponse(
 	}
 	authHeader := scenario.Request.AuthHeader()
 	if strings.Contains(authHeader, "AWS") {
-		scenario.Authentication["aws.auth.sigv4"] = types.MockAuthorization{
+		scenario.Authentication["aws.auth.sigv4"] = types.APIAuthorization{
 			Type:   "apiKey",
 			Name:   web.Authorization,
 			In:     "header",
 			Scheme: "x-amazon-apigateway-authtype",
 			Format: "awsSigv4",
 		}
-		scenario.Authentication["smithy.api.httpApiKeyAuth"] = types.MockAuthorization{
+		scenario.Authentication["smithy.api.httpApiKeyAuth"] = types.APIAuthorization{
 			Type: "apiKey",
 			Name: "x-api-key",
 			In:   "header",
 		}
-		scenario.Authentication["bearerAuth"] = types.MockAuthorization{
+		scenario.Authentication["bearerAuth"] = types.APIAuthorization{
 			Type:   "http",
 			Name:   web.Authorization,
 			In:     "header",
@@ -207,13 +207,13 @@ func saveMockResponse(
 			Format: "JWT",
 		}
 	} else if authHeader != "" {
-		scenario.Authentication["basicAuth"] = types.MockAuthorization{
+		scenario.Authentication["basicAuth"] = types.APIAuthorization{
 			Type:   "http",
 			Name:   web.Authorization,
 			In:     "header",
 			Scheme: "basic",
 		}
-		scenario.Authentication["bearerAuth"] = types.MockAuthorization{
+		scenario.Authentication["bearerAuth"] = types.APIAuthorization{
 			Type:   "http",
 			Name:   web.Authorization,
 			In:     "header",
@@ -227,10 +227,10 @@ func saveMockResponse(
 	}
 
 	scenario.Description = fmt.Sprintf("recorded at %v for %s", time.Now().UTC(), u)
-	if err = mockScenarioRepository.Save(scenario); err != nil {
+	if err = scenarioRepository.Save(scenario); err != nil {
 		return "", err
 	}
-	if err = mockScenarioRepository.SaveHistory(scenario); err != nil {
+	if err = scenarioRepository.SaveHistory(scenario); err != nil {
 		return "", err
 	}
 	return

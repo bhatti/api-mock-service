@@ -16,7 +16,7 @@ type Response struct {
 	Body        []Property
 }
 
-func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest) (_ types.MockHTTPResponse, err error) {
+func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest) (_ types.APIResponse, err error) {
 	strippedContents, err := marshalPropertyValue(res.Body, dataTemplate.WithInclude(false), true)
 	if err != nil {
 		return
@@ -56,7 +56,7 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 		assertions = append(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`, res.ContentType))
 		respHeaderAssertions[types.ContentTypeHeader] = res.ContentType
 	}
-	return types.MockHTTPResponse{
+	return types.APIResponse{
 		StatusCode:            res.StatusCode,
 		Headers:               propsToMapArray(res.Headers, dataTemplate.WithInclude(false)),
 		Contents:              string(strippedContents),

@@ -21,8 +21,8 @@ const UnescapeHTML = "UnescapeHTML"
 // RequestCount name
 const RequestCount = "_RequestCount"
 
-// MockDataExt extension
-const MockDataExt = ".dat"
+// FixtureDataExt extension
+const FixtureDataExt = ".dat"
 
 // ParseTemplate parses GO template with dynamic parameters
 func ParseTemplate(dir string, byteBody []byte, data any) ([]byte, error) {
@@ -236,19 +236,19 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			return reqCount >= 0 && reqCount%toInt(n) == 0
 		},
 		"JSONFileProperty": func(fileName string, name string) template.HTML {
-			return toJSON(fileProperty(dir, fileName+MockDataExt, name))
+			return toJSON(fileProperty(dir, fileName+FixtureDataExt, name))
 		},
 		"YAMLFileProperty": func(fileName string, name string) template.HTML {
-			return toYAML(fileProperty(dir, fileName+MockDataExt, name))
+			return toYAML(fileProperty(dir, fileName+FixtureDataExt, name))
 		},
 		"FileProperty": func(fileName string, name string) any {
-			return fileProperty(dir, fileName+MockDataExt, name)
+			return fileProperty(dir, fileName+FixtureDataExt, name)
 		},
 		"RandFileLine": func(fileName string) template.HTML {
-			return randFileLine(dir, fileName+MockDataExt, 0)
+			return randFileLine(dir, fileName+FixtureDataExt, 0)
 		},
 		"SeededFileLine": func(fileName string, seed any) template.HTML {
-			return randFileLine(dir, fileName+MockDataExt, toInt64(seed))
+			return randFileLine(dir, fileName+FixtureDataExt, toInt64(seed))
 		},
 		"VariableEquals": func(varName string, target any) bool {
 			return VariableEquals(varName, data, target)

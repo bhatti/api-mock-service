@@ -19,7 +19,7 @@ import (
 func Test_ShouldNotStartProxyServer(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -31,7 +31,7 @@ func Test_ShouldNotStartProxyServer(t *testing.T) {
 func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -71,7 +71,7 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 func Test_ShouldHandleProxyRequest(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -94,7 +94,7 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -154,7 +154,7 @@ func adapterHandler(c web.APIContext) error {
 func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -210,7 +210,7 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -234,7 +234,7 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -246,7 +246,7 @@ func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
 func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -260,7 +260,7 @@ func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -285,7 +285,7 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -311,19 +311,19 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 	require.NotNil(t, res)
 }
 
-func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {
-	return &types.MockScenario{
+func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
+	return &types.APIScenario{
 		Method:      method,
 		Name:        name,
 		Path:        path,
 		Description: name,
-		Request: types.MockHTTPRequest{
+		Request: types.APIRequest{
 			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
 			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/json",
 			},
 		},
-		Response: types.MockHTTPResponse{
+		Response: types.APIResponse{
 			Headers: map[string][]string{
 				"ETag":                  {strconv.Itoa(n)},
 				types.ContentTypeHeader: {"application/json"},

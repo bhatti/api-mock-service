@@ -15,7 +15,7 @@ type Request struct {
 	Body        []Property
 }
 
-func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) (res types.MockHTTPRequest, err error) {
+func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) (res types.APIRequest, err error) {
 	strippedContents, err := marshalPropertyValue(req.Body, dataTemplate.WithInclude(true), true)
 	if err != nil {
 		return
@@ -44,7 +44,7 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 		}
 	}
 
-	return types.MockHTTPRequest{
+	return types.APIRequest{
 		AssertHeadersPattern:     propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
 		AssertQueryParamsPattern: propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
 		Assertions:               assertions,
@@ -58,7 +58,7 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 }
 
 func checkRequestHeader(name string, pattern string) string {
-	validHeaders := map[string]bool{types.Authorization: true, types.ContentTypeHeader: true}
+	validHeaders := map[string]bool{types.AuthorizationHeader: true, types.ContentTypeHeader: true}
 	if validHeaders[name] {
 		if pattern == "" {
 			return fmt.Sprintf(`VariableSizeGE headers.%s 5`, name)

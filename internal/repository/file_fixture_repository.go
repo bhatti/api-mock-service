@@ -49,8 +49,8 @@ func (cr *FileMockFixtureRepository) GetFixtureNames(
 
 	for _, file := range files {
 		name := file.Name()
-		if strings.HasSuffix(name, fuzz.MockDataExt) {
-			trimSize := len(name) - len(fuzz.MockDataExt)
+		if strings.HasSuffix(name, fuzz.FixtureDataExt) {
+			trimSize := len(name) - len(fuzz.FixtureDataExt)
 			names = append(names, name[0:trimSize])
 		}
 	}
@@ -85,7 +85,7 @@ func (cr *FileMockFixtureRepository) buildFileName(
 	method types.MethodType,
 	scenarioName string,
 	path string) string {
-	return buildFileName(cr.dir, method, scenarioName, path) + fuzz.MockDataExt
+	return buildFileName(cr.dir, method, scenarioName, path) + fuzz.FixtureDataExt
 }
 
 func (cr *FileMockFixtureRepository) buildDir(

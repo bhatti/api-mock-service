@@ -10,8 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// MockScenarioKeyData defines keys of mock scenario for in-memory store
-type MockScenarioKeyData struct {
+// APIKeyData defines keys of api scenario for in-memory store
+type APIKeyData struct {
 	// Method for HTTP API
 	Method MethodType `yaml:"method" json:"method"`
 	// Name to uniquely identify the scenario
@@ -28,7 +28,7 @@ type MockScenarioKeyData struct {
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// AssertQueryParamsPattern for the API
 	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
-	// AssertHeadersPattern for mock response
+	// AssertHeadersPattern for api response
 	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
 	// AssertContentsPattern for request optionally
 	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
@@ -39,52 +39,52 @@ type MockScenarioKeyData struct {
 }
 
 // Equals compares path and query path
-func (msd *MockScenarioKeyData) Equals(other *MockScenarioKeyData) error {
-	if msd.Method != other.Method {
-		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", msd.Method, other.Method))
+func (kd *APIKeyData) Equals(other *APIKeyData) error {
+	if kd.Method != other.Method {
+		return NewNotFoundError(fmt.Sprintf("method '%s' didn't match '%s'", kd.Method, other.Method))
 	}
-	if msd.Group != "" && other.Group != "" && msd.Group != other.Group {
-		return NewNotFoundError(fmt.Sprintf("group '%s' didn't match '%s'", msd.Group, other.Group))
+	if kd.Group != "" && other.Group != "" && kd.Group != other.Group {
+		return NewNotFoundError(fmt.Sprintf("group '%s' didn't match '%s'", kd.Group, other.Group))
 	}
 	otherPath := filterURLQueryParams(other.Path)
-	rePath := rePath(msd.Path)
+	rePath := rePath(kd.Path)
 	matched, err := regexp.Match(rePath, []byte(otherPath))
 	if err != nil {
 		return err
 	}
 	log.WithFields(log.Fields{
-		"Group":     msd.Group,
-		"Order":     msd.Order,
+		"Group":     kd.Group,
+		"Order":     kd.Order,
 		"Other":     other.String(),
-		"This":      msd.String(),
+		"This":      kd.String(),
 		"OtherPath": otherPath,
-		"ThisPath":  msd.Path,
+		"ThisPath":  kd.Path,
 		"RegexPath": rePath,
 		"Matched":   matched,
 	}).Debugf("matching path...")
 	if !matched {
-		return NewNotFoundError(fmt.Sprintf("path '%s' didn't match '%s'", msd.Path, other.Path))
+		return NewNotFoundError(fmt.Sprintf("path '%s' didn't match '%s'", kd.Path, other.Path))
 	}
-	for k, msdQueryParamVal := range msd.AssertQueryParamsPattern {
+	for k, msdQueryParamVal := range kd.AssertQueryParamsPattern {
 		targetQueryParamVal := other.AssertQueryParamsPattern[k]
 		if targetQueryParamVal != msdQueryParamVal &&
 			!reMatch(msdQueryParamVal, targetQueryParamVal) {
 			return NewValidationError(fmt.Sprintf("request queryParam '%s' didn't match [%v == %v]",
-				k, msd.AssertQueryParamsPattern, other.AssertQueryParamsPattern))
+				k, kd.AssertQueryParamsPattern, other.AssertQueryParamsPattern))
 		}
 	}
 
-	if msd.AssertContentsPattern != "" &&
-		!strings.Contains(msd.AssertContentsPattern, other.AssertContentsPattern) &&
-		!reMatch(msd.AssertContentsPattern, other.AssertContentsPattern) {
+	if kd.AssertContentsPattern != "" &&
+		!strings.Contains(kd.AssertContentsPattern, other.AssertContentsPattern) &&
+		!reMatch(kd.AssertContentsPattern, other.AssertContentsPattern) {
 		if other.AssertContentsPattern == "" {
 			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s'",
-				msd.AssertContentsPattern, other.AssertContentsPattern))
+				kd.AssertContentsPattern, other.AssertContentsPattern))
 		}
 		regex := make(map[string]string)
-		err := json.Unmarshal([]byte(msd.AssertContentsPattern), &regex)
+		err := json.Unmarshal([]byte(kd.AssertContentsPattern), &regex)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal contents '%s' regex due to %w", msd.AssertContentsPattern, err)
+			return fmt.Errorf("failed to unmarshal contents '%s' regex due to %w", kd.AssertContentsPattern, err)
 		}
 		matchContents, err := fuzz.UnmarshalArrayOrObject([]byte(other.AssertContentsPattern))
 		if err != nil {
@@ -93,11 +93,11 @@ func (msd *MockScenarioKeyData) Equals(other *MockScenarioKeyData) error {
 		err = fuzz.ValidateRegexMap(matchContents, regex)
 		if err != nil {
 			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s' due to %s",
-				msd.AssertContentsPattern, other.AssertContentsPattern, err))
+				kd.AssertContentsPattern, other.AssertContentsPattern, err))
 		}
 	}
 
-	for k, msdHeaderVal := range msd.AssertHeadersPattern {
+	for k, msdHeaderVal := range kd.AssertHeadersPattern {
 		targetHeaderVal := getDictValue(k, other.AssertHeadersPattern)
 		if targetHeaderVal != msdHeaderVal &&
 			!reMatch(msdHeaderVal, targetHeaderVal) {
@@ -106,26 +106,26 @@ func (msd *MockScenarioKeyData) Equals(other *MockScenarioKeyData) error {
 		}
 	}
 
-	if len(msd.Tags) > 0 && len(other.Tags) > 0 {
-		strMap := toStringMap(msd.Tags)
+	if len(kd.Tags) > 0 && len(other.Tags) > 0 {
+		strMap := toStringMap(kd.Tags)
 		for _, tag := range other.Tags {
 			if !strMap[strings.ToUpper(tag)] {
 				return NewValidationError(fmt.Sprintf("%s request tag didn't match %v, all tags %v",
-					tag, msd.Tags, other.Tags))
+					tag, kd.Tags, other.Tags))
 			}
 		}
 	}
 
-	if other.Name != "" && msd.Name != other.Name {
+	if other.Name != "" && kd.Name != other.Name {
 		return NewValidationError(fmt.Sprintf("scenario name '%s' didn't match '%s'",
-			msd.Name, other.Name))
+			kd.Name, other.Name))
 	}
 	return nil
 }
 
 // MatchGroups return match groups for dynamic params in path
-func (msd *MockScenarioKeyData) MatchGroups(path string) map[string]string {
-	return MatchPathGroups(msd.Path, path)
+func (kd *APIKeyData) MatchGroups(path string) map[string]string {
+	return MatchPathGroups(kd.Path, path)
 }
 
 // MatchPathGroups return match groups for dynamic params in path
@@ -166,65 +166,65 @@ func MatchPathGroups(rawPath string, targetPath string) (res map[string]string) 
 }
 
 // Validate scenario
-func (msd *MockScenarioKeyData) Validate() error {
-	if msd.Method == "" {
+func (kd *APIKeyData) Validate() error {
+	if kd.Method == "" {
 		return fmt.Errorf("key method is not specified")
 	}
-	if msd.Path == "" {
+	if kd.Path == "" {
 		return fmt.Errorf("key path is not specified")
 	}
-	if len(msd.Path) > 200 {
-		return fmt.Errorf("key path is too long %d", len(msd.Path))
+	if len(kd.Path) > 200 {
+		return fmt.Errorf("key path is too long %d", len(kd.Path))
 	}
-	if matched, err := regexp.Match(`^[\w\d\.\-_\/\\:{}]+$`, []byte(msd.Path)); err == nil && !matched {
-		return fmt.Errorf("key path is invalid with special characters '%s'", msd.Path)
+	if matched, err := regexp.Match(`^[\w\d\.\-_\/\\:{}]+$`, []byte(kd.Path)); err == nil && !matched {
+		return fmt.Errorf("key path is invalid with special characters '%s'", kd.Path)
 	}
-	msd.Path = NormalizePath(msd.Path, '/')
-	if !strings.HasPrefix(msd.Path, "/") {
-		msd.Path = "/" + msd.Path
+	kd.Path = NormalizePath(kd.Path, '/')
+	if !strings.HasPrefix(kd.Path, "/") {
+		kd.Path = "/" + kd.Path
 	}
-	if msd.Name == "" {
+	if kd.Name == "" {
 		return fmt.Errorf("key scenario name is not specified")
 	}
-	if len(msd.Name) > 200 {
-		return fmt.Errorf("key scenario name is too long %d", len(msd.Name))
+	if len(kd.Name) > 200 {
+		return fmt.Errorf("key scenario name is too long %d", len(kd.Name))
 	}
-	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(msd.Name)); err == nil && !matched {
-		return fmt.Errorf("key scenario name is invalid with special characters %s", msd.Name)
+	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(kd.Name)); err == nil && !matched {
+		return fmt.Errorf("key scenario name is invalid with special characters %s", kd.Name)
 	}
 	return nil
 }
 
 // String
-func (msd *MockScenarioKeyData) String() string {
-	return string(msd.Method) + "|" + msd.Path + "|" + msd.Name
+func (kd *APIKeyData) String() string {
+	return string(kd.Method) + "|" + kd.Path + "|" + kd.Name
 }
 
 // MethodPath helper method
-func (msd *MockScenarioKeyData) MethodPath() string {
-	return strings.ToLower(string(msd.Method)) + "_" + SanitizeNonAlphabet(msd.Path, "_") // replace slash
+func (kd *APIKeyData) MethodPath() string {
+	return strings.ToLower(string(kd.Method)) + "_" + SanitizeNonAlphabet(kd.Path, "_") // replace slash
 }
 
 // SafeName strips invalid characters
-func (msd *MockScenarioKeyData) SafeName() string {
-	return SanitizeNonAlphabet(msd.Name, "")
+func (kd *APIKeyData) SafeName() string {
+	return SanitizeNonAlphabet(kd.Name, "")
 }
 
 // MethodNamePathPrefixKey returns full key for the scenario
-func (msd *MockScenarioKeyData) MethodNamePathPrefixKey() string {
-	return string(msd.Method) + msd.Name + msd.PathPrefix(1)
+func (kd *APIKeyData) MethodNamePathPrefixKey() string {
+	return string(kd.Method) + kd.Name + kd.PathPrefix(1)
 }
 
 // PartialMethodPathKey for key by method and first-level path
-func (msd *MockScenarioKeyData) PartialMethodPathKey() string {
-	return string(msd.Method) + msd.PathPrefix(1)
+func (kd *APIKeyData) PartialMethodPathKey() string {
+	return string(kd.Method) + kd.PathPrefix(1)
 }
 
 // PathPrefix builds prefix of path
-func (msd *MockScenarioKeyData) PathPrefix(max int) string {
-	parts := strings.Split(msd.Path, "/")
+func (kd *APIKeyData) PathPrefix(max int) string {
+	parts := strings.Split(kd.Path, "/")
 	if len(parts) <= max {
-		return msd.Path
+		return kd.Path
 	}
 
 	var buf strings.Builder

@@ -20,20 +20,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// FileMockScenarioRepository  implements mock scenario storage based on local files
-type FileMockScenarioRepository struct {
+// FileAPIScenarioRepository  implements API scenario storage based on local files
+type FileAPIScenarioRepository struct {
 	mutex            sync.RWMutex
-	keysByMethodPath map[string]map[string]*types.MockScenarioKeyData
+	keysByMethodPath map[string]map[string]*types.APIKeyData
 	contractDir      string
 	historyDir       string
 	maxHistory       int
 	debug            bool
 }
 
-// NewFileMockScenarioRepository creates new instance for mock scenarios
-func NewFileMockScenarioRepository(
+// NewFileAPIScenarioRepository creates new instance for api scenarios
+func NewFileAPIScenarioRepository(
 	config *types.Configuration,
-) (repo *FileMockScenarioRepository, err error) {
+) (repo *FileAPIScenarioRepository, err error) {
 	contractDir := buildContractsDir(config)
 	historyDir := filepath.Join(config.DataDir, "exec_history")
 	if err = mkdir(contractDir); err != nil {
@@ -42,18 +42,18 @@ func NewFileMockScenarioRepository(
 	if err = mkdir(historyDir); err != nil {
 		return nil, err
 	}
-	repo = &FileMockScenarioRepository{
+	repo = &FileAPIScenarioRepository{
 		contractDir:      contractDir,
 		historyDir:       historyDir,
 		maxHistory:       config.MaxHistory,
 		debug:            config.Debug,
-		keysByMethodPath: make(map[string]map[string]*types.MockScenarioKeyData),
+		keysByMethodPath: make(map[string]map[string]*types.APIKeyData),
 	}
 
-	err = repo.visit(func(keyData *types.MockScenarioKeyData) bool {
+	err = repo.visit(func(keyData *types.APIKeyData) bool {
 		keyMap := repo.keysByMethodPath[keyData.PartialMethodPathKey()]
 		if keyMap == nil {
-			keyMap = make(map[string]*types.MockScenarioKeyData)
+			keyMap = make(map[string]*types.APIKeyData)
 			repo.keysByMethodPath[keyData.PartialMethodPathKey()] = keyMap
 		}
 		keyMap[keyData.MethodNamePathPrefixKey()] = keyData
@@ -66,8 +66,8 @@ func NewFileMockScenarioRepository(
 	return
 }
 
-// GetGroups returns mock scenarios groups
-func (sr *FileMockScenarioRepository) GetGroups() (res []string) {
+// GetGroups returns api scenarios groups
+func (sr *FileAPIScenarioRepository) GetGroups() (res []string) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
@@ -88,8 +88,8 @@ func (sr *FileMockScenarioRepository) GetGroups() (res []string) {
 	return
 }
 
-// GetScenariosNames returns mock scenarios for given Method and Path
-func (sr *FileMockScenarioRepository) GetScenariosNames(
+// GetScenariosNames returns api scenarios for given Method and Path
+func (sr *FileAPIScenarioRepository) GetScenariosNames(
 	method types.MethodType,
 	path string) (scenarioNames []string, err error) {
 	scenarioNames = make([]string, 0)
@@ -111,9 +111,9 @@ func (sr *FileMockScenarioRepository) GetScenariosNames(
 	return
 }
 
-// Save MockScenario
-func (sr *FileMockScenarioRepository) Save(
-	scenario *types.MockScenario) (err error) {
+// Save APIScenario
+func (sr *FileAPIScenarioRepository) Save(
+	scenario *types.APIScenario) (err error) {
 	if err = scenario.Validate(); err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (sr *FileMockScenarioRepository) Save(
 }
 
 // SaveRaw saves raw data assuming to be yaml format
-func (sr *FileMockScenarioRepository) SaveRaw(input io.ReadCloser) (err error) {
+func (sr *FileAPIScenarioRepository) SaveRaw(input io.ReadCloser) (err error) {
 	data, _, err := utils.ReadAll(input)
 	if err != nil {
 		return err
@@ -137,8 +137,8 @@ func (sr *FileMockScenarioRepository) SaveRaw(input io.ReadCloser) (err error) {
 	return sr.SaveYaml(keyData, data)
 }
 
-// SaveYaml saves MockScenario as yaml format
-func (sr *FileMockScenarioRepository) SaveYaml(keyData *types.MockScenarioKeyData, payload []byte) (err error) {
+// SaveYaml saves APIScenario as yaml format
+func (sr *FileAPIScenarioRepository) SaveYaml(keyData *types.APIKeyData, payload []byte) (err error) {
 	dir := sr.buildDir(keyData.Method, keyData.Path)
 	if err = mkdir(dir); err != nil {
 		return err
@@ -150,7 +150,7 @@ func (sr *FileMockScenarioRepository) SaveYaml(keyData *types.MockScenarioKeyDat
 }
 
 // LoadRaw loads matching scenario
-func (sr *FileMockScenarioRepository) LoadRaw(
+func (sr *FileAPIScenarioRepository) LoadRaw(
 	method types.MethodType,
 	name string,
 	path string,
@@ -160,7 +160,7 @@ func (sr *FileMockScenarioRepository) LoadRaw(
 }
 
 // Delete removes a job
-func (sr *FileMockScenarioRepository) Delete(
+func (sr *FileAPIScenarioRepository) Delete(
 	method types.MethodType,
 	scenarioName string,
 	path string) error {
@@ -169,12 +169,12 @@ func (sr *FileMockScenarioRepository) Delete(
 }
 
 // ListScenarioKeyData returns keys for all scenarios
-func (sr *FileMockScenarioRepository) ListScenarioKeyData(group string) []*types.MockScenarioKeyData {
+func (sr *FileAPIScenarioRepository) ListScenarioKeyData(group string) []*types.APIKeyData {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
-	res := make([]*types.MockScenarioKeyData, 0)
+	res := make([]*types.APIKeyData, 0)
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if group == "" || group == keyData.Group {
@@ -193,7 +193,7 @@ func (sr *FileMockScenarioRepository) ListScenarioKeyData(group string) []*types
 }
 
 // LookupAllByPath finds matching scenarios by path
-func (sr *FileMockScenarioRepository) LookupAllByPath(path string) []*types.MockScenarioKeyData {
+func (sr *FileAPIScenarioRepository) LookupAllByPath(path string) []*types.APIKeyData {
 	if !strings.HasPrefix(path, "/") {
 		path = "/" + path
 	}
@@ -202,7 +202,7 @@ func (sr *FileMockScenarioRepository) LookupAllByPath(path string) []*types.Mock
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
-	res := make([]*types.MockScenarioKeyData, 0)
+	res := make([]*types.APIKeyData, 0)
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if path == keyData.Path {
@@ -215,13 +215,13 @@ func (sr *FileMockScenarioRepository) LookupAllByPath(path string) []*types.Mock
 }
 
 // LookupAllByGroup finds matching scenarios by group
-func (sr *FileMockScenarioRepository) LookupAllByGroup(
-	group string) []*types.MockScenarioKeyData {
+func (sr *FileAPIScenarioRepository) LookupAllByGroup(
+	group string) []*types.APIKeyData {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
-	res := make([]*types.MockScenarioKeyData, 0)
+	res := make([]*types.APIKeyData, 0)
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if group == keyData.Group {
@@ -234,14 +234,14 @@ func (sr *FileMockScenarioRepository) LookupAllByGroup(
 }
 
 // LookupAll finds matching scenarios
-func (sr *FileMockScenarioRepository) LookupAll(
-	other *types.MockScenarioKeyData,
-) (res []*types.MockScenarioKeyData, paramMismatchErrors int) {
+func (sr *FileAPIScenarioRepository) LookupAll(
+	other *types.APIKeyData,
+) (res []*types.APIKeyData, paramMismatchErrors int) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
 	}()
-	res = make([]*types.MockScenarioKeyData, 0)
+	res = make([]*types.APIKeyData, 0)
 	keyDataMap := sr.keysByMethodPath[other.PartialMethodPathKey()]
 	for _, keyData := range keyDataMap {
 		if err := keyData.Equals(other); err == nil {
@@ -264,9 +264,9 @@ func (sr *FileMockScenarioRepository) LookupAll(
 }
 
 // Lookup finds top matching scenario
-func (sr *FileMockScenarioRepository) Lookup(
-	other *types.MockScenarioKeyData,
-	inData map[string]any) (scenario *types.MockScenario, err error) {
+func (sr *FileAPIScenarioRepository) Lookup(
+	other *types.APIKeyData,
+	inData map[string]any) (scenario *types.APIScenario, err error) {
 	matched, paramMismatchErrors := sr.LookupAll(other)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
@@ -288,7 +288,7 @@ func (sr *FileMockScenarioRepository) Lookup(
 		"TotalRequestCount": reqCount,
 		"Timestamp":         matched[0].LastUsageTime,
 		"Matched":           len(matched),
-	}).Debugf("API mock scenario found...")
+	}).Debugf("API scenario found...")
 
 	// Read template file
 	dir := sr.buildDir(other.Method, other.Path)
@@ -318,8 +318,8 @@ func (sr *FileMockScenarioRepository) Lookup(
 	return
 }
 
-// HistoryNames returns list of mock scenarios names
-func (sr *FileMockScenarioRepository) HistoryNames(group string) (names []string) {
+// HistoryNames returns list of API scenarios names
+func (sr *FileAPIScenarioRepository) HistoryNames(group string) (names []string) {
 	names = make([]string, 0)
 	sanitizedGroup := types.SanitizeNonAlphabet(group, "_")
 	files := sr.historyFiles()
@@ -331,8 +331,8 @@ func (sr *FileMockScenarioRepository) HistoryNames(group string) (names []string
 	return
 }
 
-// SaveHistory saves history MockScenario
-func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) (err error) {
+// SaveHistory saves history APIScenario
+func (sr *FileAPIScenarioRepository) SaveHistory(scenario *types.APIScenario) (err error) {
 	name := scenario.BuildName(string(scenario.Method))
 	fileName := filepath.Join(sr.historyDir, types.SanitizeNonAlphabet(scenario.Group, "_")+"_"+name+types.ScenarioExt)
 	var b []byte
@@ -354,7 +354,7 @@ func (sr *FileMockScenarioRepository) SaveHistory(scenario *types.MockScenario) 
 }
 
 // LoadHistory loads scenario
-func (sr *FileMockScenarioRepository) LoadHistory(name string) (*types.MockScenario, error) {
+func (sr *FileAPIScenarioRepository) LoadHistory(name string) (*types.APIScenario, error) {
 	if !strings.HasSuffix(name, types.ScenarioExt) {
 		name = name + types.ScenarioExt
 	}
@@ -371,7 +371,7 @@ func (sr *FileMockScenarioRepository) LoadHistory(name string) (*types.MockScena
 
 // ///////// PRIVATE METHODS //////////////
 
-func (sr *FileMockScenarioRepository) checkHistoryLimit() {
+func (sr *FileAPIScenarioRepository) checkHistoryLimit() {
 	infos := sr.historyFiles()
 	if len(infos) <= sr.maxHistory {
 		return
@@ -391,7 +391,7 @@ func (sr *FileMockScenarioRepository) checkHistoryLimit() {
 	}
 }
 
-func (sr *FileMockScenarioRepository) historyFiles() (infos []fs.FileInfo) {
+func (sr *FileAPIScenarioRepository) historyFiles() (infos []fs.FileInfo) {
 	files, err := os.ReadDir(sr.historyDir)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -418,7 +418,7 @@ func (sr *FileMockScenarioRepository) historyFiles() (infos []fs.FileInfo) {
 func unmarshalMockScenario(
 	b []byte,
 	dir string,
-	params any) (scenario *types.MockScenario, err error) {
+	params any) (scenario *types.APIScenario, err error) {
 	// parse template
 	b, err = fuzz.ParseTemplate(dir, b, params)
 	if err != nil {
@@ -426,7 +426,7 @@ func unmarshalMockScenario(
 	}
 
 	// unmarshal scenario from template output
-	scenario = &types.MockScenario{}
+	scenario = &types.APIScenario{}
 	if err = yaml.Unmarshal(b, scenario); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal due to %w", err)
 	}
@@ -434,8 +434,8 @@ func unmarshalMockScenario(
 }
 
 // visit all scenarios matching properties
-func (sr *FileMockScenarioRepository) visit(
-	callback func(keyData *types.MockScenarioKeyData) bool) error {
+func (sr *FileAPIScenarioRepository) visit(
+	callback func(keyData *types.APIKeyData) bool) error {
 	var errStop = errors.New("stop")
 	var walkFunc = func(path string, info os.FileInfo, err error) (_ error) {
 		// handle walking error if any
@@ -481,14 +481,14 @@ func mkdir(dir string) error {
 	return nil
 }
 
-func (sr *FileMockScenarioRepository) addKeyData(keyData *types.MockScenarioKeyData) {
+func (sr *FileAPIScenarioRepository) addKeyData(keyData *types.APIKeyData) {
 	sr.mutex.Lock()
 	defer func() {
 		sr.mutex.Unlock()
 	}()
 	keyMap := sr.keysByMethodPath[keyData.PartialMethodPathKey()]
 	if keyMap == nil {
-		keyMap = make(map[string]*types.MockScenarioKeyData)
+		keyMap = make(map[string]*types.APIKeyData)
 		sr.keysByMethodPath[keyData.PartialMethodPathKey()] = keyMap
 	}
 	keyMap[keyData.MethodNamePathPrefixKey()] = keyData
@@ -503,14 +503,14 @@ func (sr *FileMockScenarioRepository) addKeyData(keyData *types.MockScenarioKeyD
 	}).Debugf("registered scenario")
 }
 
-func (sr *FileMockScenarioRepository) buildFileName(
+func (sr *FileAPIScenarioRepository) buildFileName(
 	method types.MethodType,
 	scenarioName string,
 	path string) string {
 	return buildFileName(sr.contractDir, method, scenarioName, path) + types.ScenarioExt
 }
 
-func (sr *FileMockScenarioRepository) buildDir(
+func (sr *FileAPIScenarioRepository) buildDir(
 	method types.MethodType,
 	path string) string {
 	return buildDir(sr.contractDir, method, path)
@@ -537,18 +537,18 @@ func addQueryParams(queryParams map[string]string, data map[string]any) {
 	}
 }
 
-func unmarshalScenarioKeyData(data []byte) (keyData *types.MockScenarioKeyData, err error) {
+func unmarshalScenarioKeyData(data []byte) (keyData *types.APIKeyData, err error) {
 	rawYaml := string(data)
 	ndx := strings.Index(rawYaml, "response:")
 	if ndx != -1 {
 		rawYaml = rawYaml[0:ndx]
 	}
-	mockScenario := &types.MockScenario{}
-	err = yaml.Unmarshal([]byte(rawYaml), mockScenario)
+	scenario := &types.APIScenario{}
+	err = yaml.Unmarshal([]byte(rawYaml), scenario)
 	if err != nil {
 		return nil, err
 	}
-	keyData = mockScenario.ToKeyData()
+	keyData = scenario.ToKeyData()
 	if err := keyData.Validate(); err != nil {
 		return nil, err
 	}
@@ -556,7 +556,7 @@ func unmarshalScenarioKeyData(data []byte) (keyData *types.MockScenarioKeyData, 
 }
 
 func filterScenariosByPredicate(
-	all []*types.MockScenarioKeyData, target *types.MockScenarioKeyData) (matched []*types.MockScenarioKeyData) {
+	all []*types.APIKeyData, target *types.APIKeyData) (matched []*types.APIKeyData) {
 	if len(all) == 0 {
 		return all
 	}
@@ -573,7 +573,7 @@ func filterScenariosByPredicate(
 	return
 }
 
-func sumRequestCount(all []*types.MockScenarioKeyData) uint64 {
+func sumRequestCount(all []*types.APIKeyData) uint64 {
 	sumReqCount := uint64(0)
 	for _, next := range all {
 		sumReqCount += next.RequestCount
@@ -581,7 +581,7 @@ func sumRequestCount(all []*types.MockScenarioKeyData) uint64 {
 	return sumReqCount
 }
 
-func sortByUsageTime(res []*types.MockScenarioKeyData) {
+func sortByUsageTime(res []*types.APIKeyData) {
 	sort.Slice(res, func(i, j int) bool {
 		if res[i].LastUsageTime == res[j].LastUsageTime {
 			return res[i].Name < res[j].Name

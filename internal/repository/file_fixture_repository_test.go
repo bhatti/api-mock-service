@@ -28,7 +28,7 @@ func Test_ShouldSaveAndGetFixtures(t *testing.T) {
 }
 
 func Test_ShouldListMockFixtureNames(t *testing.T) {
-	// GIVEN a mock fixture repository
+	// GIVEN a fixture repository
 	fixtureRepository, err := NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	// AND a set of fixtures
@@ -47,7 +47,7 @@ func Test_ShouldListMockFixtureNames(t *testing.T) {
 }
 
 func Test_ShouldNotGetAfterDeletingFixtures(t *testing.T) {
-	// GIVEN a mock contents repository
+	// GIVEN a fixture repository
 	fixtureRepository, err := NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	// WHEN saving contents
@@ -61,7 +61,7 @@ func Test_ShouldNotGetAfterDeletingFixtures(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, data, saved)
 
-	// But WHEN DELETING the mock scenario
+	// But WHEN DELETING the scenario
 	err = fixtureRepository.Delete(types.Delete, "data1", FixturePath)
 	require.NoError(t, err)
 

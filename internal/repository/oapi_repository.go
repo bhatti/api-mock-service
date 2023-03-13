@@ -6,7 +6,7 @@ import (
 
 // OAPIRepository defines data store for OpenAPI specs
 type OAPIRepository interface {
-	// GetNames returns list of mock scenarios names
+	// GetNames returns list of open-api spec names
 	GetNames() []string
 
 	// Save saves OAPI spec

@@ -26,7 +26,7 @@ func Test_ShouldParseAndGenerateSaveCustomerTemplate(t *testing.T) {
 
 	// THEN it should not fail
 	require.NoError(t, err)
-	scenario := types.MockScenario{}
+	scenario := types.APIScenario{}
 	// AND it should return valid mock scenario
 	err = yaml.Unmarshal(body, &scenario)
 	require.NoError(t, err)

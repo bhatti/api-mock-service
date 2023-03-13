@@ -128,18 +128,18 @@ func ParseAPISpec(
 	return
 }
 
-// BuildMockScenario builds mock scenario from API spec
-func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*types.MockScenario, error) {
+// BuildMockScenario builds api scenario from open-API spec
+func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*types.APIScenario, error) {
 	req, err := api.Request.buildMockHTTPRequest(dataTemplate)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build request for mock scenario %s - %s due to %w", api.Path, api.Method, err)
+		return nil, fmt.Errorf("failed to build request for api scenario %s - %s due to %w", api.Path, api.Method, err)
 	}
 	res, err := api.Response.buildMockHTTPResponse(dataTemplate)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build response for mock scenario due to %w", err)
+		return nil, fmt.Errorf("failed to build response for api scenario due to %w", err)
 	}
 
-	spec := &types.MockScenario{
+	spec := &types.APIScenario{
 		Description:     api.Description,
 		Method:          api.Method,
 		Path:            api.Path,
@@ -147,10 +147,10 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 		Request:         req,
 		Response:        res,
 		WaitBeforeReply: 0,
-		Authentication:  make(map[string]types.MockAuthorization),
+		Authentication:  make(map[string]types.APIAuthorization),
 	}
 	for name, scheme := range api.SecuritySchemes {
-		spec.Authentication[name] = types.MockAuthorization{
+		spec.Authentication[name] = types.APIAuthorization{
 			Type:   scheme.Value.Type,
 			Name:   scheme.Value.Name,
 			In:     scheme.Value.In,

@@ -16,9 +16,9 @@ import (
 )
 
 func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
+	// GIVEN repository, consumerExecutor and controller for mock scenario
 	_ = rootPathParams{}
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -46,8 +46,8 @@ func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 }
 
 func Test_ShouldPlayGetProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -84,8 +84,8 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -116,8 +116,8 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayPostProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -147,8 +147,8 @@ func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayPutProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -178,8 +178,8 @@ func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -209,8 +209,8 @@ func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -240,8 +240,8 @@ func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -271,8 +271,8 @@ func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -302,8 +302,8 @@ func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
-	// GIVEN repository, player and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(buildTestConfig())
+	// GIVEN repository, consumerExecutor and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
 	require.NoError(t, err)
@@ -342,21 +342,21 @@ func buildTestConfig() *types.Configuration {
 	}
 }
 
-func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {
-	return &types.MockScenario{
+func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
+	return &types.APIScenario{
 		Method:      method,
 		Name:        name,
 		Path:        path,
 		Description: name,
 		Group:       "root-group",
-		Request: types.MockHTTPRequest{
+		Request: types.APIRequest{
 			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
 			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/(json|yaml)",
 				"Auth":                  "[0-9a-z]{10}",
 			},
 		},
-		Response: types.MockHTTPResponse{
+		Response: types.APIResponse{
 			Headers: map[string][]string{
 				"ETag":                  {strconv.Itoa(n)},
 				types.ContentTypeHeader: {"application/json"},

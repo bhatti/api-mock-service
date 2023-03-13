@@ -15,11 +15,11 @@ import (
 )
 
 func Test_InitializeSwaggerStructsForMockFixtureController(t *testing.T) {
-	_ = mockFixtureNamesResponseBody{}
-	_ = mockFixtureNamesParams{}
-	_ = mockFixtureCreateParams{}
-	_ = mockFixtureResponseBody{}
-	_ = mockFixtureIDParams{}
+	_ = apiFixtureNamesResponseBody{}
+	_ = apiFixtureNamesParams{}
+	_ = apiFixtureCreateParams{}
+	_ = apiFixtureResponseBody{}
+	_ = apiFixtureIDParams{}
 	_ = emptyResponse{}
 }
 
@@ -28,25 +28,25 @@ func Test_ShouldFailPostFixtureWithoutNameOrPath(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock fixture without name and path
-	err = ctrl.postMockFixture(ctx)
+	err = ctrl.postAPITestFixture(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
 	ctx.Params["method"] = "POST"
-	err = ctrl.postMockFixture(ctx)
+	err = ctrl.postAPITestFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.postMockFixture(ctx)
+	err = ctrl.postAPITestFixture(ctx)
 	require.Error(t, err)
 }
 
@@ -55,30 +55,30 @@ func Test_ShouldFailGetFixtureWithoutNameOrPath(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN getting mock fixture without name and path
-	err = ctrl.getMockFixture(ctx)
+	err = ctrl.getAPITestFixture(ctx)
 	// THEN it should fail
 	require.Error(t, err)
 
 	// AND it should fail given method but without name
 	ctx.Params["method"] = "GET"
-	err = ctrl.getMockFixture(ctx)
+	err = ctrl.getAPITestFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail to post given method but without name
-	err = ctrl.postMockFixture(ctx)
+	err = ctrl.postAPITestFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.getMockFixture(ctx)
+	err = ctrl.getAPITestFixture(ctx)
 	require.Error(t, err)
 }
 
@@ -87,26 +87,26 @@ func Test_ShouldFailGetFixtureNamesWithoutNameOrPath(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN getting mock fixture without name and path
-	err = ctrl.getMockFixtureNames(ctx)
+	err = ctrl.getAPITestFixtureNames(ctx)
 	// THEN it should fail
 	require.Error(t, err)
 
 	// AND it should fail given method but without name
 	ctx.Params["method"] = "GET"
-	err = ctrl.getMockFixtureNames(ctx)
+	err = ctrl.getAPITestFixtureNames(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again with name
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.getMockFixtureNames(ctx)
+	err = ctrl.getAPITestFixtureNames(ctx)
 	require.Error(t, err)
 }
 
@@ -115,25 +115,25 @@ func Test_ShouldFailDeleteFixtureWithoutNameOrPath(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN deleting mock fixture without name and path
-	err = ctrl.deleteMockFixture(ctx)
+	err = ctrl.deleteAPITestFixture(ctx)
 
 	// THEN it should fail
 	require.Error(t, err)
 	ctx.Params["method"] = "DELETE"
-	err = ctrl.deleteMockFixture(ctx)
+	err = ctrl.deleteAPITestFixture(ctx)
 	require.Error(t, err)
 
 	// AND it should fail again
 	require.Error(t, err)
 	ctx.Params["name"] = "data1"
-	err = ctrl.deleteMockFixture(ctx)
+	err = ctrl.deleteAPITestFixture(ctx)
 	require.Error(t, err)
 }
 
@@ -142,7 +142,7 @@ func Test_ShouldCreateAndGetMockFixture(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 	data := []byte("test data")
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -152,13 +152,13 @@ func Test_ShouldCreateAndGetMockFixture(t *testing.T) {
 	ctx.Params["method"] = "POST"
 	ctx.Params["name"] = "data1"
 	ctx.Params["path"] = "/ghi/klm"
-	err = ctrl.postMockFixture(ctx)
+	err = ctrl.postAPITestFixture(ctx)
 
 	// THEN it should return saved fixture
 	require.NoError(t, err)
 
 	// WHEN getting mock scenario by path
-	err = ctrl.getMockFixture(ctx)
+	err = ctrl.getAPITestFixture(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -169,7 +169,7 @@ func Test_ShouldCreateAndGetMockFixtureNames(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 	for i := 0; i < 10; i++ {
 		data := []byte(fmt.Sprintf("abc_%d", i))
 		reader := io.NopCloser(bytes.NewReader(data))
@@ -179,7 +179,7 @@ func Test_ShouldCreateAndGetMockFixtureNames(t *testing.T) {
 		ctx.Params["path"] = "/qfc/klm"
 
 		// WHEN creating mock fixture
-		err = ctrl.postMockFixture(ctx)
+		err = ctrl.postAPITestFixture(ctx)
 		// THEN it should return saved scenario
 		require.NoError(t, err)
 	}
@@ -188,7 +188,7 @@ func Test_ShouldCreateAndGetMockFixtureNames(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{})
 	ctx.Params["method"] = "GET"
 	ctx.Params["path"] = "/qfc/klm"
-	err = ctrl.getMockFixtureNames(ctx)
+	err = ctrl.getAPITestFixtureNames(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -201,7 +201,7 @@ func Test_ShouldCreateAndDeleteMockFixture(t *testing.T) {
 	mockFixtureRepository, err := repository.NewFileFixtureRepository(&types.Configuration{DataDir: "../../mock_tests"})
 	require.NoError(t, err)
 	webServer := web.NewStubWebServer()
-	ctrl := NewMockFixtureController(mockFixtureRepository, webServer)
+	ctrl := NewAPIFixtureController(mockFixtureRepository, webServer)
 
 	// WHEN creating mock scenario
 	data := []byte("test data")
@@ -210,18 +210,18 @@ func Test_ShouldCreateAndDeleteMockFixture(t *testing.T) {
 	ctx.Params["method"] = "DELETE"
 	ctx.Params["name"] = "data1"
 	ctx.Params["path"] = "/ghi/klm"
-	err = ctrl.postMockFixture(ctx)
+	err = ctrl.postAPITestFixture(ctx)
 
 	// THEN it should succeed
 	require.NoError(t, err)
 
 	// WHEN deleting mock scenario
-	err = ctrl.deleteMockFixture(ctx)
+	err = ctrl.deleteAPITestFixture(ctx)
 	// THEN it should succeed
 	require.NoError(t, err)
 
 	// AND get API should fail
-	err = ctrl.getMockFixture(ctx)
+	err = ctrl.getAPITestFixture(ctx)
 
 	// THEN it should not fail
 	require.Error(t, err)

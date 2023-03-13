@@ -29,7 +29,7 @@ The property-based/generative techniques reduce the size of test suites by autom
 
 ![use-case-2](images/mock_uc2.png)
 
-- As a service owner, I need to mock remote dependent service(s) based on a mock scenario defined in a template so that my service client can test service behavior per expected request/response in the template even when remote service is not fully implemented or accessible.
+- As a service owner, I need to mock remote dependent service(s) based on a api scenario defined in a template so that my service client can test service behavior per expected request/response in the template even when remote service is not fully implemented or accessible.
 
 ![use-case-3](images/mock_uc3.png)
 
@@ -57,11 +57,11 @@ API mock service for REST/HTTP based services with following features:
 - Generate large responses using the template language with dynamic loops so that you can test performance of your system.
 - Define multiple test scenarios for the API based on different input parameters or simulating various error cases that are difficult to reproduce with real services.
 - Store API request/responses locally as files so that it’s easy to port stubbed request/responses to any machine.
-- Allow users to define API request/response with various formats such as XML/JSON/YAML and upload them to the mock service.
-- Support test fixtures that can be uploaded to the mock service and can be used to generate mock responses.
+- Allow users to define API request/response with various formats such as XML/JSON/YAML and upload them to the api-mock-service.
+- Support test fixtures that can be uploaded to the api-mock-service and can be used to generate API responses.
 - Define a collection of helper methods to generate different kind of random data such as UDID, dates, URI, Regex, text and numeric data.
 - Ability to playback all test scenarios or a specific scenario and change API behavior dynamically with different input parameters.
-- Support multiple mock scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
+- Support multiple api scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
 - Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/contract/chaos testing.
 - Generate client requests for a remote API for contract, chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
 - Create a playground for testing APIs interactively so that users can learn the APIs quickly.
@@ -94,7 +94,7 @@ make && ./out/bin/api-mock-service
 
 For full command line options, execute api-mock-service -h that will show you command line options such as:
 ```bash
-Starts mock service
+Starts api-mock-service
 
 Usage:
   api-mock-service [flags]
@@ -108,7 +108,7 @@ Available Commands:
 
 Flags:
       --config string    config file
-      --dataDir string   data dir to store mock contracts and history
+      --dataDir string   data dir to store api contracts and history
   -h, --help             help for api-mock-service
       --httpPort int     HTTP port to listen
       --proxyPort int    Proxy port to listen
@@ -119,9 +119,9 @@ Use "api-mock-service [command] --help" for more information about a command.
 ## API Docs
 See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
 
-## Recording a Mock Scenario via HTTP/HTTPS Proxy
+## Recording a API Scenario via HTTP/HTTPS Proxy
 Once you have the API mock service running, the mock service will start two ports on startup, first port
-(default 8080) will be used to record/play mock scenarios, updating templates or uploading OpenAPIs. The second
+(default 8080) will be used to record/play API scenarios, updating templates or uploading OpenAPIs. The second
 port (default 8081) will setup an HTTP/HTTPS proxy server that you can point to record your scenarios, e.g.
 ```shell
 export http_proxy="http://localhost:8081"
@@ -130,7 +130,7 @@ export https_proxy="http://localhost:8081"
 curl -k -v -H "Authorization: Bearer sk_test_xxxx" https://api.stripe.com/v1/customers/cus_xxx/cash_balance
 ```
 
-Above curl command will automatically record all requests and responses and create mock scenario to play it back. For example, if you call the same 
+Above curl command will automatically record all requests and responses and create API scenario to play it back. For example, if you call the same 
 API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `X-Mock-Record: true`  header to your request.
 
 ### Proxy Settings in other languages
@@ -159,7 +159,7 @@ resp = requests.post(API_URL, json = DATA , headers = headers, proxies = proxy_s
 Note: You may need to disable strict origin policy in your browser if testing via browser, e.g. set 
 `about:config -> security.fileuri.strict_origin_policy` to `false` in Firefox.
 
-## Recording a Mock Scenario via API 
+## Recording a API Scenario via HTTP request
 Alternatively, you can use invoke an internal API as a pass through to invoke a remote API so that you can 
 automatically record API behavior and play it back later, e.g.
 
@@ -171,7 +171,7 @@ curl -H "X-Mock-Url: https://api.stripe.com/v1/customers/cus_**/cash_balance" \
 In above example, the curl command is passing the URL of real service as an HTTP header ``X-Mock-Url``. In addition, you can pass 
 other authorization headers as needed. 
 
-## Viewing the Recorded Mock Scenario
+## Viewing the Recorded API Scenario
 The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For example, you may see a file under:
 
 ```bash
@@ -246,7 +246,7 @@ response:
 wait_before_reply: 0s
 ```
 
-Above example defines a mock scenario for testing /v1/customers/cus_**/cash_balance path. A test scenario includes:
+Above example defines a api scenario for testing /v1/customers/cus_**/cash_balance path. A test scenario includes:
 ### Predicate
 - This is a boolean condition if you need to enable or disable a scenario test based on dynamic parameters or request count.
  
@@ -267,7 +267,7 @@ You can use these parameters so that test scenario is executed only when the par
     assert_headers_pattern:
       Content-Type: "application/json"
 ```
-The matching request parameters will be used to select the mock scenario to execute and you can use regular expressions to validate, 
+The matching request parameters will be used to select the api scenario to execute and you can use regular expressions to validate, 
 e.g. above example will be matched if content-type is `application/json` and it will validate that name query parameter is alphanumeric from 1-50 size.
 
 
@@ -301,7 +301,7 @@ Similarly, `assertions` defines a set of predicates to test against response fro
 ```
 Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result headers matches `Pragma: no-cache` header.
 
-## Playback the Mock API Scenario
+## Playback the API Scenario
 
 You can playback the recorded response from above example as follows:
 ```bash
@@ -329,7 +329,7 @@ for `X-Mock-Response-Status` to override HTTP status to return or `X-Mock-Wait-B
 
 
 ### Debug Headers from Playback
-The playback request will return mock-headers to indicate the selected mock scenario, path and request count, e.g.
+The playback request will return api-headers to indicate the selected API scenario, path and request count, e.g.
 
 ```
 X-Mock-Path: /v1/jobs/{jobId}/state
@@ -337,7 +337,7 @@ X-Mock-Request-Count: 13
 X-Mock-Scenario: setDefaultState-bfb86eb288c9abf2988822938ef6d4aa3bd654a15e77158b89f17b9319d6f4e4
 ```
 
-## Upload Mock API Scenario
+## Upload API Scenario
 You can customize the recorded scenario, e.g. you can add path variables to above API as follows:
 ```yaml
 method: GET
@@ -394,7 +394,7 @@ response:
 wait_before_reply: 1s
 ```
 
-In above example, I assigned a name stripe-cash-balance to the mock scenario and changed API path to 
+In above example, I assigned a name stripe-cash-balance to the api scenario and changed API path to 
 `/v1/customers/:customer/cash_balance` so that it can capture customer-id as a path variable. I added a regular expression to 
 ensure that the HTTP request includes an Authorization header matching `Bearer sk_test_[0-9a-fA-F]{10}$` and defined dynamic properties 
 such as `{{.customer}}, {{.page}} and {{.pageSize}}` so that they will be replaced at runtime.
@@ -424,7 +424,7 @@ and it will generate:
 }
 
 ```
-As you can see, the values of customer, page and pageSize are dynamically updated. You can upload multiple mock scenarios for the same API and the mock API service will play it back sequentially. For example, you can upload another scenario for above API as follows:
+As you can see, the values of customer, page and pageSize are dynamically updated. You can upload multiple api scenarios for the same API and the mock-api-service will play it back sequentially. For example, you can upload another scenario for above API as follows:
 ```yaml
 method: GET
 name: stripe-customer-failure
@@ -467,7 +467,7 @@ which will return response with following error response
 < Content-Length: 15
 ```
 
-## Dynamic Templates with Mock API Scenarios
+## Dynamic Templates with API Scenarios
 You can use loops and conditional primitives of template language (https://golangdocs.com/templates-in-golang) to generate dynamic responses as follows:
 ```yaml
 method: GET
@@ -626,7 +626,7 @@ The template syntax allows you to define a conditional logic such as:
     status_code: {{AnyInt 200 400}}
     {{end}}
 ```
-In above example, the mock API will return HTTP status 500 or 501 for every 10th request and 200 or 400 for other requests. You can use conditional syntax to simulate different error status or customize response.
+In above example, the API will return HTTP status 500 or 501 for every 10th request and 200 or 400 for other requests. You can use conditional syntax to simulate different error status or customize response.
 
 
 ### Loops
@@ -653,7 +653,7 @@ In above example, the mock API will return HTTP status 500 or 501 for every 10th
 ```
 
 ### Test fixtures
-The mock service allows you to upload a test fixture that you can refer in your template, e.g. 
+The api-mock-service allows you to upload a test fixture that you can refer in your template, e.g. 
 ```bash
   "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
 ```
@@ -704,7 +704,7 @@ This template file will generate content as follows:
  ], "Page": 2, "PageSize": 55, "Total": 55 }  
 ```
 
-## Playing back a specific mock scenario
+## Playing back a specific api scenario
 You can pass a header for ``X-Mock-Scenario`` to specify the name of scenario if you have multiple scenarios for the same API, e.g. 
 ```bash
 curl -v -H "X-Mock-Scenario: stripe-cash-balance" -H "Authorization: Bearer sk_test_0123456789" \
@@ -854,7 +854,7 @@ Following functions can be used to generate random data from a fixture file:
 - JSONFileProperty
 - YAMLFileProperty
 
-## Generate Mock API Behavior from OpenAPI or Swagger Specifications
+## Generate API Behavior from OpenAPI or Swagger Specifications
 If you are using Open API (https://www.openapis.org/) or Swagger for API specifications, you can simply upload a YAML based API specification. For example, here is a sample Open API specification from Twilio:
 ```yaml
 openapi: 3.0.1
@@ -928,7 +928,7 @@ curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/twilio_acc
 		http://localhost:8080/_oapi
 ```
 
-It will generate a mock scenarios for each API based on mime-type, status-code, parameter formats, regex, data ranges, e.g.,
+It will generate a api scenarios for each API based on mime-type, status-code, parameter formats, regex, data ranges, e.g.,
 
 ```yaml
 method: POST
@@ -959,7 +959,7 @@ response:
 wait_before_reply: 0s
 ```
 
-In above example, the account_sid uses regex to generate data and URI format to generate URL. Then invoke the mock API as:
+In above example, the account_sid uses regex to generate data and URI format to generate URL. Then invoke the API as:
 
 ```bash
 curl -v -X POST http://localhost:8080/v1/AuthTokens/Promote
@@ -976,8 +976,8 @@ Which will generate dynamic response as follows:
   "url": "https://Billy.com"
 }
 ```
-## Listing all Mock Scenarios
-You can list all available mock APIs using:
+## Listing all API Scenarios
+You can list all available APIs using:
 ```shell
 curl -v http://localhost:8080/_scenarios
 ```
@@ -1030,7 +1030,7 @@ The api-mock-service includes an embdded swagger-ui, which you can access using 
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi
 ```
 
-You can then play with APIs on your browser with URL `http://localhost:8000/swagger-ui/`, e.g., following is a screenshot for internal specifications for mock APIs:
+You can then play with APIs on your browser with URL `http://localhost:8000/swagger-ui/`, e.g., following is a screenshot for internal specifications for APIs:
 
 ![internal-api](images/swagger_internal.png)
 
@@ -1070,7 +1070,7 @@ This tool can be used for consumer-driven contract testing by generating stub re
 
 
 ## Contract Testing CLI
-In addition to serving a mock service, you can also use a builtin contract client to test remote services for stochastic testing
+In addition to serving a api-mock-service, you can also use a builtin contract client to test remote services for stochastic testing
 by generating random data based on regex or API specifications.
 For example, you may capture a test scenario for a remote API using http proxy such as:
 
@@ -1080,7 +1080,7 @@ export https_proxy="http://localhost:8081"
 curl -k -X POST https://jsonplaceholder.typicode.com/todos -d '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 ```
 
-This will capture a mock scenario such as:
+This will capture a API scenario such as:
 ```yaml
 method: POST
 name: recorded-todos-6ded24d43a7d3d65430958b467fbfbe75fe5bb9dfb7bb5821e4b3a0c5ac0f6c5
@@ -1195,7 +1195,7 @@ Above request will submit 10 requests to the todo server with random data and re
 }
 ```
 
-If you have a local captured data, you can also run contract client with a command line without running mock server, e.g.:
+If you have a local captured data, you can also run contract client with a command line without running api-mock server, e.g.:
 ```bash
 go run main.go contract --base_url https://jsonplaceholder.typicode.com --group todos --times 10
 ```
@@ -1210,7 +1210,7 @@ Note: the group path parameter in above URL is optional and you can omit if you 
 
 
 ## Chaining Scenarios for Group Contract Testing
-A mock scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 
+An API scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 
 You can capture or define multiple scenarios for a group and then execute them in a specific order and then pass certain properties 
 from one test to another. For example, following scenario creates a todo item with order 0 and captures `id` and `title` properties:
 ```yaml
@@ -1310,11 +1310,11 @@ When you execute contract tests using `curl -k -v -X POST http://localhost:8080/
 The output will show the attributes that were captured based on the `pipe_properties` configuration.
 
 ## Static Assets
-The mock service can serve any static assets from a user-defined folder and then serve it as follows:
+The api-mock-service can serve any static assets from a user-defined folder and then serve it as follows:
 ```bash
 cp static-file default_assets
 
-# execute the API mock server
+# execute the API-mock-server
 make && ./out/bin/api-mock-service
 
 # access assets

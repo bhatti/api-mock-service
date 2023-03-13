@@ -1,65 +1,6 @@
 definitions:
-  ContractRequest:
-    description: ContractRequest for generating random requests to an API
-    properties:
-      base_url:
-        description: BaseURL of remote server
-        type: string
-        x-go-name: BaseURL
-      execution_times:
-        description: ExecutionTimes for contract testing
-        format: int64
-        type: integer
-        x-go-name: ExecutionTimes
-      verbose:
-        description: Verbose setting
-        type: boolean
-        x-go-name: Verbose
-    type: object
-    x-go-package: github.com/bhatti/api-mock-service/internal/types
-  ContractResponse:
-    description: ContractResponse for response of contract request
-    properties:
-      errors:
-        additionalProperties:
-          type: string
-        type: object
-        x-go-name: Errors
-      failed:
-        format: int64
-        type: integer
-        x-go-name: Failed
-      metrics:
-        additionalProperties:
-          format: double
-          type: number
-        type: object
-        x-go-name: Metrics
-      results:
-        additionalProperties:
-          type: string
-        type: object
-        x-go-name: Results
-      succeeded:
-        format: int64
-        type: integer
-        x-go-name: Succeeded
-    type: object
-    x-go-package: github.com/bhatti/api-mock-service/internal/types
-  Duration:
-    description: |-
-      A Duration represents the elapsed time between two instants
-      as an int64 nanosecond count. The representation limits the
-      largest representable duration to approximately 290 years.
-    format: int64
-    type: integer
-    x-go-package: time
-  MethodType:
-    description: MethodType for HTTP
-    type: string
-    x-go-package: github.com/bhatti/api-mock-service/internal/types
-  MockAuthorization:
-    description: MockAuthorization defines mock auth parameters
+  APIAuthorization:
+    description: APIAuthorization defines mock auth parameters
     properties:
       format:
         type: string
@@ -81,8 +22,66 @@ definitions:
         x-go-name: URL
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
-  MockHTTPRequest:
-    description: MockHTTPRequest defines mock request for APIs
+  APIKeyData:
+    description: APIKeyData defines keys of api scenario for in-memory store
+    properties:
+      LastUsageTime:
+        description: LastUsageTime of key data
+        format: int64
+        type: integer
+      RequestCount:
+        description: RequestCount for the API
+        format: uint64
+        type: integer
+      assert_contents_pattern:
+        description: AssertContentsPattern for request optionally
+        type: string
+        x-go-name: AssertContentsPattern
+      assert_headers_pattern:
+        additionalProperties:
+          type: string
+        description: AssertHeadersPattern for api response
+        type: object
+        x-go-name: AssertHeadersPattern
+      assert_query_params_pattern:
+        additionalProperties:
+          type: string
+        description: AssertQueryParamsPattern for the API
+        type: object
+        x-go-name: AssertQueryParamsPattern
+      group:
+        description: Group of scenario
+        type: string
+        x-go-name: Group
+      method:
+        $ref: '#/definitions/MethodType'
+      name:
+        description: Name to uniquely identify the scenario
+        type: string
+        x-go-name: Name
+      order:
+        description: Order of scenario
+        format: int64
+        type: integer
+        x-go-name: Order
+      path:
+        description: Path for the API (excluding query params)
+        type: string
+        x-go-name: Path
+      predicate:
+        description: Predicate for the request
+        type: string
+        x-go-name: Predicate
+      tags:
+        description: Tags of scenario
+        items:
+          type: string
+        type: array
+        x-go-name: Tags
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  APIRequest:
+    description: APIRequest defines mock request for APIs
     properties:
       assert_contents_pattern:
         description: AssertContentsPattern for request optionally
@@ -134,8 +133,8 @@ definitions:
         x-go-name: QueryParams
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
-  MockHTTPResponse:
-    description: MockHTTPResponse defines mock response for APIs
+  APIResponse:
+    description: APIResponse defines mock response for APIs
     properties:
       assert_contents_pattern:
         description: AssertContentsPattern for request optionally
@@ -186,12 +185,12 @@ definitions:
         x-go-name: StatusCode
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
-  MockScenario:
-    description: MockScenario defines mock scenario for APIs
+  APIScenario:
+    description: APIScenario defines mock scenario for APIs
     properties:
       authentication:
         additionalProperties:
-          $ref: '#/definitions/MockAuthorization'
+          $ref: '#/definitions/APIAuthorization'
         description: Authentication for the API
         type: object
         x-go-name: Authentication
@@ -227,9 +226,9 @@ definitions:
         type: string
         x-go-name: Predicate
       request:
-        $ref: '#/definitions/MockHTTPRequest'
+        $ref: '#/definitions/APIRequest'
       response:
-        $ref: '#/definitions/MockHTTPResponse'
+        $ref: '#/definitions/APIResponse'
       tags:
         description: Tags of scenario
         items:
@@ -240,105 +239,114 @@ definitions:
         $ref: '#/definitions/Duration'
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
-  MockScenarioKeyData:
-    description: MockScenarioKeyData defines keys of mock scenario for in-memory store
+  Duration:
+    description: |-
+      A Duration represents the elapsed time between two instants
+      as an int64 nanosecond count. The representation limits the
+      largest representable duration to approximately 290 years.
+    format: int64
+    type: integer
+    x-go-package: time
+  MethodType:
+    description: MethodType for HTTP
+    type: string
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  ProducerContractRequest:
+    description: ProducerContractRequest for generating fuzz-data requests to an API
+      implementation for producer based contract testing
     properties:
-      LastUsageTime:
-        description: LastUsageTime of key data
+      base_url:
+        description: BaseURL of remote server
+        type: string
+        x-go-name: BaseURL
+      execution_times:
+        description: ExecutionTimes for contract testing
         format: int64
         type: integer
-      RequestCount:
-        description: RequestCount for the API
-        format: uint64
-        type: integer
-      assert_contents_pattern:
-        description: AssertContentsPattern for request optionally
-        type: string
-        x-go-name: AssertContentsPattern
-      assert_headers_pattern:
+        x-go-name: ExecutionTimes
+      verbose:
+        description: Verbose setting
+        type: boolean
+        x-go-name: Verbose
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
+  ProducerContractResponse:
+    description: ProducerContractResponse for returning summary of producer based
+      test results
+    properties:
+      errors:
         additionalProperties:
           type: string
-        description: AssertHeadersPattern for mock response
         type: object
-        x-go-name: AssertHeadersPattern
-      assert_query_params_pattern:
-        additionalProperties:
-          type: string
-        description: AssertQueryParamsPattern for the API
-        type: object
-        x-go-name: AssertQueryParamsPattern
-      group:
-        description: Group of scenario
-        type: string
-        x-go-name: Group
-      method:
-        $ref: '#/definitions/MethodType'
-      name:
-        description: Name to uniquely identify the scenario
-        type: string
-        x-go-name: Name
-      order:
-        description: Order of scenario
+        x-go-name: Errors
+      failed:
         format: int64
         type: integer
-        x-go-name: Order
-      path:
-        description: Path for the API (excluding query params)
-        type: string
-        x-go-name: Path
-      predicate:
-        description: Predicate for the request
-        type: string
-        x-go-name: Predicate
-      tags:
-        description: Tags of scenario
-        items:
+        x-go-name: Failed
+      metrics:
+        additionalProperties:
+          format: double
+          type: number
+        type: object
+        x-go-name: Metrics
+      results:
+        additionalProperties:
           type: string
-        type: array
-        x-go-name: Tags
+        type: object
+        x-go-name: Results
+      succeeded:
+        format: int64
+        type: integer
+        x-go-name: Succeeded
+      urls:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+        x-go-name: URLs
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
 paths:
   /_contracts/{group}:
     post:
       description: Plays contract client for a scenario by group
-      operationId: postMockContractGroupScenario
+      operationId: postProducerContractGroupScenario
       parameters:
       - in: body
         name: Body
         schema:
-          $ref: '#/definitions/ContractRequest'
+          $ref: '#/definitions/ProducerContractRequest'
       responses:
         "200":
-          $ref: '#/responses/mockScenarioContractResponse'
+          $ref: '#/responses/apiScenarioContractResponse'
       tags:
       - contract
   /_contracts/{method}/{name}/{path}:
     post:
       description: Plays contract client for a scenario by name
-      operationId: postMockContractScenario
+      operationId: postProducerContractScenario
       parameters:
       - in: body
         name: Body
         schema:
-          $ref: '#/definitions/ContractRequest'
+          $ref: '#/definitions/ProducerContractRequest'
       responses:
         "200":
-          $ref: '#/responses/mockScenarioContractResponse'
+          $ref: '#/responses/apiScenarioContractResponse'
       tags:
       - contract
   /_contracts/history/{group}:
     post:
       description: Plays contract client for a scenario by history
-      operationId: postMockContractHistory
+      operationId: postProducerContractHistory
       responses:
         "200":
-          $ref: '#/responses/mockScenarioContractResponse'
+          $ref: '#/responses/apiScenarioContractResponse'
       tags:
       - contract
   /_fixtures/{method}/{name}/{path}:
     delete:
-      operationId: getMockFixture
+      operationId: deleteAPITestFixture
       parameters:
       - in: path
         name: method
@@ -358,11 +366,12 @@ paths:
       responses:
         "200":
           $ref: '#/responses/emptyResponse'
-      summary: Deletes an existing mock fixtures based on name and path.
+      summary: Deletes an existing api-test-fixtures based on name and path.
       tags:
-      - mock-fixtures
+      - api-test-fixtures
     get:
-      operationId: getMockFixture
+      description: Finds an existing api-test-fixtures based on name and path
+      operationId: getAPITestFixture
       parameters:
       - in: path
         name: method
@@ -381,12 +390,11 @@ paths:
         x-go-name: Path
       responses:
         "200":
-          $ref: '#/responses/emptyResponse'
-      summary: Deletes an existing mock fixtures based on name and path.
+          $ref: '#/responses/apiFixtureResponse'
       tags:
-      - mock-fixtures
+      - api-test-fixtures
     post:
-      operationId: postMockFixture
+      operationId: postAPITestFixture
       parameters:
       - in: path
         name: method
@@ -412,14 +420,14 @@ paths:
           type: array
       responses:
         "200":
-          $ref: '#/responses/mockFixtureResponse'
-      summary: Creates new mock fixtures based on request body.
+          $ref: '#/responses/apiFixtureResponse'
+      summary: Creates new api-test-fixtures based on request body.
       tags:
-      - mock-fixtures
+      - api-test-fixtures
   /_fixtures/{method}/fixtures/{path}:
     get:
-      description: Returns mock fixture names
-      operationId: getMockFixtureNames
+      description: Returns api test-fixture names
+      operationId: getAPITestFixtureNames
       parameters:
       - in: path
         name: method
@@ -433,12 +441,12 @@ paths:
         x-go-name: Path
       responses:
         "200":
-          $ref: '#/responses/mockFixtureNamesResponse'
+          $ref: '#/responses/apiFixtureNamesResponse'
       tags:
-      - mock-fixtures
+      - api-test-fixtures
   /_oapi:
     post:
-      description: Creates new mock scenarios based on Open API v3
+      description: Creates new api scenarios based on Open API v3
       operationId: postMockOAPIScenario
       parameters:
       - in: body
@@ -450,7 +458,7 @@ paths:
           type: array
       responses:
         "200":
-          $ref: '#/responses/mockScenarioOAPIResponse'
+          $ref: '#/responses/apiScenarioOAPIResponse'
       tags:
       - open-api
   /_oapi/{group}:
@@ -459,7 +467,7 @@ paths:
       operationId: getOpenAPISpecsByGroup
       responses:
         "200":
-          $ref: '#/responses/mockOapiSpecIResponse'
+          $ref: '#/responses/apiOapiSpecIResponse'
       tags:
       - open-api
   /_oapi/{method}/{name}/{path}:
@@ -468,46 +476,46 @@ paths:
       operationId: open-apiGetOpenAPISpecsByScenario
       responses:
         "200":
-          $ref: '#/responses/mockOapiSpecIResponse'
+          $ref: '#/responses/apiOapiSpecIResponse'
   /_oapi/history/{name}:
     get:
       description: Generates OpenAPI specs for the scenario history
       operationId: getOpenAPISpecsByHistory
       responses:
         "200":
-          $ref: '#/responses/mockOapiSpecIResponse'
+          $ref: '#/responses/apiOapiSpecIResponse'
       tags:
       - open-api
   /_proxy:
     delete:
       description: Records scenario from DELETE request
-      operationId: deleteMockProxy
+      operationId: deleteAPIProxy
       tags:
-      - mock-proxy
+      - api-proxy
     get:
       description: Records scenario from GET request
-      operationId: getMockProxy
+      operationId: getAPIProxy
       tags:
-      - mock-proxy
+      - api-proxy
     post:
       description: Records scenario from POST request
-      operationId: postMockProxy
+      operationId: postAPIProxy
       tags:
-      - mock-proxy
+      - api-proxy
     put:
       description: Records scenario from PUT request
-      operationId: putMockProxy
+      operationId: putAPIProxy
       tags:
-      - mock-proxy
+      - api-proxy
   /_scenarios:
     get:
       description: List paths of all scenarios
       operationId: listMockScenario
       responses:
         "200":
-          $ref: '#/responses/mockScenarioPathsResponse'
+          $ref: '#/responses/apiScenarioPathsResponse'
       tags:
-      - mock-scenarios
+      - api-scenarios
     post:
       operationId: postMockScenario
       parameters:
@@ -529,16 +537,16 @@ paths:
       - in: body
         name: Body
         schema:
-          $ref: '#/definitions/MockScenario'
+          $ref: '#/definitions/APIScenario'
       responses:
         "200":
-          $ref: '#/responses/mockScenarioResponse'
-      summary: Creates new mock scenario based on request body.
+          $ref: '#/responses/apiScenarioResponse'
+      summary: Creates new api scenario based on request body.
       tags:
-      - mock-scenarios
+      - api-scenarios
   /_scenarios/{method}/{name}/{path}:
     delete:
-      operationId: getMockScenario
+      operationId: getAPIScenario
       parameters:
       - in: path
         name: method
@@ -558,11 +566,11 @@ paths:
       responses:
         "200":
           $ref: '#/responses/emptyResponse'
-      summary: Deletes an existing mock scenario based on id.
+      summary: Deletes an existing api scenario based on id.
       tags:
-      - mock-scenarios
+      - api-scenarios
     get:
-      operationId: getMockScenario
+      operationId: getAPIScenario
       parameters:
       - in: path
         name: method
@@ -582,13 +590,13 @@ paths:
       responses:
         "200":
           $ref: '#/responses/emptyResponse'
-      summary: Deletes an existing mock scenario based on id.
+      summary: Deletes an existing api scenario based on id.
       tags:
-      - mock-scenarios
+      - api-scenarios
   /_scenarios/{method}/names/{path}:
     get:
-      description: Returns mock scenario names
-      operationId: getMockNames
+      description: Returns api scenario names
+      operationId: getAPIScenarioNames
       parameters:
       - in: path
         name: method
@@ -602,27 +610,27 @@ paths:
         x-go-name: Path
       responses:
         "200":
-          $ref: '#/responses/mockNamesResponse'
+          $ref: '#/responses/apiNamesResponse'
       tags:
-      - mock-scenarios
+      - api-scenarios
   /_scenarios/groups:
     get:
-      description: Returns mock scenario groups
-      operationId: getGroups
+      description: Returns api scenario groups
+      operationId: getAPIGroups
       responses:
         "200":
-          $ref: '#/responses/mockGroupsResponse'
+          $ref: '#/responses/apiGroupsResponse'
       tags:
-      - mock-scenarios
+      - api-scenarios
   /_scenarios/history:
     get:
-      description: Fetches history of mock scenarios
-      operationId: mockScenarioHistory
+      description: Fetches history of api scenarios
+      operationId: apiScenarioHistory
       responses:
         "200":
-          $ref: '#/responses/mockHistoryResponse'
+          $ref: '#/responses/apiHistoryResponse'
       tags:
-      - mock-scenarios
+      - api-scenarios
   /{path}:
     delete:
       description: Play scenario from DELETE request
@@ -634,7 +642,7 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - mock-play
+      - api-consumer
     get:
       description: Play scenario from GET request
       operationId: getRoot
@@ -645,22 +653,22 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - mock-play
+      - api-consumer
     head:
       description: Play scenario from HEAD request
       operationId: headRoot
       tags:
-      - mock-play
+      - api-consumer
     options:
       description: Play scenario from OPTIONS request
       operationId: optionsRoot
       tags:
-      - mock-play
+      - api-consumer
     patch:
       description: Play scenario from PATCH request
       operationId: patchRoot
       tags:
-      - mock-play
+      - api-consumer
     post:
       description: Play scenario from POST request
       operationId: postRoot
@@ -671,7 +679,7 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - mock-play
+      - api-consumer
     put:
       description: Play scenario from PUT request
       operationId: putRoot
@@ -682,64 +690,64 @@ paths:
         type: string
         x-go-name: Path
       tags:
-      - mock-play
+      - api-consumer
 responses:
-  emptyResponse:
-    description: ""
-  mockFixtureNamesResponse:
-    description: MockFixture names
+  apiFixtureNamesResponse:
+    description: APIFixture names
     schema:
       items:
         type: string
       type: array
-  mockFixtureResponse:
-    description: MockFixture body for update
+  apiFixtureResponse:
+    description: APIFixture body for update
     schema:
       items:
         format: uint8
         type: integer
       type: array
-  mockGroupsResponse:
-    description: MockScenario groups
+  apiGroupsResponse:
+    description: APIScenario groups
     schema:
       items:
         type: string
       type: array
-  mockHistoryResponse:
-    description: MockScenario history scenario names
+  apiHistoryResponse:
+    description: APIScenario history scenario names
     schema:
       items:
         type: string
       type: array
-  mockNamesResponse:
-    description: MockScenario names
+  apiNamesResponse:
+    description: APIScenario names
     schema:
       items:
         type: string
       type: array
-  mockOapiSpecIResponse:
-    description: MockScenario body for update
+  apiOapiSpecIResponse:
+    description: APIScenario body for update
     schema:
       items:
         format: uint8
         type: integer
       type: array
-  mockScenarioContractResponse:
-    description: MockScenario body for update
+  apiScenarioContractResponse:
+    description: APIScenario body for update
     schema:
-      $ref: '#/definitions/ContractResponse'
-  mockScenarioOAPIResponse:
-    description: MockScenario body for update
+      $ref: '#/definitions/ProducerContractResponse'
+  apiScenarioOAPIResponse:
+    description: APIScenario body for update
     schema:
-      $ref: '#/definitions/MockScenario'
-  mockScenarioPathsResponse:
-    description: MockScenario summary and paths
+      $ref: '#/definitions/APIScenario'
+  apiScenarioPathsResponse:
+    description: APIScenario summary and paths
     schema:
       additionalProperties:
-        $ref: '#/definitions/MockScenarioKeyData'
+        $ref: '#/definitions/APIKeyData'
       type: object
-  mockScenarioResponse:
-    description: MockScenario body for update
+  apiScenarioResponse:
+    description: APIScenario body for update
     schema:
-      $ref: '#/definitions/MockScenario'
+      $ref: '#/definitions/APIScenario'
+  emptyResponse:
+    description: ""
 swagger: "2.0"

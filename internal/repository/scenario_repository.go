@@ -5,21 +5,21 @@ import (
 	"io"
 )
 
-// MockScenarioRepository defines data store for mock-scenarios
-type MockScenarioRepository interface {
-	// HistoryNames returns list of mock scenarios names
+// APIScenarioRepository defines data store for api-scenarios
+type APIScenarioRepository interface {
+	// HistoryNames returns list of api scenarios names
 	HistoryNames(group string) []string
 
-	// SaveHistory saves history MockScenario
-	SaveHistory(scenario *types.MockScenario) (err error)
+	// SaveHistory saves history APIScenario
+	SaveHistory(scenario *types.APIScenario) (err error)
 
 	// LoadHistory loads scenario
-	LoadHistory(name string) (*types.MockScenario, error)
+	LoadHistory(name string) (*types.APIScenario, error)
 
-	// GetGroups returns mock scenarios groups
+	// GetGroups returns api scenarios groups
 	GetGroups() []string
 
-	// GetScenariosNames returns mock scenarios for given Method and Path
+	// GetScenariosNames returns api scenarios for given Method and Path
 	GetScenariosNames(
 		method types.MethodType,
 		path string) ([]string, error)
@@ -28,32 +28,32 @@ type MockScenarioRepository interface {
 	SaveRaw(input io.ReadCloser) (err error)
 
 	// SaveYaml saves as yaml data
-	SaveYaml(key *types.MockScenarioKeyData, payload []byte) (err error)
+	SaveYaml(key *types.APIKeyData, payload []byte) (err error)
 
 	// LoadRaw loads matching scenario
 	LoadRaw(method types.MethodType, name string, path string) (b []byte, err error)
 
-	// Save MockScenario
-	Save(scenario *types.MockScenario) (err error)
+	// Save APIScenario
+	Save(scenario *types.APIScenario) (err error)
 
-	// Delete removes a mock scenario
+	// Delete removes a api scenario
 	Delete(
 		method types.MethodType,
 		scenarioName string,
 		path string) error
 
 	// LookupAll finds matching scenarios
-	LookupAll(key *types.MockScenarioKeyData) ([]*types.MockScenarioKeyData, int)
+	LookupAll(key *types.APIKeyData) ([]*types.APIKeyData, int)
 
 	// LookupAllByGroup finds matching scenarios by group
-	LookupAllByGroup(group string) []*types.MockScenarioKeyData
+	LookupAllByGroup(group string) []*types.APIKeyData
 
 	// LookupAllByPath finds matching scenarios by path
-	LookupAllByPath(path string) []*types.MockScenarioKeyData
+	LookupAllByPath(path string) []*types.APIKeyData
 
 	// Lookup finds top matching scenario that hasn't been used recently
-	Lookup(target *types.MockScenarioKeyData, data map[string]any) (*types.MockScenario, error)
+	Lookup(target *types.APIKeyData, data map[string]any) (*types.APIScenario, error)
 
 	// ListScenarioKeyData returns keys for all scenarios
-	ListScenarioKeyData(group string) []*types.MockScenarioKeyData
+	ListScenarioKeyData(group string) []*types.APIKeyData
 }

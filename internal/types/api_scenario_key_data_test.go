@@ -24,7 +24,7 @@ func Test_ShouldValidateBuildMockScenarioKeyData(t *testing.T) {
 
 func Test_ShouldNotValidateEmptyMockScenarioKeyData(t *testing.T) {
 	// GIVEN a empty mock keyData
-	keyData := &MockScenarioKeyData{}
+	keyData := &APIKeyData{}
 	// WHEN validating keyData
 	// THEN it should fail
 	require.Error(t, keyData.Validate())
@@ -40,7 +40,7 @@ func Test_ShouldNotValidateEmptyMockScenarioKeyData(t *testing.T) {
 }
 
 func Test_ShouldCompareNotEqualsMockScenarioKeyData(t *testing.T) {
-	keyData := &MockScenarioKeyData{}
+	keyData := &APIKeyData{}
 	keyData.Path = "/xxx"
 	require.Error(t, keyData.Equals(buildScenario().ToKeyData()))
 	keyData.Method = Post
@@ -52,7 +52,7 @@ func Test_ShouldCompareNotEqualsMockScenarioKeyData(t *testing.T) {
 }
 
 func Test_ShouldValidateWithoutPath(t *testing.T) {
-	keyData := &MockScenarioKeyData{}
+	keyData := &APIKeyData{}
 	keyData.Method = Post
 	require.Error(t, keyData.Equals(buildScenario().ToKeyData()))
 	keyData.Path = "/path1/test1/abc"

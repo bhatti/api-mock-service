@@ -13,35 +13,35 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// MockFixtureController structure
-type MockFixtureController struct {
-	fixtureRepository repository.MockFixtureRepository
+// APIFixtureController structure
+type APIFixtureController struct {
+	fixtureRepository repository.APIFixtureRepository
 }
 
-// NewMockFixtureController instantiates controller for updating mock-fixtures
-func NewMockFixtureController(
-	fixtureRepository repository.MockFixtureRepository,
-	webserver web.Server) *MockFixtureController {
-	ctrl := &MockFixtureController{
+// NewAPIFixtureController instantiates controller for updating api-test-fixtures
+func NewAPIFixtureController(
+	fixtureRepository repository.APIFixtureRepository,
+	webserver web.Server) *APIFixtureController {
+	ctrl := &APIFixtureController{
 		fixtureRepository: fixtureRepository,
 	}
 
-	webserver.GET("/_fixtures/:method/fixtures/:path", ctrl.getMockFixtureNames)
-	webserver.GET("/_fixtures/:method/:name/:path", ctrl.getMockFixture)
-	webserver.POST("/_fixtures/:method/:name/:path", ctrl.postMockFixture)
-	webserver.DELETE("/_fixtures/:method/:name/:path", ctrl.deleteMockFixture)
+	webserver.GET("/_fixtures/:method/fixtures/:path", ctrl.getAPITestFixtureNames)
+	webserver.GET("/_fixtures/:method/:name/:path", ctrl.getAPITestFixture)
+	webserver.POST("/_fixtures/:method/:name/:path", ctrl.postAPITestFixture)
+	webserver.DELETE("/_fixtures/:method/:name/:path", ctrl.deleteAPITestFixture)
 	return ctrl
 }
 
 // ********************************* HTTP Handlers ***********************************
 
-// postMockFixture handler
-// swagger:route POST /_fixtures/{method}/{name}/{path} mock-fixtures postMockFixture
-// Creates new mock fixtures based on request body.
+// postAPITestFixture handler
+// swagger:route POST /_fixtures/{method}/{name}/{path} api-test-fixtures postAPITestFixture
+// Creates new api-test-fixtures based on request body.
 // responses:
 //
-//	200: mockFixtureResponse
-func (msc *MockFixtureController) postMockFixture(c web.APIContext) (err error) {
+//	200: apiFixtureResponse
+func (msc *APIFixtureController) postAPITestFixture(c web.APIContext) (err error) {
 	var data []byte
 	data, c.Request().Body, err = utils.ReadAll(c.Request().Body)
 	if err != nil {
@@ -69,13 +69,13 @@ func (msc *MockFixtureController) postMockFixture(c web.APIContext) (err error) 
 	return c.NoContent(http.StatusOK)
 }
 
-// getMockFixture handler
-// swagger:route GET /_fixtures/{method}/{name}/{path} mock-fixtures getMockFixture
-// Finds an existing mock fixtures based on name and path
+// getAPITestFixture handler
+// swagger:route GET /_fixtures/{method}/{name}/{path} api-test-fixtures getAPITestFixture
+// Finds an existing api-test-fixtures based on name and path
 // responses:
 //
-//	200: mockFixtureResponse
-func (msc *MockFixtureController) getMockFixture(c web.APIContext) error {
+//	200: apiFixtureResponse
+func (msc *APIFixtureController) getAPITestFixture(c web.APIContext) error {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (msc *MockFixtureController) getMockFixture(c web.APIContext) error {
 	log.WithFields(log.Fields{
 		"Name": name,
 		"Path": path,
-	}).Debugf("getting mock fixture...")
+	}).Debugf("getting api test-fixture...")
 	b, err := msc.fixtureRepository.Get(
 		method,
 		name,
@@ -102,12 +102,12 @@ func (msc *MockFixtureController) getMockFixture(c web.APIContext) error {
 	return c.Blob(http.StatusOK, "application/binary", b)
 }
 
-// swagger:route GET /_fixtures/{method}/fixtures/{path} mock-fixtures getMockFixtureNames
-// Returns mock fixture names
+// swagger:route GET /_fixtures/{method}/fixtures/{path} api-test-fixtures getAPITestFixtureNames
+// Returns api test-fixture names
 // responses:
 //
-//	200: mockFixtureNamesResponse
-func (msc *MockFixtureController) getMockFixtureNames(c web.APIContext) error {
+//	200: apiFixtureNamesResponse
+func (msc *APIFixtureController) getAPITestFixtureNames(c web.APIContext) error {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func (msc *MockFixtureController) getMockFixtureNames(c web.APIContext) error {
 	}
 	log.WithFields(log.Fields{
 		"Path": path,
-	}).Infof("getting mock fixture names...")
+	}).Infof("getting api test-fixture names...")
 	names, err := msc.fixtureRepository.GetFixtureNames(method, path)
 	if err != nil {
 		return err
@@ -126,13 +126,13 @@ func (msc *MockFixtureController) getMockFixtureNames(c web.APIContext) error {
 	return c.JSON(http.StatusOK, names)
 }
 
-// deleteMockFixture handler
-// swagger:route DELETE /_fixtures/{method}/{name}/{path} mock-fixtures getMockFixture
-// Deletes an existing mock fixtures based on name and path.
+// deleteAPITestFixture handler
+// swagger:route DELETE /_fixtures/{method}/{name}/{path} api-test-fixtures deleteAPITestFixture
+// Deletes an existing api-test-fixtures based on name and path.
 // responses:
 //
 //	200: emptyResponse
-func (msc *MockFixtureController) deleteMockFixture(c web.APIContext) error {
+func (msc *APIFixtureController) deleteAPITestFixture(c web.APIContext) error {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func (msc *MockFixtureController) deleteMockFixture(c web.APIContext) error {
 	log.WithFields(log.Fields{
 		"Name": name,
 		"Path": path,
-	}).Infof("deleting mock fixture...")
+	}).Infof("deleting api test-fixture...")
 	err = msc.fixtureRepository.Delete(method, name, path)
 	if err != nil {
 		return err
@@ -158,9 +158,9 @@ func (msc *MockFixtureController) deleteMockFixture(c web.APIContext) error {
 
 // ********************************* Swagger types ***********************************
 
-// swagger:parameters postMockFixture
-// The params for mock-fixture
-type mockFixtureCreateParams struct {
+// swagger:parameters postAPITestFixture
+// The params for api-fixture
+type apiFixtureCreateParams struct {
 	// in:path
 	Method string `json:"method"`
 	// in:path
@@ -171,23 +171,23 @@ type mockFixtureCreateParams struct {
 	Body []byte
 }
 
-// MockFixture body for update
-// swagger:response mockFixtureResponse
-type mockFixtureResponseBody struct {
+// APIFixture body for update
+// swagger:response apiFixtureResponse
+type apiFixtureResponseBody struct {
 	// in:body
 	Body []byte
 }
 
-// MockFixture names
-// swagger:response mockFixtureNamesResponse
-type mockFixtureNamesResponseBody struct {
+// APIFixture names
+// swagger:response apiFixtureNamesResponse
+type apiFixtureNamesResponseBody struct {
 	// in:body
 	Body []string
 }
 
-// swagger:parameters deleteMockFixture getMockFixture
-// The parameters for finding mock-fixture by name and path
-type mockFixtureIDParams struct {
+// swagger:parameters deleteAPITestFixture getAPITestFixture
+// The parameters for finding api test-fixture by name and path
+type apiFixtureIDParams struct {
 	// in:path
 	Method string `json:"method"`
 	// in:path
@@ -196,9 +196,9 @@ type mockFixtureIDParams struct {
 	Path string `json:"path"`
 }
 
-// swagger:parameters getMockFixtureNames
-// The parameters for finding mock-fixture names by path
-type mockFixtureNamesParams struct {
+// swagger:parameters getAPITestFixtureNames
+// The parameters for finding api test-fixture names by path
+type apiFixtureNamesParams struct {
 	// in:path
 	Method string `json:"method"`
 	// in:path

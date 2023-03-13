@@ -51,7 +51,7 @@ var contractCmd = &cobra.Command{
 		}
 
 		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
-		contractReq := types.NewContractRequest(baseURL, executionTimes)
+		contractReq := types.NewProducerContractRequest(baseURL, executionTimes)
 		contractReq.Verbose = verbose
 		executor := contract.NewProducerExecutor(scenarioRepo, web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig)))
 		contractRes := executor.ExecuteByGroup(context.Background(), &http.Request{}, group, dataTemplate, contractReq)
@@ -67,7 +67,7 @@ func init() {
 	rootCmd.AddCommand(contractCmd)
 
 	contractCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	contractCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store mock scenarios")
+	contractCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store api test scenarios")
 	contractCmd.Flags().StringVar(&group, "group", "", "group of service APIs")
 	contractCmd.Flags().StringVar(&baseURL, "base_url", "", "base-url for remote service")
 	contractCmd.Flags().IntVar(&executionTimes, "times", 10, "execution times")

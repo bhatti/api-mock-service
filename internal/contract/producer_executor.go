@@ -23,13 +23,13 @@ import (
 
 // ProducerExecutor structure
 type ProducerExecutor struct {
-	scenarioRepository repository.MockScenarioRepository
+	scenarioRepository repository.APIScenarioRepository
 	client             web.HTTPClient
 }
 
 // NewProducerExecutor executes contracts for producers
 func NewProducerExecutor(
-	scenarioRepository repository.MockScenarioRepository,
+	scenarioRepository repository.APIScenarioRepository,
 	client web.HTTPClient) *ProducerExecutor {
 	return &ProducerExecutor{
 		scenarioRepository: scenarioRepository,
@@ -37,22 +37,22 @@ func NewProducerExecutor(
 	}
 }
 
-// Execute an API with mock data
+// Execute an API with fuzz data request
 func (x *ProducerExecutor) Execute(
 	ctx context.Context,
 	req *http.Request,
-	scenarioKey *types.MockScenarioKeyData,
+	scenarioKey *types.APIKeyData,
 	dataTemplate fuzz.DataTemplateRequest,
-	contractReq *types.ContractRequest,
-) *types.ContractResponse {
+	contractReq *types.ProducerContractRequest,
+) *types.ProducerContractResponse {
 	started := time.Now()
 	sli := metrics.NewMetrics()
 	sli.RegisterHistogram(scenarioKey.SafeName())
-	contractResponse := types.NewContractResponse()
+	contractResponse := types.NewProducerContractResponse()
 	log.WithFields(log.Fields{
-		"Component":       "ProducerExecutor",
-		"Scenario":        scenarioKey,
-		"ContractRequest": contractReq.String(),
+		"Component":               "ProducerExecutor",
+		"Scenario":                scenarioKey,
+		"ProducerContractRequest": contractReq.String(),
 	}).Infof("execute BEGIN")
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
@@ -71,32 +71,32 @@ func (x *ProducerExecutor) Execute(
 	contractResponse.Metrics = sli.Summary()
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
-		"Component":       "ProducerExecutor",
-		"Scenario":        scenarioKey,
-		"ContractRequest": contractReq.String(),
-		"Elapsed":         elapsed,
-		"Errors":          len(contractResponse.Errors),
-		"Metrics":         contractResponse.Metrics,
+		"Component":               "ProducerExecutor",
+		"Scenario":                scenarioKey,
+		"ProducerContractRequest": contractReq.String(),
+		"Elapsed":                 elapsed,
+		"Errors":                  len(contractResponse.Errors),
+		"Metrics":                 contractResponse.Metrics,
 	}).Infof("execute COMPLETED")
 	return contractResponse
 }
 
-// ExecuteByHistory executes execution history for an API with mock data
+// ExecuteByHistory executes execution history for an API with fuzz data request
 func (x *ProducerExecutor) ExecuteByHistory(
 	ctx context.Context,
 	req *http.Request,
 	group string,
 	dataTemplate fuzz.DataTemplateRequest,
-	contractReq *types.ContractRequest,
-) *types.ContractResponse {
+	contractReq *types.ProducerContractRequest,
+) *types.ProducerContractResponse {
 	started := time.Now()
 	execHistory := x.scenarioRepository.HistoryNames(group)
-	contractResponse := types.NewContractResponse()
+	contractResponse := types.NewProducerContractResponse()
 	log.WithFields(log.Fields{
-		"Component":       "ProducerExecutor",
-		"Group":           group,
-		"ContractRequest": contractReq.String(),
-		"History":         len(execHistory),
+		"Component":               "ProducerExecutor",
+		"Group":                   group,
+		"ProducerContractRequest": contractReq.String(),
+		"History":                 len(execHistory),
 	}).Infof("execute-by-history BEGIN")
 
 	sli := metrics.NewMetrics()
@@ -123,32 +123,32 @@ func (x *ProducerExecutor) ExecuteByHistory(
 	elapsed := time.Since(started).String()
 	contractResponse.Metrics = sli.Summary()
 	log.WithFields(log.Fields{
-		"Component":       "ProducerExecutor",
-		"Group":           group,
-		"ContractRequest": contractReq.String(),
-		"Elapsed":         elapsed,
-		"Errors":          len(contractResponse.Errors),
-		"Metrics":         contractResponse.Metrics,
+		"Component":               "ProducerExecutor",
+		"Group":                   group,
+		"ProducerContractRequest": contractReq.String(),
+		"Elapsed":                 elapsed,
+		"Errors":                  len(contractResponse.Errors),
+		"Metrics":                 contractResponse.Metrics,
 	}).Infof("execute-by-history COMPLETED")
 	return contractResponse
 }
 
-// ExecuteByGroup executes an API with mock data
+// ExecuteByGroup executes an API with fuzz data request
 func (x *ProducerExecutor) ExecuteByGroup(
 	ctx context.Context,
 	req *http.Request,
 	group string,
 	dataTemplate fuzz.DataTemplateRequest,
-	contractReq *types.ContractRequest,
-) *types.ContractResponse {
+	contractReq *types.ProducerContractRequest,
+) *types.ProducerContractResponse {
 	started := time.Now()
 	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
-	contractResponse := types.NewContractResponse()
+	contractResponse := types.NewProducerContractResponse()
 	log.WithFields(log.Fields{
-		"Component":       "ProducerExecutor",
-		"Group":           group,
-		"ContractRequest": contractReq.String(),
-		"ScenarioKeys":    scenarioKeys,
+		"Component":               "ProducerExecutor",
+		"Group":                   group,
+		"ProducerContractRequest": contractReq.String(),
+		"ScenarioKeys":            scenarioKeys,
 	}).Infof("execute-by-group BEGIN")
 
 	sort.Slice(scenarioKeys, func(i, j int) bool {
@@ -177,25 +177,25 @@ func (x *ProducerExecutor) ExecuteByGroup(
 	elapsed := time.Since(started).String()
 	contractResponse.Metrics = sli.Summary()
 	log.WithFields(log.Fields{
-		"Component":       "ProducerExecutor",
-		"Group":           group,
-		"ContractRequest": contractReq.String(),
-		"Elapsed":         elapsed,
-		"Errors":          len(contractResponse.Errors),
-		"ScenarioKeys":    scenarioKeys,
-		"Metrics":         contractResponse.Metrics,
+		"Component":               "ProducerExecutor",
+		"Group":                   group,
+		"ProducerContractRequest": contractReq.String(),
+		"Elapsed":                 elapsed,
+		"Errors":                  len(contractResponse.Errors),
+		"ScenarioKeys":            scenarioKeys,
+		"Metrics":                 contractResponse.Metrics,
 	}).Infof("execute-by-group COMPLETED")
 	return contractResponse
 }
 
-// execute an API with mock data
+// execute an API with fuzz data request
 func (x *ProducerExecutor) execute(
 	ctx context.Context,
 	req *http.Request,
 	url string,
-	scenario *types.MockScenario,
-	contractReq *types.ContractRequest,
-	contractRes *types.ContractResponse,
+	scenario *types.APIScenario,
+	contractReq *types.ProducerContractRequest,
+	contractRes *types.ProducerContractResponse,
 	dataTemplate fuzz.DataTemplateRequest,
 	sli *metrics.Metrics,
 ) (res any, err error) {
@@ -326,7 +326,7 @@ func (x *ProducerExecutor) execute(
 }
 
 func buildRequestBody(
-	scenario *types.MockScenario,
+	scenario *types.APIScenario,
 ) (string, io.ReadCloser) {
 	var contents string
 	if scenario.Request.Contents != "" {

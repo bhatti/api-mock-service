@@ -25,7 +25,7 @@ import (
 func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -91,7 +91,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -118,8 +118,8 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 			Method: "GET",
 			URL:    u,
 			Header: http.Header{
-				types.ContentTypeHeader: []string{"application/json"},
-				types.Authorization:     []string{"123456789"},
+				types.ContentTypeHeader:   []string{"application/json"},
+				types.AuthorizationHeader: []string{"123456789"},
 			},
 		})
 		err = player.Execute(ctx)
@@ -134,7 +134,7 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -180,7 +180,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -223,7 +223,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository and player
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -264,7 +264,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository and player
-	mockScenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -309,7 +309,7 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	// AND a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -317,7 +317,7 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 
 	b, err = fuzz.ParseTemplate("../../fixtures", b, map[string]any{"id": "123"})
 	require.NoError(t, err)
-	scenario := types.MockScenario{}
+	scenario := types.APIScenario{}
 	// AND it should return valid mock scenario
 	err = yaml.Unmarshal(b, &scenario)
 	require.NoError(t, err)
@@ -348,7 +348,7 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -392,7 +392,7 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario and fixture repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -418,7 +418,7 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario and fixture repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -445,7 +445,7 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario and fixture repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -472,7 +472,7 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 	config := buildTestConfig()
 	// GIVEN a mock scenario and fixture repository
-	scenarioRepository, err := repository.NewFileMockScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
@@ -500,19 +500,19 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func buildScenario(method types.MethodType, name string, path string, n int) *types.MockScenario {
-	return &types.MockScenario{
+func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
+	return &types.APIScenario{
 		Method:      method,
 		Name:        name,
 		Path:        path,
 		Description: name,
-		Request: types.MockHTTPRequest{
+		Request: types.APIRequest{
 			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
 			AssertHeadersPattern: map[string]string{
 				types.ContentTypeHeader: "application/json",
 			},
 		},
-		Response: types.MockHTTPResponse{
+		Response: types.APIResponse{
 			Headers: map[string][]string{
 				"ETag":                  {strconv.Itoa(n)},
 				types.ContentTypeHeader: {"application/json"},

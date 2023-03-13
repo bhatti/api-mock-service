@@ -33,8 +33,8 @@ const MockScenarioPath = "X-Mock-Path"
 // ContentTypeHeader header
 const ContentTypeHeader = "Content-Type"
 
-// Authorization constant
-const Authorization = "Authorization"
+// AuthorizationHeader constant
+const AuthorizationHeader = "Authorization"
 
 // MockRequestCount header
 const MockRequestCount = "X-Mock-Request-Count"
@@ -48,8 +48,8 @@ const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 // ScenarioExt extension
 const ScenarioExt = ".yaml"
 
-// MockAuthorization defines mock auth parameters
-type MockAuthorization struct {
+// APIAuthorization defines mock auth parameters
+type APIAuthorization struct {
 	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
 	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	In     string `json:"in,omitempty" yaml:"in,omitempty"`
@@ -58,8 +58,8 @@ type MockAuthorization struct {
 	URL    string `json:"url,omitempty" yaml:"url,omitempty"`
 }
 
-// MockHTTPRequest defines mock request for APIs
-type MockHTTPRequest struct {
+// APIRequest defines mock request for APIs
+type APIRequest struct {
 	// PathParams sample for the API
 	PathParams map[string]string `yaml:"path_params" json:"path_params"`
 	// QueryParams sample for the API
@@ -81,7 +81,7 @@ type MockHTTPRequest struct {
 }
 
 // ContentType find content-type
-func (r MockHTTPRequest) ContentType(defContentType string) string {
+func (r APIRequest) ContentType(defContentType string) string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
 			return fuzz.StripTypeTags(v)
@@ -91,7 +91,7 @@ func (r MockHTTPRequest) ContentType(defContentType string) string {
 }
 
 // AuthHeader finds AuthHeaderType
-func (r MockHTTPRequest) AuthHeader() string {
+func (r APIRequest) AuthHeader() string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == "AUTHORIZATION" {
 			return fuzz.StripTypeTags(v)
@@ -109,7 +109,7 @@ func SanitizeRegexValue(val string) string {
 }
 
 // BuildTemplateParams builds template
-func (r MockHTTPRequest) BuildTemplateParams(
+func (r APIRequest) BuildTemplateParams(
 	req *http.Request,
 	pathGroups map[string]string,
 	inHeaders map[string][]string,
@@ -171,7 +171,7 @@ func (r MockHTTPRequest) BuildTemplateParams(
 }
 
 // TargetHeader find header matching target
-func (r MockHTTPRequest) TargetHeader() string {
+func (r APIRequest) TargetHeader() string {
 	for k, v := range r.Headers {
 		if strings.Contains(strings.ToUpper(k), "TARGET") {
 			return fuzz.StripTypeTags(v)
@@ -181,7 +181,7 @@ func (r MockHTTPRequest) TargetHeader() string {
 }
 
 // Assert asserts response
-func (r MockHTTPRequest) Assert(
+func (r APIRequest) Assert(
 	queryParams map[string]string,
 	reqHeaders map[string][]string,
 	reqContents any,
@@ -250,7 +250,7 @@ func (r MockHTTPRequest) Assert(
 }
 
 // AssertContentsPatternOrContent helper method
-func (r MockHTTPRequest) AssertContentsPatternOrContent() string {
+func (r APIRequest) AssertContentsPatternOrContent() string {
 	if r.ExampleContents != "" {
 		return r.ExampleContents
 	}
@@ -260,8 +260,8 @@ func (r MockHTTPRequest) AssertContentsPatternOrContent() string {
 	return r.Contents
 }
 
-// MockHTTPResponse defines mock response for APIs
-type MockHTTPResponse struct {
+// APIResponse defines mock response for APIs
+type APIResponse struct {
 	// Headers for mock response
 	Headers map[string][]string `yaml:"headers" json:"headers"`
 	// Contents for request
@@ -283,7 +283,7 @@ type MockHTTPResponse struct {
 }
 
 // ContentType find content-type
-func (r MockHTTPResponse) ContentType(defContentType string) string {
+func (r APIResponse) ContentType(defContentType string) string {
 	for k, v := range r.Headers {
 		if strings.ToUpper(k) == strings.ToUpper(ContentTypeHeader) {
 			return fuzz.StripTypeTags(v[0])
@@ -293,7 +293,7 @@ func (r MockHTTPResponse) ContentType(defContentType string) string {
 }
 
 // Assert asserts response
-func (r MockHTTPResponse) Assert(
+func (r APIResponse) Assert(
 	resHeaders map[string][]string,
 	resContents any,
 	templateParams map[string]any) error {
@@ -345,7 +345,7 @@ func (r MockHTTPResponse) Assert(
 }
 
 // AssertContentsPatternOrContent helper method
-func (r MockHTTPResponse) AssertContentsPatternOrContent() string {
+func (r APIResponse) AssertContentsPatternOrContent() string {
 	if r.ExampleContents != "" {
 		return r.ExampleContents
 	}
@@ -355,8 +355,8 @@ func (r MockHTTPResponse) AssertContentsPatternOrContent() string {
 	return r.Contents
 }
 
-// MockScenario defines mock scenario for APIs
-type MockScenario struct {
+// APIScenario defines mock scenario for APIs
+type APIScenario struct {
 	// Method for HTTP API
 	Method MethodType `yaml:"method" json:"method"`
 	// Name to uniquely identify the scenario
@@ -376,11 +376,11 @@ type MockScenario struct {
 	// Predicate for the request
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// Authentication for the API
-	Authentication map[string]MockAuthorization `yaml:"authentication" json:"authentication"`
+	Authentication map[string]APIAuthorization `yaml:"authentication" json:"authentication"`
 	// Request for the API
-	Request MockHTTPRequest `yaml:"request" json:"request"`
+	Request APIRequest `yaml:"request" json:"request"`
 	// Response for the API
-	Response MockHTTPResponse `yaml:"response" json:"response"`
+	Response APIResponse `yaml:"response" json:"response"`
 	// WaitMillisBeforeReply for response
 	WaitBeforeReply time.Duration `yaml:"wait_before_reply" json:"wait_before_reply"`
 	// RequestCount of request
@@ -388,126 +388,126 @@ type MockScenario struct {
 }
 
 // ToKeyData converts scenario to key data
-func (ms *MockScenario) ToKeyData() *MockScenarioKeyData {
-	rawPath := NormalizePath(ms.Path, '/')
+func (api *APIScenario) ToKeyData() *APIKeyData {
+	rawPath := NormalizePath(api.Path, '/')
 	if !strings.HasPrefix(rawPath, "/") {
 		rawPath = "/" + rawPath
 	}
-	return &MockScenarioKeyData{
-		Method:                   ms.Method,
-		Name:                     ms.Name,
+	return &APIKeyData{
+		Method:                   api.Method,
+		Name:                     api.Name,
 		Path:                     rawPath,
-		Group:                    ms.Group,
-		Tags:                     ms.Tags,
-		Order:                    ms.Order,
-		Predicate:                ms.Predicate,
-		AssertQueryParamsPattern: ms.Request.AssertQueryParamsPattern,
-		AssertContentsPattern:    ms.Request.AssertContentsPattern,
-		AssertHeadersPattern:     ms.Request.AssertHeadersPattern,
+		Group:                    api.Group,
+		Tags:                     api.Tags,
+		Order:                    api.Order,
+		Predicate:                api.Predicate,
+		AssertQueryParamsPattern: api.Request.AssertQueryParamsPattern,
+		AssertContentsPattern:    api.Request.AssertContentsPattern,
+		AssertHeadersPattern:     api.Request.AssertHeadersPattern,
 	}
 }
 
 // String
-func (ms *MockScenario) String() string {
-	return string(ms.Method) + ms.Name + ms.Group + ms.Path
+func (api *APIScenario) String() string {
+	return string(api.Method) + api.Name + api.Group + api.Path
 }
 
 // SafeName strips invalid characters
-func (ms *MockScenario) SafeName() string {
-	return SanitizeNonAlphabet(ms.Name, "")
+func (api *APIScenario) SafeName() string {
+	return SanitizeNonAlphabet(api.Name, "")
 }
 
 // MethodPath helper method
-func (ms *MockScenario) MethodPath() string {
-	return strings.ToLower(string(ms.Method)) + "_" + SanitizeNonAlphabet(ms.Path, "_")
+func (api *APIScenario) MethodPath() string {
+	return strings.ToLower(string(api.Method)) + "_" + SanitizeNonAlphabet(api.Path, "_")
 }
 
 // MethodPathTarget helper method
-func (ms *MockScenario) MethodPathTarget() string {
-	return strings.ToLower(string(ms.Method)) + "_" + SanitizeNonAlphabet(ms.Path, "_") + // replace slashes
-		"_" + strings.ToLower(ms.Request.TargetHeader())
+func (api *APIScenario) MethodPathTarget() string {
+	return strings.ToLower(string(api.Method)) + "_" + SanitizeNonAlphabet(api.Path, "_") + // replace slashes
+		"_" + strings.ToLower(api.Request.TargetHeader())
 }
 
 // BuildURL helper method
-func (ms *MockScenario) BuildURL(overrideBaseURL string) string {
+func (api *APIScenario) BuildURL(overrideBaseURL string) string {
 	if overrideBaseURL == "" {
-		overrideBaseURL = ms.BaseURL
+		overrideBaseURL = api.BaseURL
 	}
-	return overrideBaseURL + ms.Path
+	return overrideBaseURL + api.Path
 }
 
 // Digest of scenario
-func (ms *MockScenario) Digest() string {
+func (api *APIScenario) Digest() string {
 	h := sha1.New()
-	h.Write([]byte(ms.Method))
-	h.Write([]byte(ms.Group))
-	h.Write([]byte(ms.Path))
-	h.Write([]byte(ms.Request.Contents))
-	for k, v := range ms.Request.AssertQueryParamsPattern {
+	h.Write([]byte(api.Method))
+	h.Write([]byte(api.Group))
+	h.Write([]byte(api.Path))
+	h.Write([]byte(api.Request.Contents))
+	for k, v := range api.Request.AssertQueryParamsPattern {
 		h.Write([]byte(k))
 		h.Write([]byte(v))
 	}
-	for k, v := range ms.Request.AssertHeadersPattern {
+	for k, v := range api.Request.AssertHeadersPattern {
 		h.Write([]byte(k))
 		h.Write([]byte(v))
 	}
-	h.Write([]byte(ms.Request.AssertContentsPattern))
-	h.Write([]byte(ms.Response.Contents))
-	h.Write([]byte(ms.Response.ContentsFile))
+	h.Write([]byte(api.Request.AssertContentsPattern))
+	h.Write([]byte(api.Response.Contents))
+	h.Write([]byte(api.Response.ContentsFile))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 // Validate scenario
-func (ms *MockScenario) Validate() error {
-	if ms.Method == "" {
+func (api *APIScenario) Validate() error {
+	if api.Method == "" {
 		return fmt.Errorf("method is not specified")
 	}
-	if ms.Path == "" {
+	if api.Path == "" {
 		return fmt.Errorf("path is not specified")
 	}
-	if len(ms.Path) > 200 {
-		return fmt.Errorf("path is too long %d", len(ms.Path))
+	if len(api.Path) > 200 {
+		return fmt.Errorf("path is too long %d", len(api.Path))
 	}
-	if matched, err := regexp.Match(`^[\w\d\.\-_\/\\:{}]+$`, []byte(ms.Path)); err == nil && !matched {
-		return fmt.Errorf("path is invalid with special characters '%s'", ms.Path)
+	if matched, err := regexp.Match(`^[\w\d\.\-_\/\\:{}]+$`, []byte(api.Path)); err == nil && !matched {
+		return fmt.Errorf("path is invalid with special characters '%s'", api.Path)
 	}
-	ms.Path = NormalizePath(ms.Path, '/')
-	if !strings.HasPrefix(ms.Path, "/") {
-		ms.Path = "/" + ms.Path
+	api.Path = NormalizePath(api.Path, '/')
+	if !strings.HasPrefix(api.Path, "/") {
+		api.Path = "/" + api.Path
 	}
-	if ms.Name == "" {
+	if api.Name == "" {
 		return fmt.Errorf("scenario name is not specified")
 	}
-	if len(ms.Name) > 200 {
-		return fmt.Errorf("scenario name is too long %d", len(ms.Name))
+	if len(api.Name) > 200 {
+		return fmt.Errorf("scenario name is too long %d", len(api.Name))
 	}
-	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(ms.Name)); err == nil && !matched {
-		return fmt.Errorf("scenario name is invalid with special characters %s", ms.Name)
+	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(api.Name)); err == nil && !matched {
+		return fmt.Errorf("scenario name is invalid with special characters %s", api.Name)
 	}
-	if len(ms.Response.Contents) > 1024*1024*1024 {
-		return fmt.Errorf("contents is too long %d", len(ms.Response.Contents))
+	if len(api.Response.Contents) > 1024*1024*1024 {
+		return fmt.Errorf("contents is too long %d", len(api.Response.Contents))
 	}
 	return nil
 }
 
 // NormalPath normalizes path
-func (ms *MockScenario) NormalPath(sep uint8) string {
-	return NormalizePath(ms.Path, sep)
+func (api *APIScenario) NormalPath(sep uint8) string {
+	return NormalizePath(api.Path, sep)
 }
 
 // SetName sets name
-func (ms *MockScenario) SetName(prefix string) {
-	ms.Name = ms.BuildName(prefix)
+func (api *APIScenario) SetName(prefix string) {
+	api.Name = api.BuildName(prefix)
 }
 
 // BuildName builds name
-func (ms *MockScenario) BuildName(prefix string) string {
-	return fmt.Sprintf("%s%s-%d-%s", prefix, NormalizeDirPath(ms.NormalName()), ms.Response.StatusCode, ms.Digest())
+func (api *APIScenario) BuildName(prefix string) string {
+	return fmt.Sprintf("%s%s-%d-%s", prefix, NormalizeDirPath(api.NormalName()), api.Response.StatusCode, api.Digest())
 }
 
 // NormalName normalizes name from path
-func (ms *MockScenario) NormalName() string {
-	return NormalizePath(ms.Path, '-')
+func (api *APIScenario) NormalName() string {
+	return NormalizePath(api.Path, '-')
 }
 
 // NormalizeDirPath normalizes dir path
