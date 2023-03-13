@@ -9,9 +9,9 @@
     "/_contracts/{group}": {
       "post": {
         "tags": [
-          "contract"
+          "producer-contract"
         ],
-        "description": "Plays contract client for a scenario by group",
+        "description": "Invokes service api-contract by group of api contracts",
         "operationId": "postProducerContractGroupScenario",
         "requestBody": {
           "content": {
@@ -41,9 +41,9 @@
     "/_contracts/{method}/{name}/{path}": {
       "post": {
         "tags": [
-          "contract"
+          "producer-contract"
         ],
-        "description": "Plays contract client for a scenario by name",
+        "description": "Plays contract client for a scenario by name\nInvokes service api-contract by method, contracts-name and path",
         "operationId": "postProducerContractScenario",
         "requestBody": {
           "content": {
@@ -73,9 +73,9 @@
     "/_contracts/history/{group}": {
       "post": {
         "tags": [
-          "contract"
+          "producer-contract"
         ],
-        "description": "Plays contract client for a scenario by history",
+        "description": "Invokes service api-contract using executed history of consumer contracts",
         "operationId": "postProducerContractHistory",
         "responses": {
           "200": {

@@ -309,7 +309,7 @@ definitions:
 paths:
   /_contracts/{group}:
     post:
-      description: Plays contract client for a scenario by group
+      description: Invokes service api-contract by group of api contracts
       operationId: postProducerContractGroupScenario
       parameters:
       - in: body
@@ -320,10 +320,12 @@ paths:
         "200":
           $ref: '#/responses/apiScenarioContractResponse'
       tags:
-      - contract
+      - producer-contract
   /_contracts/{method}/{name}/{path}:
     post:
-      description: Plays contract client for a scenario by name
+      description: |-
+        Plays contract client for a scenario by name
+        Invokes service api-contract by method, contracts-name and path
       operationId: postProducerContractScenario
       parameters:
       - in: body
@@ -334,16 +336,17 @@ paths:
         "200":
           $ref: '#/responses/apiScenarioContractResponse'
       tags:
-      - contract
+      - producer-contract
   /_contracts/history/{group}:
     post:
-      description: Plays contract client for a scenario by history
+      description: Invokes service api-contract using executed history of consumer
+        contracts
       operationId: postProducerContractHistory
       responses:
         "200":
           $ref: '#/responses/apiScenarioContractResponse'
       tags:
-      - contract
+      - producer-contract
   /_fixtures/{method}/{name}/{path}:
     delete:
       operationId: deleteAPITestFixture
