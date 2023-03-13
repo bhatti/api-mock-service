@@ -650,12 +650,15 @@
     "/_oapi/{method}/{name}/{path}": {
       "get": {
         "description": "Generates OpenAPI specs for the scenario",
-        "operationId": "open-apiGetOpenAPISpecsByScenario",
+        "operationId": "getOpenAPISpecsByScenario",
         "responses": {
           "200": {
             "$ref": "#/responses/apiOapiSpecIResponse"
           }
-        }
+        },
+        "tags": [
+          "open-api"
+        ]
       }
     },
     "/_oapi/history/{name}": {

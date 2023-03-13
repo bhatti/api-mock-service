@@ -109,7 +109,7 @@ func (moc *OAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err error
 }
 
 // getOpenAPISpecsByScenario handler
-// swagger:route GET /_oapi/{method}/{name}/{path} open-apiGetOpenAPISpecsByScenario
+// swagger:route GET /_oapi/{method}/{name}/{path} open-api getOpenAPISpecsByScenario
 // Generates OpenAPI specs for the scenario
 // responses:
 //

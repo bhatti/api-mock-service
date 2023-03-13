@@ -372,8 +372,11 @@
     },
     "/_oapi/{method}/{name}/{path}": {
       "get": {
+        "tags": [
+          "open-api"
+        ],
         "description": "Generates OpenAPI specs for the scenario",
-        "operationId": "open-apiGetOpenAPISpecsByScenario",
+        "operationId": "getOpenAPISpecsByScenario",
         "responses": {
           "200": {
             "description": "APIScenario body for update",
