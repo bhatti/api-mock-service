@@ -957,6 +957,9 @@ func RandStringMinMax(min int, max int) string {
 
 // RandString generator
 func RandString(n int) string {
+	if n > 0 {
+		return RandWord(n, n)
+	}
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 	s := make([]rune, n)
