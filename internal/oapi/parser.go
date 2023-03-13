@@ -28,7 +28,7 @@ func Parse(ctx context.Context, data []byte, dataTemplate fuzz.DataTemplateReque
 	if doc.Info != nil {
 		title = doc.Info.Title
 		if doc.Info.Version != "" {
-			title += "v" + doc.Info.Version
+			title += "_V" + doc.Info.Version
 		}
 	}
 	if title == "" {
