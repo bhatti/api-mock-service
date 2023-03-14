@@ -21,7 +21,8 @@ const amzDate = "X-Amz-Date"
 type awsLoggerAdapter struct {
 }
 
-var ignoredRequestHeaders = map[string]struct{}{
+// IgnoredRequestHeaders headers
+var IgnoredRequestHeaders = map[string]struct{}{
 	Authorization:             {},
 	"User-Agent":              {},
 	"Content-Length":          {},
@@ -104,7 +105,7 @@ func (s *awsSigner) AWSSign(req *http.Request, awsCred *credentials.Credentials)
 		log.WithField("StripHeader", header).Debug("Stripping Header:")
 		req.Header.Del(header)
 	}
-	for name := range ignoredRequestHeaders {
+	for name := range IgnoredRequestHeaders {
 		log.WithField("StripHeader", name).Debug("Stripping Header:")
 		req.Header.Del(name)
 	}

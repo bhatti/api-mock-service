@@ -157,6 +157,9 @@ func AddMockResponse(
 		}
 
 		scenario.Description = fmt.Sprintf("executed at %v for %s", time.Now().UTC(), req.URL)
+		for name := range web.IgnoredRequestHeaders {
+			delete(scenario.Request.Headers, name)
+		}
 		err = scenarioRepository.SaveHistory(scenario)
 	}
 

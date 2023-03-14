@@ -230,6 +230,9 @@ func saveMockResponse(
 	if err = scenarioRepository.Save(scenario); err != nil {
 		return "", err
 	}
+	for name := range web.IgnoredRequestHeaders {
+		delete(scenario.Request.Headers, name)
+	}
 	if err = scenarioRepository.SaveHistory(scenario); err != nil {
 		return "", err
 	}
