@@ -131,6 +131,114 @@ func Test_ShouldParseSeededUUID(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldParseRandFirstName(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandFirstName}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSeededFirstName(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededFirstName 0}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandUSState(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandUSState}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSeededUSState(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededUSState 0}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandUSStateAbbr(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandUSStateAbbr}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSeededUSStateAbbr(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededUSStateAbbr 0}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandUSPostal(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandUSPostal}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSeededUSPostal(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededUSPostal 0}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandAddress(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandAddress}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSeededAddress(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededAddress 0}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandLastName(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandLastName}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseSeededLastName(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{SeededLastName 0}}`)
+	// WHEN parsing city
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
 func Test_ShouldParseRandCity(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{RandCity}}`)
@@ -310,6 +418,33 @@ func Test_ShouldParseRandRegexPhone(t *testing.T) {
 func Test_ShouldParseRandRegexEmail(t *testing.T) {
 	// GIVEN a template string
 	b := []byte(`{{RandEmail}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandItin(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandItin}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandEin(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandEin}}`)
+	// WHEN parsing string regex
+	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
+	// THEN it should succeed
+	require.NoError(t, err)
+}
+
+func Test_ShouldParseRandSsn(t *testing.T) {
+	// GIVEN a template string
+	b := []byte(`{{RandSsn}}`)
 	// WHEN parsing string regex
 	_, err := ParseTemplate("../../fixtures", b, map[string]any{})
 	// THEN it should succeed

@@ -593,11 +593,26 @@ Go template allows custom functions that can provide customized behavior for gen
   "URL": "{{RandURL}}",
   "EnrollmentStatus": {{SeededBool $val}}
   "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
-  "City": {{RandCity}},
-  "Country": {{RandCountry}},
-  "CountryCode": {{RandCountryCode}},
-  "Completed": {{RandBool}},
-  "Date": {{TimeFormat "3:04PM"}},
+  "City": "{{RandCity}}",
+  "RandItin": "{{RandItin}}",
+  "RandEin": "{{RandEin}}",
+  "RandSsn": "{{RandSsn}}",
+  "RandFirstName": "{{RandFirstName}}",
+  "SeededFirstName": "{{SeededFirstName 0}}",
+  "RandUSState": "{{RandUSState}}",
+  "SeededUSState": "{{SeededUSState 0}}}",
+  "RandUSStateAbbr": "{{RandUSStateAbbr}}",
+  "SeededUSStateAbbr": "{{SeededUSStateAbbr 0}}",
+  "RandUSPostal":"{{RandUSPostal}}" ,
+  "SeededUSPostal": "{{SeededUSPostal 0}}",
+  "RandAddress": "{{RandAddress}}",
+  "SeededAddress": "{{SeededAddress 0}}",
+  "RandLastName": "{{RandLastName}}",
+  "SeededLastName": "{{SeededLastName 0}}",
+  "Country": "{{RandCountry}}",
+  "CountryCode": "{{RandCountryCode}}",
+  "Completed": "{{RandBool}}",
+  "Date": "{{TimeFormat `3:04PM`}}",
   "BatteryLevel": "{{RandFloatMax 100}}%",
   "Object": "{{RandDict}}",
   "IntHistory": {{RandIntArrayMinMax 1 10}},
@@ -781,6 +796,21 @@ Following functions can be used to generate numeric data within a range or with 
 - RandPhone
 - RandDict
 - RandCity
+- RandItin
+- RandEin
+- RandSsn
+- RandFirstName
+- SeededFirstName
+- RandUSState
+- SeededUSState
+- RandUSStateAbbr
+- SeededUSStateAbbr
+- RandUSPostal
+- SeededUSPostal
+- RandAddress
+- SeededAddress
+- RandLastName
+- SeededLastName
 - RandName
 - RandParagraph
 - RandPhone

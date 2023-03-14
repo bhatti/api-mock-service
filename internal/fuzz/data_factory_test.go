@@ -71,6 +71,47 @@ func Test_ShouldGetRandName(t *testing.T) {
 	require.True(t, RandName() != "")
 }
 
+func Test_ShouldGetRandItin(t *testing.T) {
+	require.Equal(t, 11, len(RandItin()))
+}
+
+func Test_ShouldGetRandSsn(t *testing.T) {
+	require.Equal(t, 11, len(RandSsn()))
+}
+
+func Test_ShouldGetRandEin(t *testing.T) {
+	require.Equal(t, 10, len(RandEin()))
+}
+
+func Test_ShouldGetRandFirstName(t *testing.T) {
+	require.True(t, RandFirstName() != "")
+}
+
+func Test_ShouldGetRandFirstMaleName(t *testing.T) {
+	require.True(t, RandFirstMaleName() != "")
+}
+
+func Test_ShouldGetRandFirstFemaleName(t *testing.T) {
+	require.True(t, RandFirstFemaleName() != "")
+}
+
+func Test_ShouldGetRandLastName(t *testing.T) {
+	require.True(t, RandLastName() != "")
+}
+
+func Test_ShouldGetRandUSState(t *testing.T) {
+	require.True(t, RandUSState() != "")
+}
+
+func Test_ShouldGetRandUSStateAbbr(t *testing.T) {
+	require.True(t, RandUSStateAbbr() != "")
+}
+
+func Test_ShouldGetRandAddress(t *testing.T) {
+	addr := RandAddress()
+	require.True(t, addr != "")
+}
+
 func Test_ShouldGetRandString(t *testing.T) {
 	require.True(t, RandString(5) != "")
 	require.Equal(t, "", RandString(0))

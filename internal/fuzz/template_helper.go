@@ -178,6 +178,53 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"RandEmail": func() string {
 			return RandEmail()
 		},
+		"RandItin": func() string {
+			return RandItin()
+		},
+		"RandEin": func() string {
+			return RandEin()
+		},
+		"RandSsn": func() string {
+			return RandSsn()
+		},
+		"RandFirstName": func() string {
+			return RandFirstName()
+		},
+		"SeededFirstName": func(seed any) string {
+			return SeededFirstName(toInt64(seed))
+		},
+		"RandUSState": func() string {
+			return RandUSState()
+		},
+		"SeededUSState": func(seed any) string {
+			return SeededUSState(toInt64(seed))
+		},
+		"RandUSStateAbbr": func() string {
+			return RandUSStateAbbr()
+		},
+		"SeededUSStateAbbr": func(seed any) string {
+			return SeededUSStateAbbr(toInt64(seed))
+		},
+		"RandUSPostal": func() string {
+			state := RandUSStateAbbr()
+			return SeededUSPostal(state, 0)
+		},
+		"SeededUSPostal": func(seed any) string {
+			state := SeededUSStateAbbr(toInt64(seed))
+			return SeededUSPostal(state, toInt64(seed))
+		},
+		"RandAddress": func() string {
+			return RandAddress()
+		},
+		"SeededAddress": func(seed any) string {
+			return SeededAddress(toInt64(seed))
+		},
+		"RandLastName": func() string {
+			return RandLastName()
+		},
+		"SeededLastName": func(seed any) string {
+			return SeededLastName(toInt64(seed))
+		},
 		"RandHost": func() string {
 			return RandHost()
 		},
