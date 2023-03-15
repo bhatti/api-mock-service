@@ -28,28 +28,28 @@ func NewAPIProxyController(
 // ********************************* HTTP Handlers ***********************************
 
 // swagger:route POST /_proxy api-proxy postAPIProxy
-// Records scenario from POST request
+// Records scenario for the API POST request.
 // responses: returns original response based on API
 func (msc *APIProxyController) postAPIProxy(c web.APIContext) (err error) {
 	return msc.recorder.Handle(c)
 }
 
 // swagger:route PUT /_proxy api-proxy putAPIProxy
-// Records scenario from PUT request
+// Records scenario for the API PUT request.
 // responses: returns original response based on API
 func (msc *APIProxyController) putAPIProxy(c web.APIContext) (err error) {
 	return msc.recorder.Handle(c)
 }
 
 // swagger:route GET /_proxy api-proxy getAPIProxy
-// Records scenario from GET request
+// Records scenario for the API GET request.
 // responses: returns original response based on API
 func (msc *APIProxyController) getAPIProxy(c web.APIContext) (err error) {
 	return msc.recorder.Handle(c)
 }
 
 // swagger:route DELETE /_proxy api-proxy deleteAPIProxy
-// Records scenario from DELETE request
+// Records scenario for the API DELETE request.
 // responses: returns original response based on API
 func (msc *APIProxyController) deleteAPIProxy(c web.APIContext) (err error) {
 	return msc.recorder.Handle(c)

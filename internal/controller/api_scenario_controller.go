@@ -64,7 +64,7 @@ func (msc *APIScenarioController) postMockScenario(c web.APIContext) (err error)
 
 // apiScenarioHistory handler
 // swagger:route GET /_scenarios/history api-scenarios apiScenarioHistory
-// Fetches history of api scenarios
+// Fetches history of api scenarios by group.
 // responses:
 //
 //	200: apiHistoryResponse
@@ -78,7 +78,7 @@ func (msc *APIScenarioController) apiScenarioHistory(c web.APIContext) error {
 
 // listAPIScenarioPaths handler
 // swagger:route GET /_scenarios api-scenarios listMockScenario
-// List paths of all scenarios
+// List paths of all scenarios with group if available.
 // responses:
 //
 //	200: apiScenarioPathsResponse
@@ -92,7 +92,7 @@ func (msc *APIScenarioController) listAPIScenarioPaths(c web.APIContext) error {
 
 // getAPIScenario handler
 // swagger:route GET /_scenarios/{method}/{name}/{path} api-scenarios getAPIScenario
-// Finds an existing api scenario based on method, name and path
+// Finds an existing api scenario based on method, name and path.
 // responses:
 //
 //	200: apiScenarioResponse
@@ -127,7 +127,7 @@ func (msc *APIScenarioController) getAPIScenario(c web.APIContext) error {
 }
 
 // swagger:route GET /_scenarios/groups api-scenarios getAPIGroups
-// Returns api scenario groups
+// Finds api scenario groups.
 // responses:
 //
 //	200: apiGroupsResponse
@@ -156,7 +156,7 @@ func (msc *APIScenarioController) getAPIGroups(c web.APIContext) error {
 }
 
 // swagger:route GET /_scenarios/{method}/names/{path} api-scenarios getAPIScenarioNames
-// Returns api scenario names
+// Finds api scenario names by method and path.
 // responses:
 //
 //	200: apiNamesResponse

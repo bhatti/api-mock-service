@@ -55,7 +55,7 @@
         "tags": [
           "producer-contract"
         ],
-        "description": "Plays contract client for a scenario by name\nInvokes service api-contract by method, contracts-name and path.",
+        "summary": "Invokes service api-contract by method, contracts-name and path.",
         "operationId": "postProducerContractScenarioByPath",
         "parameters": [
           {
@@ -549,28 +549,28 @@
         "tags": [
           "api-proxy"
         ],
-        "description": "Records scenario from GET request",
+        "summary": "Records scenario for the API GET request.",
         "operationId": "getAPIProxy"
       },
       "put": {
         "tags": [
           "api-proxy"
         ],
-        "description": "Records scenario from PUT request",
+        "summary": "Records scenario for the API PUT request.",
         "operationId": "putAPIProxy"
       },
       "post": {
         "tags": [
           "api-proxy"
         ],
-        "description": "Records scenario from POST request",
+        "summary": "Records scenario for the API POST request.",
         "operationId": "postAPIProxy"
       },
       "delete": {
         "tags": [
           "api-proxy"
         ],
-        "description": "Records scenario from DELETE request",
+        "summary": "Records scenario for the API DELETE request.",
         "operationId": "deleteAPIProxy"
       }
     },
@@ -579,7 +579,7 @@
         "tags": [
           "api-scenarios"
         ],
-        "description": "List paths of all scenarios",
+        "summary": "List paths of all scenarios with group if available.",
         "operationId": "listMockScenario",
         "responses": {
           "200": {
@@ -757,7 +757,7 @@
         "tags": [
           "api-scenarios"
         ],
-        "description": "Returns api scenario names",
+        "summary": "Finds api scenario names by method and path.",
         "operationId": "getAPIScenarioNames",
         "parameters": [
           {
@@ -803,7 +803,7 @@
         "tags": [
           "api-scenarios"
         ],
-        "description": "Returns api scenario groups",
+        "summary": "Finds api scenario groups.",
         "operationId": "getAPIGroups",
         "responses": {
           "200": {
@@ -827,7 +827,7 @@
         "tags": [
           "api-scenarios"
         ],
-        "description": "Fetches history of api scenarios",
+        "summary": "Fetches history of api scenarios by group.",
         "operationId": "apiScenarioHistory",
         "responses": {
           "200": {

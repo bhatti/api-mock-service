@@ -430,7 +430,6 @@
     },
     "/_contracts/{method}/{name}/{path}": {
       "post": {
-        "description": "Plays contract client for a scenario by name\nInvokes service api-contract by method, contracts-name and path.",
         "operationId": "postProducerContractScenarioByPath",
         "parameters": [
           {
@@ -467,6 +466,7 @@
             "$ref": "#/responses/apiScenarioContractResponse"
           }
         },
+        "summary": "Invokes service api-contract by method, contracts-name and path.",
         "tags": [
           "producer-contract"
         ]
@@ -763,29 +763,29 @@
     },
     "/_proxy": {
       "delete": {
-        "description": "Records scenario from DELETE request",
         "operationId": "deleteAPIProxy",
+        "summary": "Records scenario for the API DELETE request.",
         "tags": [
           "api-proxy"
         ]
       },
       "get": {
-        "description": "Records scenario from GET request",
         "operationId": "getAPIProxy",
+        "summary": "Records scenario for the API GET request.",
         "tags": [
           "api-proxy"
         ]
       },
       "post": {
-        "description": "Records scenario from POST request",
         "operationId": "postAPIProxy",
+        "summary": "Records scenario for the API POST request.",
         "tags": [
           "api-proxy"
         ]
       },
       "put": {
-        "description": "Records scenario from PUT request",
         "operationId": "putAPIProxy",
+        "summary": "Records scenario for the API PUT request.",
         "tags": [
           "api-proxy"
         ]
@@ -793,13 +793,13 @@
     },
     "/_scenarios": {
       "get": {
-        "description": "List paths of all scenarios",
         "operationId": "listMockScenario",
         "responses": {
           "200": {
             "$ref": "#/responses/apiScenarioPathsResponse"
           }
         },
+        "summary": "List paths of all scenarios with group if available.",
         "tags": [
           "api-scenarios"
         ]
@@ -921,7 +921,6 @@
     },
     "/_scenarios/{method}/names/{path}": {
       "get": {
-        "description": "Returns api scenario names",
         "operationId": "getAPIScenarioNames",
         "parameters": [
           {
@@ -944,6 +943,7 @@
             "$ref": "#/responses/apiNamesResponse"
           }
         },
+        "summary": "Finds api scenario names by method and path.",
         "tags": [
           "api-scenarios"
         ]
@@ -951,13 +951,13 @@
     },
     "/_scenarios/groups": {
       "get": {
-        "description": "Returns api scenario groups",
         "operationId": "getAPIGroups",
         "responses": {
           "200": {
             "$ref": "#/responses/apiGroupsResponse"
           }
         },
+        "summary": "Finds api scenario groups.",
         "tags": [
           "api-scenarios"
         ]
@@ -965,13 +965,13 @@
     },
     "/_scenarios/history": {
       "get": {
-        "description": "Fetches history of api scenarios",
         "operationId": "apiScenarioHistory",
         "responses": {
           "200": {
             "$ref": "#/responses/apiHistoryResponse"
           }
         },
+        "summary": "Fetches history of api scenarios by group.",
         "tags": [
           "api-scenarios"
         ]

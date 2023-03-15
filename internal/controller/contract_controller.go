@@ -74,7 +74,6 @@ func (mcc *ProducerContractController) postProducerContractGroupScenario(c web.A
 
 // postProducerContractScenarioByPath handler
 // swagger:route POST /_contracts/{method}/{name}/{path} producer-contract postProducerContractScenarioByPath
-// Plays contract client for a scenario by name
 // Invokes service api-contract by method, contracts-name and path.
 // responses:
 //
