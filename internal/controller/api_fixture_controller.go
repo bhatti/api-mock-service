@@ -71,7 +71,7 @@ func (msc *APIFixtureController) postAPITestFixture(c web.APIContext) (err error
 
 // getAPITestFixture handler
 // swagger:route GET /_fixtures/{method}/{name}/{path} api-test-fixtures getAPITestFixture
-// Finds an existing api-test-fixtures based on name and path
+// Finds an existing api-test-fixtures based on name and path.
 // responses:
 //
 //	200: apiFixtureResponse
@@ -102,8 +102,9 @@ func (msc *APIFixtureController) getAPITestFixture(c web.APIContext) error {
 	return c.Blob(http.StatusOK, "application/binary", b)
 }
 
+// getAPITestFixtureNames handler
 // swagger:route GET /_fixtures/{method}/fixtures/{path} api-test-fixtures getAPITestFixtureNames
-// Returns api test-fixture names
+// Finds api test-fixture names for given method and path.
 // responses:
 //
 //	200: apiFixtureNamesResponse

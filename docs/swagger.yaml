@@ -309,7 +309,6 @@ definitions:
 paths:
   /_contracts/{group}:
     post:
-      description: Invokes service api-contract by group of api contracts
       operationId: postProducerContractGroupScenario
       parameters:
       - in: path
@@ -324,13 +323,14 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiScenarioContractResponse'
+      summary: Invokes service api-contract by group of api contracts.
       tags:
       - producer-contract
   /_contracts/{method}/{name}/{path}:
     post:
       description: |-
         Plays contract client for a scenario by name
-        Invokes service api-contract by method, contracts-name and path
+        Invokes service api-contract by method, contracts-name and path.
       operationId: postProducerContractScenarioByPath
       parameters:
       - in: path
@@ -359,8 +359,6 @@ paths:
       - producer-contract
   /_contracts/history/{group}:
     post:
-      description: Invokes service api-contract using executed history of consumer
-        contracts
       operationId: postProducerContractHistoryByGroup
       parameters:
       - in: path
@@ -375,6 +373,7 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiScenarioContractResponse'
+      summary: Invokes service api-contract using executed history of consumer contracts.
       tags:
       - producer-contract
   /_fixtures/{method}/{name}/{path}:
@@ -403,7 +402,6 @@ paths:
       tags:
       - api-test-fixtures
     get:
-      description: Finds an existing api-test-fixtures based on name and path
       operationId: getAPITestFixture
       parameters:
       - in: path
@@ -424,6 +422,7 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiFixtureResponse'
+      summary: Finds an existing api-test-fixtures based on name and path.
       tags:
       - api-test-fixtures
     post:
@@ -459,7 +458,6 @@ paths:
       - api-test-fixtures
   /_fixtures/{method}/fixtures/{path}:
     get:
-      description: Returns api test-fixture names
       operationId: getAPITestFixtureNames
       parameters:
       - in: path
@@ -475,11 +473,11 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiFixtureNamesResponse'
+      summary: Finds api test-fixture names for given method and path.
       tags:
       - api-test-fixtures
   /_oapi:
     post:
-      description: Creates new api scenarios based on Open API v3
       operationId: postMockOAPIScenario
       parameters:
       - in: body
@@ -492,11 +490,11 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiScenarioOAPIResponse'
+      summary: Creates new api scenarios based on Open API v3 uploaded by user.
       tags:
       - open-api
   /_oapi/{group}:
     get:
-      description: Generates OpenAPI specs for the scenario group
       operationId: getOpenAPISpecsByGroup
       parameters:
       - in: path
@@ -507,11 +505,11 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiOapiSpecIResponse'
+      summary: Generates OpenAPI specs by group of API scenarios.
       tags:
       - open-api
   /_oapi/{method}/{name}/{path}:
     get:
-      description: Generates OpenAPI specs for the scenario
       operationId: getOpenAPISpecsByScenario
       parameters:
       - in: path
@@ -532,11 +530,11 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiOapiSpecIResponse'
+      summary: Generates OpenAPI specs for the API scenario by method, name and path.
       tags:
       - open-api
   /_oapi/history/{name}:
     get:
-      description: Generates OpenAPI specs for the scenario history
       operationId: getOpenAPISpecsByHistory
       parameters:
       - description: Name of open-api spec
@@ -548,6 +546,8 @@ paths:
       responses:
         "200":
           $ref: '#/responses/apiOapiSpecIResponse'
+      summary: Generates OpenAPI specs based on name of API scenario from execution
+        history.
       tags:
       - open-api
   /_proxy:
@@ -697,7 +697,6 @@ paths:
       - api-scenarios
   /{path}:
     delete:
-      description: Play scenario from DELETE request
       operationId: deleteRoot
       parameters:
       - in: path
@@ -705,10 +704,11 @@ paths:
         required: true
         type: string
         x-go-name: Path
+      summary: Play API scenario for previously defined API contract based on DELETE
+        request.
       tags:
       - consumer-contract
     get:
-      description: Play scenario from GET request
       operationId: getRoot
       parameters:
       - in: path
@@ -716,25 +716,29 @@ paths:
         required: true
         type: string
         x-go-name: Path
+      summary: Play API scenario for previously defined API contract based on GET
+        request.
       tags:
       - consumer-contract
     head:
-      description: Play scenario from HEAD request
       operationId: headRoot
+      summary: Play API scenario for previously defined API contract based on HEAD
+        request.
       tags:
       - consumer-contract
     options:
-      description: Play scenario from OPTIONS request
       operationId: optionsRoot
+      summary: Play API scenario for previously defined API contract based on OPTIONS
+        request.
       tags:
       - consumer-contract
     patch:
-      description: Play scenario from PATCH request
       operationId: patchRoot
+      summary: Play API scenario for previously defined API contract based on PATCH
+        request.
       tags:
       - consumer-contract
     post:
-      description: Play scenario from POST request
       operationId: postRoot
       parameters:
       - in: path
@@ -742,10 +746,11 @@ paths:
         required: true
         type: string
         x-go-name: Path
+      summary: Play API scenario for previously defined API contract based on POST
+        request.
       tags:
       - consumer-contract
     put:
-      description: Play scenario from PUT request
       operationId: putRoot
       parameters:
       - in: path
@@ -753,6 +758,8 @@ paths:
         required: true
         type: string
         x-go-name: Path
+      summary: Play API scenario for previously defined API contract based on PUT
+        request.
       tags:
       - consumer-contract
 responses:

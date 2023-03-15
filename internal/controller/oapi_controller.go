@@ -47,7 +47,7 @@ func NewOAPIController(
 
 // getOpenAPISpecsByGroup handler
 // swagger:route GET /_oapi/{group} open-api getOpenAPISpecsByGroup
-// Generates OpenAPI specs for the scenario group
+// Generates OpenAPI specs by group of API scenarios.
 // responses:
 //
 //	200: apiOapiSpecIResponse
@@ -86,7 +86,7 @@ func (moc *OAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err error) 
 
 // getOpenAPISpecsByHistory handler
 // swagger:route GET /_oapi/history/{name} open-api getOpenAPISpecsByHistory
-// Generates OpenAPI specs for the scenario history
+// Generates OpenAPI specs based on name of API scenario from execution history.
 // responses:
 //
 //	200: apiOapiSpecIResponse
@@ -110,7 +110,7 @@ func (moc *OAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err error
 
 // getOpenAPISpecsByScenario handler
 // swagger:route GET /_oapi/{method}/{name}/{path} open-api getOpenAPISpecsByScenario
-// Generates OpenAPI specs for the scenario
+// Generates OpenAPI specs for the API scenario by method, name and path.
 // responses:
 //
 //	200: apiOapiSpecIResponse
@@ -146,7 +146,7 @@ func (moc *OAPIController) getOpenAPISpecsByScenario(c web.APIContext) (err erro
 
 // postMockOAPIScenario handler
 // swagger:route POST /_oapi open-api postMockOAPIScenario
-// Creates new api scenarios based on Open API v3
+// Creates new api scenarios based on Open API v3 uploaded by user.
 // responses:
 //
 //	200: apiScenarioOAPIResponse

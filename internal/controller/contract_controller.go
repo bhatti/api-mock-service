@@ -37,7 +37,7 @@ func NewProducerContractController(
 
 // postProducerContractHistoryByGroup handler
 // swagger:route POST /_contracts/history/{group} producer-contract postProducerContractHistoryByGroup
-// Invokes service api-contract using executed history of consumer contracts
+// Invokes service api-contract using executed history of consumer contracts.
 // responses:
 //
 //	200: apiScenarioContractResponse
@@ -54,7 +54,7 @@ func (mcc *ProducerContractController) postProducerContractHistoryByGroup(c web.
 
 // postProducerContractGroupScenario handler
 // swagger:route POST /_contracts/{group} producer-contract postProducerContractGroupScenario
-// Invokes service api-contract by group of api contracts
+// Invokes service api-contract by group of api contracts.
 // responses:
 //
 //	200: apiScenarioContractResponse
@@ -75,7 +75,7 @@ func (mcc *ProducerContractController) postProducerContractGroupScenario(c web.A
 // postProducerContractScenarioByPath handler
 // swagger:route POST /_contracts/{method}/{name}/{path} producer-contract postProducerContractScenarioByPath
 // Plays contract client for a scenario by name
-// Invokes service api-contract by method, contracts-name and path
+// Invokes service api-contract by method, contracts-name and path.
 // responses:
 //
 //	200: apiScenarioContractResponse

@@ -11,7 +11,7 @@
         "tags": [
           "producer-contract"
         ],
-        "description": "Invokes service api-contract by group of api contracts",
+        "summary": "Invokes service api-contract by group of api contracts.",
         "operationId": "postProducerContractGroupScenario",
         "parameters": [
           {
@@ -55,7 +55,7 @@
         "tags": [
           "producer-contract"
         ],
-        "description": "Plays contract client for a scenario by name\nInvokes service api-contract by method, contracts-name and path",
+        "description": "Plays contract client for a scenario by name\nInvokes service api-contract by method, contracts-name and path.",
         "operationId": "postProducerContractScenarioByPath",
         "parameters": [
           {
@@ -119,7 +119,7 @@
         "tags": [
           "producer-contract"
         ],
-        "description": "Invokes service api-contract using executed history of consumer contracts",
+        "summary": "Invokes service api-contract using executed history of consumer contracts.",
         "operationId": "postProducerContractHistoryByGroup",
         "parameters": [
           {
@@ -163,7 +163,7 @@
         "tags": [
           "api-test-fixtures"
         ],
-        "description": "Finds an existing api-test-fixtures based on name and path",
+        "summary": "Finds an existing api-test-fixtures based on name and path.",
         "operationId": "getAPITestFixture",
         "parameters": [
           {
@@ -335,7 +335,7 @@
         "tags": [
           "api-test-fixtures"
         ],
-        "description": "Returns api test-fixture names",
+        "summary": "Finds api test-fixture names for given method and path.",
         "operationId": "getAPITestFixtureNames",
         "parameters": [
           {
@@ -381,7 +381,7 @@
         "tags": [
           "open-api"
         ],
-        "description": "Creates new api scenarios based on Open API v3",
+        "summary": "Creates new api scenarios based on Open API v3 uploaded by user.",
         "operationId": "postMockOAPIScenario",
         "requestBody": {
           "content": {
@@ -417,7 +417,7 @@
         "tags": [
           "open-api"
         ],
-        "description": "Generates OpenAPI specs for the scenario group",
+        "summary": "Generates OpenAPI specs by group of API scenarios.",
         "operationId": "getOpenAPISpecsByGroup",
         "parameters": [
           {
@@ -454,7 +454,7 @@
         "tags": [
           "open-api"
         ],
-        "description": "Generates OpenAPI specs for the scenario",
+        "summary": "Generates OpenAPI specs for the API scenario by method, name and path.",
         "operationId": "getOpenAPISpecsByScenario",
         "parameters": [
           {
@@ -511,7 +511,7 @@
         "tags": [
           "open-api"
         ],
-        "description": "Generates OpenAPI specs for the scenario history",
+        "summary": "Generates OpenAPI specs based on name of API scenario from execution history.",
         "operationId": "getOpenAPISpecsByHistory",
         "parameters": [
           {
@@ -851,7 +851,7 @@
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from GET request",
+        "summary": "Play API scenario for previously defined API contract based on GET request.",
         "operationId": "getRoot",
         "parameters": [
           {
@@ -870,7 +870,7 @@
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from PUT request",
+        "summary": "Play API scenario for previously defined API contract based on PUT request.",
         "operationId": "putRoot",
         "parameters": [
           {
@@ -889,7 +889,7 @@
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from POST request",
+        "summary": "Play API scenario for previously defined API contract based on POST request.",
         "operationId": "postRoot",
         "parameters": [
           {
@@ -908,7 +908,7 @@
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from DELETE request",
+        "summary": "Play API scenario for previously defined API contract based on DELETE request.",
         "operationId": "deleteRoot",
         "parameters": [
           {
@@ -927,21 +927,21 @@
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from OPTIONS request",
+        "summary": "Play API scenario for previously defined API contract based on OPTIONS request.",
         "operationId": "optionsRoot"
       },
       "head": {
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from HEAD request",
+        "summary": "Play API scenario for previously defined API contract based on HEAD request.",
         "operationId": "headRoot"
       },
       "patch": {
         "tags": [
           "consumer-contract"
         ],
-        "description": "Play scenario from PATCH request",
+        "summary": "Play API scenario for previously defined API contract based on PATCH request.",
         "operationId": "patchRoot"
       }
     }
