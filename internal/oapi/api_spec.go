@@ -68,7 +68,7 @@ func ParseAPISpec(
 				for reqContentType, reqMedia := range reqContent {
 					reqHeaders = append(reqHeaders,
 						Property{
-							Name:    "ContentsType",
+							Name:    "Content-Type",
 							Pattern: reqContentType,
 							Type:    "string",
 							In:      "header",
