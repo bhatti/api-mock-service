@@ -25,6 +25,9 @@ func Test_InitializeSwaggerStructsForMockOAPIScenarioController(t *testing.T) {
 	_ = apiScenarioOAPICreateParams{}
 	_ = apiScenarioOAPIResponseBody{}
 	_ = apiOapiSpecIResponseBody{}
+	_ = getOpenAPISpecsByGroupParams{}
+	_ = getOpenAPISpecsByHistoryParams{}
+	_ = getOpenAPISpecsByScenarioParams{}
 }
 
 func Test_ShouldFailPostScenarioWithBadOAPIInput(t *testing.T) {

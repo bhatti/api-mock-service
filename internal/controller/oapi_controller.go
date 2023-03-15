@@ -198,6 +198,32 @@ type apiScenarioOAPIResponseBody struct {
 	Body types.APIScenario
 }
 
+// The params for group
+// swagger:parameters getOpenAPISpecsByGroup
+type getOpenAPISpecsByGroupParams struct {
+	// in:path
+	Group string `json:"group"`
+}
+
+// getOpenAPISpecsByHistoryParams params for name
+// swagger:parameters getOpenAPISpecsByHistory
+type getOpenAPISpecsByHistoryParams struct {
+	// Name of open-api spec
+	// in: path
+	Name string `json:"name"`
+}
+
+// The params for name
+// swagger:parameters getOpenAPISpecsByScenario
+type getOpenAPISpecsByScenarioParams struct {
+	// in:path
+	Method string `json:"method"`
+	// in:path
+	Name string `json:"name"`
+	// in:path
+	Path string `json:"path"`
+}
+
 // APIScenario body for update
 // swagger:response apiOapiSpecIResponse
 type apiOapiSpecIResponseBody struct {

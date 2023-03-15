@@ -13,6 +13,18 @@
         ],
         "description": "Invokes service api-contract by group of api contracts",
         "operationId": "postProducerContractGroupScenario",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          }
+        ],
         "requestBody": {
           "content": {
             "*/*": {
@@ -44,7 +56,39 @@
           "producer-contract"
         ],
         "description": "Plays contract client for a scenario by name\nInvokes service api-contract by method, contracts-name and path",
-        "operationId": "postProducerContractScenario",
+        "operationId": "postProducerContractScenarioByPath",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
         "requestBody": {
           "content": {
             "*/*": {
@@ -76,7 +120,29 @@
           "producer-contract"
         ],
         "description": "Invokes service api-contract using executed history of consumer contracts",
-        "operationId": "postProducerContractHistory",
+        "operationId": "postProducerContractHistoryByGroup",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/ProducerContractRequest"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "description": "APIScenario body for update",
@@ -88,7 +154,8 @@
               }
             }
           }
-        }
+        },
+        "x-codegen-request-body-name": "Body"
       }
     },
     "/_fixtures/{method}/{name}/{path}": {
@@ -352,6 +419,18 @@
         ],
         "description": "Generates OpenAPI specs for the scenario group",
         "operationId": "getOpenAPISpecsByGroup",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          }
+        ],
         "responses": {
           "200": {
             "description": "APIScenario body for update",
@@ -377,6 +456,38 @@
         ],
         "description": "Generates OpenAPI specs for the scenario",
         "operationId": "getOpenAPISpecsByScenario",
+        "parameters": [
+          {
+            "name": "method",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Method"
+            },
+            "x-go-name": "Method"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ],
         "responses": {
           "200": {
             "description": "APIScenario body for update",
@@ -402,6 +513,19 @@
         ],
         "description": "Generates OpenAPI specs for the scenario history",
         "operationId": "getOpenAPISpecsByHistory",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Name of open-api spec",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          }
+        ],
         "responses": {
           "200": {
             "description": "APIScenario body for update",

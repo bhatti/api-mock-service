@@ -312,6 +312,11 @@ paths:
       description: Invokes service api-contract by group of api contracts
       operationId: postProducerContractGroupScenario
       parameters:
+      - in: path
+        name: group
+        required: true
+        type: string
+        x-go-name: Group
       - in: body
         name: Body
         schema:
@@ -326,8 +331,23 @@ paths:
       description: |-
         Plays contract client for a scenario by name
         Invokes service api-contract by method, contracts-name and path
-      operationId: postProducerContractScenario
+      operationId: postProducerContractScenarioByPath
       parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
       - in: body
         name: Body
         schema:
@@ -341,7 +361,17 @@ paths:
     post:
       description: Invokes service api-contract using executed history of consumer
         contracts
-      operationId: postProducerContractHistory
+      operationId: postProducerContractHistoryByGroup
+      parameters:
+      - in: path
+        name: group
+        required: true
+        type: string
+        x-go-name: Group
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/ProducerContractRequest'
       responses:
         "200":
           $ref: '#/responses/apiScenarioContractResponse'
@@ -468,6 +498,12 @@ paths:
     get:
       description: Generates OpenAPI specs for the scenario group
       operationId: getOpenAPISpecsByGroup
+      parameters:
+      - in: path
+        name: group
+        required: true
+        type: string
+        x-go-name: Group
       responses:
         "200":
           $ref: '#/responses/apiOapiSpecIResponse'
@@ -477,6 +513,22 @@ paths:
     get:
       description: Generates OpenAPI specs for the scenario
       operationId: getOpenAPISpecsByScenario
+      parameters:
+      - in: path
+        name: method
+        required: true
+        type: string
+        x-go-name: Method
+      - in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
+      - in: path
+        name: path
+        required: true
+        type: string
+        x-go-name: Path
       responses:
         "200":
           $ref: '#/responses/apiOapiSpecIResponse'
@@ -486,6 +538,13 @@ paths:
     get:
       description: Generates OpenAPI specs for the scenario history
       operationId: getOpenAPISpecsByHistory
+      parameters:
+      - description: Name of open-api spec
+        in: path
+        name: name
+        required: true
+        type: string
+        x-go-name: Name
       responses:
         "200":
           $ref: '#/responses/apiOapiSpecIResponse'

@@ -27,21 +27,21 @@ func NewProducerContractController(
 	}
 
 	webserver.POST("/_contracts/:group", ctrl.postProducerContractGroupScenario)
-	webserver.POST("/_contracts/history/:group", ctrl.postProducerContractHistory)
-	webserver.POST("/_contracts/history", ctrl.postProducerContractHistory)
-	webserver.POST("/_contracts/:method/:name/:path", ctrl.postProducerContractScenario)
+	webserver.POST("/_contracts/history/:group", ctrl.postProducerContractHistoryByGroup)
+	webserver.POST("/_contracts/history", ctrl.postProducerContractHistoryByGroup)
+	webserver.POST("/_contracts/:method/:name/:path", ctrl.postProducerContractScenarioByPath)
 	return ctrl
 }
 
 // ********************************* HTTP Handlers ***********************************
 
-// postProducerContractHistory handler
-// swagger:route POST /_contracts/history/{group} producer-contract postProducerContractHistory
+// postProducerContractHistoryByGroup handler
+// swagger:route POST /_contracts/history/{group} producer-contract postProducerContractHistoryByGroup
 // Invokes service api-contract using executed history of consumer contracts
 // responses:
 //
 //	200: apiScenarioContractResponse
-func (mcc *ProducerContractController) postProducerContractHistory(c web.APIContext) (err error) {
+func (mcc *ProducerContractController) postProducerContractHistoryByGroup(c web.APIContext) (err error) {
 	group := c.Param("group")
 	contractReq, err := buildContractRequest(c)
 	if err != nil {
@@ -72,14 +72,14 @@ func (mcc *ProducerContractController) postProducerContractGroupScenario(c web.A
 	return c.JSON(http.StatusOK, res)
 }
 
-// postProducerContractScenario handler
-// swagger:route POST /_contracts/{method}/{name}/{path} producer-contract postProducerContractScenario
+// postProducerContractScenarioByPath handler
+// swagger:route POST /_contracts/{method}/{name}/{path} producer-contract postProducerContractScenarioByPath
 // Plays contract client for a scenario by name
 // Invokes service api-contract by method, contracts-name and path
 // responses:
 //
 //	200: apiScenarioContractResponse
-func (mcc *ProducerContractController) postProducerContractScenario(c web.APIContext) (err error) {
+func (mcc *ProducerContractController) postProducerContractScenarioByPath(c web.APIContext) (err error) {
 	method, err := types.ToMethod(c.Param("method"))
 	if err != nil {
 		return fmt.Errorf("method name not specified in %s due to %w", c.Request().URL, err)
@@ -115,9 +115,33 @@ func (mcc *ProducerContractController) postProducerContractScenario(c web.APICon
 
 // ********************************* Swagger types ***********************************
 
-// swagger:parameters postProducerContractScenario postProducerContractGroupScenario
+// swagger:parameters postProducerContractScenarioByPath
 // The params for api-contract based on OpenAPI v3
 type apiScenarioContractCreateParams struct {
+	// in:path
+	Method string `json:"method"`
+	// in:path
+	Name string `json:"name"`
+	// in:path
+	Path string `json:"path"`
+	// in:body
+	Body types.ProducerContractRequest
+}
+
+// The params for api-contract based on OpenAPI v3
+// swagger:parameters postProducerContractGroupScenario
+type postProducerContractGroupScenarioParams struct {
+	// in:path
+	Group string `json:"group"`
+	// in:body
+	Body types.ProducerContractRequest
+}
+
+// The params for api-contract based on OpenAPI v3
+// swagger:parameters postProducerContractHistoryByGroup
+type postProducerContractHistoryParams struct {
+	// in:path
+	Group string `json:"group"`
 	// in:body
 	Body types.ProducerContractRequest
 }

@@ -23,6 +23,8 @@ import (
 func Test_InitializeSwaggerStructsForMockContractScenarioController(t *testing.T) {
 	_ = apiScenarioContractCreateParams{}
 	_ = apiScenarioContractResponseBody{}
+	_ = postProducerContractHistoryParams{}
+	_ = postProducerContractGroupScenarioParams{}
 }
 
 func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
@@ -40,7 +42,7 @@ func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.postProducerContractScenario(ctx)
+	err = ctrl.postProducerContractScenarioByPath(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "invalid method")
 }
@@ -68,7 +70,7 @@ func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 	ctx.Params["method"] = "POST"
 
 	// WHEN creating mock scenario with without method
-	err = ctrl.postProducerContractScenario(ctx)
+	err = ctrl.postProducerContractScenarioByPath(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "scenario name")
 }
@@ -97,7 +99,7 @@ func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 	ctx.Params["name"] = "name"
 
 	// WHEN creating mock scenario with without method
-	err = ctrl.postProducerContractScenario(ctx)
+	err = ctrl.postProducerContractScenarioByPath(ctx)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "path not specified")
 }
@@ -143,7 +145,7 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 	ctx.Params["path"] = "/todos/10"
 
 	// WHEN creating mock scenario with without method, name and path
-	err = ctrl.postProducerContractScenario(ctx)
+	err = ctrl.postProducerContractScenarioByPath(ctx)
 
 	// THEN it should fail
 	require.NoError(t, err)
@@ -237,7 +239,7 @@ func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
 	ctx.Params["group"] = "/todos/10"
 
 	// WHEN creating mock scenario with group
-	err = ctrl.postProducerContractHistory(ctx)
+	err = ctrl.postProducerContractHistoryByGroup(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
@@ -346,7 +348,7 @@ func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 	ctx.Params["id"] = "10"
 
 	// WHEN creating mock scenario with method, name and path
-	err = ctrl.postProducerContractScenario(ctx)
+	err = ctrl.postProducerContractScenarioByPath(ctx)
 
 	// THEN it should not fail
 	require.NoError(t, err)
