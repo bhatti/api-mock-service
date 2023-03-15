@@ -106,7 +106,7 @@ func (r *RootController) traceRoot(c web.APIContext) (err error) {
 	return r.consumerExecutor.Execute(c)
 }
 
-// swagger:parameters postRoot putRoot getRoot deleteRoot
+// swagger:parameters postRoot putRoot getRoot deleteRoot postRoot putRoot getRoot connectRoot headRoot optionsRoot patchRoot traceRoot
 // The parameters for consumer-based API testing by path
 type rootPathParams struct {
 	// in:path

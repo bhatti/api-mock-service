@@ -928,21 +928,57 @@
           "consumer-contract"
         ],
         "summary": "Play API scenario for previously defined API contract based on OPTIONS request.",
-        "operationId": "optionsRoot"
+        "operationId": "optionsRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
       },
       "head": {
         "tags": [
           "consumer-contract"
         ],
         "summary": "Play API scenario for previously defined API contract based on HEAD request.",
-        "operationId": "headRoot"
+        "operationId": "headRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
       },
       "patch": {
         "tags": [
           "consumer-contract"
         ],
         "summary": "Play API scenario for previously defined API contract based on PATCH request.",
-        "operationId": "patchRoot"
+        "operationId": "patchRoot",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Path"
+            },
+            "x-go-name": "Path"
+          }
+        ]
       }
     }
   },
