@@ -35,9 +35,10 @@ func NewOAPIController(
 		oapiRepository:     oapiRepository,
 	}
 
+	webserver.GET("/_oapi", ctrl.getOpenAPISpecsByGroup)
 	webserver.GET("/_oapi/", ctrl.getOpenAPISpecsByGroup)
-	webserver.GET("/_oapi/history/:name", ctrl.getOpenAPISpecsByHistory)
 	webserver.GET("/_oapi/:group", ctrl.getOpenAPISpecsByGroup)
+	webserver.GET("/_oapi/history/:name", ctrl.getOpenAPISpecsByHistory)
 	webserver.GET("/_oapi/:method/:name/:path", ctrl.getOpenAPISpecsByScenario)
 	webserver.POST("/_oapi", ctrl.postMockOAPIScenario)
 	return ctrl
@@ -55,7 +56,7 @@ func (moc *OAPIController) getOpenAPISpecsByGroup(c web.APIContext) (err error) 
 	u := c.Request().URL
 	group := c.Param("group")
 	var b []byte
-	if group == "_internal" {
+	if group == "_internal" || group == "" {
 		b, err = moc.internalOAPI.ReadFile("docs/openapi.json")
 	} else {
 		b, err = moc.oapiRepository.LoadRaw(group)
