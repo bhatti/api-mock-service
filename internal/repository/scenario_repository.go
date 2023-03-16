@@ -11,7 +11,7 @@ type APIScenarioRepository interface {
 	HistoryNames(group string) []string
 
 	// SaveHistory saves history APIScenario
-	SaveHistory(scenario *types.APIScenario) (err error)
+	SaveHistory(scenario *types.APIScenario, url string) (err error)
 
 	// LoadHistory loads scenario
 	LoadHistory(name string) (*types.APIScenario, error)

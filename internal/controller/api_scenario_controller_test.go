@@ -110,7 +110,7 @@ func Test_ShouldGetScenarioHistory(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
 	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
-	err = mockScenarioRepository.SaveHistory(scenario)
+	err = mockScenarioRepository.SaveHistory(scenario, "")
 	require.NoError(t, err)
 
 	// WHEN getting mock scenario groups

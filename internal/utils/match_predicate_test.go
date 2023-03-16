@@ -24,6 +24,10 @@ func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
 	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 0))
 	require.False(t, MatchScenarioPredicate(keyData1, keyData2, 2))
 	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 3))
+	keyData1.Predicate = `{{NthRequest 1}}`
+	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 0))
+	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 1))
+	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 2))
 }
 
 func Test_ShouldMatchScenarioPredicate(t *testing.T) {
@@ -32,6 +36,10 @@ func Test_ShouldMatchScenarioPredicate(t *testing.T) {
 	keyData.Predicate = `{{NthRequest 3}}`
 	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 0))
 	require.False(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 2))
+	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 3))
+	keyData.Predicate = `{{NthRequest 0}}`
+	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 0))
+	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 2))
 	require.True(t, MatchScenarioPredicate(keyData, &types.APIKeyData{}, 3))
 }
 

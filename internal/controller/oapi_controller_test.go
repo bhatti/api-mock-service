@@ -112,7 +112,7 @@ func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
-	err = mockScenarioRepository.SaveHistory(scenario)
+	err = mockScenarioRepository.SaveHistory(scenario, "")
 	require.NoError(t, err)
 
 	names := mockScenarioRepository.HistoryNames(scenario.Group)

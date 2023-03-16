@@ -225,15 +225,17 @@ func saveMockResponse(
 	if scenario.Name == "" {
 		scenario.SetName("recorded-" + scenario.Group + "-")
 	}
+	if scenario.Response.StatusCode >= 300 {
+		scenario.Predicate = "{{NthRequest 2}}"
+	} else {
+		scenario.Predicate = "{{NthRequest 1}}"
+	}
 
 	scenario.Description = fmt.Sprintf("recorded at %v for %s", time.Now().UTC(), u)
 	if err = scenarioRepository.Save(scenario); err != nil {
 		return "", err
 	}
-	for name := range web.IgnoredRequestHeaders {
-		delete(scenario.Request.Headers, name)
-	}
-	if err = scenarioRepository.SaveHistory(scenario); err != nil {
+	if err = scenarioRepository.SaveHistory(scenario, u.String()); err != nil {
 		return "", err
 	}
 	return

@@ -161,6 +161,8 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 	}
 	if res.StatusCode >= 300 {
 		spec.Predicate = "{{NthRequest 2}}"
+	} else {
+		spec.Predicate = "{{NthRequest 1}}"
 	}
 	spec.SetName(api.ID + "-")
 	return spec, nil

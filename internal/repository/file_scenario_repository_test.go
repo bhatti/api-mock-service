@@ -623,7 +623,7 @@ func Test_ShouldLoadSaveMockScenariosHistory(t *testing.T) {
 		scenario := buildScenario(types.Post, fmt.Sprintf("history_%d", i), apiPath, 30)
 		scenario.Group = fmt.Sprintf("history-group-%v", i%2 == 0)
 		scenario.Path = fmt.Sprintf("/api/v1/%d", i)
-		err = repo.SaveHistory(scenario)
+		err = repo.SaveHistory(scenario, "")
 		require.NoError(t, err)
 	}
 	names := repo.HistoryNames("history-group-false")

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
+	"github.com/bhatti/api-mock-service/internal/web"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
@@ -332,7 +333,11 @@ func (sr *FileAPIScenarioRepository) HistoryNames(group string) (names []string)
 }
 
 // SaveHistory saves history APIScenario
-func (sr *FileAPIScenarioRepository) SaveHistory(scenario *types.APIScenario) (err error) {
+func (sr *FileAPIScenarioRepository) SaveHistory(scenario *types.APIScenario, url string) (err error) {
+	scenario.Description = fmt.Sprintf("executed at %v for %s", time.Now().UTC(), url)
+	for name := range web.IgnoredRequestHeaders {
+		delete(scenario.Request.Headers, name)
+	}
 	name := scenario.BuildName(string(scenario.Method))
 	fileName := filepath.Join(sr.historyDir, types.SanitizeNonAlphabet(scenario.Group, "_")+"_"+name+types.ScenarioExt)
 	var b []byte
