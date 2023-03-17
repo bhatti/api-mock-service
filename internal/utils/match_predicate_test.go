@@ -7,16 +7,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 	"os"
-	"strconv"
 	"testing"
-	"time"
 )
 
 const apiPath = "//abc//\\def/123/"
 
 func Test_ShouldParsePredicateForNthRequest(t *testing.T) {
-	keyData1 := buildScenario(types.Post, "test1", apiPath, 1).ToKeyData()
-	keyData2 := buildScenario(types.Post, "test2", apiPath, 2).ToKeyData()
+	keyData1 := types.BuildTestScenario(types.Post, "test1", apiPath, 1).ToKeyData()
+	keyData2 := types.BuildTestScenario(types.Post, "test2", apiPath, 2).ToKeyData()
 	require.True(t, MatchScenarioPredicate(keyData1, keyData2, 0))
 	keyData1.AssertQueryParamsPattern = map[string]string{"a": `\d+`, "b": "abc"}
 	keyData2.AssertQueryParamsPattern = map[string]string{"a": `\d+`, "b": "abc"}
@@ -139,30 +137,5 @@ func Test_ShouldParseDevicesTemplate(t *testing.T) {
 			require.True(t, scenario.Response.StatusCode == 200 || scenario.Response.StatusCode == 400)
 		}
 		require.Contains(t, scenario.Response.ContentType(""), "application/json")
-	}
-}
-func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
-	return &types.APIScenario{
-		Method:      method,
-		Name:        name,
-		Path:        path,
-		Group:       path,
-		Description: name,
-		Request: types.APIRequest{
-			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
-			AssertHeadersPattern: map[string]string{
-				types.ContentTypeHeader: "application/json",
-				"ETag":                  `\d{3}`,
-			},
-		},
-		Response: types.APIResponse{
-			Headers: map[string][]string{
-				"ETag":                  {strconv.Itoa(n)},
-				types.ContentTypeHeader: {"application/json"},
-			},
-			Contents:   "test body",
-			StatusCode: 200,
-		},
-		WaitBeforeReply: time.Duration(1) * time.Second,
 	}
 }

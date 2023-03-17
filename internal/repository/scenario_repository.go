@@ -2,7 +2,9 @@ package repository
 
 import (
 	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/types/har"
 	"io"
+	"time"
 )
 
 // APIScenarioRepository defines data store for api-scenarios
@@ -11,10 +13,19 @@ type APIScenarioRepository interface {
 	HistoryNames(group string) []string
 
 	// SaveHistory saves history APIScenario
-	SaveHistory(scenario *types.APIScenario, url string) (err error)
+	SaveHistory(
+		scenario *types.APIScenario,
+		url string,
+		host string,
+		started time.Time,
+		ended time.Time,
+	) (err error)
 
 	// LoadHistory loads scenario
 	LoadHistory(name string) (*types.APIScenario, error)
+
+	// LoadHar loads HAR file for the executed history
+	LoadHar(name string, group string, page int, limit int) ([]har.Har, error)
 
 	// GetGroups returns api scenarios groups
 	GetGroups() []string

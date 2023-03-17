@@ -25,11 +25,11 @@ func Test_InitializeSwaggerStructsForMockScenarioController(t *testing.T) {
 	_ = apiScenarioResponseBody{}
 	_ = apiScenarioIDParams{}
 	_ = apiScenarioPathsResponseBody{}
-	_ = apiHistoryResponseBody{}
+	_ = execHistoryNamesResponse{}
 }
 
 func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -61,7 +61,7 @@ func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {
 }
 
 func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -93,36 +93,8 @@ func Test_ShouldFailGetScenarioWithoutMethodNameOrPath(t *testing.T) {
 	require.Error(t, err)
 }
 
-func Test_ShouldGetScenarioHistory(t *testing.T) {
-	config := buildTestConfig()
-	// GIVEN repository and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
-	require.NoError(t, err)
-	oapiRepository, err := repository.NewFileOAPIRepository(config)
-	require.NoError(t, err)
-	webServer := web.NewStubWebServer()
-	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
-	data := []byte("test data")
-	require.NoError(t, err)
-	reader := io.NopCloser(bytes.NewReader(data))
-	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
-	require.NoError(t, err)
-	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
-	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
-	scenario := buildScenario(types.Post, "test1", "/path1", 1)
-	err = mockScenarioRepository.SaveHistory(scenario, "")
-	require.NoError(t, err)
-
-	// WHEN getting mock scenario groups
-	err = ctrl.apiScenarioHistory(ctx)
-	// THEN it should not fail
-	require.NoError(t, err)
-	names := ctx.Result.([]string)
-	require.True(t, len(names) > 0)
-}
-
 func Test_ShouldGetScenarioGroups(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -147,7 +119,7 @@ func Test_ShouldGetScenarioGroups(t *testing.T) {
 }
 
 func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -180,7 +152,7 @@ func Test_ShouldFailGetScenarioNamesWithoutMethodNameOrPath(t *testing.T) {
 }
 
 func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -212,7 +184,7 @@ func Test_ShouldFailDeleteScenarioWithoutMethodNameOrPath(t *testing.T) {
 }
 
 func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -260,7 +232,7 @@ func Test_ShouldCreateAndGetMockScenario(t *testing.T) {
 }
 
 func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -299,7 +271,7 @@ func Test_ShouldCreateAndGetMockScenarioWithYAML(t *testing.T) {
 }
 
 func Test_ShouldCreateAndGetMockNames(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -338,7 +310,7 @@ func Test_ShouldCreateAndGetMockNames(t *testing.T) {
 }
 
 func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -379,7 +351,7 @@ func Test_ShouldCreateAndDeleteMockScenario(t *testing.T) {
 }
 
 func Test_ShouldListMockScenario(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)

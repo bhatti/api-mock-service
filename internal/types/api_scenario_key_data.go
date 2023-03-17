@@ -28,6 +28,8 @@ type APIKeyData struct {
 	Predicate string `yaml:"predicate" json:"predicate"`
 	// AssertQueryParamsPattern for the API
 	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
+	// AssertPostParamsPattern for the API
+	AssertPostParamsPattern map[string]string `yaml:"assert_post_params_pattern" json:"assert_post_params_pattern"`
 	// AssertHeadersPattern for api response
 	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
 	// AssertContentsPattern for request optionally
@@ -71,6 +73,15 @@ func (kd *APIKeyData) Equals(other *APIKeyData) error {
 			!reMatch(msdQueryParamVal, targetQueryParamVal) {
 			return NewValidationError(fmt.Sprintf("request queryParam '%s' didn't match [%v == %v]",
 				k, kd.AssertQueryParamsPattern, other.AssertQueryParamsPattern))
+		}
+	}
+
+	for k, msdPostParamVal := range kd.AssertPostParamsPattern {
+		targetPostParamVal := other.AssertPostParamsPattern[k]
+		if targetPostParamVal != msdPostParamVal &&
+			!reMatch(msdPostParamVal, targetPostParamVal) {
+			return NewValidationError(fmt.Sprintf("request post'%s' didn't match [%v == %v]",
+				k, kd.AssertPostParamsPattern, other.AssertPostParamsPattern))
 		}
 	}
 

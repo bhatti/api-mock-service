@@ -6,18 +6,17 @@ import (
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
+	"github.com/elazarl/goproxy"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"testing"
-	"time"
 )
 
 func Test_ShouldNotStartProxyServer(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -29,7 +28,7 @@ func Test_ShouldNotStartProxyServer(t *testing.T) {
 }
 
 func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -44,12 +43,12 @@ func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	_, res := handler.handleRequest(req, nil)
+	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.Nil(t, res)
 }
 
 func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -64,19 +63,19 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	_, res := handler.handleRequest(req, nil)
+	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.Nil(t, res)
 }
 
 func Test_ShouldHandleProxyRequest(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
-	scenario := buildScenario(types.Post, "todos", "/api/todos", 0)
+	scenario := types.BuildTestScenario(types.Post, "todos", "/v2/api/todos", 0)
 	require.NoError(t, scenarioRepository.Save(scenario))
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=3&b=abc")
@@ -87,19 +86,19 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"application/json"}},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	_, res := handler.handleRequest(req, nil)
+	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
-	scenario := buildScenario(types.Post, "todos", "/api/todos", 0)
+	scenario := types.BuildTestScenario(types.Post, "todos", "/api/todos", 0)
 	require.NoError(t, scenarioRepository.Save(scenario))
 
 	adapter := web.NewWebServerAdapter()
@@ -123,7 +122,7 @@ func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
 			Method: method,
 			Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 		}
-		_, res := proxy.handleRequest(req, nil)
+		_, res := proxy.handleRequest(req, &goproxy.ProxyCtx{})
 		require.NotNil(t, res)
 		params := make(map[string]string)
 		b, err := io.ReadAll(res.Body)
@@ -152,14 +151,14 @@ func adapterHandler(c web.APIContext) error {
 }
 
 func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
-	scenario := buildScenario(types.Post, "todos", "/api/todos", 0)
+	scenario := types.BuildTestScenario(types.Post, "todos", "/api/todos", 0)
 	require.NoError(t, scenarioRepository.Save(scenario))
 
 	adapter := web.NewWebServerAdapter()
@@ -187,7 +186,7 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 			Method: method,
 			Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 		}
-		_, res := proxy.handleRequest(req, nil)
+		_, res := proxy.handleRequest(req, &goproxy.ProxyCtx{})
 		require.NotNil(t, res)
 		params := make(map[string]string)
 		b, err := io.ReadAll(res.Body)
@@ -208,7 +207,7 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 }
 
 func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -227,12 +226,12 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 		Header:  http.Header{},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	res = handler.handleResponse(res, nil)
+	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -240,11 +239,11 @@ func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	require.Nil(t, handler.handleResponse(nil, nil))
+	require.Nil(t, handler.handleResponse(nil, &goproxy.ProxyCtx{}))
 }
 
 func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -253,12 +252,12 @@ func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 
 	res := &http.Response{}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	res = handler.handleResponse(res, nil)
+	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -278,12 +277,12 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 		Header:  http.Header{},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	res = handler.handleResponse(res, nil)
+	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
 
 func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -304,33 +303,9 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 		Header:  http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
-	res = handler.handleResponse(res, nil)
+	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
-	res = handler.handleResponse(res, nil)
+	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
-}
-
-func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
-	return &types.APIScenario{
-		Method:      method,
-		Name:        name,
-		Path:        path,
-		Description: name,
-		Request: types.APIRequest{
-			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
-			AssertHeadersPattern: map[string]string{
-				types.ContentTypeHeader: "application/json",
-			},
-		},
-		Response: types.APIResponse{
-			Headers: map[string][]string{
-				"ETag":                  {strconv.Itoa(n)},
-				types.ContentTypeHeader: {"application/json"},
-			},
-			Contents:   "test body",
-			StatusCode: 200,
-		},
-		WaitBeforeReply: time.Duration(1) * time.Second,
-	}
 }

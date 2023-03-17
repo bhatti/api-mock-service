@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
@@ -20,7 +21,7 @@ var baseURL = "https://mocksite.local"
 
 func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	// GIVEN scenario repository
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 
@@ -40,7 +41,7 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 
 func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -73,7 +74,7 @@ func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 
 func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
@@ -105,7 +106,7 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 }
 
 func Test_ShouldExecuteGetTodo(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -132,7 +133,7 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 }
 
 func Test_ShouldExecutePutPosts(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -156,7 +157,7 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -186,7 +187,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -217,7 +218,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 }
 
 func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -246,7 +247,7 @@ func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 }
 
 func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -275,7 +276,7 @@ func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 }
 
 func Test_ShouldExecutePostProductScenario(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -302,7 +303,7 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 }
 
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -338,7 +339,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 }
 
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -366,7 +367,7 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 }
 
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN scenario repository
 	repo, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -407,7 +408,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 }
 
 func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN mock scenarios from open-api specifications
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
@@ -432,7 +433,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 		// WITH mock web client
 		client, data := buildJobsTestClient("AC1234567890", "RUNNING", "/good", scenario.Response.StatusCode)
-		contractReq.Verbose = true
+		contractReq.Verbose = false
 		contractReq.Params = data
 		// AND executor
 		executor := NewProducerExecutor(repo, client)
@@ -499,16 +500,6 @@ func buildJobsTestClient(jobID string, jobStatus string, prefixPath string, http
 	return client, map[string]any{"jobId": jobID, "state": jobStatus}
 }
 
-func buildTestConfig() *types.Configuration {
-	return &types.Configuration{
-		DataDir:                  "../../mock_tests",
-		MaxHistory:               5,
-		ProxyPort:                8081,
-		AssertQueryParamsPattern: "target",
-		AssertHeadersPattern:     "target",
-	}
-}
-
 func saveTestScenario(
 	name string,
 	scenarioRepo repository.APIScenarioRepository,
@@ -528,7 +519,7 @@ func saveTestScenario(
 	if err != nil {
 		return nil, err
 	}
-	err = scenarioRepo.SaveHistory(&scenario, "")
+	err = scenarioRepo.SaveHistory(&scenario, "", "", time.Now(), time.Now().Add(time.Second))
 	if err != nil {
 		return nil, err
 	}

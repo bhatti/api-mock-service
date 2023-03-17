@@ -3,12 +3,11 @@ package repository
 import (
 	"bytes"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/utils"
 	"gopkg.in/yaml.v3"
 	"strconv"
 	"testing"
 	"time"
-
-	"github.com/bhatti/api-mock-service/internal/utils"
 
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/stretchr/testify/assert"
@@ -20,10 +19,10 @@ const apiPath = "//abc//\\def/123/"
 
 func Test_ShouldRawSaveAndLoadMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND mock scenario
-	scenario := buildScenario(types.Post, "test1", apiPath, 10)
+	scenario := types.BuildTestScenario(types.Post, "test1", apiPath, 10)
 	b, err := yaml.Marshal(scenario)
 	require.NoError(t, err)
 	// WHEN saving scenario
@@ -39,10 +38,10 @@ func Test_ShouldRawSaveAndLoadMockScenarios(t *testing.T) {
 
 func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND mock scenario
-	scenario := buildScenario(types.Post, "test1", apiPath, 10)
+	scenario := types.BuildTestScenario(types.Post, "test1", apiPath, 10)
 	// WHEN saving scenario
 	err = repo.Save(scenario)
 	// THEN it should succeed
@@ -56,10 +55,10 @@ func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 
 func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND mock scenario
-	scenario := buildScenario(types.Post, "test1", apiPath, 20)
+	scenario := types.BuildTestScenario(types.Post, "test1", apiPath, 20)
 	// WHEN saving scenario
 	err = repo.Save(scenario)
 	// THEN it should succeed
@@ -81,11 +80,11 @@ func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
 
 func Test_ShouldListMockScenariosGroups(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		scenario := buildScenario(types.Post, fmt.Sprintf("test_%d", i), apiPath, 30)
+		scenario := types.BuildTestScenario(types.Post, fmt.Sprintf("test_%d", i), apiPath, 30)
 		scenario.Group = fmt.Sprintf("test-group-%v", i%2 == 0)
 		err = repo.Save(scenario)
 		require.NoError(t, err)
@@ -97,11 +96,11 @@ func Test_ShouldListMockScenariosGroups(t *testing.T) {
 
 func Test_ShouldListMockScenariosByPath(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		scenario := buildScenario(types.Post, fmt.Sprintf("test_%d", i), apiPath, 30)
+		scenario := types.BuildTestScenario(types.Post, fmt.Sprintf("test_%d", i), apiPath, 30)
 		scenario.Group = fmt.Sprintf("test-group-%v", i%2 == 0)
 		scenario.Path = fmt.Sprintf("/api/v1/%v", i%2 == 0)
 		err = repo.Save(scenario)
@@ -115,11 +114,11 @@ func Test_ShouldListMockScenariosByPath(t *testing.T) {
 
 func Test_ShouldListMockScenariosNames(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		scenario := buildScenario(types.Post, fmt.Sprintf("test_%d", i), apiPath, 30)
+		scenario := types.BuildTestScenario(types.Post, fmt.Sprintf("test_%d", i), apiPath, 30)
 		err = repo.Save(scenario)
 		require.NoError(t, err)
 	}
@@ -135,16 +134,16 @@ func Test_ShouldListMockScenariosNames(t *testing.T) {
 
 func Test_ShouldLookupAllByGroup(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Get, fmt.Sprintf("todo_%d", i), "/v2/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Get, fmt.Sprintf("book_%d", i), "/v2/books", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Post, fmt.Sprintf("todo_%d", i), "/v2/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Post, fmt.Sprintf("book_%d", i), "/v2/books", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Put, fmt.Sprintf("todo_%d", i), "/v2/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Put, fmt.Sprintf("book_%d", i), "/v2/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("todo_%d", i), "/v2/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("book_%d", i), "/v2/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("todo_%d", i), "/v2/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_%d", i), "/v2/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("todo_%d", i), "/v2/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("book_%d", i), "/v2/books", i)))
 	}
 	// WHEN looking up by group
 	matched := repo.LookupAllByGroup("/v2/todos")
@@ -157,12 +156,12 @@ func Test_ShouldLookupAllByGroup(t *testing.T) {
 
 func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Put, fmt.Sprintf("book_put_%d", i), "/api/:topic/books/:id", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("book_put_%d", i), "/api/:topic/books/:id", i)))
 	}
 	// WHEN looking up todos by POST without criteria
 	matched, _ := repo.LookupAll(&types.APIKeyData{})
@@ -254,16 +253,16 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 
 func Test_ShouldListMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Get, fmt.Sprintf("todo_post_%d", i), "/v3/api/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Post, fmt.Sprintf("todo_post_%d", i), "/v3/api/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Delete, fmt.Sprintf("todo_post_%d", i), "/v3/api/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Get, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Delete, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("todo_post_%d", i), "/v3/api/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("todo_post_%d", i), "/v3/api/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("todo_post_%d", i), "/v3/api/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
 	}
 	// WHEN listing mock scenario
 	all := repo.ListScenarioKeyData("")
@@ -286,12 +285,12 @@ func Test_ShouldListMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Post, fmt.Sprintf("todo_post_%d", i), "/v3/todos", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/v3/:topic/books", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("todo_post_%d", i), "/v3/todos", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/v3/:topic/books", i)))
 	}
 	// WHEN looking up todos by POST without criteria
 	matched, _ := repo.LookupAll(&types.APIKeyData{})
@@ -369,12 +368,12 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Get, fmt.Sprintf("todo_get_%d", i), "/api/todos/:id", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Get, fmt.Sprintf("book_get_%d", i), "/api/:topic/books/:id", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("todo_get_%d", i), "/api/todos/:id", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("book_get_%d", i), "/api/:topic/books/:id", i)))
 	}
 	// WHEN looking up scenarios with wrong method
 	matched, _ := repo.LookupAll(&types.APIKeyData{
@@ -452,12 +451,12 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Delete, fmt.Sprintf("todo_get_%d", i), "/v1/todos/:id", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Delete, fmt.Sprintf("book_get_%d", i), "/v1/:topic/books/:id", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("todo_get_%d", i), "/v1/todos/:id", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("book_get_%d", i), "/v1/:topic/books/:id", i)))
 	}
 	// WHEN looking up scenarios with wrong method
 	matched, _ := repo.LookupAll(&types.APIKeyData{
@@ -522,12 +521,12 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 
 func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	repo, err := NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	// AND a set of mock scenarios
 	for i := 0; i < 10; i++ {
-		require.NoError(t, repo.Save(buildScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))
-		require.NoError(t, repo.Save(buildScenario(types.Put, fmt.Sprintf("book_put_%d", i), "/api/{topic}/books/{id}", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))
+		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("book_put_%d", i), "/api/{topic}/books/{id}", i)))
 	}
 	// WHEN looking up todos by POST without criteria
 	matched, _ := repo.LookupAll(&types.APIKeyData{})
@@ -614,63 +613,50 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_ShouldLoadSaveMockScenariosHistory(t *testing.T) {
+func Test_ShouldLoadSaveScenariosHistory(t *testing.T) {
 	// GIVEN a mock scenario repository
-	repo, err := NewFileAPIScenarioRepository(buildTestConfig())
+	config := types.BuildTestConfig()
+	repo, err := NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	// AND a set of mock scenarios
-	for i := 0; i < 10; i++ {
-		scenario := buildScenario(types.Post, fmt.Sprintf("history_%d", i), apiPath, 30)
-		scenario.Group = fmt.Sprintf("history-group-%v", i%2 == 0)
-		scenario.Path = fmt.Sprintf("/api/v1/%d", i)
-		err = repo.SaveHistory(scenario, "")
+	started := time.Now()
+	groups := []string{
+		fmt.Sprintf("%d-save-history-group-first", started.UnixMilli()),
+		fmt.Sprintf("%d-save-history-group-second", started.UnixMilli()),
+	}
+	for i := 0; i < 200; i++ {
+		scenario := types.BuildTestScenario(types.Post, fmt.Sprintf("save-history_%d", i), "/path", i)
+		scenario.Group = groups[i%2]
+		scenario.Path = fmt.Sprintf("/v123/api/%s/%d", apiPath, i)
+		scenario.Request.QueryParams["i"] = fmt.Sprintf("%d", started.UnixMilli()+int64(i))
+		scenario.Request.Headers["I"] = fmt.Sprintf("%d", started.UnixMilli()+int64(i))
+		err = repo.SaveHistory(scenario, "http://localhost:8080", "localhost:8080", time.Now(), time.Now().Add(time.Second))
 		require.NoError(t, err)
 	}
-	names := repo.HistoryNames("history-group-false")
-	require.Equal(t, 3, len(names))
-	names = repo.HistoryNames("unknown")
+	names := repo.HistoryNames("unknown")
 	require.Equal(t, 0, len(names))
 	names = repo.HistoryNames("")
-	require.Equal(t, 5, len(names))
+	require.True(t, len(names) >= 200)
+	names = repo.HistoryNames(groups[0])
+	require.Equal(t, 100, len(names))
+	names = repo.HistoryNames(groups[1])
+	require.Equal(t, 100, len(names))
 	for _, name := range names {
 		scenario, err := repo.LoadHistory(name)
 		require.NoError(t, err)
 		require.Contains(t, name, scenario.Group)
+		res, err := repo.LoadHar(name, "", 0, 100)
+		require.NoError(t, err)
+		require.Equal(t, 1, len(res))
 	}
-}
-
-func buildTestConfig() *types.Configuration {
-	return &types.Configuration{
-		DataDir:                  "../../mock_tests",
-		MaxHistory:               5,
-		ProxyPort:                8081,
-		AssertQueryParamsPattern: "target",
-		AssertHeadersPattern:     "target",
-	}
-}
-
-func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
-	return &types.APIScenario{
-		Method:      method,
-		Name:        name,
-		Path:        path,
-		Group:       path,
-		Description: name,
-		Request: types.APIRequest{
-			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
-			AssertHeadersPattern: map[string]string{
-				types.ContentTypeHeader: "application/json",
-				"ETag":                  `\d{3}`,
-			},
-		},
-		Response: types.APIResponse{
-			Headers: map[string][]string{
-				"ETag":                  {strconv.Itoa(n)},
-				types.ContentTypeHeader: {"application/json"},
-			},
-			Contents:   "test body",
-			StatusCode: 200,
-		},
-		WaitBeforeReply: time.Duration(1) * time.Second,
+	for i := 0; i < 6; i++ {
+		res, err := repo.LoadHar("", groups[0], i, 20)
+		require.NoError(t, err)
+		if i == 5 {
+			require.Equal(t, 0, len(res))
+		} else {
+			require.Equal(t, 1, len(res), fmt.Sprintf("page %d", i))
+			require.Equal(t, 20, len(res[0].Log.Entries), fmt.Sprintf("page %d", i))
+		}
 	}
 }

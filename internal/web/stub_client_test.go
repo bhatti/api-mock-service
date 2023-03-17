@@ -10,7 +10,7 @@ import (
 
 func Test_ShouldNotStubGetWithBadUrl(t *testing.T) {
 	w := NewStubHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		"uuu",
 		"mmm",
@@ -23,7 +23,7 @@ func Test_ShouldNotStubGetWithBadUrl(t *testing.T) {
 func Test_ShouldNotPostStubClientWithoutURL(t *testing.T) {
 	w := NewStubHTTPClient()
 	w.AddMapping("POST", "/path1", NewStubHTTPResponse(200, "test body"))
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		"",
 		"POST",
@@ -36,7 +36,7 @@ func Test_ShouldNotPostStubClientWithoutURL(t *testing.T) {
 func Test_ShouldNotPostStubClientWithoutMethod(t *testing.T) {
 	w := NewStubHTTPClient()
 	w.AddMapping("POST", "/path1", NewStubHTTPResponse(200, "test body"))
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		"/path",
 		"",
@@ -49,7 +49,7 @@ func Test_ShouldNotPostStubClientWithoutMethod(t *testing.T) {
 func Test_ShouldPostStubClientWithIntegerResponse(t *testing.T) {
 	w := NewStubHTTPClient()
 	w.AddMapping("POST", "/path1", NewStubHTTPResponse(200, 3))
-	status, reader, _, err := w.Handle(
+	status, _, reader, _, err := w.Handle(
 		context.Background(),
 		"/path1",
 		"POST",
@@ -66,7 +66,7 @@ func Test_ShouldPostStubClientWithIntegerResponse(t *testing.T) {
 func Test_ShouldPostStubClientWithFileResponse(t *testing.T) {
 	w := NewStubHTTPClient()
 	w.AddMapping("POST", "/path1", NewStubHTTPResponse(200, "../../fixtures/devices.yaml"))
-	status, reader, _, err := w.Handle(
+	status, _, reader, _, err := w.Handle(
 		context.Background(),
 		"/path1",
 		"POST",
@@ -83,7 +83,7 @@ func Test_ShouldPostStubClientWithFileResponse(t *testing.T) {
 func Test_ShouldPostStubClientWithStringResponse(t *testing.T) {
 	w := NewStubHTTPClient()
 	w.AddMapping("POST", "/path1", NewStubHTTPResponse(200, "test body"))
-	status, reader, _, err := w.Handle(
+	status, _, reader, _, err := w.Handle(
 		context.Background(),
 		"/path1",
 		"POST",
@@ -100,7 +100,7 @@ func Test_ShouldPostStubClientWithStringResponse(t *testing.T) {
 func Test_ShouldPostStubClientWithErrorResponse(t *testing.T) {
 	w := NewStubHTTPClient()
 	w.AddMapping("POST", "/path1", NewStubHTTPResponseError(500, 1, fmt.Errorf("test error")))
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		"/path1",
 		"POST",

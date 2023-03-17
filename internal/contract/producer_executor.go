@@ -49,11 +49,13 @@ func (x *ProducerExecutor) Execute(
 	sli := metrics.NewMetrics()
 	sli.RegisterHistogram(scenarioKey.SafeName())
 	contractResponse := types.NewProducerContractResponse()
-	log.WithFields(log.Fields{
-		"Component":               "ProducerExecutor",
-		"Scenario":                scenarioKey,
-		"ProducerContractRequest": contractReq.String(),
-	}).Infof("execute BEGIN")
+	if contractReq.Verbose {
+		log.WithFields(log.Fields{
+			"Component":               "ProducerExecutor",
+			"Scenario":                scenarioKey,
+			"ProducerContractRequest": contractReq.String(),
+		}).Infof("execute BEGIN")
+	}
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
@@ -70,14 +72,16 @@ func (x *ProducerExecutor) Execute(
 
 	contractResponse.Metrics = sli.Summary()
 	elapsed := time.Since(started).String()
-	log.WithFields(log.Fields{
-		"Component":               "ProducerExecutor",
-		"Scenario":                scenarioKey,
-		"ProducerContractRequest": contractReq.String(),
-		"Elapsed":                 elapsed,
-		"Errors":                  len(contractResponse.Errors),
-		"Metrics":                 contractResponse.Metrics,
-	}).Infof("execute COMPLETED")
+	if contractReq.Verbose {
+		log.WithFields(log.Fields{
+			"Component":               "ProducerExecutor",
+			"Scenario":                scenarioKey,
+			"ProducerContractRequest": contractReq.String(),
+			"Elapsed":                 elapsed,
+			"Errors":                  len(contractResponse.Errors),
+			"Metrics":                 contractResponse.Metrics,
+		}).Infof("execute COMPLETED")
+	}
 	return contractResponse
 }
 
@@ -218,7 +222,7 @@ func (x *ProducerExecutor) execute(
 		return nil, fmt.Errorf("http URL is not valid %s, scenario url %s", url, scenario.BaseURL)
 	}
 	started := time.Now().UnixMilli()
-	templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
+	templateParams, queryParams, postParams, reqHeaders := scenario.Request.BuildTemplateParams(
 		req,
 		scenario.ToKeyData().MatchGroups(scenario.Path),
 		contractReq.Headers,
@@ -239,7 +243,7 @@ func (x *ProducerExecutor) execute(
 			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", scenario.Name, err)
 		}
 
-		if err = scenario.Request.Assert(queryParams, reqHeaders, reqContents, templateParams); err != nil {
+		if err = scenario.Request.Assert(queryParams, postParams, reqHeaders, reqContents, templateParams); err != nil {
 			return nil, err
 		}
 	}
@@ -252,7 +256,7 @@ func (x *ProducerExecutor) execute(
 		"QueryParams": queryParams,
 	}).Debugf("before execute")
 
-	statusCode, resBody, resHeaders, err := x.client.Handle(
+	statusCode, httpVersion, resBody, resHeaders, err := x.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	elapsed := time.Now().UnixMilli() - started
 	sli.AddHistogram(scenario.SafeName(), float64(elapsed)/1000.0, nil)
@@ -273,6 +277,7 @@ func (x *ProducerExecutor) execute(
 		"StatusCode":  statusCode,
 		"Headers":     reqHeaders,
 		"QueryParams": queryParams,
+		"HTTPVersion": httpVersion,
 		"Elapsed":     elapsed}
 
 	// response contents

@@ -37,6 +37,7 @@ func NewRecorder(
 
 // Handle records request
 func (r *Recorder) Handle(c web.APIContext) (err error) {
+	started := time.Now()
 	mockURL := c.Request().Header.Get(types.MockURL)
 	if mockURL == "" {
 		return fmt.Errorf("header for %s is not defined to connect to remote url '%s'", types.MockURL, c.Request().URL)
@@ -52,7 +53,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		return err
 	}
 
-	status, resBody, resHeaders, err := r.client.Handle(
+	status, httpVersion, resBody, resHeaders, err := r.client.Handle(
 		context.Background(),
 		mockURL,
 		c.Request().Method,
@@ -70,7 +71,17 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	}
 
 	resContentType, err := saveMockResponse(
-		r.config, u, c.Request(), reqBody, resBytes, resHeaders, status, r.scenarioRepository)
+		r.config,
+		u,
+		c.Request(),
+		reqBody,
+		resBytes,
+		resHeaders,
+		status,
+		httpVersion,
+		started,
+		time.Now(),
+		r.scenarioRepository)
 	if err != nil {
 		return err
 	}
@@ -85,7 +96,10 @@ func saveMockResponse(
 	reqBody []byte,
 	resBody []byte,
 	resHeaders map[string][]string,
-	status int,
+	resStatus int,
+	resHttpVersion string,
+	started time.Time,
+	ended time.Time,
 	scenarioRepository repository.APIScenarioRepository) (resContentType string, err error) {
 
 	if resHeaders != nil {
@@ -116,7 +130,7 @@ func saveMockResponse(
 	reqAssertions := make([]string, 0)
 	resAssertions := []string{
 		`ResponseTimeMillisLE 5000`,
-		fmt.Sprintf(`ResponseStatusMatches %d`, status),
+		fmt.Sprintf(`ResponseStatusMatches %d`, resStatus),
 	}
 	reqHeaderAssertions := make(map[string]string)
 	if req.Header.Get(types.ContentTypeHeader) != "" {
@@ -142,6 +156,7 @@ func saveMockResponse(
 			Headers:                  make(map[string]string),
 			Contents:                 string(reqBody),
 			ExampleContents:          string(reqBody),
+			HTTPVersion:              req.Proto,
 			AssertQueryParamsPattern: make(map[string]string),
 			AssertHeadersPattern:     reqHeaderAssertions,
 			AssertContentsPattern:    matchReqContents,
@@ -151,7 +166,8 @@ func saveMockResponse(
 			Headers:               resHeaders,
 			Contents:              string(resBody),
 			ExampleContents:       string(resBody),
-			StatusCode:            status,
+			StatusCode:            resStatus,
+			HTTPVersion:           resHttpVersion,
 			AssertHeadersPattern:  respHeaderAssertions,
 			AssertContentsPattern: matchResContents,
 			Assertions:            resAssertions,
@@ -235,7 +251,7 @@ func saveMockResponse(
 	if err = scenarioRepository.Save(scenario); err != nil {
 		return "", err
 	}
-	if err = scenarioRepository.SaveHistory(scenario, u.String()); err != nil {
+	if err = scenarioRepository.SaveHistory(scenario, u.String(), req.Host, started, ended); err != nil {
 		return "", err
 	}
 	return

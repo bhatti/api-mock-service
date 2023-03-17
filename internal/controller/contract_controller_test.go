@@ -28,7 +28,7 @@ func Test_InitializeSwaggerStructsForMockContractScenarioController(t *testing.T
 }
 
 func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -48,7 +48,7 @@ func Test_ShouldFailPostContractScenarioWithoutMethod(t *testing.T) {
 }
 
 func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func Test_ShouldFailPostContractScenarioWithoutName(t *testing.T) {
 }
 
 func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func Test_ShouldFailPostContractScenarioWithoutPath(t *testing.T) {
 }
 
 func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -157,7 +157,7 @@ func Test_ShouldFailPostContractScenarioWithoutBaseURL(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -198,7 +198,7 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -248,7 +248,7 @@ func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -298,7 +298,7 @@ func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 }
 
 func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)

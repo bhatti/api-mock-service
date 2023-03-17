@@ -42,7 +42,7 @@ type HTTPClient interface {
 		headers map[string][]string,
 		params map[string]string,
 		body io.ReadCloser,
-	) (int, io.ReadCloser, map[string][]string, error)
+	) (int, string, io.ReadCloser, map[string][]string, error)
 }
 
 // DefaultHTTPClient implements HTTPClient
@@ -67,7 +67,7 @@ func (w *DefaultHTTPClient) Handle(
 	headers map[string][]string,
 	params map[string]string,
 	body io.ReadCloser,
-) (statusCode int, respBody io.ReadCloser, respHeader map[string][]string, err error) {
+) (statusCode int, httpVersion string, respBody io.ReadCloser, respHeader map[string][]string, err error) {
 	started := time.Now()
 	log.WithFields(log.Fields{
 		"Component": "DefaultHTTPClient",
@@ -79,10 +79,10 @@ func (w *DefaultHTTPClient) Handle(
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return 500, nil, make(map[string][]string), err
+		return 500, "", nil, make(map[string][]string), err
 	}
 	req.ContentLength = int64(len(bodyB))
-	statusCode, respBody, respHeader, err = w.execute(req, headers, params)
+	statusCode, httpVersion, respBody, respHeader, err = w.execute(req, headers, params)
 
 	elapsed := time.Since(started).String()
 	log.WithFields(log.Fields{
@@ -99,9 +99,9 @@ func (w *DefaultHTTPClient) Handle(
 func (w *DefaultHTTPClient) execute(
 	req *http.Request,
 	headers map[string][]string,
-	params map[string]string) (int, io.ReadCloser, map[string][]string, error) {
+	params map[string]string) (int, string, io.ReadCloser, map[string][]string, error) {
 	if req == nil {
-		return 500, nil, make(map[string][]string), fmt.Errorf("request not specified")
+		return 500, "", nil, make(map[string][]string), fmt.Errorf("request not specified")
 	}
 	internalKeyMap := make(map[string]string)
 	if w.config.UserAgent != "" {
@@ -167,9 +167,9 @@ func (w *DefaultHTTPClient) execute(
 	}
 
 	if err != nil {
-		return 500, nil, make(map[string][]string), err
+		return 500, "", nil, make(map[string][]string), err
 	}
-	return resp.StatusCode, resp.Body, resp.Header, nil
+	return resp.StatusCode, resp.Proto, resp.Body, resp.Header, nil
 }
 
 // GetHeaderParamOrEnvValue searches key in map or env variables

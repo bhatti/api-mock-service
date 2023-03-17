@@ -63,7 +63,7 @@ func NewConfiguration(
 	viper.SetDefault("user_agent", "MocService_"+version.Version)
 	viper.SetDefault("match_header_regex", "Target")
 	viper.SetDefault("match_query_regex", "Target")
-	viper.SetDefault("max_history", "100")
+	viper.SetDefault("max_history", "500")
 	viper.SetDefault("assert_headers_pattern", "")
 	viper.SetDefault("assert_query_params_pattern", "")
 	viper.SetDefault("cors", "*")
@@ -105,7 +105,7 @@ func NewConfiguration(
 		config.DataDir = dataDir
 	}
 	if config.MaxHistory <= 0 {
-		config.MaxHistory = 100
+		config.MaxHistory = 500
 	}
 	if config.DataDir == "" {
 		config.DataDir = "default_mocks_data"
@@ -153,4 +153,17 @@ func matchRegex(re string, str string) bool {
 	}
 	match, err := regexp.Match("(?i)"+re, []byte(str))
 	return err == nil && match
+}
+
+// BuildTestConfig helper method
+func BuildTestConfig() *Configuration {
+	return &Configuration{
+		UserAgent:                "MockAPI",
+		DataDir:                  "../../mock_tests",
+		MaxHistory:               500,
+		ProxyPort:                8081,
+		AssertQueryParamsPattern: "target",
+		AssertHeadersPattern:     "target",
+		Version:                  NewVersion("1.0", "dev", "x"),
+	}
 }

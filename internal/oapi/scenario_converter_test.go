@@ -11,7 +11,7 @@ import (
 )
 
 func Test_ShouldParseJobsOpenAPI(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN mock scenarios from open-api specifications
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
@@ -44,14 +44,4 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 	}
 	_, err = MarshalScenarioToOpenAPI("t-api", "t-version", scenarios...)
 	require.NoError(t, err)
-}
-
-func buildTestConfig() *types.Configuration {
-	return &types.Configuration{
-		DataDir:                  "../../mock_tests",
-		MaxHistory:               5,
-		ProxyPort:                8081,
-		AssertQueryParamsPattern: "target",
-		AssertHeadersPattern:     "target",
-	}
 }

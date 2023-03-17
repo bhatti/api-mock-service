@@ -17,7 +17,7 @@ import (
 )
 
 func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -43,7 +43,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 }
 
 func Test_ShouldRecordGetProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -80,7 +80,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -109,7 +109,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordPostProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -147,7 +147,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordPutProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)

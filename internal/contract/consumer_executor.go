@@ -33,6 +33,7 @@ func NewConsumerExecutor(
 
 // Execute request and replays stubbed response
 func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
+	started := time.Now()
 	key, err := web.BuildMockScenarioKeyData(c.Request())
 	if err != nil {
 		return err
@@ -64,6 +65,8 @@ func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		c.Request().Header,
 		c.Response().Header(),
 		matchedScenario,
+		started,
+		time.Now(),
 		p.scenarioRepository,
 		p.fixtureRepository,
 	)
@@ -82,6 +85,8 @@ func AddMockResponse(
 	reqHeaders http.Header,
 	respHeaders http.Header,
 	scenario *types.APIScenario,
+	started time.Time,
+	ended time.Time,
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
 ) (respBody []byte, err error) {
@@ -94,7 +99,7 @@ func AddMockResponse(
 
 	{
 		// check request assertions
-		templateParams, queryParams, reqHeaders := scenario.Request.BuildTemplateParams(
+		templateParams, queryParams, postParams, reqHeaders := scenario.Request.BuildTemplateParams(
 			req,
 			scenario.ToKeyData().MatchGroups(scenario.Path),
 			reqHeaders,
@@ -103,7 +108,7 @@ func AddMockResponse(
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", scenario.Name, err)
 		}
-		if err = scenario.Request.Assert(queryParams, reqHeaders, reqContents, templateParams); err != nil {
+		if err = scenario.Request.Assert(queryParams, postParams, reqHeaders, reqContents, templateParams); err != nil {
 			return nil, err
 		}
 	}
@@ -156,7 +161,12 @@ func AddMockResponse(
 			scenario.Response.Headers[k] = vals
 		}
 
-		err = scenarioRepository.SaveHistory(scenario, req.URL.String())
+		err = scenarioRepository.SaveHistory(scenario,
+			req.URL.String(),
+			req.Host,
+			started,
+			ended,
+		)
 	}
 
 	return

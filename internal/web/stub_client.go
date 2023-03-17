@@ -91,32 +91,32 @@ func (w *StubHTTPClient) Handle(
 	method string,
 	_ map[string][]string,
 	_ map[string]string,
-	_ io.ReadCloser) (int, io.ReadCloser, map[string][]string, error) {
+	_ io.ReadCloser) (int, string, io.ReadCloser, map[string][]string, error) {
 	if url == "" {
-		return 500, nil, nil, fmt.Errorf("url is not specified")
+		return 500, "", nil, nil, fmt.Errorf("url is not specified")
 	}
 	if method == "" {
-		return 500, nil, nil, fmt.Errorf("method is not specified")
+		return 500, "", nil, nil, fmt.Errorf("method is not specified")
 	}
 	log.WithFields(log.Fields{"component": "stub-web", "url": url, "method": method}).Debugf("BEGIN")
 	resp := w.getMapping(method, url)
 	if resp == nil {
 		debug.PrintStack()
-		return 404, nil, nil, fmt.Errorf("couldn't find URL '%s' method '%s' in mapping: %v",
+		return 404, "", nil, nil, fmt.Errorf("couldn't find URL '%s' method '%s' in mapping: %v",
 			url, method, w.mappingByMethodURL)
 	}
 	if resp.sleepDuration > 0 {
 		time.Sleep(resp.sleepDuration)
 	}
 	if len(resp.Bytes) > 0 {
-		return resp.Status, io.NopCloser(bytes.NewReader(resp.Bytes)), resp.Headers, resp.Error
+		return resp.Status, "", io.NopCloser(bytes.NewReader(resp.Bytes)), resp.Headers, resp.Error
 	}
 	if resp.Error != nil {
-		return resp.Status, nil, resp.Headers, resp.Error
+		return resp.Status, "", nil, resp.Headers, resp.Error
 	}
 	b, err := os.ReadFile(resp.Filename)
 	if err != nil {
-		return 404, nil, resp.Headers, fmt.Errorf("error reading file %v for url %v due to %w", resp.Filename, url, err)
+		return 404, "", nil, resp.Headers, fmt.Errorf("error reading file %v for url %v due to %w", resp.Filename, url, err)
 	}
-	return resp.Status, io.NopCloser(bytes.NewReader(b)), resp.Headers, resp.Error
+	return resp.Status, "", io.NopCloser(bytes.NewReader(b)), resp.Headers, resp.Error
 }

@@ -7,23 +7,21 @@ import (
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
+	"github.com/bhatti/api-mock-service/internal/repository"
+	"github.com/bhatti/api-mock-service/internal/types"
+	"github.com/bhatti/api-mock-service/internal/web"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"testing"
 	"time"
-
-	"github.com/bhatti/api-mock-service/internal/repository"
-	"github.com/bhatti/api-mock-service/internal/types"
-	"github.com/bhatti/api-mock-service/internal/web"
-	"github.com/stretchr/testify/require"
 )
 
 func Test_ShouldLookupPutMockScenarios(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -32,7 +30,8 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, scenarioRepository.Save(buildScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)))
+		scenario := types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)
+		require.NoError(t, scenarioRepository.Save(scenario))
 	}
 	u, err := url.Parse("https://jsonplaceholder.typicode.com/blah")
 	// WHEN looking up non-existing API
@@ -65,10 +64,8 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		},
 	})
 	err = player.Execute(ctx)
-	require.NoError(t, err)
-	// THEN it should find it
-	saved := ctx.Result.([]byte)
-	require.Equal(t, "test body", string(saved))
+	// THEN it should not find it due to missing ETag regex \d{3}
+	require.Error(t, err)
 
 	// WHEN looking up todos by PUT with different query param
 	ctx = web.NewStubContext(&http.Request{
@@ -84,12 +81,12 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	err = player.Execute(ctx)
 	require.NoError(t, err)
 	// THEN it should find it
-	saved = ctx.Result.([]byte)
+	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
 }
 
 func Test_ShouldExecuteDescribeAPI(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -132,7 +129,7 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 }
 
 func Test_ShouldLookupPostMockScenarios(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -141,7 +138,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, scenarioRepository.Save(buildScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books/:id", i)))
+		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books/:id", i)))
 	}
 
 	// WHEN matching partial url without id
@@ -168,6 +165,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 		URL:    u,
 		Header: http.Header{
 			types.ContentTypeHeader: []string{"application/json"},
+			"ETag":                  []string{"123"},
 		},
 	})
 	err = player.Execute(ctx)
@@ -178,7 +176,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupGetMockScenarios(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -187,7 +185,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, scenarioRepository.Save(buildScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
+		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
 	}
 	// WHEN looking up non-existing API
 	u, err := url.Parse("https://books.com/v2/topic/business/blah")
@@ -211,6 +209,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 		URL:    u,
 		Header: http.Header{
 			types.ContentTypeHeader: []string{"application/json"},
+			"ETag":                  []string{"123"},
 		},
 	})
 	err = player.Execute(ctx)
@@ -221,7 +220,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository and player
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -230,7 +229,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
+		require.NoError(t, mockScenarioRepository.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
 	}
 	// WHEN looking up non-existing API
 	u, err := url.Parse("https://books.com/business/books/202")
@@ -252,6 +251,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 		URL:    u,
 		Header: http.Header{
 			types.ContentTypeHeader: []string{"application/json"},
+			"ETag":                  []string{"123"},
 		},
 	})
 	err = player.Execute(ctx)
@@ -262,7 +262,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 }
 
 func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository and player
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -271,7 +271,7 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/{topic}/{id}", i)))
+		require.NoError(t, mockScenarioRepository.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/{topic}/{id}", i)))
 	}
 	// WHEN looking up non-existing API
 	u, err := url.Parse("https://books.com/business/books/202")
@@ -293,6 +293,7 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 		URL:    u,
 		Header: http.Header{
 			types.ContentTypeHeader: []string{"application/json"},
+			"ETag":                  []string{"123"},
 		},
 	})
 	err = player.Execute(ctx)
@@ -303,7 +304,7 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 }
 
 func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario loaded from YAML
 	b, err := os.ReadFile("../../fixtures/get_customer.yaml")
 	require.NoError(t, err)
@@ -346,7 +347,7 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 }
 
 func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -355,7 +356,7 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
-		require.NoError(t, scenarioRepository.Save(buildScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))
+		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))
 	}
 	u, err := url.Parse("https://jsonplaceholder.typicode.com/blah")
 	// WHEN looking up non-existing API
@@ -380,6 +381,7 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 		URL:    u,
 		Header: http.Header{
 			types.ContentTypeHeader: []string{"application/json"},
+			"ETag":                  []string{"123"},
 		},
 	})
 	err = player.Execute(ctx)
@@ -390,7 +392,7 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 }
 
 func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario and fixture repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -398,7 +400,7 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
-	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario := types.BuildTestScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
 	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
 	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
@@ -408,6 +410,8 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 		reqHeader,
 		resHeader,
 		matchedScenario,
+		time.Now(),
+		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
 	)
@@ -416,15 +420,15 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 }
 
 func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario and fixture repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	reqHeader := http.Header{"X1": []string{"val1"}}
+	reqHeader := http.Header{"X1": []string{"val1"}, "ETag": []string{"123"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
-	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario := types.BuildTestScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
 	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
 	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
@@ -436,6 +440,8 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 		reqHeader,
 		resHeader,
 		matchedScenario,
+		time.Now(),
+		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
 	)
@@ -443,7 +449,7 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 }
 
 func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario and fixture repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -451,7 +457,7 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
-	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario := types.BuildTestScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
 	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
 	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
@@ -463,6 +469,8 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 		reqHeader,
 		resHeader,
 		matchedScenario,
+		time.Now(),
+		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
 	)
@@ -470,15 +478,15 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 }
 
 func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario and fixture repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	reqHeader := http.Header{"X1": []string{"val1"}}
+	reqHeader := http.Header{"X1": []string{"val1"}, "ETag": []string{"123"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
-	matchedScenario := buildScenario(types.Post, "name", "/path", 10)
+	matchedScenario := types.BuildTestScenario(types.Post, "name", "/path", 10)
 	matchedScenario.Response.ContentsFile = "lines.txt"
 	_ = os.MkdirAll("../../mock_tests/api_contracts/path/POST", 0755)
 	_ = os.WriteFile("../../mock_tests/api_contracts/path/POST/lines.txt.dat", []byte("test"), 0644)
@@ -494,32 +502,10 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 		reqHeader,
 		resHeader,
 		matchedScenario,
+		time.Now(),
+		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
 	)
 	require.NoError(t, err)
-}
-
-func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {
-	return &types.APIScenario{
-		Method:      method,
-		Name:        name,
-		Path:        path,
-		Description: name,
-		Request: types.APIRequest{
-			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
-			AssertHeadersPattern: map[string]string{
-				types.ContentTypeHeader: "application/json",
-			},
-		},
-		Response: types.APIResponse{
-			Headers: map[string][]string{
-				"ETag":                  {strconv.Itoa(n)},
-				types.ContentTypeHeader: {"application/json"},
-			},
-			Contents:   "test body",
-			StatusCode: 200,
-		},
-		WaitBeforeReply: time.Duration(1) * time.Second,
-	}
 }

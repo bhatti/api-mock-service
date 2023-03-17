@@ -14,7 +14,7 @@ const todoURL = "https://jsonplaceholder.typicode.com/todos"
 
 func Test_ShouldNotRealGetWithBadUrl(t *testing.T) {
 	w := newTestNewHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		"uuu",
 		"mmm",
@@ -28,7 +28,7 @@ func Test_ShouldNotRealGetWithBadUrl(t *testing.T) {
 
 func Test_ShouldNotRealGetWithBadMethod(t *testing.T) {
 	w := newTestNewHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL+"/1",
 		"mmm",
@@ -42,7 +42,7 @@ func Test_ShouldNotRealGetWithBadMethod(t *testing.T) {
 
 func Test_ShouldRealGet(t *testing.T) {
 	w := newTestNewHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL+"/1",
 		"GET",
@@ -56,7 +56,7 @@ func Test_ShouldRealGet(t *testing.T) {
 
 func Test_ShouldRealDelete(t *testing.T) {
 	w := newTestNewHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL+"/1",
 		"DELETE",
@@ -70,8 +70,8 @@ func Test_ShouldRealDelete(t *testing.T) {
 
 func Test_ShouldRealDeleteBody(t *testing.T) {
 	w := newTestNewHTTPClient()
-	body := io.ReadCloser(io.NopCloser(bytes.NewReader([]byte("hello"))))
-	_, _, _, err := w.Handle(
+	body := io.NopCloser(bytes.NewReader([]byte("hello")))
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL+"/1",
 		"DELETE",
@@ -85,7 +85,7 @@ func Test_ShouldRealDeleteBody(t *testing.T) {
 
 func Test_ShouldRealPostError(t *testing.T) {
 	w := newTestNewHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL+"_____",
 		"POST",
@@ -99,7 +99,7 @@ func Test_ShouldRealPostError(t *testing.T) {
 
 func Test_ShouldRealPost(t *testing.T) {
 	w := newTestNewHTTPClient()
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL,
 		"POST",
@@ -114,7 +114,7 @@ func Test_ShouldRealPost(t *testing.T) {
 func Test_ShouldRealPostForm(t *testing.T) {
 	w := newTestNewHTTPClient()
 	w.config.UserAgent = "test"
-	_, _, _, err := w.Handle(
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL,
 		"POST",
@@ -128,8 +128,8 @@ func Test_ShouldRealPostForm(t *testing.T) {
 
 func Test_ShouldRealPostBody(t *testing.T) {
 	w := newTestNewHTTPClient()
-	body := io.ReadCloser(io.NopCloser(bytes.NewReader([]byte("hello"))))
-	_, _, _, err := w.Handle(
+	body := io.NopCloser(bytes.NewReader([]byte("hello")))
+	_, _, _, _, err := w.Handle(
 		context.Background(),
 		todoURL,
 		"POST",
@@ -154,7 +154,7 @@ func Test_ShouldGetgetProxyEnv(t *testing.T) {
 
 func Test_ShouldNotExecuteHttpClientWithNilRequest(t *testing.T) {
 	config := &types.Configuration{ProxyURL: "http://localhost:8000"}
-	status, _, _, err := NewHTTPClient(config, NewAWSSigner(config)).execute(nil, nil, nil)
+	status, _, _, _, err := NewHTTPClient(config, NewAWSSigner(config)).execute(nil, nil, nil)
 	require.Error(t, err)
 	require.Equal(t, 500, status)
 }

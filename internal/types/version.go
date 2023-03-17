@@ -27,9 +27,9 @@ func NewVersion(version string, commit string, date string) *Version {
 
 func (v *Version) String() string {
 	if v.Version == "" || v.Version == v.Commit {
-		return v.Commit + " " + v.Date
+		return v.Commit + "_" + v.Date
 	}
-	return v.Version + " " + v.Commit + " " + v.Date
+	return v.Version + "_" + v.Commit + "_" + v.Date
 }
 
 // Output will add the versioning code

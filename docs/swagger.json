@@ -57,6 +57,14 @@
           "type": "object",
           "x-go-name": "AssertHeadersPattern"
         },
+        "assert_post_params_pattern": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "AssertPostParamsPattern for the API",
+          "type": "object",
+          "x-go-name": "AssertPostParamsPattern"
+        },
         "assert_query_params_pattern": {
           "additionalProperties": {
             "type": "string"
@@ -122,6 +130,14 @@
           "type": "object",
           "x-go-name": "AssertHeadersPattern"
         },
+        "assert_post_params_pattern": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "AssertPostParamsPattern for the API",
+          "type": "object",
+          "x-go-name": "AssertPostParamsPattern"
+        },
         "assert_query_params_pattern": {
           "additionalProperties": {
             "type": "string"
@@ -156,19 +172,32 @@
           "type": "object",
           "x-go-name": "Headers"
         },
+        "http_version": {
+          "description": "HTTPVersion version of http",
+          "type": "string",
+          "x-go-name": "HTTPVersion"
+        },
         "path_params": {
           "additionalProperties": {
             "type": "string"
           },
-          "description": "PathParams sample for the API",
+          "description": "PathParams for the API",
           "type": "object",
           "x-go-name": "PathParams"
+        },
+        "post_params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "PostParams for the API",
+          "type": "object",
+          "x-go-name": "PostParams"
         },
         "query_params": {
           "additionalProperties": {
             "type": "string"
           },
-          "description": "QueryParams sample for the API",
+          "description": "QueryParams for the API",
           "type": "object",
           "x-go-name": "QueryParams"
         }
@@ -225,6 +254,11 @@
           "description": "Headers for mock response",
           "type": "object",
           "x-go-name": "Headers"
+        },
+        "http_version": {
+          "description": "HTTPVersion version of http",
+          "type": "string",
+          "x-go-name": "HTTPVersion"
         },
         "pipe_properties": {
           "description": "PipeProperties to extract properties from response",
@@ -315,16 +349,482 @@
       "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
+    "Browser": {
+      "description": "Browser that created the log",
+      "properties": {
+        "comment": {
+          "description": "Optional. A comment provided by the user or the browser.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "name": {
+          "description": "Required. The name of the browser that created the log.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "version": {
+          "description": "Required. The version number of the browser that created the log.",
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Cache": {
+      "properties": {
+        "afterRequest": {
+          "$ref": "#/definitions/CacheObject"
+        },
+        "beforeRequest": {
+          "$ref": "#/definitions/CacheObject"
+        },
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        }
+      },
+      "title": "Cache contains info about a request coming from browser cache.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "CacheObject": {
+      "description": "CacheObject is used by both beforeRequest and afterRequest",
+      "properties": {
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "eTag": {
+          "description": "Etag",
+          "type": "string",
+          "x-go-name": "ETag"
+        },
+        "expires": {
+          "description": "optional - Expiration time of the cache entry.",
+          "type": "string",
+          "x-go-name": "Expires"
+        },
+        "hitCount": {
+          "description": "The number of times the cache entry has been opened.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "HitCount"
+        },
+        "lastAccess": {
+          "description": "The last time the cache entry was opened.",
+          "type": "string",
+          "x-go-name": "LastAccess"
+        }
+      },
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Content": {
+      "properties": {
+        "_file": {
+          "description": "optional (community enhancement) A path to an attached file containing this content\nused by Playwright",
+          "type": "string",
+          "x-go-name": "File"
+        },
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "compression": {
+          "description": "optional Number of bytes saved. Leave out this field if the information\nis not available.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Compression"
+        },
+        "encoding": {
+          "description": "optional (new in 1.2) Encoding used for response text field e.g\n\"base64\". Leave out this field if the text field is HTTP decoded\n(decompressed & unchunked), than trans-coded from its original character\nset into UTF-8.",
+          "type": "string",
+          "x-go-name": "Encoding"
+        },
+        "mimeType": {
+          "description": "MIME type of the response text (value of the Content-Type response\nheader). The charset attribute of the MIME type is included (if\navailable).",
+          "type": "string",
+          "x-go-name": "MimeType"
+        },
+        "size": {
+          "description": "Length of the returned content in bytes. Should be equal to\nresponse.bodySize if there is no compression and bigger when the content\nhas been compressed.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Size"
+        },
+        "text": {
+          "description": "optional Response body sent from the server or loaded from the browser\ncache. This field is populated with textual content only. The text field\nis either HTTP decoded text or encoded (e.g. \"base64\") representation of\nthe response body. Leave out this field if the information is not\navailable.",
+          "type": "string",
+          "x-go-name": "Text"
+        }
+      },
+      "title": "Content describes details about response content (embedded in <response> object).",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Cookie": {
+      "properties": {
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the application.",
+          "type": "boolean",
+          "x-go-name": "Comment"
+        },
+        "domain": {
+          "description": "optional The host of the cookie.",
+          "type": "string",
+          "x-go-name": "Domain"
+        },
+        "expires": {
+          "description": "optional Cookie expiration time.\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.123+02:00).",
+          "type": "string",
+          "x-go-name": "Expires"
+        },
+        "httpOnly": {
+          "description": "optional Set to true if the cookie is HTTP only, false otherwise.",
+          "type": "boolean",
+          "x-go-name": "HTTPOnly"
+        },
+        "name": {
+          "description": "The name of the cookie.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "path": {
+          "description": "optional The path pertaining to the cookie.",
+          "type": "string",
+          "x-go-name": "Path"
+        },
+        "secure": {
+          "description": "optional (new in 1.2) True if the cookie was transmitted over ssl, false\notherwise.",
+          "type": "boolean",
+          "x-go-name": "Secure"
+        },
+        "value": {
+          "description": "The cookie value.",
+          "type": "string",
+          "x-go-name": "Value"
+        }
+      },
+      "title": "Cookie contains list of all cookies (used in <request> and <response> objects).",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Creator": {
+      "description": "Creator contains information about the log creator application",
+      "properties": {
+        "comment": {
+          "description": "Optional. A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "name": {
+          "description": "Required. The name of the application that created the log.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "version": {
+          "description": "Required. The version number of the application that created the log.",
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
     "Duration": {
       "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
       "format": "int64",
       "type": "integer",
       "x-go-package": "time"
     },
+    "Entry": {
+      "description": "Leave out this field if the application does not support grouping by pages.",
+      "properties": {
+        "cache": {
+          "$ref": "#/definitions/Cache"
+        },
+        "comment": {
+          "description": "(new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "connection": {
+          "description": "optional (new in 1.2) Unique ID of the parent TCP/IP connection, can be\nthe client port number. Note that a port number doesn't have to be unique\nidentifier in cases where the port is shared for more connections. If the\nport isn't available for the application, any other unique connection ID\ncan be used instead (e.g. connection index). Leave out this field if the\napplication doesn't support this info.",
+          "type": "string",
+          "x-go-name": "Connection"
+        },
+        "pageTimings": {
+          "$ref": "#/definitions/PageTimings"
+        },
+        "pageref": {
+          "type": "string",
+          "x-go-name": "Pageref"
+        },
+        "request": {
+          "$ref": "#/definitions/Request"
+        },
+        "response": {
+          "$ref": "#/definitions/Response"
+        },
+        "serverIPAddress": {
+          "description": "optional (new in 1.2) IP address of the server that was connected\n(result of DNS resolution).",
+          "type": "string",
+          "x-go-name": "ServerIPAddress"
+        },
+        "startedDateTime": {
+          "description": "Date and time stamp of the request start\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD).",
+          "type": "string",
+          "x-go-name": "StartedDateTime"
+        },
+        "time": {
+          "description": "Total elapsed time of the request in milliseconds. This is the sum of all\ntimings available in the timings object (i.e. not including -1 values) .",
+          "format": "float",
+          "type": "number",
+          "x-go-name": "Time"
+        }
+      },
+      "title": "Entry is a unique, optional Reference to the parent page.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Log": {
+      "properties": {
+        "browser": {
+          "$ref": "#/definitions/Browser"
+        },
+        "comment": {
+          "description": "Optional. A comment provided by the user or the application. Sorting\nentries by startedDateTime (starting from the oldest) is preferred way how\nto export data since it can make importing faster. However, the reader\napplication should always make sure the array is sorted (if required for\nthe import).",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "creator": {
+          "$ref": "#/definitions/Creator"
+        },
+        "entries": {
+          "description": "Required. An array of objects of type entry, each representing one\nexported (tracked) HTTP request.",
+          "items": {
+            "$ref": "#/definitions/Entry"
+          },
+          "type": "array",
+          "x-go-name": "Entries"
+        },
+        "pages": {
+          "description": "Optional. An array of objects of type page, each representing one exported\n(tracked) page. Leave out this field if the application does not support\ngrouping by pages.",
+          "items": {
+            "$ref": "#/definitions/Page"
+          },
+          "type": "array",
+          "x-go-name": "Pages"
+        },
+        "version": {
+          "description": "Required. Version number of the format.",
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "title": "Log represents the root of the exported data. This object MUST be present and its name MUST be \"log\".",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
     "MethodType": {
       "description": "MethodType for HTTP",
       "type": "string",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
+    "NVP": {
+      "description": "NVP is simply a name/value pair with a comment",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "value": {
+          "type": "string",
+          "x-go-name": "Value"
+        }
+      },
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Page": {
+      "description": "In case when an HTTP trace tool isn't able to group requests by a page,\nthe <pages> object is empty and individual requests doesn't have a parent page.",
+      "properties": {
+        "comment": {
+          "description": "(new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "id": {
+          "description": "Unique identifier of a page within the . Entries use it to refer the parent page.",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "pageTiming": {
+          "$ref": "#/definitions/PageTiming"
+        },
+        "startedDateTime": {
+          "description": "Date and time stamp for the beginning of the page load\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.45+01:00).",
+          "type": "string",
+          "x-go-name": "StartedDateTime"
+        },
+        "title": {
+          "description": "Page title.",
+          "type": "string",
+          "x-go-name": "Title"
+        }
+      },
+      "title": "Page object for every exported web page and one <entry> object for every HTTP request.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "PageTiming": {
+      "description": "All times are specified in milliseconds. If a time info is not available appropriate field is set to -1.",
+      "properties": {
+        "comment": {
+          "description": "(new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "onContentLoad": {
+          "description": "Content of the page loaded. Number of milliseconds since page load started\n(page.startedDateTime). Use -1 if the timing does not apply to the current\nrequest.\nDepeding on the browser, onContentLoad property represents DOMContentLoad\nevent or document.readyState == interactive.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "OnContentLoad"
+        },
+        "onLoad": {
+          "description": "Page is loaded (onLoad event fired). Number of milliseconds since page\nload started (page.startedDateTime). Use -1 if the timing does not apply\nto the current request.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "OnLoad"
+        }
+      },
+      "title": "PageTiming describes timings for various events (states) fired during the page load.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "PageTimings": {
+      "description": "All times are specified in milliseconds.",
+      "properties": {
+        "blocked": {
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Blocked"
+        },
+        "comment": {
+          "description": "optional (new in 1.2) - Time required for SSL/TLS negotiation. If this\nfield is defined then the time is also included in the connect field (to\nensure backward compatibility with HAR 1.1). Use -1 if the timing does not\napply to the current request.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "connect": {
+          "description": "optional - DNS resolution time. The time required to resolve a host name.\nUse -1 if the timing does not apply to the current request.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Connect"
+        },
+        "dns": {
+          "description": "optional - Time spent in a queue waiting for a network connection. Use -1\nif the timing does not apply to the current request.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "DNS"
+        },
+        "receive": {
+          "description": "Waiting for a response from the server.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Receive"
+        },
+        "send": {
+          "description": "optional - Time required to create TCP connection. Use -1 if the timing\ndoes not apply to the current request.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Send"
+        },
+        "ssl": {
+          "description": "Time required to read entire response from the server (or cache).",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Ssl"
+        },
+        "wait": {
+          "description": "Time required to send HTTP request to the server.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Wait"
+        }
+      },
+      "title": "PageTimings describes various phases within request-response round trip.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "PostData": {
+      "properties": {
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the\napplication.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "mimeType": {
+          "description": "Mime type of posted data.",
+          "type": "string",
+          "x-go-name": "MimeType"
+        },
+        "params": {
+          "description": "List of posted parameters (in case of URL encoded parameters).",
+          "items": {
+            "$ref": "#/definitions/PostParam"
+          },
+          "type": "array",
+          "x-go-name": "Params"
+        },
+        "text": {
+          "description": "Plain text posted data",
+          "type": "string",
+          "x-go-name": "Text"
+        }
+      },
+      "title": "PostData describes posted data, if any (embedded in <request> object).",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "PostParam": {
+      "properties": {
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "contentType": {
+          "description": "optional content type of posted file.",
+          "type": "string",
+          "x-go-name": "ContentType"
+        },
+        "fileName": {
+          "description": "optional name of a posted file.",
+          "type": "string",
+          "x-go-name": "FileName"
+        },
+        "name": {
+          "description": "name of a posted parameter.",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "value": {
+          "description": "optional value of a posted parameter or content of a posted file.",
+          "type": "string",
+          "x-go-name": "Value"
+        }
+      },
+      "title": "PostParam is a list of posted parameters, if any (embedded in <postData> object).",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
     },
     "ProducerContractRequest": {
       "description": "ProducerContractRequest for generating fuzz-data requests to an API implementation for producer based contract testing",
@@ -395,6 +895,136 @@
       },
       "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
+    "Request": {
+      "properties": {
+        "bodySize": {
+          "description": "Size of the request body (POST data payload) in bytes. Set to -1 if the\ninfo is not available.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "BodySize"
+        },
+        "comment": {
+          "description": "(new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "cookies": {
+          "description": "List of cookie objects.",
+          "items": {
+            "$ref": "#/definitions/Cookie"
+          },
+          "type": "array",
+          "x-go-name": "Cookies"
+        },
+        "headerSize": {
+          "description": "Total number of bytes from the start of the HTTP request message until\n(and including) the double CRLF before the body. Set to -1 if the info\nis not available.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "HeaderSize"
+        },
+        "headers": {
+          "description": "List of header objects.",
+          "items": {
+            "$ref": "#/definitions/NVP"
+          },
+          "type": "array",
+          "x-go-name": "Headers"
+        },
+        "httpVersion": {
+          "description": "Request HTTP Version.",
+          "type": "string",
+          "x-go-name": "HTTPVersion"
+        },
+        "method": {
+          "description": "Request method (GET, POST, ...).",
+          "type": "string",
+          "x-go-name": "Method"
+        },
+        "postData": {
+          "$ref": "#/definitions/PostData"
+        },
+        "queryString": {
+          "description": "List of query parameter objects.",
+          "items": {
+            "$ref": "#/definitions/NVP"
+          },
+          "type": "array",
+          "x-go-name": "QueryString"
+        },
+        "url": {
+          "description": "Absolute URL of the request (fragments are not included).",
+          "type": "string",
+          "x-go-name": "URL"
+        }
+      },
+      "title": "Request contains detailed info about performed request.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+    },
+    "Response": {
+      "properties": {
+        "bodySize": {
+          "description": "Size of the received response body in bytes. Set to zero in case of\nresponses coming from the cache (304). Set to -1 if the info is not\navailable.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "BodySize"
+        },
+        "comment": {
+          "description": "optional (new in 1.2) A comment provided by the user or the application.",
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "content": {
+          "$ref": "#/definitions/Content"
+        },
+        "cookies": {
+          "description": "List of cookie objects.",
+          "items": {
+            "$ref": "#/definitions/Cookie"
+          },
+          "type": "array",
+          "x-go-name": "Cookies"
+        },
+        "headers": {
+          "description": "List of header objects.",
+          "items": {
+            "$ref": "#/definitions/NVP"
+          },
+          "type": "array",
+          "x-go-name": "Headers"
+        },
+        "headersSize": {
+          "description": "Total number of bytes from the start of the HTTP response message until\n(and including) the double CRLF before the body. Set to -1 if the info is\nnot available.\nThe size of received response-headers is computed only from headers that\nare really received from the server. Additional headers appended by the\nbrowser are not included in this number, but they appear in the list of\nheader objects.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "HeadersSize"
+        },
+        "httpVersion": {
+          "description": "Response HTTP Version.",
+          "type": "string",
+          "x-go-name": "HTTPVersion"
+        },
+        "redirectURL": {
+          "description": "Redirection target URL from the Location response header.",
+          "type": "string",
+          "x-go-name": "RedirectURL"
+        },
+        "status": {
+          "description": "Response status.",
+          "format": "int64",
+          "type": "integer",
+          "x-go-name": "Status"
+        },
+        "statusText": {
+          "description": "Response status description.",
+          "type": "string",
+          "x-go-name": "StatusText"
+        }
+      },
+      "title": "Response contains detailed info about the response.",
+      "type": "object",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
     }
   },
   "paths": {
@@ -499,6 +1129,34 @@
         "summary": "Invokes service api-contract using executed history of consumer contracts.",
         "tags": [
           "producer-contract"
+        ]
+      }
+    },
+    "/_exec_history/har": {
+      "get": {
+        "operationId": "getExecHistoryHar",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/execHistoryNamesResponse"
+          }
+        },
+        "summary": "Fetches execution history in the format of HTTP HAR.",
+        "tags": [
+          "exec-history"
+        ]
+      }
+    },
+    "/_exec_history/names": {
+      "get": {
+        "operationId": "getExecHistoryNames",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/execHistoryNamesResponse"
+          }
+        },
+        "summary": "Fetches history of api scenarios by group.",
+        "tags": [
+          "exec-history"
         ]
       }
     },
@@ -963,20 +1621,6 @@
         ]
       }
     },
-    "/_scenarios/history": {
-      "get": {
-        "operationId": "apiScenarioHistory",
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiHistoryResponse"
-          }
-        },
-        "summary": "Fetches history of api scenarios by group.",
-        "tags": [
-          "api-scenarios"
-        ]
-      }
-    },
     "/{path}": {
       "delete": {
         "operationId": "deleteRoot",
@@ -1121,15 +1765,6 @@
         "type": "array"
       }
     },
-    "apiHistoryResponse": {
-      "description": "APIScenario history scenario names",
-      "schema": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array"
-      }
-    },
     "apiNamesResponse": {
       "description": "APIScenario names",
       "schema": {
@@ -1178,6 +1813,16 @@
     },
     "emptyResponse": {
       "description": ""
+    },
+    "execHistoryNamesResponse": {
+      "description": "ExecHistory history scenario names",
+      "schema": {
+        "items": {
+          "$ref": "#/definitions/Log",
+          "type": "string"
+        },
+        "type": "array"
+      }
     }
   },
   "swagger": "2.0"

@@ -30,7 +30,6 @@ func NewAPIScenarioController(
 	}
 
 	webserver.GET("/_scenarios", ctrl.listAPIScenarioPaths)
-	webserver.GET("/_scenarios/history", ctrl.apiScenarioHistory)
 	webserver.GET("/_scenarios/:method/names/:path", ctrl.getAPIScenarioNames)
 	webserver.GET("/_scenarios/groups", ctrl.getAPIGroups)
 	webserver.GET("/_scenarios/:method/:name/:path", ctrl.getAPIScenario)
@@ -60,20 +59,6 @@ func (msc *APIScenarioController) postMockScenario(c web.APIContext) (err error)
 		}
 	}
 	return c.JSON(http.StatusOK, scenario)
-}
-
-// apiScenarioHistory handler
-// swagger:route GET /_scenarios/history api-scenarios apiScenarioHistory
-// Fetches history of api scenarios by group.
-// responses:
-//
-//	200: apiHistoryResponse
-func (msc *APIScenarioController) apiScenarioHistory(c web.APIContext) error {
-	res := msc.scenarioRepository.HistoryNames(c.QueryParam("group"))
-	if res == nil {
-		res = make([]string, 0)
-	}
-	return c.JSON(http.StatusOK, res)
 }
 
 // listAPIScenarioPaths handler
@@ -243,13 +228,6 @@ type apiNamesResponseBody struct {
 // APIScenario groups
 // swagger:response apiGroupsResponse
 type apiGroupsResponseBody struct {
-	// in:body
-	Body []string
-}
-
-// APIScenario history scenario names
-// swagger:response apiHistoryResponse
-type apiHistoryResponseBody struct {
 	// in:body
 	Body []string
 }

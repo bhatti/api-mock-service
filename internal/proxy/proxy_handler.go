@@ -15,6 +15,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 //var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
@@ -82,7 +83,8 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 	return req, res
 }
 
-func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
+	ctx.UserData = time.Now()
 	var err error
 	_, req.Body, err = utils.ReadAll(req.Body)
 	if err != nil {
@@ -143,7 +145,7 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 			"Method":      req.Method,
 			"Headers":     req.Header,
 			"AWSAuthSig4": awsAuthSig4,
-		}).Infof("proxy server redirected request to internal controllers")
+		}).Debugf("proxy server redirected request to internal controllers")
 		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 		return req, res, nil
 	}
@@ -172,6 +174,8 @@ func (h *Handler) doHandleRequest(req *http.Request, _ *goproxy.ProxyCtx) (*http
 		req.Header,
 		respHeader,
 		matchedScenario,
+		getStartTime(ctx),
+		time.Now(),
 		h.scenarioRepository,
 		h.fixtureRepository,
 	)
@@ -206,7 +210,7 @@ func (h *Handler) handleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) *ht
 	return resp
 }
 
-func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*http.Response, error) {
+func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (*http.Response, error) {
 	if resp == nil || resp.Request == nil || len(resp.Request.Header) == 0 ||
 		resp.Request.Header.Get(types.MockRecordMode) == types.MockRecordModeDisabled {
 		log.WithFields(log.Fields{}).Debugf("proxy server returning canned response")
@@ -247,7 +251,17 @@ func (h *Handler) doHandleResponse(resp *http.Response, _ *goproxy.ProxyCtx) (*h
 	}
 
 	resContentType, err := saveMockResponse(
-		h.config, resp.Request.URL, resp.Request, reqBytes, resBytes, resp.Header, resp.StatusCode, h.scenarioRepository)
+		h.config,
+		resp.Request.URL,
+		resp.Request,
+		reqBytes,
+		resBytes,
+		resp.Header,
+		resp.StatusCode,
+		resp.Proto,
+		getStartTime(ctx),
+		time.Now(),
+		h.scenarioRepository)
 	if err != nil {
 		return resp, err
 	}
@@ -286,4 +300,12 @@ func proxyCondition() goproxy.ReqConditionFunc {
 	return func(req *http.Request, _ *goproxy.ProxyCtx) bool {
 		return !strings.Contains(req.URL.Path, "html") && !strings.Contains(req.URL.Path, "txt")
 	}
+}
+
+func getStartTime(ctx *goproxy.ProxyCtx) time.Time {
+	switch ctx.UserData.(type) {
+	case time.Time:
+		return ctx.UserData.(time.Time)
+	}
+	return time.Now()
 }

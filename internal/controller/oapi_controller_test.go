@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -31,7 +32,7 @@ func Test_InitializeSwaggerStructsForMockOAPIScenarioController(t *testing.T) {
 }
 
 func Test_ShouldFailPostScenarioWithBadOAPIInput(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -52,7 +53,7 @@ func Test_ShouldFailPostScenarioWithBadOAPIInput(t *testing.T) {
 }
 
 func Test_ShouldCreateTwitterMockScenarioFromOAPI(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -75,7 +76,7 @@ func Test_ShouldCreateTwitterMockScenarioFromOAPI(t *testing.T) {
 }
 
 func Test_ShouldCreatePetsMockScenarioFromOAPI(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -98,7 +99,7 @@ func Test_ShouldCreatePetsMockScenarioFromOAPI(t *testing.T) {
 }
 
 func Test_ShouldDownloadScenarioHistory(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -112,7 +113,12 @@ func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
-	err = mockScenarioRepository.SaveHistory(scenario, "")
+	err = mockScenarioRepository.SaveHistory(
+		scenario,
+		"",
+		"",
+		time.Now(),
+		time.Now())
 	require.NoError(t, err)
 
 	names := mockScenarioRepository.HistoryNames(scenario.Group)
@@ -134,7 +140,7 @@ func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 }
 
 func Test_ShouldDownloadInternalSpecs(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -160,7 +166,7 @@ func Test_ShouldDownloadInternalSpecs(t *testing.T) {
 }
 
 func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -197,7 +203,7 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 }
 
 func Test_ShouldGetOpenAPIByScenario(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)

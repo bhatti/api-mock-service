@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -15,7 +16,7 @@ import (
 )
 
 func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -40,7 +41,7 @@ func Test_ShouldNotRecordWithoutMockURL(t *testing.T) {
 }
 
 func Test_ShouldRecordGetProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -75,7 +76,7 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -102,7 +103,7 @@ func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordPostProxyRequestsWithArray(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -138,7 +139,7 @@ func Test_ShouldRecordPostProxyRequestsWithArray(t *testing.T) {
 }
 
 func Test_ShouldRecordPostProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -174,7 +175,7 @@ func Test_ShouldRecordPostProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldRecordPutProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -210,7 +211,7 @@ func Test_ShouldRecordPutProxyRequests(t *testing.T) {
 }
 
 func Test_ShouldSaveMockResponse(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -224,13 +225,22 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 		Header: resHeaders,
 	}
 	_, err = saveMockResponse(
-		config, u, req, []byte("test"), []byte("test"),
-		resHeaders, 404, mockScenarioRepository)
+		config,
+		u,
+		req,
+		[]byte("test"),
+		[]byte("test"),
+		resHeaders,
+		404,
+		"",
+		time.Now(),
+		time.Now().Add(time.Second),
+		mockScenarioRepository)
 	require.NoError(t, err)
 }
 
 func Test_ShouldRecordRealPostProxyRequests(t *testing.T) {
-	config := buildTestConfig()
+	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
@@ -255,14 +265,4 @@ func Test_ShouldRecordRealPostProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	saved := ctx.Result.([]byte)
 	require.Contains(t, string(saved), "id")
-}
-
-func buildTestConfig() *types.Configuration {
-	return &types.Configuration{
-		DataDir:                  "../../mock_tests",
-		MaxHistory:               5,
-		ProxyPort:                8081,
-		AssertQueryParamsPattern: "target",
-		AssertHeadersPattern:     "target",
-	}
 }

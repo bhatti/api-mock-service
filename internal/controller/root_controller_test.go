@@ -18,9 +18,9 @@ import (
 func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
 	_ = rootPathParams{}
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -47,9 +47,9 @@ func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 
 func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -85,9 +85,9 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -117,9 +117,9 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -148,9 +148,9 @@ func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -179,9 +179,9 @@ func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -210,9 +210,9 @@ func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -241,9 +241,9 @@ func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -272,9 +272,9 @@ func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -303,9 +303,9 @@ func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 
 func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 	// GIVEN repository, consumerExecutor and controller for mock scenario
-	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(buildTestConfig())
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	fixtureRepository, err := repository.NewFileFixtureRepository(buildTestConfig())
+	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
 	// AND a set of mock scenarios
@@ -330,16 +330,6 @@ func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	saved := ctx.Result.([]byte)
 	require.Equal(t, "test body", string(saved))
-}
-
-func buildTestConfig() *types.Configuration {
-	return &types.Configuration{
-		DataDir:                  "../../mock_tests",
-		MaxHistory:               5,
-		ProxyPort:                8081,
-		AssertQueryParamsPattern: "target",
-		AssertHeadersPattern:     "target",
-	}
 }
 
 func buildScenario(method types.MethodType, name string, path string, n int) *types.APIScenario {

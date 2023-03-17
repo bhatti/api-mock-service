@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -48,6 +49,9 @@ const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 // ScenarioExt extension
 const ScenarioExt = ".yaml"
 
+// HarExt extension
+const HarExt = ".har"
+
 // APIAuthorization defines mock auth parameters
 type APIAuthorization struct {
 	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
@@ -60,18 +64,24 @@ type APIAuthorization struct {
 
 // APIRequest defines mock request for APIs
 type APIRequest struct {
-	// PathParams sample for the API
+	// PathParams for the API
 	PathParams map[string]string `yaml:"path_params" json:"path_params"`
-	// QueryParams sample for the API
+	// QueryParams for the API
 	QueryParams map[string]string `yaml:"query_params" json:"query_params"`
+	// PostParams for the API
+	PostParams map[string]string `yaml:"post_params" json:"post_params"`
 	// Headers for mock response
 	Headers map[string]string `yaml:"headers" json:"headers"`
 	// Contents for request optionally
 	Contents string `yaml:"contents" json:"contents"`
 	// ExampleContents sample for request optionally
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
+	// HTTPVersion version of http
+	HTTPVersion string `yaml:"http_version" json:"http_version"`
 	// AssertQueryParamsPattern for the API
 	AssertQueryParamsPattern map[string]string `yaml:"assert_query_params_pattern" json:"assert_query_params_pattern"`
+	// AssertPostParamsPattern for the API
+	AssertPostParamsPattern map[string]string `yaml:"assert_post_params_pattern" json:"assert_post_params_pattern"`
 	// AssertHeadersPattern for mock response
 	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
 	// AssertContentsPattern for request optionally
@@ -114,9 +124,10 @@ func (r APIRequest) BuildTemplateParams(
 	pathGroups map[string]string,
 	inHeaders map[string][]string,
 	overrides map[string]any,
-) (templateParams map[string]any, queryParams map[string]string, reqHeaders map[string][]string) {
+) (templateParams map[string]any, queryParams map[string]string, postParams map[string]string, reqHeaders map[string][]string) {
 	templateParams = make(map[string]any)
 	queryParams = make(map[string]string)
+	postParams = make(map[string]string)
 	reqHeaders = make(map[string][]string)
 	//for _, env := range os.Environ() {
 	//	parts := strings.Split(env, "=")
@@ -124,10 +135,6 @@ func (r APIRequest) BuildTemplateParams(
 	//		templateParams[parts[0]] = parts[1]
 	//	}
 	//}
-
-	for k, v := range inHeaders {
-		reqHeaders[k] = v
-	}
 
 	for k, v := range r.PathParams {
 		templateParams[k] = fuzz.StripTypeTags(v)
@@ -140,6 +147,14 @@ func (r APIRequest) BuildTemplateParams(
 	for k, v := range r.QueryParams {
 		templateParams[k] = fuzz.StripTypeTags(v)
 		queryParams[k] = fuzz.StripTypeTags(v)
+	}
+	for k, v := range r.AssertPostParamsPattern {
+		templateParams[k] = SanitizeRegexValue(v)
+		postParams[k] = SanitizeRegexValue(v)
+	}
+	for k, v := range r.PostParams {
+		templateParams[k] = fuzz.StripTypeTags(v)
+		postParams[k] = fuzz.StripTypeTags(v)
 	}
 	for k, v := range r.AssertHeadersPattern {
 		templateParams[k] = SanitizeRegexValue(v)
@@ -154,6 +169,10 @@ func (r APIRequest) BuildTemplateParams(
 			templateParams[k] = fuzz.StripTypeTags(v[0])
 			queryParams[k] = fuzz.StripTypeTags(v[0])
 		}
+		for k, v := range req.PostForm {
+			templateParams[k] = fuzz.StripTypeTags(v[0])
+			postParams[k] = fuzz.StripTypeTags(v[0])
+		}
 	}
 	for k, v := range req.Header {
 		templateParams[k] = fuzz.StripTypeTags(v[0])
@@ -167,6 +186,10 @@ func (r APIRequest) BuildTemplateParams(
 		templateParams[k] = v
 		queryParams[k] = fmt.Sprintf("%v", v)
 	}
+	for k, v := range inHeaders {
+		reqHeaders[k] = v
+	}
+
 	return
 }
 
@@ -183,6 +206,7 @@ func (r APIRequest) TargetHeader() string {
 // Assert asserts response
 func (r APIRequest) Assert(
 	queryParams map[string]string,
+	postParams map[string]string,
 	reqHeaders map[string][]string,
 	reqContents any,
 	templateParams map[string]any) error {
@@ -202,6 +226,22 @@ func (r APIRequest) Assert(
 		}
 		if !match {
 			return fmt.Errorf("didn't match required request query param '%s' with regex '%s' and actual value '%s'",
+				k, v, actual)
+		}
+	}
+
+	for k, v := range r.AssertPostParamsPattern {
+		actual := postParams[k]
+		if actual == "" {
+			return fmt.Errorf("failed to find required post parameter '%s' with regex '%s'", k, v)
+		}
+		match, err := regexp.MatchString(v, actual)
+		if err != nil {
+			return fmt.Errorf("failed to fuzz required request post param '%s' with regex '%s' and actual value '%s' due to '%w'",
+				k, v, actual, err)
+		}
+		if !match {
+			return fmt.Errorf("didn't match required request post param '%s' with regex '%s' and actual value '%s'",
 				k, v, actual)
 		}
 	}
@@ -272,6 +312,8 @@ type APIResponse struct {
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 	// StatusCode for response
 	StatusCode int `yaml:"status_code" json:"status_code"`
+	// HTTPVersion version of http
+	HTTPVersion string `yaml:"http_version" json:"http_version"`
 	// PipeProperties to extract properties from response
 	PipeProperties []string `yaml:"pipe_properties" json:"pipe_properties"`
 	// AssertHeadersPattern for mock response
@@ -598,4 +640,36 @@ func SanitizeNonAlphabet(name string, rep string) string {
 		name = re.ReplaceAllString(name, "")
 	}
 	return name
+}
+
+// BuildTestScenario helper method
+func BuildTestScenario(method MethodType, name string, path string, n int) *APIScenario {
+	return &APIScenario{
+		Method:      method,
+		Name:        name,
+		Path:        path,
+		Group:       path,
+		Description: name,
+		Request: APIRequest{
+			HTTPVersion:              "1.1",
+			QueryParams:              make(map[string]string),
+			PostParams:               make(map[string]string),
+			Headers:                  make(map[string]string),
+			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
+			AssertHeadersPattern: map[string]string{
+				ContentTypeHeader: "application/json",
+				"ETag":            `\d{3}`,
+			},
+		},
+		Response: APIResponse{
+			HTTPVersion: "1.1",
+			Headers: map[string][]string{
+				"ETag":            {strconv.Itoa(n)},
+				ContentTypeHeader: {"application/json"},
+			},
+			Contents:   "test body",
+			StatusCode: 200,
+		},
+		WaitBeforeReply: time.Duration(1) * time.Second,
+	}
 }
