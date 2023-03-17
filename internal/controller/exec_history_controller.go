@@ -34,8 +34,8 @@ func NewExecHistoryController(
 // responses:
 //
 //	200: execHistoryNamesResponse
-func (msc *ExecHistoryController) getExecHistoryNames(c web.APIContext) error {
-	res := msc.scenarioRepository.HistoryNames(c.QueryParam("group"))
+func (ehc *ExecHistoryController) getExecHistoryNames(c web.APIContext) error {
+	res := ehc.scenarioRepository.HistoryNames(c.QueryParam("group"))
 	if res == nil {
 		res = make([]string, 0)
 	}
@@ -48,12 +48,12 @@ func (msc *ExecHistoryController) getExecHistoryNames(c web.APIContext) error {
 // responses:
 //
 //	200: execHistoryNamesResponse
-func (msc *ExecHistoryController) getExecHistoryHar(c web.APIContext) error {
+func (ehc *ExecHistoryController) getExecHistoryHar(c web.APIContext) error {
 	name := c.QueryParam("name")
 	group := c.QueryParam("group")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	pageSize := 20
-	res, err := msc.scenarioRepository.LoadHar(name, group, page, pageSize)
+	res, err := ehc.scenarioRepository.LoadHar(name, group, page, pageSize)
 	if err != nil {
 		return err
 	}
