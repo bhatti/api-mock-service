@@ -67,6 +67,8 @@ API mock service for REST/HTTP based services with following features:
 - Create a playground for testing APIs interactively so that users can learn the APIs quickly.
 - Support contract based testing from both consumer and producer sides.
 - Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input to next test scenarios.
+- Import test scenarios from HAR files (https://w3c.github.io/web-performance/specs/HAR/Overview.html) or export scenarios to HAR formats.
+- Persist execution of test scenarios that can be replayed for consumer and producer based contract testing.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
 As, it's written in GO, you can either download GO runtime environment or use Docker to install it locally. 
@@ -1051,6 +1053,18 @@ Which will return summary of APIs such as:
     "RequestCount": 0
   },
 ...  
+```
+
+## HAR Formats (https://w3c.github.io/web-performance/specs/HAR/Overview.html)
+
+### Download test scenarios as HAR format
+```bash
+curl -v http://localhost:8080/_exec_history/har
+```
+
+### Upload test scenarios as HAR format
+```bash
+curl -v -X POST http://localhost:8080/_exec_history/har --data-binary @myfile.har
 ```
 
 ## Swagger-UI
