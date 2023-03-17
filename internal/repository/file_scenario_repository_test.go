@@ -164,12 +164,12 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("book_put_%d", i), "/api/:topic/books/:id", i)))
 	}
 	// WHEN looking up todos by POST without criteria
-	matched, _ := repo.LookupAll(&types.APIKeyData{})
+	matched, _, _ := repo.LookupAll(&types.APIKeyData{})
 	// THEN it should not find it
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by PUT with different query param
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/todos/11",
 		AssertQueryParamsPattern: map[string]string{"a": "22"},
@@ -181,7 +181,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by matching path and query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/todos/12",
 		AssertQueryParamsPattern: map[string]string{"a": "1"},
@@ -193,7 +193,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by matching path, headers and query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/todos/12",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -222,7 +222,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 
 	//
 	// WHEN looking up books by POST with topic
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/mytopic/books/11",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
@@ -293,12 +293,12 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 		require.NoError(t, repo.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/v3/:topic/books", i)))
 	}
 	// WHEN looking up todos by POST without criteria
-	matched, _ := repo.LookupAll(&types.APIKeyData{})
+	matched, _, _ := repo.LookupAll(&types.APIKeyData{})
 	// THEN it should not find it
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by POST with different query param
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Post,
 		Path:                     "/v3/todos",
 		AssertQueryParamsPattern: map[string]string{"a": "11"},
@@ -310,7 +310,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by matching path and query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Post,
 		Path:                     "/v3/todos",
 		AssertQueryParamsPattern: map[string]string{"a": "1"},
@@ -321,7 +321,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	// THEN it should not find it
 	assert.Equal(t, 0, len(matched))
 	// WHEN looking up todos by matching path, headers and query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Post,
 		Path:                     "/v3/todos",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -338,7 +338,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 
 	//
 	// WHEN looking up books by POST with topic
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Post,
 		Path:                     "/v3/mytopic/books",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -376,7 +376,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 		require.NoError(t, repo.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("book_get_%d", i), "/api/:topic/books/:id", i)))
 	}
 	// WHEN looking up scenarios with wrong method
-	matched, _ := repo.LookupAll(&types.APIKeyData{
+	matched, _, _ := repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Patch,
 		Path:                     "/api/todos/1",
 		AssertQueryParamsPattern: map[string]string{"a": "1"},
@@ -388,7 +388,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up scenarios with wrong query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Get,
 		Path:                     "/api/todos/1",
 		AssertQueryParamsPattern: map[string]string{"a": "11"},
@@ -400,7 +400,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up scenarios with valid params but without headers
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Get,
 		Path:                     "/api/todos/2",
 		AssertQueryParamsPattern: map[string]string{"a": "1"},
@@ -412,7 +412,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up scenarios with valid params and headers
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Get,
 		Path:                     "/api/todos/2",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -430,7 +430,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 
 	//
 	// WHEN looking up books by POST with topic
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Get,
 		Path:                     "/api/mytopic/books/11",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -459,7 +459,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 		require.NoError(t, repo.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("book_get_%d", i), "/v1/:topic/books/:id", i)))
 	}
 	// WHEN looking up scenarios with wrong method
-	matched, _ := repo.LookupAll(&types.APIKeyData{
+	matched, _, _ := repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Patch,
 		Path:                     "/v1/todos/1",
 		AssertQueryParamsPattern: map[string]string{"a": "1"},
@@ -471,7 +471,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up scenarios with wrong query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Delete,
 		Path:                     "/v1/todos/1",
 		AssertQueryParamsPattern: map[string]string{"a": "11"},
@@ -482,7 +482,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up scenarios with valid params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Delete,
 		Path:                     "/v1/todos/2",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -500,7 +500,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 
 	//
 	// WHEN looking up books by POST with topic
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Delete,
 		Path:                     "/v1/mytopic/books/11",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -529,12 +529,12 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		require.NoError(t, repo.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("book_put_%d", i), "/api/{topic}/books/{id}", i)))
 	}
 	// WHEN looking up todos by POST without criteria
-	matched, _ := repo.LookupAll(&types.APIKeyData{})
+	matched, _, _ := repo.LookupAll(&types.APIKeyData{})
 	// THEN it should not find it
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by PUT with different query param
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/todos/11",
 		AssertQueryParamsPattern: map[string]string{"a": "11"},
@@ -546,7 +546,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 	assert.Equal(t, 0, len(matched))
 
 	// WHEN looking up todos by matching path and query params
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/todos/12",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
@@ -575,7 +575,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 
 	//
 	// WHEN looking up books by POST with topic
-	matched, _ = repo.LookupAll(&types.APIKeyData{
+	matched, _, _ = repo.LookupAll(&types.APIKeyData{
 		Method:                   types.Put,
 		Path:                     "/api/mytopic/books/11",
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},

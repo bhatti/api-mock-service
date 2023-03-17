@@ -247,7 +247,7 @@ func (sr *FileAPIScenarioRepository) LookupAllByGroup(
 // LookupAll finds matching scenarios
 func (sr *FileAPIScenarioRepository) LookupAll(
 	other *types.APIKeyData,
-) (res []*types.APIKeyData, paramMismatchErrors int) {
+) (res []*types.APIKeyData, paramMismatchErrors int, keyDataLen int) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
@@ -271,21 +271,21 @@ func (sr *FileAPIScenarioRepository) LookupAll(
 		}
 	}
 	sortByUsageTime(res)
-	return filterScenariosByPredicate(res, other), paramMismatchErrors
+	return filterScenariosByPredicate(res, other), paramMismatchErrors, len(keyDataMap)
 }
 
 // Lookup finds top matching scenario
 func (sr *FileAPIScenarioRepository) Lookup(
 	other *types.APIKeyData,
 	inData map[string]any) (scenario *types.APIScenario, err error) {
-	matched, paramMismatchErrors := sr.LookupAll(other)
+	matched, paramMismatchErrors, keyDataLen := sr.LookupAll(other)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
 			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", other.String()))
 		}
 		fileName := sr.buildFileName(other.Method, other.Name, other.Path)
-		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s']",
-			other.String(), fileName))
+		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s'], partial matched: %d",
+			other.String(), fileName, keyDataLen))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)

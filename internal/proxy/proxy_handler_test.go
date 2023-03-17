@@ -69,21 +69,25 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 
 func Test_ShouldHandleProxyRequest(t *testing.T) {
 	config := types.BuildTestConfig()
+	config.Debug = true
 	// GIVEN a mock scenario repository
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
 
-	scenario := types.BuildTestScenario(types.Post, "todos", "/v2/api/todos", 0)
+	scenario := types.BuildTestScenario(types.Post, "todos", "/vabc5/api/todos", 0)
 	require.NoError(t, scenarioRepository.Save(scenario))
 
-	u, err := url.Parse("http://localhost:8080/api/todos?a=3&b=abc")
+	u, err := url.Parse("http://localhost:8080/vabc5/api/todos?a=3&b=abc")
 	require.NoError(t, err)
 	req := &http.Request{
 		URL:    u,
 		Method: "POST",
-		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"application/json"}},
+		Header: http.Header{
+			"X1":                    []string{"val1"},
+			"ETag":                  []string{"123"},
+			types.ContentTypeHeader: []string{"application/json"}},
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
