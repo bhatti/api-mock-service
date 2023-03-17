@@ -198,17 +198,23 @@ definitions:
         description: HTTPVersion version of http
         type: string
         x-go-name: HTTPVersion
-      pipe_properties:
-        description: PipeProperties to extract properties from response
+      set_variables:
+        description: SetVariables to set shared variables from response
         items:
           type: string
         type: array
-        x-go-name: PipeProperties
+        x-go-name: SetVariables
       status_code:
         description: StatusCode for response
         format: int64
         type: integer
         x-go-name: StatusCode
+      unset_variables:
+        description: UnsetVariables to reset shared variables
+        items:
+          type: string
+        type: array
+        x-go-name: UnsetVariables
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
   APIScenario:

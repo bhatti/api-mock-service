@@ -306,6 +306,7 @@ func (x *ProducerExecutor) execute(
 	if contractReq.Verbose {
 		log.WithFields(fields).Infof("executed request")
 	}
+
 	if err = scenario.Response.Assert(resHeaders, resContents, templateParams); err != nil {
 		return nil, err
 	}
@@ -314,18 +315,28 @@ func (x *ProducerExecutor) execute(
 		if contractReq.Params == nil {
 			contractReq.Params = map[string]any{}
 		}
-		pipeProperties := map[string]any{}
+		setVariables := map[string]any{}
 
-		for _, propName := range scenario.Response.PipeProperties {
+		for _, propName := range scenario.Response.SetVariables {
 			val := fuzz.FindVariable(propName, resContents)
 			if val != nil {
 				n := strings.Index(propName, ".")
 				propName = propName[n+1:]
 				contractReq.Params[propName] = val
-				pipeProperties[propName] = val
+				setVariables[propName] = val
+			} else {
+				vals := resHeaders[propName]
+				if len(vals) > 0 {
+					contractReq.Params[propName] = vals[0]
+					setVariables[propName] = vals[0]
+				}
 			}
 		}
-		resContents = pipeProperties
+		for _, propName := range scenario.Response.UnsetVariables {
+			delete(contractReq.Params, propName)
+			delete(setVariables, propName)
+		}
+		resContents = setVariables
 	}
 	return resContents, nil
 }

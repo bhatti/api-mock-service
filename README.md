@@ -1207,7 +1207,7 @@ response:
     status_code: 201
     assert_headers_pattern: {}
     assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
-    pipe_properties: []
+    set_variables: []
     assertions: []
 wait_before_reply: 0s
 ```
@@ -1284,7 +1284,7 @@ response:
         }
     status_code: 200
     assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
-    pipe_properties:
+    set_variables:
       - id
       - title
     assertions:
@@ -1292,7 +1292,7 @@ response:
 wait_before_reply: 1s
 ```
 
-The pipeline properties can be used as input parameters for another scenario such as:
+The set variables can be used as input parameters for another scenario such as:
 ```yaml
 method: GET
 name: todo-get
@@ -1323,7 +1323,7 @@ response:
                         "completed": true
                   }
     assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    pipe_properties:
+    set_variables:
       - id
       - userId
     status_code: 200
@@ -1351,7 +1351,7 @@ When you execute contract tests using `curl -k -v -X POST http://localhost:8080/
 }
 ```
 
-The output will show the attributes that were captured based on the `pipe_properties` configuration.
+The output will show the attributes that were captured based on the `set_variables` configuration.
 
 ## Static Assets
 The api-mock-service can serve any static assets from a user-defined folder and then serve it as follows:

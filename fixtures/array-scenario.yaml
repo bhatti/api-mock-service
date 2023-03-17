@@ -43,5 +43,5 @@ response:
     status_code: 200
     assert_headers_pattern: {}
     assert_contents_pattern: '{"account":"(__string__\\d{11,11})","boo":"__array__(__boolean__(false|true)|__boolean__(false|true))","id":"(__string__.+)","items":"__array__(__number__[+-]?((\\d{1,10}(\\.\\d{1,5})?)|(\\.\\d{1,10}))|__number__[+-]?\\d{1,10})","name":"(__string__.+)","regions":"__array__(__string__.+)","taxes":"__array__(__number__[+-]?\\d{1,10})"}'
-    pipe_properties: []
+    set_variables: []
     assertions: []

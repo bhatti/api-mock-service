@@ -21,6 +21,6 @@ response:
     status_code: {{EnumInt 400 415 500}}
     assert_headers_pattern: {}
     assert_contents_pattern: '{"errors":"(__string__\\w+)"}'
-    pipe_properties: []
+    set_variables: []
     assertions: []
 wait_before_reply: 0s

@@ -1312,19 +1312,27 @@
             "description": "HTTPVersion version of http",
             "x-go-name": "HTTPVersion"
           },
-          "pipe_properties": {
+          "set_variables": {
             "type": "array",
-            "description": "PipeProperties to extract properties from response",
+            "description": "SetVariables to set shared variables from response",
             "items": {
               "type": "string"
             },
-            "x-go-name": "PipeProperties"
+            "x-go-name": "SetVariables"
           },
           "status_code": {
             "type": "integer",
             "description": "StatusCode for response",
             "format": "int64",
             "x-go-name": "StatusCode"
+          },
+          "unset_variables": {
+            "type": "array",
+            "description": "UnsetVariables to reset shared variables",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "UnsetVariables"
           }
         },
         "description": "APIResponse defines mock response for APIs",

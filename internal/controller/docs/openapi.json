@@ -930,7 +930,7 @@
             "description": "MatchHeaders for mock response",
             "x-go-name": "MatchHeaders"
           },
-          "pipe_properties": {
+          "set_variables": {
             "type": "array",
             "description": "PipeProperties to extract properties from response",
             "items": {

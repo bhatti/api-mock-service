@@ -317,8 +317,10 @@ type APIResponse struct {
 	StatusCode int `yaml:"status_code" json:"status_code"`
 	// HTTPVersion version of http
 	HTTPVersion string `yaml:"http_version" json:"http_version"`
-	// PipeProperties to extract properties from response
-	PipeProperties []string `yaml:"pipe_properties" json:"pipe_properties"`
+	// SetVariables to set shared variables from response
+	SetVariables []string `yaml:"set_variables" json:"set_variables"`
+	// UnsetVariables to reset shared variables
+	UnsetVariables []string `yaml:"unset_variables" json:"unset_variables"`
 	// AssertHeadersPattern for mock response
 	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
 	// AssertContentsPattern for request optionally
@@ -556,7 +558,7 @@ func BuildScenarioFromHTTP(
 			AssertHeadersPattern:  respHeaderAssertions,
 			AssertContentsPattern: matchResContents,
 			Assertions:            resAssertions,
-			PipeProperties:        fuzz.ExtractTopPrimitiveAttributes(resBody, 5),
+			SetVariables:          fuzz.ExtractTopPrimitiveAttributes(resBody, 5),
 		},
 	}
 	if scenario.Group == "" {
