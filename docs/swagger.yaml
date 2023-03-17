@@ -960,9 +960,18 @@ paths:
   /_exec_history/har:
     get:
       operationId: getExecHistoryHar
+      parameters:
+      - in: query
+        name: group
+        type: string
+        x-go-name: Group
+      - in: query
+        name: page
+        type: string
+        x-go-name: Page
       responses:
         "200":
-          $ref: '#/responses/execHistoryNamesResponse'
+          $ref: '#/responses/execHistoryHarResponse'
       summary: Fetches execution history in the format of HTTP HAR.
       tags:
       - exec-history
@@ -1423,11 +1432,16 @@ responses:
       $ref: '#/definitions/APIScenario'
   emptyResponse:
     description: ""
-  execHistoryNamesResponse:
-    description: ExecHistory history scenario names
+  execHistoryHarResponse:
+    description: ""
     schema:
       items:
         $ref: '#/definitions/Log'
+      type: array
+  execHistoryNamesResponse:
+    description: ""
+    schema:
+      items:
         type: string
       type: array
 swagger: "2.0"

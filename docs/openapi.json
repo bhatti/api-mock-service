@@ -165,9 +165,29 @@
         ],
         "summary": "Fetches execution history in the format of HTTP HAR.",
         "operationId": "getExecHistoryHar",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Page"
+            },
+            "x-go-name": "Page"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "ExecHistory history scenario names",
+            "description": "",
             "content": {
               "*/*": {
                 "schema": {
@@ -191,13 +211,13 @@
         "operationId": "getExecHistoryNames",
         "responses": {
           "200": {
-            "description": "ExecHistory history scenario names",
+            "description": "",
             "content": {
               "*/*": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Log"
+                    "type": "string"
                   }
                 }
               }
@@ -2150,14 +2170,27 @@
         "description": "",
         "content": {}
       },
-      "execHistoryNamesResponse": {
-        "description": "ExecHistory history scenario names",
+      "execHistoryHarResponse": {
+        "description": "",
         "content": {
           "*/*": {
             "schema": {
               "type": "array",
               "items": {
                 "$ref": "#/components/schemas/Log"
+              }
+            }
+          }
+        }
+      },
+      "execHistoryNamesResponse": {
+        "description": "",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
               }
             }
           }

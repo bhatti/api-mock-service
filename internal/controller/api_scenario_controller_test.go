@@ -25,7 +25,6 @@ func Test_InitializeSwaggerStructsForMockScenarioController(t *testing.T) {
 	_ = apiScenarioResponseBody{}
 	_ = apiScenarioIDParams{}
 	_ = apiScenarioPathsResponseBody{}
-	_ = execHistoryNamesResponse{}
 }
 
 func Test_ShouldFailPostScenarioWithoutMethodNameOrPath(t *testing.T) {

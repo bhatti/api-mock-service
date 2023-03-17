@@ -47,7 +47,7 @@ func (ehc *ExecHistoryController) getExecHistoryNames(c web.APIContext) error {
 // Fetches execution history in the format of HTTP HAR.
 // responses:
 //
-//	200: execHistoryNamesResponse
+//	200: execHistoryHarResponse
 func (ehc *ExecHistoryController) getExecHistoryHar(c web.APIContext) error {
 	name := c.QueryParam("name")
 	group := c.QueryParam("group")
@@ -62,14 +62,14 @@ func (ehc *ExecHistoryController) getExecHistoryHar(c web.APIContext) error {
 
 // ********************************* Swagger types ***********************************
 
-// ExecHistory history scenario names
-// swagger:response execHistoryNamesResponse
-type execHistoryNamesResponse struct {
+// swagger:response execHistoryHarResponse
+// ExecHistory history in the format of HAR format
+type execHistoryHarResponse struct {
 	// in:body
 	Body []har.Log
 }
 
-// swagger:parameters execHistoryNamesResponse
+// swagger:parameters getExecHistoryHar
 // The parameters for HAR query parameters
 type execHistoryNamesParams struct {
 	// in:query
@@ -78,8 +78,8 @@ type execHistoryNamesParams struct {
 	Page string `json:"page"`
 }
 
-// ExecHistory history scenario names
 // swagger:response execHistoryNamesResponse
+// ExecHistory history scenario names
 type execHistoryNamesResponseBody struct {
 	// in:body
 	Body []string

@@ -18,7 +18,9 @@ import (
 )
 
 func Test_InitializeSwaggerStructsForExecHistoryoController(t *testing.T) {
-	_ = execHistoryNamesResponse{}
+	_ = execHistoryHarResponse{}
+	_ = execHistoryNamesResponseBody{}
+	_ = execHistoryNamesParams{}
 }
 
 func Test_ShouldGetExecutionHistoryNames(t *testing.T) {
