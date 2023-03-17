@@ -117,7 +117,7 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		web.GetHeaderParamOrEnvValue(nil, web.AWSSecurityToken, web.AWSSessionToken),
 	)
 
-	oldAuth := req.Header.Get(web.Authorization)
+	oldAuth := req.Header.Get(types.AuthorizationHeader)
 	awsAuthSig4, awsInfo, err := h.awsSigner.AWSSign(req, staticCredentials)
 
 	if awsAuthSig4 {

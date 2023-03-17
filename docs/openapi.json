@@ -193,13 +193,37 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Log"
+                    "$ref": "#/components/schemas/HarLog"
                   }
                 }
               }
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "exec-history"
+        ],
+        "summary": "Uploads HAR contents and generates scenario and history.",
+        "operationId": "postExecHistoryHar",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/Har"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "Body"
       }
     },
     "/_exec_history/names": {
@@ -1377,7 +1401,23 @@
         "description": "APIScenario defines mock scenario for APIs",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
-      "Browser": {
+      "Duration": {
+        "type": "integer",
+        "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
+        "format": "int64",
+        "x-go-package": "time"
+      },
+      "Har": {
+        "type": "object",
+        "properties": {
+          "log": {
+            "$ref": "#/components/schemas/HarLog"
+          }
+        },
+        "description": "Har is a container type for deserialization",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarBrowser": {
         "type": "object",
         "properties": {
           "comment": {
@@ -1396,18 +1436,18 @@
             "x-go-name": "Version"
           }
         },
-        "description": "Browser that created the log",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "description": "HarBrowser that created the log",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
-      "Cache": {
-        "title": "Cache contains info about a request coming from browser cache.",
+      "HarCache": {
+        "title": "HarCache contains info about a request coming from browser cache.",
         "type": "object",
         "properties": {
           "afterRequest": {
-            "$ref": "#/components/schemas/CacheObject"
+            "$ref": "#/components/schemas/HarCacheObject"
           },
           "beforeRequest": {
-            "$ref": "#/components/schemas/CacheObject"
+            "$ref": "#/components/schemas/HarCacheObject"
           },
           "comment": {
             "type": "string",
@@ -1415,9 +1455,9 @@
             "x-go-name": "Comment"
           }
         },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
-      "CacheObject": {
+      "HarCacheObject": {
         "type": "object",
         "properties": {
           "comment": {
@@ -1447,55 +1487,11 @@
             "x-go-name": "LastAccess"
           }
         },
-        "description": "CacheObject is used by both beforeRequest and afterRequest",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "description": "HarCacheObject is used by both beforeRequest and afterRequest",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
-      "Content": {
-        "title": "Content describes details about response content (embedded in <response> object).",
-        "type": "object",
-        "properties": {
-          "_file": {
-            "type": "string",
-            "description": "optional (community enhancement) A path to an attached file containing this content\nused by Playwright",
-            "x-go-name": "File"
-          },
-          "comment": {
-            "type": "string",
-            "description": "optional (new in 1.2) A comment provided by the user or the application.",
-            "x-go-name": "Comment"
-          },
-          "compression": {
-            "type": "integer",
-            "description": "optional Number of bytes saved. Leave out this field if the information\nis not available.",
-            "format": "int64",
-            "x-go-name": "Compression"
-          },
-          "encoding": {
-            "type": "string",
-            "description": "optional (new in 1.2) Encoding used for response text field e.g\n\"base64\". Leave out this field if the text field is HTTP decoded\n(decompressed & unchunked), than trans-coded from its original character\nset into UTF-8.",
-            "x-go-name": "Encoding"
-          },
-          "mimeType": {
-            "type": "string",
-            "description": "MIME type of the response text (value of the Content-Type response\nheader). The charset attribute of the MIME type is included (if\navailable).",
-            "x-go-name": "MimeType"
-          },
-          "size": {
-            "type": "integer",
-            "description": "Length of the returned content in bytes. Should be equal to\nresponse.bodySize if there is no compression and bigger when the content\nhas been compressed.",
-            "format": "int64",
-            "x-go-name": "Size"
-          },
-          "text": {
-            "type": "string",
-            "description": "optional Response body sent from the server or loaded from the browser\ncache. This field is populated with textual content only. The text field\nis either HTTP decoded text or encoded (e.g. \"base64\") representation of\nthe response body. Leave out this field if the information is not\navailable.",
-            "x-go-name": "Text"
-          }
-        },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
-      },
-      "Cookie": {
-        "title": "Cookie contains list of all cookies (used in <request> and <response> objects).",
+      "HarCookie": {
+        "title": "HarCookie contains list of all cookies (used in <request> and <response> objects).",
         "type": "object",
         "properties": {
           "comment": {
@@ -1510,7 +1506,7 @@
           },
           "expires": {
             "type": "string",
-            "description": "optional Cookie expiration time.\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.123+02:00).",
+            "description": "optional HarCookie expiration time.\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.123+02:00).",
             "x-go-name": "Expires"
           },
           "httpOnly": {
@@ -1539,9 +1535,9 @@
             "x-go-name": "Value"
           }
         },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
-      "Creator": {
+      "HarCreator": {
         "type": "object",
         "properties": {
           "comment": {
@@ -1560,21 +1556,15 @@
             "x-go-name": "Version"
           }
         },
-        "description": "Creator contains information about the log creator application",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "description": "HarCreator contains information about the log creator application",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
-      "Duration": {
-        "type": "integer",
-        "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
-        "format": "int64",
-        "x-go-package": "time"
-      },
-      "Entry": {
-        "title": "Entry is a unique, optional Reference to the parent page.",
+      "HarEntry": {
+        "title": "HarEntry is a unique, optional Reference to the parent page.",
         "type": "object",
         "properties": {
           "cache": {
-            "$ref": "#/components/schemas/Cache"
+            "$ref": "#/components/schemas/HarCache"
           },
           "comment": {
             "type": "string",
@@ -1591,13 +1581,13 @@
           },
           "pageref": {
             "type": "string",
-            "x-go-name": "Pageref"
+            "x-go-name": "PageRef"
           },
           "request": {
-            "$ref": "#/components/schemas/Request"
+            "$ref": "#/components/schemas/HarRequest"
           },
           "response": {
-            "$ref": "#/components/schemas/Response"
+            "$ref": "#/components/schemas/HarResponse"
           },
           "serverIPAddress": {
             "type": "string",
@@ -1614,17 +1604,21 @@
             "description": "Total elapsed time of the request in milliseconds. This is the sum of all\ntimings available in the timings object (i.e. not including -1 values) .",
             "format": "float",
             "x-go-name": "Time"
+          },
+          "title": {
+            "type": "string",
+            "x-go-name": "Title"
           }
         },
         "description": "Leave out this field if the application does not support grouping by pages.",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
-      "Log": {
-        "title": "Log represents the root of the exported data. This object MUST be present and its name MUST be \"log\".",
+      "HarLog": {
+        "title": "HarLog represents the root of the exported data. This object MUST be present and its name MUST be \"log\".",
         "type": "object",
         "properties": {
           "browser": {
-            "$ref": "#/components/schemas/Browser"
+            "$ref": "#/components/schemas/HarBrowser"
           },
           "comment": {
             "type": "string",
@@ -1632,13 +1626,13 @@
             "x-go-name": "Comment"
           },
           "creator": {
-            "$ref": "#/components/schemas/Creator"
+            "$ref": "#/components/schemas/HarCreator"
           },
           "entries": {
             "type": "array",
             "description": "Required. An array of objects of type entry, each representing one\nexported (tracked) HTTP request.",
             "items": {
-              "$ref": "#/components/schemas/Entry"
+              "$ref": "#/components/schemas/HarEntry"
             },
             "x-go-name": "Entries"
           },
@@ -1646,7 +1640,7 @@
             "type": "array",
             "description": "Optional. An array of objects of type page, each representing one exported\n(tracked) page. Leave out this field if the application does not support\ngrouping by pages.",
             "items": {
-              "$ref": "#/components/schemas/Page"
+              "$ref": "#/components/schemas/HarPage"
             },
             "x-go-name": "Pages"
           },
@@ -1656,7 +1650,274 @@
             "x-go-name": "Version"
           }
         },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarPage": {
+        "title": "HarPage object for every exported web page and one <entry> object for every HTTP request.",
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string",
+            "description": "(new in 1.2) A comment provided by the user or the application.",
+            "x-go-name": "Comment"
+          },
+          "id": {
+            "type": "string",
+            "description": "Unique identifier of a page within the . Entries use it to refer the parent page.",
+            "x-go-name": "ID"
+          },
+          "pageTiming": {
+            "$ref": "#/components/schemas/PageTiming"
+          },
+          "startedDateTime": {
+            "type": "string",
+            "description": "Date and time stamp for the beginning of the page load\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.45+01:00).",
+            "x-go-name": "StartedDateTime"
+          },
+          "title": {
+            "type": "string",
+            "description": "HarPage title.",
+            "x-go-name": "Title"
+          }
+        },
+        "description": "In case when an HTTP trace tool isn't able to group requests by a page,\nthe <pages> object is empty and individual requests doesn't have a parent page.",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarPostData": {
+        "title": "HarPostData describes posted data, if any (embedded in <request> object).",
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string",
+            "description": "optional (new in 1.2) A comment provided by the user or the\napplication.",
+            "x-go-name": "Comment"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "Mime type of posted data.",
+            "x-go-name": "MimeType"
+          },
+          "params": {
+            "type": "array",
+            "description": "List of posted parameters (in case of URL encoded parameters).",
+            "items": {
+              "$ref": "#/components/schemas/HarPostParam"
+            },
+            "x-go-name": "Params"
+          },
+          "text": {
+            "type": "string",
+            "description": "Plain text posted data",
+            "x-go-name": "Text"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarPostParam": {
+        "title": "HarPostParam is a list of posted parameters, if any (embedded in <postData> object).",
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string",
+            "description": "optional (new in 1.2) A comment provided by the user or the application.",
+            "x-go-name": "Comment"
+          },
+          "contentType": {
+            "type": "string",
+            "description": "optional content type of posted file.",
+            "x-go-name": "ContentType"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "optional name of a posted file.",
+            "x-go-name": "FileName"
+          },
+          "name": {
+            "type": "string",
+            "description": "name of a posted parameter.",
+            "x-go-name": "Name"
+          },
+          "value": {
+            "type": "string",
+            "description": "optional value of a posted parameter or content of a posted file.",
+            "x-go-name": "Value"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarRequest": {
+        "title": "HarRequest contains detailed info about performed request.",
+        "type": "object",
+        "properties": {
+          "bodySize": {
+            "type": "integer",
+            "description": "Size of the request body (POST data payload) in bytes. Set to -1 if the\ninfo is not available.",
+            "format": "int64",
+            "x-go-name": "BodySize"
+          },
+          "comment": {
+            "type": "string",
+            "description": "(new in 1.2) A comment provided by the user or the application.",
+            "x-go-name": "Comment"
+          },
+          "cookies": {
+            "type": "array",
+            "description": "List of cookie objects.",
+            "items": {
+              "$ref": "#/components/schemas/HarCookie"
+            },
+            "x-go-name": "Cookies"
+          },
+          "headerSize": {
+            "type": "integer",
+            "description": "Total number of bytes from the start of the HTTP request message until\n(and including) the double CRLF before the body. Set to -1 if the info\nis not available.",
+            "format": "int64",
+            "x-go-name": "HeaderSize"
+          },
+          "headers": {
+            "type": "array",
+            "description": "List of header objects.",
+            "items": {
+              "$ref": "#/components/schemas/NVP"
+            },
+            "x-go-name": "Headers"
+          },
+          "httpVersion": {
+            "type": "string",
+            "description": "HarRequest HTTP Version.",
+            "x-go-name": "HTTPVersion"
+          },
+          "method": {
+            "type": "string",
+            "description": "HarRequest method (GET, POST, ...).",
+            "x-go-name": "Method"
+          },
+          "postData": {
+            "$ref": "#/components/schemas/HarPostData"
+          },
+          "queryString": {
+            "type": "array",
+            "description": "List of query parameter objects.",
+            "items": {
+              "$ref": "#/components/schemas/NVP"
+            },
+            "x-go-name": "QueryString"
+          },
+          "url": {
+            "type": "string",
+            "description": "Absolute URL of the request (fragments are not included).",
+            "x-go-name": "URL"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarResponse": {
+        "title": "HarResponse contains detailed info about the response.",
+        "type": "object",
+        "properties": {
+          "bodySize": {
+            "type": "integer",
+            "description": "Size of the received response body in bytes. Set to zero in case of\nresponses coming from the cache (304). Set to -1 if the info is not\navailable.",
+            "format": "int64",
+            "x-go-name": "BodySize"
+          },
+          "comment": {
+            "type": "string",
+            "description": "optional (new in 1.2) A comment provided by the user or the application.",
+            "x-go-name": "Comment"
+          },
+          "content": {
+            "$ref": "#/components/schemas/HarResponseContent"
+          },
+          "cookies": {
+            "type": "array",
+            "description": "List of cookie objects.",
+            "items": {
+              "$ref": "#/components/schemas/HarCookie"
+            },
+            "x-go-name": "Cookies"
+          },
+          "headers": {
+            "type": "array",
+            "description": "List of header objects.",
+            "items": {
+              "$ref": "#/components/schemas/NVP"
+            },
+            "x-go-name": "Headers"
+          },
+          "headersSize": {
+            "type": "integer",
+            "description": "Total number of bytes from the start of the HTTP response message until\n(and including) the double CRLF before the body. Set to -1 if the info is\nnot available.\nThe size of received response-headers is computed only from headers that\nare really received from the server. Additional headers appended by the\nbrowser are not included in this number, but they appear in the list of\nheader objects.",
+            "format": "int64",
+            "x-go-name": "HeadersSize"
+          },
+          "httpVersion": {
+            "type": "string",
+            "description": "HarResponse HTTP Version.",
+            "x-go-name": "HTTPVersion"
+          },
+          "redirectURL": {
+            "type": "string",
+            "description": "Redirection target URL from the Location response header.",
+            "x-go-name": "RedirectURL"
+          },
+          "status": {
+            "type": "integer",
+            "description": "HarResponse status.",
+            "format": "int64",
+            "x-go-name": "Status"
+          },
+          "statusText": {
+            "type": "string",
+            "description": "HarResponse status description.",
+            "x-go-name": "StatusText"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      },
+      "HarResponseContent": {
+        "title": "HarResponseContent describes details about response content (embedded in <response> object).",
+        "type": "object",
+        "properties": {
+          "_file": {
+            "type": "string",
+            "description": "optional (community enhancement) A path to an attached file containing this content\nused by Playwright",
+            "x-go-name": "File"
+          },
+          "comment": {
+            "type": "string",
+            "description": "optional (new in 1.2) A comment provided by the user or the application.",
+            "x-go-name": "Comment"
+          },
+          "compression": {
+            "type": "integer",
+            "description": "optional Number of bytes saved. Leave out this field if the information\nis not available.",
+            "format": "int64",
+            "x-go-name": "Compression"
+          },
+          "encoding": {
+            "type": "string",
+            "description": "optional (new in 1.2) Encoding used for response text field e.g\n\"base64\". Leave out this field if the text field is HTTP decoded\n(decompressed & unchunked), than trans-coded from its original character\nset into UTF-8.",
+            "x-go-name": "Encoding"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the response text (value of the HarResponseContent-Type response\nheader). The charset attribute of the MIME type is included (if\navailable).",
+            "x-go-name": "MimeType"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Length of the returned content in bytes. Should be equal to\nresponse.bodySize if there is no compression and bigger when the content\nhas been compressed.",
+            "format": "int64",
+            "x-go-name": "Size"
+          },
+          "text": {
+            "type": "string",
+            "description": "optional HarResponse body sent from the server or loaded from the browser\ncache. This field is populated with textual content only. The text field\nis either HTTP decoded text or encoded (e.g. \"base64\") representation of\nthe response body. Leave out this field if the information is not\navailable.",
+            "x-go-name": "Text"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
       "MethodType": {
         "type": "string",
@@ -1680,38 +1941,7 @@
           }
         },
         "description": "NVP is simply a name/value pair with a comment",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
-      },
-      "Page": {
-        "title": "Page object for every exported web page and one <entry> object for every HTTP request.",
-        "type": "object",
-        "properties": {
-          "comment": {
-            "type": "string",
-            "description": "(new in 1.2) A comment provided by the user or the application.",
-            "x-go-name": "Comment"
-          },
-          "id": {
-            "type": "string",
-            "description": "Unique identifier of a page within the . Entries use it to refer the parent page.",
-            "x-go-name": "ID"
-          },
-          "pageTiming": {
-            "$ref": "#/components/schemas/PageTiming"
-          },
-          "startedDateTime": {
-            "type": "string",
-            "description": "Date and time stamp for the beginning of the page load\n(ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.45+01:00).",
-            "x-go-name": "StartedDateTime"
-          },
-          "title": {
-            "type": "string",
-            "description": "Page title.",
-            "x-go-name": "Title"
-          }
-        },
-        "description": "In case when an HTTP trace tool isn't able to group requests by a page,\nthe <pages> object is empty and individual requests doesn't have a parent page.",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
       "PageTiming": {
         "title": "PageTiming describes timings for various events (states) fired during the page load.",
@@ -1724,19 +1954,19 @@
           },
           "onContentLoad": {
             "type": "integer",
-            "description": "Content of the page loaded. Number of milliseconds since page load started\n(page.startedDateTime). Use -1 if the timing does not apply to the current\nrequest.\nDepeding on the browser, onContentLoad property represents DOMContentLoad\nevent or document.readyState == interactive.",
+            "description": "HarResponseContent of the page loaded. Number of milliseconds since page load started\n(page.startedDateTime). Use -1 if the timing does not apply to the current\nrequest.\nDepending on the browser, onContentLoad property represents DOMContentLoad\nevent or document.readyState == interactive.",
             "format": "int64",
             "x-go-name": "OnContentLoad"
           },
           "onLoad": {
             "type": "integer",
-            "description": "Page is loaded (onLoad event fired). Number of milliseconds since page\nload started (page.startedDateTime). Use -1 if the timing does not apply\nto the current request.",
+            "description": "HarPage is loaded (onLoad event fired). Number of milliseconds since page\nload started (page.startedDateTime). Use -1 if the timing does not apply\nto the current request.",
             "format": "int64",
             "x-go-name": "OnLoad"
           }
         },
         "description": "All times are specified in milliseconds. If a time info is not available appropriate field is set to -1.",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
       "PageTimings": {
         "title": "PageTimings describes various phases within request-response round trip.",
@@ -1790,69 +2020,7 @@
           }
         },
         "description": "All times are specified in milliseconds.",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
-      },
-      "PostData": {
-        "title": "PostData describes posted data, if any (embedded in <request> object).",
-        "type": "object",
-        "properties": {
-          "comment": {
-            "type": "string",
-            "description": "optional (new in 1.2) A comment provided by the user or the\napplication.",
-            "x-go-name": "Comment"
-          },
-          "mimeType": {
-            "type": "string",
-            "description": "Mime type of posted data.",
-            "x-go-name": "MimeType"
-          },
-          "params": {
-            "type": "array",
-            "description": "List of posted parameters (in case of URL encoded parameters).",
-            "items": {
-              "$ref": "#/components/schemas/PostParam"
-            },
-            "x-go-name": "Params"
-          },
-          "text": {
-            "type": "string",
-            "description": "Plain text posted data",
-            "x-go-name": "Text"
-          }
-        },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
-      },
-      "PostParam": {
-        "title": "PostParam is a list of posted parameters, if any (embedded in <postData> object).",
-        "type": "object",
-        "properties": {
-          "comment": {
-            "type": "string",
-            "description": "optional (new in 1.2) A comment provided by the user or the application.",
-            "x-go-name": "Comment"
-          },
-          "contentType": {
-            "type": "string",
-            "description": "optional content type of posted file.",
-            "x-go-name": "ContentType"
-          },
-          "fileName": {
-            "type": "string",
-            "description": "optional name of a posted file.",
-            "x-go-name": "FileName"
-          },
-          "name": {
-            "type": "string",
-            "description": "name of a posted parameter.",
-            "x-go-name": "Name"
-          },
-          "value": {
-            "type": "string",
-            "description": "optional value of a posted parameter or content of a posted file.",
-            "x-go-name": "Value"
-          }
-        },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
       "ProducerContractRequest": {
         "type": "object",
@@ -1923,136 +2091,6 @@
         },
         "description": "ProducerContractResponse for returning summary of producer based test results",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-      },
-      "Request": {
-        "title": "Request contains detailed info about performed request.",
-        "type": "object",
-        "properties": {
-          "bodySize": {
-            "type": "integer",
-            "description": "Size of the request body (POST data payload) in bytes. Set to -1 if the\ninfo is not available.",
-            "format": "int64",
-            "x-go-name": "BodySize"
-          },
-          "comment": {
-            "type": "string",
-            "description": "(new in 1.2) A comment provided by the user or the application.",
-            "x-go-name": "Comment"
-          },
-          "cookies": {
-            "type": "array",
-            "description": "List of cookie objects.",
-            "items": {
-              "$ref": "#/components/schemas/Cookie"
-            },
-            "x-go-name": "Cookies"
-          },
-          "headerSize": {
-            "type": "integer",
-            "description": "Total number of bytes from the start of the HTTP request message until\n(and including) the double CRLF before the body. Set to -1 if the info\nis not available.",
-            "format": "int64",
-            "x-go-name": "HeaderSize"
-          },
-          "headers": {
-            "type": "array",
-            "description": "List of header objects.",
-            "items": {
-              "$ref": "#/components/schemas/NVP"
-            },
-            "x-go-name": "Headers"
-          },
-          "httpVersion": {
-            "type": "string",
-            "description": "Request HTTP Version.",
-            "x-go-name": "HTTPVersion"
-          },
-          "method": {
-            "type": "string",
-            "description": "Request method (GET, POST, ...).",
-            "x-go-name": "Method"
-          },
-          "postData": {
-            "$ref": "#/components/schemas/PostData"
-          },
-          "queryString": {
-            "type": "array",
-            "description": "List of query parameter objects.",
-            "items": {
-              "$ref": "#/components/schemas/NVP"
-            },
-            "x-go-name": "QueryString"
-          },
-          "url": {
-            "type": "string",
-            "description": "Absolute URL of the request (fragments are not included).",
-            "x-go-name": "URL"
-          }
-        },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
-      },
-      "Response": {
-        "title": "Response contains detailed info about the response.",
-        "type": "object",
-        "properties": {
-          "bodySize": {
-            "type": "integer",
-            "description": "Size of the received response body in bytes. Set to zero in case of\nresponses coming from the cache (304). Set to -1 if the info is not\navailable.",
-            "format": "int64",
-            "x-go-name": "BodySize"
-          },
-          "comment": {
-            "type": "string",
-            "description": "optional (new in 1.2) A comment provided by the user or the application.",
-            "x-go-name": "Comment"
-          },
-          "content": {
-            "$ref": "#/components/schemas/Content"
-          },
-          "cookies": {
-            "type": "array",
-            "description": "List of cookie objects.",
-            "items": {
-              "$ref": "#/components/schemas/Cookie"
-            },
-            "x-go-name": "Cookies"
-          },
-          "headers": {
-            "type": "array",
-            "description": "List of header objects.",
-            "items": {
-              "$ref": "#/components/schemas/NVP"
-            },
-            "x-go-name": "Headers"
-          },
-          "headersSize": {
-            "type": "integer",
-            "description": "Total number of bytes from the start of the HTTP response message until\n(and including) the double CRLF before the body. Set to -1 if the info is\nnot available.\nThe size of received response-headers is computed only from headers that\nare really received from the server. Additional headers appended by the\nbrowser are not included in this number, but they appear in the list of\nheader objects.",
-            "format": "int64",
-            "x-go-name": "HeadersSize"
-          },
-          "httpVersion": {
-            "type": "string",
-            "description": "Response HTTP Version.",
-            "x-go-name": "HTTPVersion"
-          },
-          "redirectURL": {
-            "type": "string",
-            "description": "Redirection target URL from the Location response header.",
-            "x-go-name": "RedirectURL"
-          },
-          "status": {
-            "type": "integer",
-            "description": "Response status.",
-            "format": "int64",
-            "x-go-name": "Status"
-          },
-          "statusText": {
-            "type": "string",
-            "description": "Response status description.",
-            "x-go-name": "StatusText"
-          }
-        },
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/har"
       }
     },
     "responses": {
@@ -2177,7 +2215,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/components/schemas/Log"
+                "$ref": "#/components/schemas/HarLog"
               }
             }
           }
@@ -2195,6 +2233,10 @@
             }
           }
         }
+      },
+      "postExecHistoryHarResponse": {
+        "description": "",
+        "content": {}
       }
     }
   }

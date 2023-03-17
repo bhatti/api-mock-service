@@ -26,7 +26,7 @@ func Test_ShouldParseServiceRegionForAWSSig4(t *testing.T) {
 	}
 	req := &http.Request{
 		Header: http.Header{
-			Authorization: []string{
+			types.AuthorizationHeader: []string{
 				"AWS4-HMAC-SHA256 Credential=ASI/20230217/us-west-2/my-service/aws4_request SignedHeaders=content-encoding;host;x-amz-date;x-amz-requestsupertrace;x-amz-target  Signature=bbb2",
 			},
 			"Content-Encoding": []string{"amz-1.0"},
@@ -91,7 +91,7 @@ func Test_ShouldSignAWSRequest(t *testing.T) {
 	req := &http.Request{
 		URL: u,
 		Header: http.Header{
-			Authorization: []string{
+			types.AuthorizationHeader: []string{
 				"AWS4-HMAC-SHA256 Credential=ASI/20230217/us-west-2/my-service/aws4_request SignedHeaders=content-encoding;host;x-amz-date;x-amz-requestsupertrace;x-amz-target  Signature=bbb2",
 			},
 			"Content-Type": []string{"application/json; charset=UTF-8"},
@@ -108,7 +108,7 @@ func Test_ShouldNotSignNonAWSRequest(t *testing.T) {
 	signer := NewAWSSigner(&types.Configuration{})
 	req := &http.Request{
 		Header: http.Header{
-			Authorization: []string{
+			types.AuthorizationHeader: []string{
 				"Blah",
 			},
 			"Content-Type": []string{"application/json; charset=UTF-8"},
@@ -125,10 +125,10 @@ func Test_ShouldSignAndVerifySignature4(t *testing.T) {
 	require.NoError(t, err)
 	req := &http.Request{
 		Header: http.Header{
-			Authorization:  []string{"AWS4-HMAC-SHA256 Credential"},
-			"X-Amz-Date":   []string{"20230308T024331Z"},
-			"X-Amz-Target": []string{"AWSCognitoIdentityProviderService.AdminGetUser"},
-			"Content-Type": []string{"application/x-amz-json-1.1"},
+			types.AuthorizationHeader: []string{"AWS4-HMAC-SHA256 Credential"},
+			"X-Amz-Date":              []string{"20230308T024331Z"},
+			"X-Amz-Target":            []string{"AWSCognitoIdentityProviderService.AdminGetUser"},
+			"Content-Type":            []string{"application/x-amz-json-1.1"},
 		},
 		Method: "POST",
 		URL:    u,
@@ -186,7 +186,7 @@ func parseAuthHeader(req *http.Request) *signingCtx {
 	if err != nil {
 		return nil
 	}
-	time, err := time.Parse("20060102T150405Z", req.Header.Get("X-Amz-Date"))
+	date, err := time.Parse("20060102T150405Z", req.Header.Get("X-Amz-Date"))
 	if err != nil {
 		return nil
 	}
@@ -203,8 +203,8 @@ func parseAuthHeader(req *http.Request) *signingCtx {
 		SignedHeaderVals: req.Header,
 		Authorization:    auth,
 		BodyDigest:       fmt.Sprintf("%x", sha256.Sum256(b)),
-		Time:             time,
-		//ExpireTime, time.Duration
+		Time:             date,
+		//ExpireTime, date.Duration
 		//signedHeaders    string
 		//canonicalHeaders string
 		//canonicalString  string

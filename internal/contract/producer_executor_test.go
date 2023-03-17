@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -166,7 +167,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
 	require.NoError(t, err)
 	// AND a bad assertion
-	scenario.Request.Headers[web.Authorization] = "AWS4-HMAC-SHA256"
+	scenario.Request.Headers[types.AuthorizationHeader] = "AWS4-HMAC-SHA256"
 	scenario.Response.Assertions = append(scenario.Response.Assertions, "VariableContains headers.Content-Type application/xjson")
 	err = repo.Save(scenario)
 	require.NoError(t, err)
@@ -519,7 +520,11 @@ func saveTestScenario(
 	if err != nil {
 		return nil, err
 	}
-	err = scenarioRepo.SaveHistory(&scenario, "", "", time.Now(), time.Now().Add(time.Second))
+	u, err := url.Parse("http://localhost:8080")
+	if err != nil {
+		return nil, err
+	}
+	err = scenarioRepo.SaveHistory(&scenario, u, time.Now(), time.Now().Add(time.Second))
 	if err != nil {
 		return nil, err
 	}

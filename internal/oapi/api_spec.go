@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/bhatti/api-mock-service/internal/types"
-	"github.com/bhatti/api-mock-service/internal/utils"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
 )
@@ -143,7 +142,7 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 		Description:     api.Description,
 		Method:          api.Method,
 		Path:            api.Path,
-		Group:           utils.NormalizeGroup(api.Title, api.Path),
+		Group:           types.NormalizeGroup(api.Title, api.Path),
 		Request:         req,
 		Response:        res,
 		WaitBeforeReply: 0,

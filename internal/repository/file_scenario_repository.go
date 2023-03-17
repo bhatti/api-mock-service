@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
-	"github.com/bhatti/api-mock-service/internal/types/har"
+	"github.com/bhatti/api-mock-service/internal/types/archive"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -333,7 +334,7 @@ func (sr *FileAPIScenarioRepository) Lookup(
 func (sr *FileAPIScenarioRepository) HistoryNames(group string) (names []string) {
 	names = make([]string, 0)
 	sanitizedGroup := types.SanitizeNonAlphabet(group, "_")
-	files := sr.historyFiles()
+	files := sr.historyFiles(sr.historyDir)
 	for _, file := range files {
 		if group == "" || strings.Contains(file.Name(), group) || strings.Contains(file.Name(), sanitizedGroup) {
 			names = append(names, strings.ReplaceAll(file.Name(), types.ScenarioExt, ""))
@@ -345,8 +346,7 @@ func (sr *FileAPIScenarioRepository) HistoryNames(group string) (names []string)
 // SaveHistory saves history APIScenario
 func (sr *FileAPIScenarioRepository) SaveHistory(
 	scenario *types.APIScenario,
-	url string,
-	host string,
+	u *url.URL,
 	started time.Time,
 	ended time.Time,
 ) (err error) {
@@ -354,16 +354,17 @@ func (sr *FileAPIScenarioRepository) SaveHistory(
 		delete(scenario.Request.Headers, name)
 	}
 	scenario.Description = fmt.Sprintf("executed started at %s, ended at %s, duration %d millis, target url %s",
-		started.UTC().Format(time.RFC3339), ended.UTC().Format(time.RFC3339), ended.UnixMilli()-started.UnixMilli(), url)
+		started.UTC().Format(time.RFC3339), ended.UTC().Format(time.RFC3339), ended.UnixMilli()-started.UnixMilli(), u)
 	name := types.SanitizeNonAlphabet(scenario.Group, "_") + "_" + scenario.BuildName(string(scenario.Method))
-	if err = sr.saveHar(scenario, url, host, started, ended, name); err != nil {
+	if err = sr.saveHar(scenario, u, started, ended, name); err != nil {
 		return err
 	}
 	if err = sr.saveHistory(scenario, name); err != nil {
 		return err
 	}
 
-	sr.checkHistoryLimit()
+	sr.checkHistoryLimit(sr.historyDir, types.ScenarioExt)
+	sr.checkHistoryLimit(sr.harDir, types.HarExt)
 	log.WithFields(log.Fields{
 		"Component": "FileScenarioRepository",
 		"MaxLimit":  sr.maxHistory,
@@ -385,12 +386,11 @@ func (sr *FileAPIScenarioRepository) saveHistory(scenario *types.APIScenario, na
 
 func (sr *FileAPIScenarioRepository) saveHar(
 	scenario *types.APIScenario,
-	url string,
-	host string,
+	u *url.URL,
 	started time.Time,
 	ended time.Time,
 	name string) error {
-	harScenario := har.BuildHar(sr.config, scenario, url, host, started, ended)
+	harScenario := archive.BuildHar(sr.config, scenario, u, started, ended)
 	b, err := json.Marshal(harScenario)
 	if err != nil {
 		return err
@@ -415,17 +415,37 @@ func (sr *FileAPIScenarioRepository) LoadHistory(name string) (*types.APIScenari
 	return unmarshalMockScenario(b, sr.historyDir, data)
 }
 
+// SaveHar saves har file as scenarios
+func (sr *FileAPIScenarioRepository) SaveHar(har *archive.Har) (err error) {
+	scenarios := archive.BuildScenarios(sr.config, har)
+	for _, scenario := range scenarios {
+		err = sr.Save(scenario)
+		if err != nil {
+			return err
+		}
+		u, err := url.Parse(scenario.URL)
+		if err != nil {
+			return err
+		}
+		err = sr.SaveHistory(scenario, u, scenario.StartTime, scenario.EndTime)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // LoadHar loads HAR file for the executed history
-func (sr *FileAPIScenarioRepository) LoadHar(name string, group string, page int, limit int) ([]har.Har, error) {
+func (sr *FileAPIScenarioRepository) LoadHar(name string, group string, page int, limit int) ([]archive.Har, error) {
 	if name != "" {
 		res, err := sr.loadHarByName(name)
 		if err != nil {
 			return nil, err
 		}
-		return []har.Har{res}, nil
+		return []archive.Har{res}, nil
 	}
 	names := sr.HistoryNames(group)
-	harByGroup := make(map[string]*har.Har)
+	harByGroup := make(map[string]*archive.Har)
 	entries := 0
 	for i, name := range names {
 		if entries >= limit {
@@ -457,14 +477,14 @@ func (sr *FileAPIScenarioRepository) LoadHar(name string, group string, page int
 			}).Warnf("failed to read HAR file")
 		}
 	}
-	res := make([]har.Har, 0)
+	res := make([]archive.Har, 0)
 	for _, next := range harByGroup {
 		res = append(res, *next)
 	}
 	return res, nil
 }
 
-func (sr *FileAPIScenarioRepository) loadHarByName(name string) (h har.Har, err error) {
+func (sr *FileAPIScenarioRepository) loadHarByName(name string) (h archive.Har, err error) {
 	if !strings.HasSuffix(name, types.HarExt) {
 		name = name + types.HarExt
 	}
@@ -483,35 +503,34 @@ func (sr *FileAPIScenarioRepository) loadHarByName(name string) (h har.Har, err 
 
 // ///////// PRIVATE METHODS //////////////
 
-func (sr *FileAPIScenarioRepository) checkHistoryLimit() {
-	infos := sr.historyFiles()
+func (sr *FileAPIScenarioRepository) checkHistoryLimit(dir string, ext string) {
+	infos := sr.historyFiles(dir)
 	if len(infos) <= sr.maxHistory {
 		return
 	}
 	for i := len(infos) - 1; i >= sr.maxHistory; i-- {
-		harFile := filepath.Join(sr.harDir, strings.ReplaceAll(infos[i].Name(), types.ScenarioExt, types.HarExt))
-		err1 := os.Remove(harFile)
-		historyFile := filepath.Join(sr.historyDir, infos[i].Name())
-		err2 := os.Remove(historyFile)
-		log.WithFields(log.Fields{
-			"Component":    "FileScenarioRepository",
-			"MaxLimit":     sr.maxHistory,
-			"InfoSize":     len(infos),
-			"Dir":          sr.historyDir,
-			"HarFile":      harFile,
-			"HistoryFile":  historyFile,
-			"I":            i,
-			"HarError":     err1,
-			"HistoryError": err2,
-		}).Debugf("removing old history/har scenario")
+		fileName := filepath.Join(dir, strings.ReplaceAll(infos[i].Name(), types.ScenarioExt, ext))
+		err := os.Remove(fileName)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"Component": "FileScenarioRepository",
+				"MaxLimit":  sr.maxHistory,
+				"InfoSize":  len(infos),
+				"Dir":       dir,
+				"FileName":  fileName,
+				"I":         i,
+				"Error":     err,
+			}).Warnf("failed to remove old history/archive scenario")
+		}
 	}
 }
 
-func (sr *FileAPIScenarioRepository) historyFiles() (infos []fs.FileInfo) {
-	files, err := os.ReadDir(sr.historyDir)
+func (sr *FileAPIScenarioRepository) historyFiles(dir string) (infos []fs.FileInfo) {
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Component": "FileScenarioRepository",
+			"Dir":       dir,
 			"Error":     err,
 		}).Warnf("failed to read history dir")
 		return nil

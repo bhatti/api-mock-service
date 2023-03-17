@@ -23,7 +23,7 @@ type awsLoggerAdapter struct {
 
 // IgnoredRequestHeaders headers
 var IgnoredRequestHeaders = map[string]struct{}{
-	Authorization:             {},
+	types.AuthorizationHeader: {},
 	"User-Agent":              {},
 	"Content-Length":          {},
 	"Accept":                  {},
@@ -151,7 +151,7 @@ func (s *awsSigner) isAWSSig4(request *http.Request) bool {
 	if s.awsConfig.ResignAllRequests {
 		return true
 	}
-	val := strings.ToUpper(request.Header.Get(Authorization))
+	val := strings.ToUpper(request.Header.Get(types.AuthorizationHeader))
 	return strings.Contains(val, "AWS4-HMAC-SHA256")
 }
 
@@ -176,7 +176,7 @@ func (s *awsSigner) getAWSService(request *http.Request) *endpoints.ResolvedEndp
 			SigningName:   s.awsConfig.SigningNameOverride}
 	}
 
-	auth := request.Header.Get(Authorization)
+	auth := request.Header.Get(types.AuthorizationHeader)
 	if auth != "" {
 		var re = regexp.MustCompile(`Credential=.*/.*/(.*)/(.*)/aws4_request`)
 		matches := re.FindStringSubmatch(auth)

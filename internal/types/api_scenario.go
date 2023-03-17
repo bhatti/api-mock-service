@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
+	log "github.com/sirupsen/logrus"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -425,6 +428,14 @@ type APIScenario struct {
 	Response APIResponse `yaml:"response" json:"response"`
 	// WaitMillisBeforeReply for response
 	WaitBeforeReply time.Duration `yaml:"wait_before_reply" json:"wait_before_reply"`
+	// URL of request
+	URL string `yaml:"-" json:"-"`
+	// Host of request
+	Host string `yaml:"-" json:"-"`
+	// StartTime of request
+	StartTime time.Time `yaml:"-" json:"-"`
+	// EndTime of request
+	EndTime time.Time `yaml:"-" json:"-"`
 	// RequestCount of request
 	RequestCount uint64 `yaml:"-" json:"-"`
 }
@@ -447,6 +458,192 @@ func (api *APIScenario) ToKeyData() *APIKeyData {
 		AssertContentsPattern:    api.Request.AssertContentsPattern,
 		AssertHeadersPattern:     api.Request.AssertHeadersPattern,
 	}
+}
+
+// BuildScenarioFromHTTP helper method
+func BuildScenarioFromHTTP(
+	config *Configuration,
+	prefix string,
+	u *url.URL,
+	method string,
+	group string,
+	reqHttpVersion string,
+	resHttpVersion string,
+	reqBody []byte,
+	resBody []byte,
+	queryParams map[string][]string,
+	postParams map[string][]string,
+	reqHeaders map[string][]string,
+	reqContentType string,
+	resHeaders map[string][]string,
+	resContentType string,
+	resStatus int,
+) *APIScenario {
+	if queryParams == nil {
+		queryParams = make(map[string][]string)
+	}
+	if postParams == nil {
+		postParams = make(map[string][]string)
+	}
+	if reqHeaders == nil {
+		reqHeaders = make(map[string][]string)
+	}
+	if resHeaders == nil {
+		resHeaders = make(map[string][]string)
+	}
+	reqContentType = headerValue(reqHeaders, ContentTypeHeader, reqContentType)
+	resContentType = headerValue(resHeaders, ContentTypeHeader, resContentType)
+
+	dataTemplate := fuzz.NewDataTemplateRequest(true, 1, 1)
+	matchReqContents, err := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(reqBody), dataTemplate)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   u,
+			"Method": method,
+			"Error":  err,
+		}).Warnf("failed to unmarshal and extrate types for request")
+	}
+	matchResContents, err := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(string(resBody), dataTemplate)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"Path":   u,
+			"Method": method,
+			"Error":  err,
+		}).Warnf("failed to unmarshal and extrate types for response")
+	}
+
+	reqAssertions := make([]string, 0)
+	resAssertions := []string{
+		`ResponseTimeMillisLE 5000`,
+		fmt.Sprintf(`ResponseStatusMatches %d`, resStatus),
+	}
+	reqHeaderAssertions := make(map[string]string)
+	if reqContentType != "" {
+		reqAssertions = append(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+			reqContentType))
+		reqHeaderAssertions[ContentTypeHeader] = reqContentType
+	}
+	respHeaderAssertions := make(map[string]string)
+	if resContentType != "" {
+		resAssertions = append(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+			resContentType))
+		respHeaderAssertions[ContentTypeHeader] = resContentType
+	}
+	scenario := &APIScenario{
+		Method:         MethodType(method),
+		Name:           headerValue(reqHeaders, MockScenarioName, ""),
+		Path:           u.Path,
+		BaseURL:        u.Scheme + "://" + u.Host,
+		Group:          group,
+		Authentication: make(map[string]APIAuthorization),
+		Request: APIRequest{
+			QueryParams:              make(map[string]string),
+			Headers:                  make(map[string]string),
+			Contents:                 string(reqBody),
+			ExampleContents:          string(reqBody),
+			HTTPVersion:              reqHttpVersion,
+			AssertQueryParamsPattern: make(map[string]string),
+			AssertHeadersPattern:     reqHeaderAssertions,
+			AssertContentsPattern:    matchReqContents,
+			Assertions:               reqAssertions,
+		},
+		Response: APIResponse{
+			Headers:               resHeaders,
+			Contents:              string(resBody),
+			ExampleContents:       string(resBody),
+			StatusCode:            resStatus,
+			HTTPVersion:           resHttpVersion,
+			AssertHeadersPattern:  respHeaderAssertions,
+			AssertContentsPattern: matchResContents,
+			Assertions:            resAssertions,
+			PipeProperties:        fuzz.ExtractTopPrimitiveAttributes(resBody, 5),
+		},
+	}
+	if scenario.Group == "" {
+		scenario.Group = NormalizeGroup("", u.Path)
+	}
+	scenario.Tags = []string{scenario.Group}
+
+	for k, v := range queryParams {
+		if len(v) > 0 {
+			scenario.Request.QueryParams[k] = fuzz.PrefixTypeExample + v[0]
+			if config.AssertQueryParams(k) {
+				scenario.Request.AssertQueryParamsPattern[k] = v[0]
+			}
+		}
+	}
+	for k, v := range postParams {
+		if len(v) > 0 {
+			scenario.Request.PostParams[k] = fuzz.PrefixTypeExample + v[0]
+			if config.AssertQueryParams(k) {
+				scenario.Request.AssertQueryParamsPattern[k] = v[0]
+			}
+		}
+	}
+	for k, v := range reqHeaders {
+		if len(v) > 0 {
+			scenario.Request.Headers[k] = fuzz.PrefixTypeExample + v[0]
+			if strings.Contains(strings.ToUpper(k), "TARGET") {
+				scenario.Request.AssertHeadersPattern[k] = v[0]
+				parts := strings.Split(v[0], ".")
+				if u.Path == "/" {
+					if len(parts) >= 2 {
+						scenario.Group = parts[len(parts)-2] + "_" + parts[len(parts)-1]
+						scenario.Tags = []string{scenario.Group}
+					}
+				}
+			} else if config.AssertHeader(k) {
+				scenario.Request.AssertHeadersPattern[k] = v[0]
+			}
+		}
+	}
+
+	authHeader := scenario.Request.AuthHeader()
+	if strings.Contains(authHeader, "AWS") {
+		scenario.Authentication["aws.auth.sigv4"] = APIAuthorization{
+			Type:   "apiKey",
+			Name:   AuthorizationHeader,
+			In:     "header",
+			Scheme: "x-amazon-apigateway-authtype",
+			Format: "awsSigv4",
+		}
+		scenario.Authentication["smithy.scenario.httpApiKeyAuth"] = APIAuthorization{
+			Type: "apiKey",
+			Name: "x-scenario-key",
+			In:   "header",
+		}
+		scenario.Authentication["bearerAuth"] = APIAuthorization{
+			Type:   "http",
+			Name:   AuthorizationHeader,
+			In:     "header",
+			Scheme: "bearer",
+			Format: "JWT",
+		}
+	} else if authHeader != "" {
+		scenario.Authentication["basicAuth"] = APIAuthorization{
+			Type:   "http",
+			Name:   AuthorizationHeader,
+			In:     "header",
+			Scheme: "basic",
+		}
+		scenario.Authentication["bearerAuth"] = APIAuthorization{
+			Type:   "http",
+			Name:   AuthorizationHeader,
+			In:     "header",
+			Scheme: "bearer",
+			Format: "auth-scheme",
+		}
+	}
+	if scenario.Name == "" {
+		scenario.SetName(prefix + scenario.Group + "-")
+	}
+	if scenario.Response.StatusCode >= 300 {
+		scenario.Predicate = "{{NthRequest 2}}"
+	} else {
+		scenario.Predicate = "{{NthRequest 1}}"
+	}
+	scenario.Description = fmt.Sprintf("%s at %v for %s", time.Now().UTC(), prefix, u)
+	return scenario
 }
 
 // String
@@ -505,7 +702,8 @@ func (api *APIScenario) Validate() error {
 		return fmt.Errorf("method is not specified")
 	}
 	if api.Path == "" {
-		return fmt.Errorf("path is not specified")
+		debug.PrintStack()
+		return fmt.Errorf("scenario path is not specified")
 	}
 	if len(api.Path) > 200 {
 		return fmt.Errorf("path is too long %d", len(api.Path))
@@ -672,4 +870,35 @@ func BuildTestScenario(method MethodType, name string, path string, n int) *APIS
 		},
 		WaitBeforeReply: time.Duration(1) * time.Second,
 	}
+}
+
+// NormalizeGroup normalizes group name
+func NormalizeGroup(title string, path string) string {
+	if title != "" {
+		return title
+	}
+	n := strings.Index(path, "{")
+	if n != -1 {
+		path = path[0 : n-1]
+	}
+	n = strings.Index(path, ":")
+	if n != -1 {
+		path = path[0 : n-1]
+	}
+	if len(path) > 0 {
+		path = path[1:]
+	}
+	group := strings.ReplaceAll(path, "/", "_")
+	if group == "" {
+		group = "root"
+	}
+	return group
+}
+
+func headerValue(headers map[string][]string, name string, defVal string) string {
+	vals := headers[name]
+	if len(vals) == 0 {
+		return defVal
+	}
+	return vals[0]
 }

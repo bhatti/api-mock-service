@@ -109,14 +109,16 @@ func Test_ShouldDownloadScenarioHistory(t *testing.T) {
 	ctrl := NewOAPIController(internalOAPI, mockScenarioRepository, oapiRepository, webServer)
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
+	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
+	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
 	ctx := web.NewStubContext(&http.Request{Body: reader})
 
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	err = mockScenarioRepository.SaveHistory(
 		scenario,
-		"",
-		"",
+		u,
+
 		time.Now(),
 		time.Now())
 	require.NoError(t, err)

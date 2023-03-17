@@ -1,9 +1,11 @@
-package har
+package archive
 
 import (
 	"github.com/bhatti/api-mock-service/internal/types"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -15,28 +17,28 @@ https://github.com/mrichman/hargo/blob/master/types.go
 
 // Har is a container type for deserialization
 type Har struct {
-	Log Log `json:"log"`
+	Log HarLog `json:"log"`
 }
 
-// Log represents the root of the exported data. This object MUST be present and its name MUST be "log".
-type Log struct {
+// HarLog represents the root of the exported data. This object MUST be present and its name MUST be "log".
+type HarLog struct {
 	// The object contains the following name/value pairs:
 
 	// Required. Version number of the format.
 	Version string `json:"version"`
 	// Required. An object of type creator that contains the name and version
 	// information of the log creator application.
-	Creator Creator `json:"creator"`
+	Creator HarCreator `json:"creator"`
 	// Optional. An object of type browser that contains the name and version
 	// information of the user agent.
-	Browser Browser `json:"browser"`
+	Browser HarBrowser `json:"browser"`
 	// Optional. An array of objects of type page, each representing one exported
 	// (tracked) page. Leave out this field if the application does not support
 	// grouping by pages.
-	Pages []Page `json:"pages,omitempty"`
+	Pages []HarPage `json:"pages,omitempty"`
 	// Required. An array of objects of type entry, each representing one
 	// exported (tracked) HTTP request.
-	Entries []Entry `json:"entries"`
+	Entries []HarEntry `json:"entries"`
 	// Optional. A comment provided by the user or the application. Sorting
 	// entries by startedDateTime (starting from the oldest) is preferred way how
 	// to export data since it can make importing faster. However, the reader
@@ -45,8 +47,8 @@ type Log struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Creator contains information about the log creator application
-type Creator struct {
+// HarCreator contains information about the log creator application
+type HarCreator struct {
 	// Required. The name of the application that created the log.
 	Name string `json:"name"`
 	// Required. The version number of the application that created the log.
@@ -55,8 +57,8 @@ type Creator struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Browser that created the log
-type Browser struct {
+// HarBrowser that created the log
+type HarBrowser struct {
 	// Required. The name of the browser that created the log.
 	Name string `json:"name"`
 	// Required. The version number of the browser that created the log.
@@ -65,10 +67,10 @@ type Browser struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Page object for every exported web page and one <entry> object for every HTTP request.
+// HarPage object for every exported web page and one <entry> object for every HTTP request.
 // In case when an HTTP trace tool isn't able to group requests by a page,
 // the <pages> object is empty and individual requests doesn't have a parent page.
-type Page struct {
+type HarPage struct {
 	/* There is one <page> object for every exported web page and one <entry>
 	object for every HTTP request. In case when an HTTP trace tool isn't able to
 	group requests by a page, the <pages> object is empty and individual
@@ -80,7 +82,7 @@ type Page struct {
 	StartedDateTime string `json:"startedDateTime"`
 	// Unique identifier of a page within the . Entries use it to refer the parent page.
 	ID string `json:"id"`
-	// Page title.
+	// HarPage title.
 	Title string `json:"title"`
 	// Detailed timing info about page load.
 	PageTiming PageTiming `json:"pageTiming"`
@@ -91,13 +93,13 @@ type Page struct {
 // PageTiming describes timings for various events (states) fired during the page load.
 // All times are specified in milliseconds. If a time info is not available appropriate field is set to -1.
 type PageTiming struct {
-	// Content of the page loaded. Number of milliseconds since page load started
+	// HarResponseContent of the page loaded. Number of milliseconds since page load started
 	// (page.startedDateTime). Use -1 if the timing does not apply to the current
 	// request.
-	// Depeding on the browser, onContentLoad property represents DOMContentLoad
+	// Depending on the browser, onContentLoad property represents DOMContentLoad
 	// event or document.readyState == interactive.
 	OnContentLoad int `json:"onContentLoad"`
-	// Page is loaded (onLoad event fired). Number of milliseconds since page
+	// HarPage is loaded (onLoad event fired). Number of milliseconds since page
 	// load started (page.startedDateTime). Use -1 if the timing does not apply
 	// to the current request.
 	OnLoad int `json:"onLoad"`
@@ -105,10 +107,11 @@ type PageTiming struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Entry is a unique, optional Reference to the parent page.
+// HarEntry is a unique, optional Reference to the parent page.
 // Leave out this field if the application does not support grouping by pages.
-type Entry struct {
-	Pageref string `json:"pageref,omitempty"`
+type HarEntry struct {
+	Title   string `json:"title,omitempty"`
+	PageRef string `json:"pageref,omitempty"`
 	// Date and time stamp of the request start
 	// (ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD).
 	StartedDateTime string `json:"startedDateTime"`
@@ -116,11 +119,11 @@ type Entry struct {
 	// timings available in the timings object (i.e. not including -1 values) .
 	Time float32 `json:"time"`
 	// Detailed info about the request.
-	Request Request `json:"request"`
+	Request HarRequest `json:"request"`
 	// Detailed info about the response.
-	Response Response `json:"response"`
+	Response HarResponse `json:"response"`
 	// Info about cache usage.
-	Cache Cache `json:"cache,omitempty"`
+	Cache HarCache `json:"cache,omitempty"`
 	// Detailed timing info about request/response round trip.
 	PageTimings PageTimings `json:"pageTimings,omitempty"`
 	// optional (new in 1.2) IP address of the server that was connected
@@ -137,22 +140,22 @@ type Entry struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Request contains detailed info about performed request.
-type Request struct {
-	// Request method (GET, POST, ...).
+// HarRequest contains detailed info about performed request.
+type HarRequest struct {
+	// HarRequest method (GET, POST, ...).
 	Method string `json:"method"`
 	// Absolute URL of the request (fragments are not included).
 	URL string `json:"url"`
-	// Request HTTP Version.
+	// HarRequest HTTP Version.
 	HTTPVersion string `json:"httpVersion"`
 	// List of cookie objects.
-	Cookies []Cookie `json:"cookies,omitempty"`
+	Cookies []HarCookie `json:"cookies,omitempty"`
 	// List of header objects.
 	Headers []NVP `json:"headers,omitempty"`
 	// List of query parameter objects.
 	QueryString []NVP `json:"queryString,omitempty"`
 	// Posted data.
-	PostData PostData `json:"postData,omitempty"`
+	PostData HarPostData `json:"postData,omitempty"`
 	// Total number of bytes from the start of the HTTP request message until
 	// (and including) the double CRLF before the body. Set to -1 if the info
 	// is not available.
@@ -164,20 +167,20 @@ type Request struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Response contains detailed info about the response.
-type Response struct {
-	// Response status.
+// HarResponse contains detailed info about the response.
+type HarResponse struct {
+	// HarResponse status.
 	Status int `json:"status"`
-	// Response status description.
+	// HarResponse status description.
 	StatusText string `json:"statusText"`
-	// Response HTTP Version.
+	// HarResponse HTTP Version.
 	HTTPVersion string `json:"httpVersion"`
 	// List of cookie objects.
-	Cookies []Cookie `json:"cookies,omitempty"`
+	Cookies []HarCookie `json:"cookies,omitempty"`
 	// List of header objects.
 	Headers []NVP `json:"headers,omitempty"`
 	// Details about the response body.
-	Content Content `json:"content,omitempty"`
+	Content HarResponseContent `json:"content,omitempty"`
 	// Redirection target URL from the Location response header.
 	RedirectURL string `json:"redirectURL"`
 	// Total number of bytes from the start of the HTTP response message until
@@ -196,8 +199,8 @@ type Response struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Cookie contains list of all cookies (used in <request> and <response> objects).
-type Cookie struct {
+// HarCookie contains list of all cookies (used in <request> and <response> objects).
+type HarCookie struct {
 	// The name of the cookie.
 	Name string `json:"name"`
 	// The cookie value.
@@ -206,7 +209,7 @@ type Cookie struct {
 	Path string `json:"path,omitempty"`
 	// optional The host of the cookie.
 	Domain string `json:"domain,omitempty"`
-	// optional Cookie expiration time.
+	// optional HarCookie expiration time.
 	// (ISO 8601 YYYY-MM-DDThh:mm:ss.sTZD, e.g. 2009-07-24T19:20:30.123+02:00).
 	Expires string `json:"expires,omitempty"`
 	// optional Set to true if the cookie is HTTP only, false otherwise.
@@ -225,12 +228,12 @@ type NVP struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// PostData describes posted data, if any (embedded in <request> object).
-type PostData struct {
+// HarPostData describes posted data, if any (embedded in <request> object).
+type HarPostData struct {
 	//  Mime type of posted data.
 	MimeType string `json:"mimeType"`
 	//  List of posted parameters (in case of URL encoded parameters).
-	Params []PostParam `json:"params,omitempty"`
+	Params []HarPostParam `json:"params,omitempty"`
 	//  Plain text posted data
 	Text string `json:"text"`
 	// optional (new in 1.2) A comment provided by the user or the
@@ -238,8 +241,8 @@ type PostData struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// PostParam is a list of posted parameters, if any (embedded in <postData> object).
-type PostParam struct {
+// HarPostParam is a list of posted parameters, if any (embedded in <postData> object).
+type HarPostParam struct {
 	// name of a posted parameter.
 	Name string `json:"name"`
 	// optional value of a posted parameter or content of a posted file.
@@ -252,8 +255,8 @@ type PostParam struct {
 	Comment string `json:"comment,omitempty"`
 }
 
-// Content describes details about response content (embedded in <response> object).
-type Content struct {
+// HarResponseContent describes details about response content (embedded in <response> object).
+type HarResponseContent struct {
 	// Length of the returned content in bytes. Should be equal to
 	// response.bodySize if there is no compression and bigger when the content
 	// has been compressed.
@@ -261,11 +264,11 @@ type Content struct {
 	// optional Number of bytes saved. Leave out this field if the information
 	// is not available.
 	Compression int `json:"compression,omitempty"`
-	// MIME type of the response text (value of the Content-Type response
+	// MIME type of the response text (value of the HarResponseContent-Type response
 	// header). The charset attribute of the MIME type is included (if
 	// available).
 	MimeType string `json:"mimeType"`
-	// optional Response body sent from the server or loaded from the browser
+	// optional HarResponse body sent from the server or loaded from the browser
 	// cache. This field is populated with textual content only. The text field
 	// is either HTTP decoded text or encoded (e.g. "base64") representation of
 	// the response body. Leave out this field if the information is not
@@ -283,20 +286,20 @@ type Content struct {
 	File string `json:"_file,omitempty"`
 }
 
-// Cache contains info about a request coming from browser cache.
-type Cache struct {
+// HarCache contains info about a request coming from browser cache.
+type HarCache struct {
 	// optional State of a cache entry before the request. Leave out this field
 	// if the information is not available.
-	BeforeRequest CacheObject `json:"beforeRequest,omitempty"`
+	BeforeRequest HarCacheObject `json:"beforeRequest,omitempty"`
 	// optional State of a cache entry after the request. Leave out this field if
 	// the information is not available.
-	AfterRequest CacheObject `json:"afterRequest,omitempty"`
+	AfterRequest HarCacheObject `json:"afterRequest,omitempty"`
 	// optional (new in 1.2) A comment provided by the user or the application.
 	Comment string `json:"comment,omitempty"`
 }
 
-// CacheObject is used by both beforeRequest and afterRequest
-type CacheObject struct {
+// HarCacheObject is used by both beforeRequest and afterRequest
+type HarCacheObject struct {
 	// optional - Expiration time of the cache entry.
 	Expires string `json:"expires,omitempty"`
 	// The last time the cache entry was opened.
@@ -336,28 +339,46 @@ type PageTimings struct {
 	// optional (new in 1.2) - A comment provided by the user or the application.
 }
 
+// BuildScenarios builds scenarios from HAR log
+func BuildScenarios(
+	config *types.Configuration,
+	har *Har,
+) (res []*types.APIScenario) {
+	for _, entry := range har.Log.Entries {
+		scenario, err := toScenario(config, entry)
+		if err == nil {
+			res = append(res, scenario)
+		} else {
+			log.WithFields(log.Fields{
+				"entry": entry,
+				"Error": err,
+			}).Warnf("failed to import har file")
+		}
+	}
+	return
+}
+
 // BuildHar extracts http request and builds HAR log
 func BuildHar(
 	config *types.Configuration,
 	scenario *types.APIScenario,
-	url string,
-	host string,
+	u *url.URL,
 	started time.Time,
 	ended time.Time) *Har {
 	return &Har{
-		Log: Log{
+		Log: HarLog{
 			Version: "1.2",
-			Creator: Creator{
+			Creator: HarCreator{
 				Name:    config.UserAgent,
 				Version: config.Version.String(),
 				Comment: "",
 			},
-			Browser: Browser{
+			Browser: HarBrowser{
 				Name:    config.UserAgent,
 				Version: config.Version.String(),
 				Comment: "",
 			},
-			Pages: []Page{
+			Pages: []HarPage{
 				{
 					StartedDateTime: started.UTC().Format(time.RFC3339),
 					ID:              scenario.Group,
@@ -370,25 +391,53 @@ func BuildHar(
 					Comment: "",
 				}},
 			Comment: "",
-			Entries: []Entry{toEntry(scenario, url, host, started, ended)},
+			Entries: []HarEntry{toEntry(scenario, u, started, ended)},
 		},
 	}
 }
 
+func toScenario(config *types.Configuration, entry HarEntry) (*types.APIScenario, error) {
+	u, err := url.Parse(entry.Request.URL)
+	if err != nil {
+		return nil, err
+	}
+	scenario := types.BuildScenarioFromHTTP(
+		config,
+		"recorded-",
+		u,
+		entry.Request.Method,
+		entry.PageRef,
+		entry.Request.HTTPVersion,
+		entry.Response.HTTPVersion,
+		[]byte(entry.Request.PostData.Text),
+		[]byte(entry.Response.Content.Text),
+		nvpToMap(entry.Request.QueryString),
+		postParamsToMap(entry.Request.PostData.Params),
+		nvpToMap(entry.Request.Headers),
+		entry.Request.PostData.MimeType,
+		nvpToMap(entry.Response.Headers),
+		entry.Response.Content.MimeType,
+		entry.Response.Status)
+	scenario.URL = entry.Request.URL
+	scenario.StartTime, _ = time.Parse(entry.StartedDateTime, time.RFC3339)
+	scenario.EndTime = scenario.StartTime.Add(time.Duration(entry.Time) * time.Millisecond)
+	return scenario, nil
+}
+
 func toEntry(
 	scenario *types.APIScenario,
-	url string,
-	host string,
+	u *url.URL,
 	started time.Time,
-	ended time.Time) Entry {
-	host, port, _ := net.SplitHostPort(host)
-	return Entry{
-		Pageref:         scenario.Group,
+	ended time.Time) HarEntry {
+	host, port, _ := net.SplitHostPort(u.Host)
+	return HarEntry{
+		Title:           scenario.Name,
+		PageRef:         scenario.Group,
 		StartedDateTime: started.UTC().Format(time.RFC3339),
 		Time:            float32(ended.UnixMilli() - started.UnixMilli()),
-		Request:         toRequest(scenario, url),
+		Request:         toRequest(scenario, u),
 		Response:        toResponse(scenario),
-		Cache:           Cache{},
+		Cache:           HarCache{},
 		PageTimings: PageTimings{
 			Blocked: 0,
 			DNS:     0,
@@ -407,22 +456,22 @@ func toEntry(
 
 func toRequest(
 	scenario *types.APIScenario,
-	url string,
-) Request {
+	u *url.URL,
+) HarRequest {
 	headers := toNVP(scenario.Request.Headers)
 	headersSize := 0
 	for _, header := range headers {
 		headersSize += len(header.Name) + len(header.Value)
 	}
-	postData := PostData{
+	postData := HarPostData{
 		MimeType: scenario.Request.ContentType(""),
 		Params:   toPostParams(scenario),
 		Text:     scenario.Request.Contents,
 		Comment:  "",
 	}
-	return Request{
+	return HarRequest{
 		Method:      string(scenario.Method),
-		URL:         url,
+		URL:         u.Scheme + "://" + u.Host + scenario.Path,
 		HTTPVersion: scenario.Request.HTTPVersion,
 		Cookies:     toCookies(nil),
 		Headers:     headers,
@@ -434,7 +483,7 @@ func toRequest(
 	}
 }
 
-func toResponse(scenario *types.APIScenario) Response {
+func toResponse(scenario *types.APIScenario) HarResponse {
 	headers := toNVPArray(scenario.Response.Headers)
 	headersSize := 0
 	for _, header := range headers {
@@ -444,13 +493,13 @@ func toResponse(scenario *types.APIScenario) Response {
 	if len(scenario.Response.Headers["Location"]) > 0 {
 		redirectURL = scenario.Response.Headers["Location"][0]
 	}
-	return Response{
+	return HarResponse{
 		Status:      scenario.Response.StatusCode,
 		StatusText:  "",
 		HTTPVersion: scenario.Response.HTTPVersion,
 		Cookies:     toCookies(nil),
 		Headers:     headers,
-		Content: Content{
+		Content: HarResponseContent{
 			Size:        len(scenario.Response.Contents),
 			Compression: 0,
 			MimeType:    scenario.Response.ContentType(""),
@@ -466,9 +515,9 @@ func toResponse(scenario *types.APIScenario) Response {
 	}
 }
 
-func toCookies(cookies []*http.Cookie) (res []Cookie) {
+func toCookies(cookies []*http.Cookie) (res []HarCookie) {
 	for _, cookie := range cookies {
-		res = append(res, Cookie{
+		res = append(res, HarCookie{
 			Name:     cookie.Name,
 			Value:    cookie.Value,
 			Path:     cookie.Path,
@@ -481,9 +530,9 @@ func toCookies(cookies []*http.Cookie) (res []Cookie) {
 	return
 }
 
-func toPostParams(scenario *types.APIScenario) (res []PostParam) {
+func toPostParams(scenario *types.APIScenario) (res []HarPostParam) {
 	for k, v := range scenario.Request.PostParams {
-		res = append(res, PostParam{
+		res = append(res, HarPostParam{
 			// name of a posted parameter.
 			Name:        k,
 			Value:       v,
@@ -514,6 +563,22 @@ func toNVPArray(store map[string][]string) (res []NVP) {
 				Comment: "",
 			})
 		}
+	}
+	return
+}
+
+func nvpToMap(nvpList []NVP) (res map[string][]string) {
+	res = make(map[string][]string)
+	for _, nvp := range nvpList {
+		res[nvp.Name] = []string{nvp.Value}
+	}
+	return
+}
+
+func postParamsToMap(postParams []HarPostParam) (res map[string][]string) {
+	res = make(map[string][]string)
+	for _, nvp := range postParams {
+		res[nvp.Name] = []string{nvp.Value}
 	}
 	return
 }

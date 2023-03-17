@@ -1,8 +1,9 @@
 package controller
 
 import (
+	"encoding/json"
 	"github.com/bhatti/api-mock-service/internal/repository"
-	"github.com/bhatti/api-mock-service/internal/types/har"
+	"github.com/bhatti/api-mock-service/internal/types/archive"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"net/http"
 	"strconv"
@@ -23,6 +24,7 @@ func NewExecHistoryController(
 
 	webserver.GET("/_exec_history/names", ctrl.getExecHistoryNames)
 	webserver.GET("/_exec_history/har", ctrl.getExecHistoryHar)
+	webserver.POST("/_exec_history/har", ctrl.postExecHistoryHar)
 	return ctrl
 }
 
@@ -40,6 +42,24 @@ func (ehc *ExecHistoryController) getExecHistoryNames(c web.APIContext) error {
 		res = make([]string, 0)
 	}
 	return c.JSON(http.StatusOK, res)
+}
+
+// postExecHistoryHar handler
+// swagger:route POST /_exec_history/har exec-history postExecHistoryHar
+// Uploads HAR contents and generates scenario and history.
+// responses:
+//
+//	200: postExecHistoryHarResponse
+func (ehc *ExecHistoryController) postExecHistoryHar(c web.APIContext) (err error) {
+	har := &archive.Har{}
+	err = json.NewDecoder(c.Request().Body).Decode(har)
+	if err != nil {
+		return err
+	}
+	if err = ehc.scenarioRepository.SaveHar(har); err != nil {
+		return err
+	}
+	return c.NoContent(http.StatusOK)
 }
 
 // getExecHistoryHar handler
@@ -66,7 +86,7 @@ func (ehc *ExecHistoryController) getExecHistoryHar(c web.APIContext) error {
 // ExecHistory history in the format of HAR format
 type execHistoryHarResponse struct {
 	// in:body
-	Body []har.Log
+	Body []archive.HarLog
 }
 
 // swagger:parameters getExecHistoryHar
@@ -79,8 +99,20 @@ type execHistoryNamesParams struct {
 }
 
 // swagger:response execHistoryNamesResponse
-// ExecHistory history scenario names
+// response for history of scenario names
 type execHistoryNamesResponseBody struct {
 	// in:body
 	Body []string
+}
+
+// swagger:parameters postExecHistoryHar
+// The parameters for uploading har contents
+type postExecHistoryHarParams struct {
+	// in:body
+	Body archive.Har
+}
+
+// swagger:response postExecHistoryHarResponse
+// response for uploading HAR
+type postExecHistoryHarResponseBody struct {
 }

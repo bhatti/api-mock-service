@@ -50,6 +50,9 @@ func (msc *APIScenarioController) postMockScenario(c web.APIContext) (err error)
 	scenario := &types.APIScenario{}
 	if c.Request().Header.Get(types.ContentTypeHeader) != "application/yaml" {
 		err = json.NewDecoder(c.Request().Body).Decode(scenario)
+		if err != nil {
+			return err
+		}
 		if err = msc.scenarioRepository.Save(scenario); err != nil {
 			return err
 		}

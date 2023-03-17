@@ -30,8 +30,10 @@ type Configuration struct {
 	AssertHeadersPattern string `yaml:"assert_headers_pattern" mapstructure:"assert_headers_pattern" env:"ASSERT_HEADERS_PATTERN"`
 	// AssertQueryParamsPattern to always match HTTP query params and store them in match-query parameters of api scenario
 	AssertQueryParamsPattern string `yaml:"assert_query_params_pattern" mapstructure:"assert_query_params_pattern" env:"ASSERT_QUERY_PATTERN"`
-	CORS                     string `yaml:"cors" mapstructure:"cors" env:"MOCK_CORS"`
-	Debug                    bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
+	// AssertPostParamsPattern to always match HTTP post params and store them in match-query parameters of api scenario
+	AssertPostParamsPattern string `yaml:"assert_post_params_pattern" mapstructure:"assert_post_params_pattern" env:"ASSERT_POST_PATTERN"`
+	CORS                    string `yaml:"cors" mapstructure:"cors" env:"MOCK_CORS"`
+	Debug                   bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
 	// AWSConfig
@@ -145,6 +147,11 @@ func (c *Configuration) AssertHeader(h string) bool {
 // AssertQueryParams match query params
 func (c *Configuration) AssertQueryParams(p string) bool {
 	return matchRegex(c.AssertQueryParamsPattern, p)
+}
+
+// AssertPostParams match post params
+func (c *Configuration) AssertPostParams(p string) bool {
+	return matchRegex(c.AssertPostParamsPattern, p)
 }
 
 func matchRegex(re string, str string) bool {

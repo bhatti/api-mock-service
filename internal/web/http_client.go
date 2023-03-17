@@ -16,9 +16,6 @@ import (
 	"time"
 )
 
-// Authorization constant
-const Authorization = "Authorization"
-
 // AWSAccessKey constant
 const AWSAccessKey = "AWS_ACCESS_KEY_ID"
 
