@@ -158,98 +158,6 @@
         "x-codegen-request-body-name": "Body"
       }
     },
-    "/_exec_history/har": {
-      "get": {
-        "tags": [
-          "exec-history"
-        ],
-        "summary": "Fetches execution history in the format of HTTP HAR.",
-        "operationId": "getExecHistoryHar",
-        "parameters": [
-          {
-            "name": "group",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "x-go-name": "Group"
-            },
-            "x-go-name": "Group"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "x-go-name": "Page"
-            },
-            "x-go-name": "Page"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/HarLog"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "exec-history"
-        ],
-        "summary": "Uploads HAR contents and generates scenario and history.",
-        "operationId": "postExecHistoryHar",
-        "requestBody": {
-          "content": {
-            "*/*": {
-              "schema": {
-                "$ref": "#/components/schemas/Har"
-              }
-            }
-          },
-          "required": false
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {}
-          }
-        },
-        "x-codegen-request-body-name": "Body"
-      }
-    },
-    "/_exec_history/names": {
-      "get": {
-        "tags": [
-          "exec-history"
-        ],
-        "summary": "Fetches history of api scenarios by group.",
-        "operationId": "getExecHistoryNames",
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/_fixtures/{method}/{name}/{path}": {
       "get": {
         "tags": [
@@ -466,6 +374,231 @@
             }
           }
         }
+      }
+    },
+    "/_history": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches history of api scenarios by name or group.",
+        "operationId": "getExecHistory",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Page"
+            },
+            "x-go-name": "Page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APIScenario"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_history/har": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches execution history in the format of HTTP HAR.",
+        "operationId": "getExecHistoryHar",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Page"
+            },
+            "x-go-name": "Page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Har"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Uploads HAR contents and generates scenario and history.",
+        "operationId": "postExecHistoryHar",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/Har"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      }
+    },
+    "/_history/names": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches history of api scenarios by group.",
+        "operationId": "getExecHistoryNames",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/_history/postman": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches execution history in the format of HTTP HAR.",
+        "operationId": "getExecHistoryPostman",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Name"
+            },
+            "x-go-name": "Name"
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "x-go-name": "Page"
+            },
+            "x-go-name": "Page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collection"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Uploads HAR contents and generates scenario and history.",
+        "operationId": "postExecHistoryPostman",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/Collection"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "Body"
       }
     },
     "/_oapi": {
@@ -1252,6 +1385,14 @@
             },
             "description": "QueryParams for the API",
             "x-go-name": "QueryParams"
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Variables to set for templates",
+            "x-go-name": "Variables"
           }
         },
         "description": "APIRequest defines mock request for APIs",
@@ -1359,6 +1500,12 @@
             "description": "Description of scenario",
             "x-go-name": "Description"
           },
+          "end_time": {
+            "type": "string",
+            "description": "EndTime of request",
+            "format": "date-time",
+            "x-go-name": "EndTime"
+          },
           "group": {
             "type": "string",
             "description": "Group of scenario",
@@ -1394,6 +1541,12 @@
           "response": {
             "$ref": "#/components/schemas/APIResponse"
           },
+          "start_time": {
+            "type": "string",
+            "description": "StartTime of request",
+            "format": "date-time",
+            "x-go-name": "StartTime"
+          },
           "tags": {
             "type": "array",
             "description": "Tags of scenario",
@@ -1409,11 +1562,301 @@
         "description": "APIScenario defines mock scenario for APIs",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
+      "Auth": {
+        "title": "Auth contains the authentication method used and its associated parameters.",
+        "type": "object",
+        "properties": {
+          "apikey": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "APIKey"
+          },
+          "awsv4": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "AWSV4"
+          },
+          "basic": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "Basic"
+          },
+          "bearer": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "Bearer"
+          },
+          "digest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "Digest"
+          },
+          "hawk": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "Hawk"
+          },
+          "noauth": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "NoAuth"
+          },
+          "ntlm": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "NTLM"
+          },
+          "oauth1": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "OAuth1"
+          },
+          "oauth2": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthParam"
+            },
+            "x-go-name": "OAuth2"
+          },
+          "type": {
+            "$ref": "#/components/schemas/authType"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "AuthParam": {
+        "title": "AuthParam represents an attribute for any authentication method provided by Postman.",
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "x-go-name": "Key"
+          },
+          "type": {
+            "type": "string",
+            "x-go-name": "Type"
+          },
+          "value": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "Value"
+          }
+        },
+        "description": "For example \"username\" and \"password\" are set as auth attributes for Basic Authentication method.",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Body": {
+        "title": "Body represents the data usually contained in the request body.",
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean",
+            "x-go-name": "Disabled"
+          },
+          "file": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "File"
+          },
+          "formdata": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "FormData"
+          },
+          "graphql": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "GraphQL"
+          },
+          "mode": {
+            "type": "string",
+            "x-go-name": "Mode"
+          },
+          "options": {
+            "$ref": "#/components/schemas/BodyOptions"
+          },
+          "raw": {
+            "type": "string",
+            "x-go-name": "Raw"
+          },
+          "urlencoded": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "URLEncoded"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "BodyOptions": {
+        "title": "BodyOptions holds body options.",
+        "type": "object",
+        "properties": {
+          "raw": {
+            "$ref": "#/components/schemas/BodyOptionsRaw"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "BodyOptionsRaw": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string",
+            "x-go-name": "Language"
+          }
+        },
+        "description": "BodyOptionsRaw represents the acutal language to use in postman. (See possible options in the cost above)",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Collection": {
+        "title": "Collection represents a Postman Collection.",
+        "type": "object",
+        "properties": {
+          "auth": {
+            "$ref": "#/components/schemas/Auth"
+          },
+          "event": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "x-go-name": "Events"
+          },
+          "info": {
+            "$ref": "#/components/schemas/Info"
+          },
+          "item": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Items"
+            },
+            "x-go-name": "Items"
+          },
+          "variable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Variable"
+            },
+            "x-go-name": "Variables"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Cookie": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "x-go-name": "Domain"
+          },
+          "expires": {
+            "type": "string",
+            "x-go-name": "Expires"
+          },
+          "extensions": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "Extensions"
+          },
+          "hostOnly": {
+            "type": "boolean",
+            "x-go-name": "HostOnly"
+          },
+          "httpOnly": {
+            "type": "boolean",
+            "x-go-name": "HTTPOnly"
+          },
+          "maxAge": {
+            "type": "string",
+            "x-go-name": "MaxAge"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "path": {
+            "type": "string",
+            "x-go-name": "Path"
+          },
+          "secure": {
+            "type": "string",
+            "x-go-name": "Secure"
+          },
+          "session": {
+            "type": "boolean",
+            "x-go-name": "Session"
+          },
+          "value": {
+            "type": "string",
+            "x-go-name": "Value"
+          }
+        },
+        "description": "Cookie represents a cookie that follows the Google Chrome format (https://developer.chrome.com/extensions/cookies)",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Description": {
+        "title": "Description contains collection description.",
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "x-go-name": "Content"
+          },
+          "type": {
+            "type": "string",
+            "x-go-name": "Type"
+          },
+          "version": {
+            "type": "string",
+            "x-go-name": "Version"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
       "Duration": {
         "type": "integer",
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
         "format": "int64",
         "x-go-package": "time"
+      },
+      "Event": {
+        "title": "An Event defines a script associated with an associated event name.",
+        "type": "object",
+        "properties": {
+          "disabled": {
+            "type": "boolean",
+            "x-go-name": "Disabled"
+          },
+          "id": {
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "listen": {
+            "$ref": "#/components/schemas/ListenType"
+          },
+          "script": {
+            "$ref": "#/components/schemas/Script"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
       },
       "Har": {
         "type": "object",
@@ -1927,6 +2370,136 @@
         },
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
       },
+      "Header": {
+        "title": "Header represents an HTTP Header.",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "x-go-name": "Description"
+          },
+          "disabled": {
+            "type": "boolean",
+            "x-go-name": "Disabled"
+          },
+          "key": {
+            "type": "string",
+            "x-go-name": "Key"
+          },
+          "value": {
+            "type": "string",
+            "x-go-name": "Value"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "HeaderList": {
+        "title": "HeaderList contains a list of headers.",
+        "type": "object",
+        "properties": {
+          "Headers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Header"
+            }
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Info": {
+        "title": "Info stores data about the collection.",
+        "type": "object",
+        "properties": {
+          "description": {
+            "$ref": "#/components/schemas/Description"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "schema": {
+            "type": "string",
+            "x-go-name": "Schema"
+          },
+          "version": {
+            "type": "string",
+            "x-go-name": "Version"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Items": {
+        "title": "Items are the basic unit for a Postman collection.",
+        "type": "object",
+        "properties": {
+          "auth": {
+            "$ref": "#/components/schemas/Auth"
+          },
+          "description": {
+            "type": "string",
+            "x-go-name": "Description"
+          },
+          "event": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "x-go-name": "Events"
+          },
+          "id": {
+            "type": "string",
+            "description": "Fields specific to Item",
+            "x-go-name": "ID"
+          },
+          "item": {
+            "type": "array",
+            "description": "Fields specific to ItemGroup",
+            "items": {
+              "$ref": "#/components/schemas/Items"
+            },
+            "x-go-name": "Items"
+          },
+          "name": {
+            "type": "string",
+            "description": "Common fields.",
+            "x-go-name": "Name"
+          },
+          "protocolProfileBehavior": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "ProtocolProfileBehavior"
+          },
+          "request": {
+            "$ref": "#/components/schemas/Request"
+          },
+          "response": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Response"
+            },
+            "x-go-name": "Responses"
+          },
+          "variable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Variable"
+            },
+            "x-go-name": "Variables"
+          }
+        },
+        "description": "It can either be a request (Item) or a folder (ItemGroup).",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "ListenType": {
+        "title": "ListenType defines the kind of script attached to an event.",
+        "type": "string",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Method": {
+        "title": "Method defines common HTTP methods.",
+        "type": "string",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
       "MethodType": {
         "type": "string",
         "description": "MethodType for HTTP",
@@ -2099,6 +2672,244 @@
         },
         "description": "ProducerContractResponse for returning summary of producer based test results",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
+      "QueryParam": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "x-go-name": "Description"
+          },
+          "key": {
+            "type": "string",
+            "x-go-name": "Key"
+          },
+          "value": {
+            "type": "string",
+            "x-go-name": "Value"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Request": {
+        "title": "A Request represents an HTTP request.",
+        "type": "object",
+        "properties": {
+          "auth": {
+            "$ref": "#/components/schemas/Auth"
+          },
+          "body": {
+            "$ref": "#/components/schemas/Body"
+          },
+          "certificate": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "Certificate"
+          },
+          "description": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "Description"
+          },
+          "header": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Header"
+            },
+            "x-go-name": "Header"
+          },
+          "method": {
+            "$ref": "#/components/schemas/Method"
+          },
+          "proxy": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "Proxy"
+          },
+          "url": {
+            "$ref": "#/components/schemas/URL"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Response": {
+        "title": "A Response represents an HTTP response.",
+        "type": "object",
+        "properties": {
+          "_postman_previewlanguage": {
+            "type": "string",
+            "x-go-name": "PreviewLanguage"
+          },
+          "body": {
+            "type": "string",
+            "x-go-name": "Body"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "Code"
+          },
+          "cookie": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Cookie"
+            },
+            "x-go-name": "Cookies"
+          },
+          "header": {
+            "$ref": "#/components/schemas/HeaderList"
+          },
+          "id": {
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "originalRequest": {
+            "$ref": "#/components/schemas/Request"
+          },
+          "responseTime": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "ResponseTime"
+          },
+          "status": {
+            "type": "string",
+            "x-go-name": "Status"
+          },
+          "timings": {
+            "type": "object",
+            "properties": {},
+            "x-go-name": "Timings"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Script": {
+        "title": "A Script is a snippet of Javascript code that can be used to to perform setup or teardown operations on a particular response.",
+        "type": "object",
+        "properties": {
+          "exec": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Exec"
+          },
+          "id": {
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "src": {
+            "$ref": "#/components/schemas/URL"
+          },
+          "type": {
+            "type": "string",
+            "x-go-name": "Type"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "URL": {
+        "title": "URL is a struct that contains an URL in a \"broken-down way\".",
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string",
+            "x-go-name": "Hash"
+          },
+          "host": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Host"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Path"
+          },
+          "port": {
+            "type": "string",
+            "x-go-name": "Port"
+          },
+          "protocol": {
+            "type": "string",
+            "x-go-name": "Protocol"
+          },
+          "query": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueryParam"
+            },
+            "x-go-name": "Query"
+          },
+          "raw": {
+            "type": "string",
+            "x-go-name": "Raw"
+          },
+          "variable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Variable"
+            },
+            "x-go-name": "Variables"
+          }
+        },
+        "description": "Raw contains the complete URL.",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "Variable": {
+        "title": "A Variable allows you to store and reuse values in your requests and scripts.",
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "x-go-name": "Description"
+          },
+          "disabled": {
+            "type": "boolean",
+            "x-go-name": "Disabled"
+          },
+          "id": {
+            "type": "string",
+            "x-go-name": "ID"
+          },
+          "key": {
+            "type": "string",
+            "x-go-name": "Key"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "system": {
+            "type": "boolean",
+            "x-go-name": "System"
+          },
+          "type": {
+            "type": "string",
+            "x-go-name": "Type"
+          },
+          "value": {
+            "type": "string",
+            "x-go-name": "Value"
+          }
+        },
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
+      },
+      "authType": {
+        "type": "string",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/postman"
       }
     },
     "responses": {
@@ -2221,10 +3032,7 @@
         "content": {
           "*/*": {
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/HarLog"
-              }
+              "$ref": "#/components/schemas/Har"
             }
           }
         }
@@ -2242,7 +3050,34 @@
           }
         }
       },
+      "execHistoryPostmanResponse": {
+        "description": "",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/Collection"
+            }
+          }
+        }
+      },
+      "getExecHistoryResponse": {
+        "description": "",
+        "content": {
+          "*/*": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/APIScenario"
+              }
+            }
+          }
+        }
+      },
       "postExecHistoryHarResponse": {
+        "description": "",
+        "content": {}
+      },
+      "postExecHistoryPostmanResponse": {
         "description": "",
         "content": {}
       }

@@ -153,6 +153,12 @@ definitions:
         description: QueryParams for the API
         type: object
         x-go-name: QueryParams
+      variables:
+        additionalProperties:
+          type: string
+        description: Variables to set for templates
+        type: object
+        x-go-name: Variables
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
   APIResponse:
@@ -234,6 +240,11 @@ definitions:
         description: Description of scenario
         type: string
         x-go-name: Description
+      end_time:
+        description: EndTime of request
+        format: date-time
+        type: string
+        x-go-name: EndTime
       group:
         description: Group of scenario
         type: string
@@ -261,6 +272,11 @@ definitions:
         $ref: '#/definitions/APIRequest'
       response:
         $ref: '#/definitions/APIResponse'
+      start_time:
+        description: StartTime of request
+        format: date-time
+        type: string
+        x-go-name: StartTime
       tags:
         description: Tags of scenario
         items:
@@ -271,6 +287,201 @@ definitions:
         $ref: '#/definitions/Duration'
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
+  Auth:
+    properties:
+      apikey:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: APIKey
+      awsv4:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: AWSV4
+      basic:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: Basic
+      bearer:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: Bearer
+      digest:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: Digest
+      hawk:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: Hawk
+      noauth:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: NoAuth
+      ntlm:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: NTLM
+      oauth1:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: OAuth1
+      oauth2:
+        items:
+          $ref: '#/definitions/AuthParam'
+        type: array
+        x-go-name: OAuth2
+      type:
+        $ref: '#/definitions/authType'
+    title: Auth contains the authentication method used and its associated parameters.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  AuthParam:
+    description: For example "username" and "password" are set as auth attributes
+      for Basic Authentication method.
+    properties:
+      key:
+        type: string
+        x-go-name: Key
+      type:
+        type: string
+        x-go-name: Type
+      value:
+        type: object
+        x-go-name: Value
+    title: AuthParam represents an attribute for any authentication method provided
+      by Postman.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Body:
+    properties:
+      disabled:
+        type: boolean
+        x-go-name: Disabled
+      file:
+        type: object
+        x-go-name: File
+      formdata:
+        type: object
+        x-go-name: FormData
+      graphql:
+        type: object
+        x-go-name: GraphQL
+      mode:
+        type: string
+        x-go-name: Mode
+      options:
+        $ref: '#/definitions/BodyOptions'
+      raw:
+        type: string
+        x-go-name: Raw
+      urlencoded:
+        type: object
+        x-go-name: URLEncoded
+    title: Body represents the data usually contained in the request body.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  BodyOptions:
+    properties:
+      raw:
+        $ref: '#/definitions/BodyOptionsRaw'
+    title: BodyOptions holds body options.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  BodyOptionsRaw:
+    description: BodyOptionsRaw represents the acutal language to use in postman.
+      (See possible options in the cost above)
+    properties:
+      language:
+        type: string
+        x-go-name: Language
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Collection:
+    properties:
+      auth:
+        $ref: '#/definitions/Auth'
+      event:
+        items:
+          $ref: '#/definitions/Event'
+        type: array
+        x-go-name: Events
+      info:
+        $ref: '#/definitions/Info'
+      item:
+        items:
+          $ref: '#/definitions/Items'
+        type: array
+        x-go-name: Items
+      variable:
+        items:
+          $ref: '#/definitions/Variable'
+        type: array
+        x-go-name: Variables
+    title: Collection represents a Postman Collection.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Cookie:
+    description: Cookie represents a cookie that follows the Google Chrome format
+      (https://developer.chrome.com/extensions/cookies)
+    properties:
+      domain:
+        type: string
+        x-go-name: Domain
+      expires:
+        type: string
+        x-go-name: Expires
+      extensions:
+        type: object
+        x-go-name: Extensions
+      hostOnly:
+        type: boolean
+        x-go-name: HostOnly
+      httpOnly:
+        type: boolean
+        x-go-name: HTTPOnly
+      maxAge:
+        type: string
+        x-go-name: MaxAge
+      name:
+        type: string
+        x-go-name: Name
+      path:
+        type: string
+        x-go-name: Path
+      secure:
+        type: string
+        x-go-name: Secure
+      session:
+        type: boolean
+        x-go-name: Session
+      value:
+        type: string
+        x-go-name: Value
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Description:
+    properties:
+      content:
+        type: string
+        x-go-name: Content
+      type:
+        type: string
+        x-go-name: Type
+      version:
+        type: string
+        x-go-name: Version
+    title: Description contains collection description.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
   Duration:
     description: |-
       A Duration represents the elapsed time between two instants
@@ -279,6 +490,21 @@ definitions:
     format: int64
     type: integer
     x-go-package: time
+  Event:
+    properties:
+      disabled:
+        type: boolean
+        x-go-name: Disabled
+      id:
+        type: string
+        x-go-name: ID
+      listen:
+        $ref: '#/definitions/ListenType'
+      script:
+        $ref: '#/definitions/Script'
+    title: An Event defines a script associated with an associated event name.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
   Har:
     description: Har is a container type for deserialization
     properties:
@@ -749,6 +975,101 @@ definitions:
       <response> object).
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types/archive
+  Header:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      disabled:
+        type: boolean
+        x-go-name: Disabled
+      key:
+        type: string
+        x-go-name: Key
+      value:
+        type: string
+        x-go-name: Value
+    title: Header represents an HTTP Header.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  HeaderList:
+    properties:
+      Headers:
+        items:
+          $ref: '#/definitions/Header'
+        type: array
+    title: HeaderList contains a list of headers.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Info:
+    properties:
+      description:
+        $ref: '#/definitions/Description'
+      name:
+        type: string
+        x-go-name: Name
+      schema:
+        type: string
+        x-go-name: Schema
+      version:
+        type: string
+        x-go-name: Version
+    title: Info stores data about the collection.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Items:
+    description: It can either be a request (Item) or a folder (ItemGroup).
+    properties:
+      auth:
+        $ref: '#/definitions/Auth'
+      description:
+        type: string
+        x-go-name: Description
+      event:
+        items:
+          $ref: '#/definitions/Event'
+        type: array
+        x-go-name: Events
+      id:
+        description: Fields specific to Item
+        type: string
+        x-go-name: ID
+      item:
+        description: Fields specific to ItemGroup
+        items:
+          $ref: '#/definitions/Items'
+        type: array
+        x-go-name: Items
+      name:
+        description: Common fields.
+        type: string
+        x-go-name: Name
+      protocolProfileBehavior:
+        type: object
+        x-go-name: ProtocolProfileBehavior
+      request:
+        $ref: '#/definitions/Request'
+      response:
+        items:
+          $ref: '#/definitions/Response'
+        type: array
+        x-go-name: Responses
+      variable:
+        items:
+          $ref: '#/definitions/Variable'
+        type: array
+        x-go-name: Variables
+    title: Items are the basic unit for a Postman collection.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  ListenType:
+    title: ListenType defines the kind of script attached to an event.
+    type: string
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Method:
+    title: Method defines common HTTP methods.
+    type: string
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
   MethodType:
     description: MethodType for HTTP
     type: string
@@ -906,6 +1227,177 @@ definitions:
         x-go-name: URLs
     type: object
     x-go-package: github.com/bhatti/api-mock-service/internal/types
+  QueryParam:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      key:
+        type: string
+        x-go-name: Key
+      value:
+        type: string
+        x-go-name: Value
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Request:
+    properties:
+      auth:
+        $ref: '#/definitions/Auth'
+      body:
+        $ref: '#/definitions/Body'
+      certificate:
+        type: object
+        x-go-name: Certificate
+      description:
+        type: object
+        x-go-name: Description
+      header:
+        items:
+          $ref: '#/definitions/Header'
+        type: array
+        x-go-name: Header
+      method:
+        $ref: '#/definitions/Method'
+      proxy:
+        type: object
+        x-go-name: Proxy
+      url:
+        $ref: '#/definitions/URL'
+    title: A Request represents an HTTP request.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Response:
+    properties:
+      _postman_previewlanguage:
+        type: string
+        x-go-name: PreviewLanguage
+      body:
+        type: string
+        x-go-name: Body
+      code:
+        format: int64
+        type: integer
+        x-go-name: Code
+      cookie:
+        items:
+          $ref: '#/definitions/Cookie'
+        type: array
+        x-go-name: Cookies
+      header:
+        $ref: '#/definitions/HeaderList'
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      originalRequest:
+        $ref: '#/definitions/Request'
+      responseTime:
+        type: object
+        x-go-name: ResponseTime
+      status:
+        type: string
+        x-go-name: Status
+      timings:
+        type: object
+        x-go-name: Timings
+    title: A Response represents an HTTP response.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Script:
+    properties:
+      exec:
+        items:
+          type: string
+        type: array
+        x-go-name: Exec
+      id:
+        type: string
+        x-go-name: ID
+      name:
+        type: string
+        x-go-name: Name
+      src:
+        $ref: '#/definitions/URL'
+      type:
+        type: string
+        x-go-name: Type
+    title: A Script is a snippet of Javascript code that can be used to to perform
+      setup or teardown operations on a particular response.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  URL:
+    description: Raw contains the complete URL.
+    properties:
+      hash:
+        type: string
+        x-go-name: Hash
+      host:
+        items:
+          type: string
+        type: array
+        x-go-name: Host
+      path:
+        items:
+          type: string
+        type: array
+        x-go-name: Path
+      port:
+        type: string
+        x-go-name: Port
+      protocol:
+        type: string
+        x-go-name: Protocol
+      query:
+        items:
+          $ref: '#/definitions/QueryParam'
+        type: array
+        x-go-name: Query
+      raw:
+        type: string
+        x-go-name: Raw
+      variable:
+        items:
+          $ref: '#/definitions/Variable'
+        type: array
+        x-go-name: Variables
+    title: URL is a struct that contains an URL in a "broken-down way".
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  Variable:
+    properties:
+      description:
+        type: string
+        x-go-name: Description
+      disabled:
+        type: boolean
+        x-go-name: Disabled
+      id:
+        type: string
+        x-go-name: ID
+      key:
+        type: string
+        x-go-name: Key
+      name:
+        type: string
+        x-go-name: Name
+      system:
+        type: boolean
+        x-go-name: System
+      type:
+        type: string
+        x-go-name: Type
+      value:
+        type: string
+        x-go-name: Value
+    title: A Variable allows you to store and reuse values in your requests and scripts.
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
+  authType:
+    type: string
+    x-go-package: github.com/bhatti/api-mock-service/internal/types/postman
 paths:
   /_contracts/{group}:
     post:
@@ -974,46 +1466,6 @@ paths:
       summary: Invokes service api-contract using executed history of consumer contracts.
       tags:
       - producer-contract
-  /_exec_history/har:
-    get:
-      operationId: getExecHistoryHar
-      parameters:
-      - in: query
-        name: group
-        type: string
-        x-go-name: Group
-      - in: query
-        name: page
-        type: string
-        x-go-name: Page
-      responses:
-        "200":
-          $ref: '#/responses/execHistoryHarResponse'
-      summary: Fetches execution history in the format of HTTP HAR.
-      tags:
-      - exec-history
-    post:
-      operationId: postExecHistoryHar
-      parameters:
-      - in: body
-        name: Body
-        schema:
-          $ref: '#/definitions/Har'
-      responses:
-        "200":
-          $ref: '#/responses/postExecHistoryHarResponse'
-      summary: Uploads HAR contents and generates scenario and history.
-      tags:
-      - exec-history
-  /_exec_history/names:
-    get:
-      operationId: getExecHistoryNames
-      responses:
-        "200":
-          $ref: '#/responses/execHistoryNamesResponse'
-      summary: Fetches history of api scenarios by group.
-      tags:
-      - exec-history
   /_fixtures/{method}/{name}/{path}:
     delete:
       operationId: deleteAPITestFixture
@@ -1114,6 +1566,107 @@ paths:
       summary: Finds api test-fixture names for given method and path.
       tags:
       - api-test-fixtures
+  /_history:
+    get:
+      operationId: getExecHistory
+      parameters:
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: group
+        type: string
+        x-go-name: Group
+      - in: query
+        name: page
+        type: string
+        x-go-name: Page
+      responses:
+        "200":
+          $ref: '#/responses/getExecHistoryResponse'
+      summary: Fetches history of api scenarios by name or group.
+      tags:
+      - api-history
+  /_history/har:
+    get:
+      operationId: getExecHistoryHar
+      parameters:
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: group
+        type: string
+        x-go-name: Group
+      - in: query
+        name: page
+        type: string
+        x-go-name: Page
+      responses:
+        "200":
+          $ref: '#/responses/execHistoryHarResponse'
+      summary: Fetches execution history in the format of HTTP HAR.
+      tags:
+      - api-history
+    post:
+      operationId: postExecHistoryHar
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Har'
+      responses:
+        "200":
+          $ref: '#/responses/postExecHistoryHarResponse'
+      summary: Uploads HAR contents and generates scenario and history.
+      tags:
+      - api-history
+  /_history/names:
+    get:
+      operationId: getExecHistoryNames
+      responses:
+        "200":
+          $ref: '#/responses/execHistoryNamesResponse'
+      summary: Fetches history of api scenarios by group.
+      tags:
+      - api-history
+  /_history/postman:
+    get:
+      operationId: getExecHistoryPostman
+      parameters:
+      - in: query
+        name: name
+        type: string
+        x-go-name: Name
+      - in: query
+        name: group
+        type: string
+        x-go-name: Group
+      - in: query
+        name: page
+        type: string
+        x-go-name: Page
+      responses:
+        "200":
+          $ref: '#/responses/execHistoryPostmanResponse'
+      summary: Fetches execution history in the format of HTTP HAR.
+      tags:
+      - api-history
+    post:
+      operationId: postExecHistoryPostman
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Collection'
+      responses:
+        "200":
+          $ref: '#/responses/postExecHistoryPostmanResponse'
+      summary: Uploads HAR contents and generates scenario and history.
+      tags:
+      - api-history
   /_oapi:
     post:
       operationId: postMockOAPIScenario
@@ -1465,15 +2018,25 @@ responses:
   execHistoryHarResponse:
     description: ""
     schema:
-      items:
-        $ref: '#/definitions/HarLog'
-      type: array
+      $ref: '#/definitions/Har'
   execHistoryNamesResponse:
     description: ""
     schema:
       items:
         type: string
       type: array
+  execHistoryPostmanResponse:
+    description: ""
+    schema:
+      $ref: '#/definitions/Collection'
+  getExecHistoryResponse:
+    description: ""
+    schema:
+      items:
+        $ref: '#/definitions/APIScenario'
+      type: array
   postExecHistoryHarResponse:
+    description: ""
+  postExecHistoryPostmanResponse:
     description: ""
 swagger: "2.0"

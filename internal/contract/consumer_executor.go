@@ -161,7 +161,7 @@ func AddMockResponse(
 			scenario.Response.Headers[k] = vals
 		}
 
-		err = scenarioRepository.SaveHistory(scenario, req.URL, started, ended)
+		err = scenarioRepository.SaveHistory(scenario, req.URL.String(), started, ended)
 	}
 
 	return

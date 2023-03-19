@@ -524,7 +524,7 @@ func saveTestScenario(
 	if err != nil {
 		return nil, err
 	}
-	err = scenarioRepo.SaveHistory(&scenario, u, time.Now(), time.Now().Add(time.Second))
+	err = scenarioRepo.SaveHistory(&scenario, u.String(), time.Now(), time.Now().Add(time.Second))
 	if err != nil {
 		return nil, err
 	}

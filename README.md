@@ -1059,12 +1059,12 @@ Which will return summary of APIs such as:
 
 ### Download test scenarios as HAR format
 ```bash
-curl -v http://localhost:8080/_exec_history/har
+curl -v http://localhost:8080/_history/har
 ```
 
 ### Upload test scenarios as HAR format
 ```bash
-curl -v -X POST http://localhost:8080/_exec_history/har --data-binary @myfile.har
+curl -v -X POST http://localhost:8080/_history/har --data-binary @myfile.har
 ```
 
 ## Swagger-UI

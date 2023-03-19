@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/stretchr/testify/require"
+	"net/url"
 	"testing"
 	"time"
 )
@@ -72,6 +73,34 @@ func Test_ShouldValidateDotPathForMockScenario(t *testing.T) {
 	require.Equal(t, "2/openapi.json", scenario.NormalPath('/'))
 	scenario.Path = "/2018-06-01/runtime/invocation/next"
 	require.NoError(t, scenario.Validate())
+}
+
+func Test_ShouldGetURL(t *testing.T) {
+	// GIVEN a valid mock scenario
+	u, err := url.Parse("http://localhost")
+	require.NoError(t, err)
+	scenario := buildScenario()
+	scenario.Path = "/2/openapi.json"
+	// WHEN setting name
+	scenario.SetName("prefix")
+	require.False(t, scenario.HasURL())
+	_, err = scenario.GetURL("http://localhost")
+	require.NoError(t, err)
+	_, err = scenario.GetNetURL(u)
+	require.NoError(t, err)
+	scenario.BaseURL = u.String()
+	require.True(t, scenario.HasURL())
+	_, err = scenario.GetURL("")
+	require.NoError(t, err)
+}
+
+func Test_ShouldGetStartEndTime(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	require.Equal(t, int64(0), scenario.GetMillisTime())
+	scenario.StartTime = time.Now()
+	scenario.EndTime = time.Now().Add(time.Second)
+	require.Equal(t, int64(1000), scenario.GetMillisTime())
 }
 
 func Test_ShouldSetName(t *testing.T) {
@@ -226,6 +255,7 @@ func buildScenario() *APIScenario {
 			AssertHeadersPattern: map[string]string{
 				"CTag": "981",
 			},
+			Variables: make(map[string]string),
 		},
 		Response: APIResponse{
 			Headers: map[string][]string{

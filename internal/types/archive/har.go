@@ -1,6 +1,7 @@
 package archive
 
 import (
+	"fmt"
 	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -339,8 +340,8 @@ type PageTimings struct {
 	// optional (new in 1.2) - A comment provided by the user or the application.
 }
 
-// BuildScenarios builds scenarios from HAR log
-func BuildScenarios(
+// ConvertHarToScenarios builds scenarios from HAR log
+func ConvertHarToScenarios(
 	config *types.Configuration,
 	har *Har,
 ) (res []*types.APIScenario) {
@@ -358,14 +359,15 @@ func BuildScenarios(
 	return
 }
 
-// BuildHar extracts http request and builds HAR log
-func BuildHar(
+// ConvertScenariosToHar extracts http request and builds HAR log
+func ConvertScenariosToHar(
 	config *types.Configuration,
-	scenario *types.APIScenario,
 	u *url.URL,
 	started time.Time,
-	ended time.Time) *Har {
-	return &Har{
+	ended time.Time,
+	scenarios ...*types.APIScenario,
+) *Har {
+	har := &Har{
 		Log: HarLog{
 			Version: "1.2",
 			Creator: HarCreator{
@@ -378,30 +380,59 @@ func BuildHar(
 				Version: config.Version.String(),
 				Comment: "",
 			},
-			Pages: []HarPage{
-				{
-					StartedDateTime: started.UTC().Format(time.RFC3339),
-					ID:              scenario.Group,
-					Title:           scenario.Name,
-					PageTiming: PageTiming{
-						OnContentLoad: -1,
-						OnLoad:        -1,
-						Comment:       "",
-					},
-					Comment: "",
-				}},
+			Pages:   make([]HarPage, 0),
 			Comment: "",
-			Entries: []HarEntry{toEntry(scenario, u, started, ended)},
+			Entries: make([]HarEntry, 0),
 		},
 	}
+	pages := make(map[string]bool)
+	for _, scenario := range scenarios {
+		if !pages[scenario.Group] {
+			pages[scenario.Group] = true
+			har.Log.Pages = append(har.Log.Pages, HarPage{
+				StartedDateTime: started.UTC().Format(time.RFC3339),
+				ID:              scenario.Group,
+				Title:           scenario.Name,
+				PageTiming: PageTiming{
+					OnContentLoad: -1,
+					OnLoad:        -1,
+					Comment:       "",
+				},
+				Comment: "",
+			})
+		}
+		if u != nil && !scenario.HasURL() {
+			scenario.BaseURL = u.String()
+		}
+		if !started.IsZero() {
+			scenario.StartTime = started
+		}
+		if !ended.IsZero() {
+			scenario.EndTime = ended
+		}
+		if entry, err := toEntry(scenario); err == nil {
+			har.Log.Entries = append(har.Log.Entries, entry)
+		} else {
+			log.WithFields(log.Fields{
+				"entry": scenario,
+				"Error": err,
+			}).Warnf("failed to convert scenario to har entry")
+		}
+	}
+	return har
 }
 
 func toScenario(config *types.Configuration, entry HarEntry) (*types.APIScenario, error) {
 	u, err := url.Parse(entry.Request.URL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse %s due to %w", entry.Request.URL, err)
 	}
-	scenario := types.BuildScenarioFromHTTP(
+	started, _ := time.Parse(entry.StartedDateTime, time.RFC3339)
+	if started.IsZero() {
+		started = time.Now()
+	}
+	ended := started.Add(time.Duration(entry.Time) * time.Millisecond)
+	return types.BuildScenarioFromHTTP(
 		config,
 		"recorded-",
 		u,
@@ -417,24 +448,24 @@ func toScenario(config *types.Configuration, entry HarEntry) (*types.APIScenario
 		entry.Request.PostData.MimeType,
 		nvpToMap(entry.Response.Headers),
 		entry.Response.Content.MimeType,
-		entry.Response.Status)
-	scenario.URL = entry.Request.URL
-	scenario.StartTime, _ = time.Parse(entry.StartedDateTime, time.RFC3339)
-	scenario.EndTime = scenario.StartTime.Add(time.Duration(entry.Time) * time.Millisecond)
-	return scenario, nil
+		entry.Response.Status,
+		started,
+		ended)
 }
 
 func toEntry(
 	scenario *types.APIScenario,
-	u *url.URL,
-	started time.Time,
-	ended time.Time) HarEntry {
+) (HarEntry, error) {
+	u, err := scenario.GetURL("")
+	if err != nil {
+		return HarEntry{}, err
+	}
 	host, port, _ := net.SplitHostPort(u.Host)
 	return HarEntry{
 		Title:           scenario.Name,
 		PageRef:         scenario.Group,
-		StartedDateTime: started.UTC().Format(time.RFC3339),
-		Time:            float32(ended.UnixMilli() - started.UnixMilli()),
+		StartedDateTime: scenario.GetStartTime().Format(time.RFC3339),
+		Time:            float32(scenario.GetMillisTime()),
 		Request:         toRequest(scenario, u),
 		Response:        toResponse(scenario),
 		Cache:           HarCache{},
@@ -451,7 +482,7 @@ func toEntry(
 		ServerIPAddress: host,
 		Connection:      port,
 		Comment:         "",
-	}
+	}, nil
 }
 
 func toRequest(
@@ -471,7 +502,7 @@ func toRequest(
 	}
 	return HarRequest{
 		Method:      string(scenario.Method),
-		URL:         u.Scheme + "://" + u.Host + scenario.Path,
+		URL:         u.String(),
 		HTTPVersion: scenario.Request.HTTPVersion,
 		Cookies:     toCookies(nil),
 		Headers:     headers,

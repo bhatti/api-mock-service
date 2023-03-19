@@ -64,6 +64,7 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 		AssertHeadersPattern:  respHeaderAssertions,
 		AssertContentsPattern: matchContents,
 		Assertions:            assertions,
+		HTTPVersion:           "",
 		SetVariables:          fuzz.ExtractTopPrimitiveAttributes(exampleContents, 5),
 	}, nil
 }

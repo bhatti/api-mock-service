@@ -108,19 +108,21 @@ func (x *ProducerExecutor) ExecuteByHistory(
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioName := range execHistory {
-			scenario, err := x.scenarioRepository.LoadHistory(scenarioName)
+			scenarios, err := x.scenarioRepository.LoadHistory(scenarioName, "", 0, 100)
 			if err != nil {
-				contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), nil, err)
+				contractResponse.Add(fmt.Sprintf("%s_%d", scenarioName, i), nil, err)
 				contractResponse.Metrics = sli.Summary()
 				return contractResponse
 			}
-			if !registered[scenario.SafeName()] {
-				sli.RegisterHistogram(scenario.SafeName())
+			for _, scenario := range scenarios {
+				if !registered[scenario.SafeName()] {
+					sli.RegisterHistogram(scenario.SafeName())
+				}
+				url := scenario.BuildURL(contractReq.BaseURL)
+				resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+				contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
+				time.Sleep(scenario.WaitBeforeReply)
 			}
-			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
-			contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
-			time.Sleep(scenario.WaitBeforeReply)
 		}
 	}
 

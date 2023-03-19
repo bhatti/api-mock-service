@@ -1,16 +1,13 @@
 package repository
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
-	"github.com/bhatti/api-mock-service/internal/types/archive"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"gopkg.in/yaml.v3"
 	"io"
 	"io/fs"
-	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -31,7 +28,6 @@ type FileAPIScenarioRepository struct {
 	config           *types.Configuration
 	contractDir      string
 	historyDir       string
-	harDir           string
 	maxHistory       int
 	debug            bool
 }
@@ -41,22 +37,17 @@ func NewFileAPIScenarioRepository(
 	config *types.Configuration,
 ) (repo *FileAPIScenarioRepository, err error) {
 	contractDir := buildContractsDir(config)
-	historyDir := filepath.Join(config.DataDir, "exec_history")
-	harDir := filepath.Join(config.DataDir, "har_history")
+	historyDir := filepath.Join(config.DataDir, "history")
 	if err = mkdir(contractDir); err != nil {
 		return nil, err
 	}
 	if err = mkdir(historyDir); err != nil {
 		return nil, err
 	}
-	if err = mkdir(harDir); err != nil {
-		return nil, err
-	}
 	repo = &FileAPIScenarioRepository{
 		config:           config,
 		contractDir:      contractDir,
 		historyDir:       historyDir,
-		harDir:           harDir,
 		maxHistory:       config.MaxHistory,
 		debug:            config.Debug,
 		keysByMethodPath: make(map[string]map[string]*types.APIKeyData),
@@ -346,25 +337,24 @@ func (sr *FileAPIScenarioRepository) HistoryNames(group string) (names []string)
 // SaveHistory saves history APIScenario
 func (sr *FileAPIScenarioRepository) SaveHistory(
 	scenario *types.APIScenario,
-	u *url.URL,
+	url string,
 	started time.Time,
 	ended time.Time,
 ) (err error) {
 	for name := range web.IgnoredRequestHeaders {
 		delete(scenario.Request.Headers, name)
 	}
-	scenario.Description = fmt.Sprintf("executed started at %s, ended at %s, duration %d millis, target url %s",
-		started.UTC().Format(time.RFC3339), ended.UTC().Format(time.RFC3339), ended.UnixMilli()-started.UnixMilli(), u)
-	name := types.SanitizeNonAlphabet(scenario.Group, "_") + "_" + scenario.BuildName(string(scenario.Method))
-	if err = sr.saveHar(scenario, u, started, ended, name); err != nil {
-		return err
+	if u, err := scenario.GetURL(url); err == nil {
+		url = u.String()
 	}
+	scenario.Description = fmt.Sprintf("executed started at %s, ended at %s, duration %d millis, target url %s",
+		started.UTC().Format(time.RFC3339), ended.UTC().Format(time.RFC3339), ended.UnixMilli()-started.UnixMilli(), url)
+	name := types.SanitizeNonAlphabet(scenario.Group, "_") + "_" + scenario.BuildName(string(scenario.Method))
 	if err = sr.saveHistory(scenario, name); err != nil {
 		return err
 	}
 
 	sr.checkHistoryLimit(sr.historyDir, types.ScenarioExt)
-	sr.checkHistoryLimit(sr.harDir, types.HarExt)
 	log.WithFields(log.Fields{
 		"Component": "FileScenarioRepository",
 		"MaxLimit":  sr.maxHistory,
@@ -384,124 +374,54 @@ func (sr *FileAPIScenarioRepository) saveHistory(scenario *types.APIScenario, na
 	return os.WriteFile(fileName, b, 0644)
 }
 
-func (sr *FileAPIScenarioRepository) saveHar(
-	scenario *types.APIScenario,
-	u *url.URL,
-	started time.Time,
-	ended time.Time,
-	name string) error {
-	harScenario := archive.BuildHar(sr.config, scenario, u, started, ended)
-	b, err := json.Marshal(harScenario)
-	if err != nil {
-		return err
+// LoadHistory loads scenario
+func (sr *FileAPIScenarioRepository) LoadHistory(
+	name string,
+	group string,
+	page int,
+	limit int) (scenarios []*types.APIScenario, err error) {
+	if name != "" {
+		scenario, err := sr.loadHistoryByName(name)
+		if err != nil {
+			return nil, err
+		}
+		return []*types.APIScenario{scenario}, nil
 	}
-	fileName := filepath.Join(sr.harDir, name+types.HarExt)
-	return os.WriteFile(fileName, b, 0644)
+	names := sr.HistoryNames(group)
+	for i, name := range names {
+		if len(scenarios) >= limit {
+			break
+		}
+		if page > 0 && i < page*limit {
+			continue
+		}
+		if scenario, err := sr.loadHistoryByName(name); err == nil {
+			scenarios = append(scenarios, scenario)
+		} else {
+			return nil, err
+		}
+	}
+	return
 }
 
-// LoadHistory loads scenario
-func (sr *FileAPIScenarioRepository) LoadHistory(name string) (*types.APIScenario, error) {
+// ///////// PRIVATE METHODS //////////////
+
+func (sr *FileAPIScenarioRepository) loadHistoryByName(name string) (*types.APIScenario, error) {
 	if !strings.HasSuffix(name, types.ScenarioExt) {
 		name = name + types.ScenarioExt
 	}
 	fileName := filepath.Join(sr.historyDir, name)
 	b, err := os.ReadFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read %s due to %w", fileName, err)
+		return nil, fmt.Errorf("failed to read %s due to %v", fileName, err)
 	}
-
-	data := make(map[string]any)
-
-	return unmarshalMockScenario(b, sr.historyDir, data)
-}
-
-// SaveHar saves har file as scenarios
-func (sr *FileAPIScenarioRepository) SaveHar(har *archive.Har) (err error) {
-	scenarios := archive.BuildScenarios(sr.config, har)
-	for _, scenario := range scenarios {
-		err = sr.Save(scenario)
-		if err != nil {
-			return err
-		}
-		u, err := url.Parse(scenario.URL)
-		if err != nil {
-			return err
-		}
-		err = sr.SaveHistory(scenario, u, scenario.StartTime, scenario.EndTime)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// LoadHar loads HAR file for the executed history
-func (sr *FileAPIScenarioRepository) LoadHar(name string, group string, page int, limit int) ([]archive.Har, error) {
-	if name != "" {
-		res, err := sr.loadHarByName(name)
-		if err != nil {
-			return nil, err
-		}
-		return []archive.Har{res}, nil
-	}
-	names := sr.HistoryNames(group)
-	harByGroup := make(map[string]*archive.Har)
-	entries := 0
-	for i, name := range names {
-		if entries >= limit {
-			break
-		}
-		if page > 0 && i < page*limit {
-			continue
-		}
-
-		if loadedHar, err := sr.loadHarByName(name); err == nil {
-			entries++
-			loadedPage := loadedHar.Log.Pages[0]
-			prevHar := harByGroup[loadedPage.ID]
-			if prevHar == nil {
-				harByGroup[loadedPage.ID] = &loadedHar
-			} else {
-				if loadedPage.StartedDateTime < prevHar.Log.Pages[0].StartedDateTime {
-					prevHar.Log.Pages[0].StartedDateTime = loadedPage.StartedDateTime
-				}
-				for _, entry := range loadedHar.Log.Entries {
-					prevHar.Log.Entries = append(prevHar.Log.Entries, entry)
-				}
-			}
-		} else {
-			log.WithFields(log.Fields{
-				"Component": "FileScenarioRepository",
-				"Name":      name,
-				"Error":     err,
-			}).Warnf("failed to read HAR file")
-		}
-	}
-	res := make([]archive.Har, 0)
-	for _, next := range harByGroup {
-		res = append(res, *next)
-	}
-	return res, nil
-}
-
-func (sr *FileAPIScenarioRepository) loadHarByName(name string) (h archive.Har, err error) {
-	if !strings.HasSuffix(name, types.HarExt) {
-		name = name + types.HarExt
-	}
-	fileName := filepath.Join(sr.harDir, name)
-	var b []byte
-	b, err = os.ReadFile(fileName)
+	scenario := &types.APIScenario{}
+	err = yaml.Unmarshal(b, scenario)
 	if err != nil {
-		return
+		err = fmt.Errorf("failed to unmarshal scenario from %s due to %w", fileName, err)
 	}
-	err = json.Unmarshal(b, &h)
-	if err != nil {
-		return
-	}
-	return
+	return scenario, err
 }
-
-// ///////// PRIVATE METHODS //////////////
 
 func (sr *FileAPIScenarioRepository) checkHistoryLimit(dir string, ext string) {
 	infos := sr.historyFiles(dir)

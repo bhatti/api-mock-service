@@ -45,15 +45,17 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 	}
 
 	return types.APIRequest{
-		AssertHeadersPattern:     propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
-		AssertQueryParamsPattern: propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
-		Assertions:               assertions,
 		Headers:                  propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(false)),
 		QueryParams:              propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(false)),
 		Contents:                 string(strippedContents),
 		ExampleContents:          string(exampleContents),
-		AssertContentsPattern:    matchContents,
 		PathParams:               propsToMap(req.PathParams, asciiPattern, dataTemplate.WithInclude(false)),
+		AssertContentsPattern:    matchContents,
+		AssertHeadersPattern:     propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(true)),
+		AssertQueryParamsPattern: propsToMap(req.QueryParams, asciiPattern, dataTemplate.WithInclude(true)),
+		Assertions:               assertions,
+		HTTPVersion:              "",
+		Variables:                make(map[string]string),
 	}, nil
 }
 

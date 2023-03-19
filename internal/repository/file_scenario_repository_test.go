@@ -3,7 +3,6 @@ package repository
 import (
 	"bytes"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types/archive"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	"gopkg.in/yaml.v3"
 	"net/url"
@@ -634,7 +633,7 @@ func Test_ShouldLoadSaveScenariosHistory(t *testing.T) {
 		scenario.Path = fmt.Sprintf("/v123/api/%s/%d", apiPath, i)
 		scenario.Request.QueryParams["i"] = fmt.Sprintf("%d", started.UnixMilli()+int64(i))
 		scenario.Request.Headers["I"] = fmt.Sprintf("%d", started.UnixMilli()+int64(i))
-		err = repo.SaveHistory(scenario, u, time.Now(), time.Now().Add(time.Second))
+		err = repo.SaveHistory(scenario, u.String(), time.Now(), time.Now().Add(time.Second))
 		require.NoError(t, err)
 	}
 	names := repo.HistoryNames("unknown")
@@ -646,21 +645,22 @@ func Test_ShouldLoadSaveScenariosHistory(t *testing.T) {
 	names = repo.HistoryNames(groups[1])
 	require.Equal(t, 100, len(names))
 	for _, name := range names {
-		scenario, err := repo.LoadHistory(name)
+		scenarios, err := repo.LoadHistory(name, "", 0, 100)
 		require.NoError(t, err)
-		require.Contains(t, name, scenario.Group)
-		res, err := repo.LoadHar(name, "", 0, 100)
-		require.NoError(t, err)
-		require.Equal(t, 1, len(res))
+		for _, scenario := range scenarios {
+			require.Contains(t, name, scenario.Group)
+			loaded, err := repo.loadHistoryByName(name)
+			require.NoError(t, err)
+			require.Contains(t, loaded.Group, scenario.Group)
+		}
 	}
 	for i := 0; i < 6; i++ {
-		res, err := repo.LoadHar("", groups[0], i, 20)
+		scenarios, err := repo.LoadHistory("", groups[0], i, 20)
 		require.NoError(t, err)
 		if i == 5 {
-			require.Equal(t, 0, len(res))
+			require.Equal(t, 0, len(scenarios))
 		} else {
-			require.Equal(t, 1, len(res), fmt.Sprintf("page %d", i))
-			require.Equal(t, 20, len(res[0].Log.Entries), fmt.Sprintf("page %d", i))
+			require.Equal(t, 20, len(scenarios), fmt.Sprintf("page %d", i))
 		}
 	}
 }
@@ -685,7 +685,7 @@ func Test_ShouldLoadSaveScenariosHistoryWithLimit(t *testing.T) {
 		scenario.Path = fmt.Sprintf("/v789/api/%s/%d", apiPath, i)
 		scenario.Request.QueryParams["i"] = fmt.Sprintf("%d", started.UnixMilli()+int64(i))
 		scenario.Request.Headers["I"] = fmt.Sprintf("%d", started.UnixMilli()+int64(i))
-		err = repo.SaveHistory(scenario, u, time.Now(), time.Now().Add(time.Second))
+		err = repo.SaveHistory(scenario, u.String(), time.Now(), time.Now().Add(time.Second))
 		require.NoError(t, err)
 	}
 	names := repo.HistoryNames("unknown")
@@ -696,22 +696,16 @@ func Test_ShouldLoadSaveScenariosHistoryWithLimit(t *testing.T) {
 	require.Equal(t, 5, len(names))
 	names = repo.HistoryNames(groups[1])
 	require.Equal(t, 5, len(names))
-	for _, name := range names {
-		scenario, err := repo.LoadHistory(name)
-		require.NoError(t, err)
-		require.Contains(t, name, scenario.Group)
-		res, err := repo.LoadHar(name, "", 0, 100)
-		require.NoError(t, err)
-		require.Equal(t, 1, len(res))
-	}
+	scenarios, err := repo.LoadHistory("", "", 0, 100)
+	require.NoError(t, err)
+	require.Equal(t, 10, len(scenarios)) // max 10
 	for i := 0; i < 2; i++ {
-		res, err := repo.LoadHar("", groups[0], i, 20)
+		scenarios, err := repo.LoadHistory("", groups[0], i, 20)
 		require.NoError(t, err)
 		if i == 1 {
-			require.Equal(t, 0, len(res))
+			require.Equal(t, 0, len(scenarios))
 		} else {
-			require.Equal(t, 1, len(res), fmt.Sprintf("page %d", i))
-			require.Equal(t, 5, len(res[0].Log.Entries), fmt.Sprintf("page %d", i))
+			require.Equal(t, 5, len(scenarios), fmt.Sprintf("page %d", i))
 		}
 	}
 }
@@ -734,27 +728,6 @@ func Test_ShouldConvertHar(t *testing.T) {
 	require.NoError(t, err)
 	u, err := url.Parse("https://localhost:8080" + scenario.Path)
 	require.NoError(t, err)
-	err = mockScenarioRepository.SaveHistory(scenario, u, time.Now(), time.Now().Add(time.Second))
-	require.NoError(t, err)
-}
-
-func Test_ShouldSaveHar(t *testing.T) {
-	config := types.BuildTestConfig()
-	// GIVEN repository for mock scenario
-	mockScenarioRepository, err := NewFileAPIScenarioRepository(config)
-	require.NoError(t, err)
-	// AND a valid scenario
-	scenario := types.BuildTestScenario(types.Post, "test-name", "/path", 0)
-	scenario.Group = "archive-group"
-	scenario.Request.Headers = map[string]string{
-		types.ContentTypeHeader: "application/json 1.1",
-	}
-	scenario.Request.QueryParams = map[string]string{
-		"abc": "123",
-	}
-	u, err := url.Parse("https://localhost:8080" + scenario.Path)
-	require.NoError(t, err)
-	har := archive.BuildHar(config, scenario, u, time.Now(), time.Now().Add(time.Second))
-	err = mockScenarioRepository.SaveHar(har)
+	err = mockScenarioRepository.SaveHistory(scenario, u.String(), time.Now(), time.Now().Add(time.Second))
 	require.NoError(t, err)
 }

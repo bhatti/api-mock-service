@@ -90,12 +90,12 @@
         }
       }
     }
-    xhr2.open("GET", location.protocol + "//" + location.host + "/_exec_history/names", true);
+    xhr2.open("GET", location.protocol + "//" + location.host + "/_history/names", true);
     xhr2.send();
     window.ui.specActions._setResponse = window.ui.specActions.setResponse
     window.ui.specActions.setResponse = function(path, method, t) {
       window.ui.specActions._setResponse(path, method, t);
-      xhr2.open("GET", location.protocol + "//" + location.host + "/_exec_history/names", true);
+      xhr2.open("GET", location.protocol + "//" + location.host + "/_history/names", true);
       xhr2.send();
     };
   });

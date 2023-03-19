@@ -52,9 +52,6 @@ const MockWaitBeforeReply = "X-Mock-Wait-Before-Reply"
 // ScenarioExt extension
 const ScenarioExt = ".yaml"
 
-// HarExt extension
-const HarExt = ".har"
-
 // APIAuthorization defines mock auth parameters
 type APIAuthorization struct {
 	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
@@ -91,6 +88,8 @@ type APIRequest struct {
 	AssertContentsPattern string `yaml:"assert_contents_pattern" json:"assert_contents_pattern"`
 	// Assertions for validating response
 	Assertions []string `yaml:"assertions" json:"assertions"`
+	// Variables to set for templates
+	Variables map[string]string `yaml:"variables" json:"variables"`
 }
 
 // ContentType find content-type
@@ -139,6 +138,9 @@ func (r APIRequest) BuildTemplateParams(
 	//	}
 	//}
 
+	for k, v := range r.Variables {
+		templateParams[k] = fuzz.StripTypeTags(v)
+	}
 	for k, v := range r.PathParams {
 		templateParams[k] = fuzz.StripTypeTags(v)
 		queryParams[k] = fuzz.StripTypeTags(v)
@@ -430,14 +432,10 @@ type APIScenario struct {
 	Response APIResponse `yaml:"response" json:"response"`
 	// WaitMillisBeforeReply for response
 	WaitBeforeReply time.Duration `yaml:"wait_before_reply" json:"wait_before_reply"`
-	// URL of request
-	URL string `yaml:"-" json:"-"`
-	// Host of request
-	Host string `yaml:"-" json:"-"`
 	// StartTime of request
-	StartTime time.Time `yaml:"-" json:"-"`
+	StartTime time.Time `yaml:"start_time" json:"start_time"`
 	// EndTime of request
-	EndTime time.Time `yaml:"-" json:"-"`
+	EndTime time.Time `yaml:"end_time" json:"end_time"`
 	// RequestCount of request
 	RequestCount uint64 `yaml:"-" json:"-"`
 }
@@ -480,7 +478,12 @@ func BuildScenarioFromHTTP(
 	resHeaders map[string][]string,
 	resContentType string,
 	resStatus int,
-) *APIScenario {
+	started time.Time,
+	ended time.Time,
+) (*APIScenario, error) {
+	if u == nil {
+		return nil, fmt.Errorf("url is not specified for building api scenario")
+	}
 	if queryParams == nil {
 		queryParams = make(map[string][]string)
 	}
@@ -531,15 +534,20 @@ func BuildScenarioFromHTTP(
 			resContentType))
 		respHeaderAssertions[ContentTypeHeader] = resContentType
 	}
+	path := u.Path
+	if path == "" {
+		path = "/"
+	}
 	scenario := &APIScenario{
 		Method:         MethodType(method),
 		Name:           headerValue(reqHeaders, MockScenarioName, ""),
-		Path:           u.Path,
+		Path:           path,
 		BaseURL:        u.Scheme + "://" + u.Host,
 		Group:          group,
 		Authentication: make(map[string]APIAuthorization),
 		Request: APIRequest{
 			QueryParams:              make(map[string]string),
+			PostParams:               make(map[string]string),
 			Headers:                  make(map[string]string),
 			Contents:                 string(reqBody),
 			ExampleContents:          string(reqBody),
@@ -548,6 +556,7 @@ func BuildScenarioFromHTTP(
 			AssertHeadersPattern:     reqHeaderAssertions,
 			AssertContentsPattern:    matchReqContents,
 			Assertions:               reqAssertions,
+			Variables:                make(map[string]string),
 		},
 		Response: APIResponse{
 			Headers:               resHeaders,
@@ -564,7 +573,6 @@ func BuildScenarioFromHTTP(
 	if scenario.Group == "" {
 		scenario.Group = NormalizeGroup("", u.Path)
 	}
-	scenario.Tags = []string{scenario.Group}
 
 	for k, v := range queryParams {
 		if len(v) > 0 {
@@ -639,13 +647,69 @@ func BuildScenarioFromHTTP(
 	if scenario.Name == "" {
 		scenario.SetName(prefix + scenario.Group + "-")
 	}
+	scenario.Tags = []string{scenario.Group}
 	if scenario.Response.StatusCode >= 300 {
 		scenario.Predicate = "{{NthRequest 2}}"
 	} else {
 		scenario.Predicate = "{{NthRequest 1}}"
 	}
 	scenario.Description = fmt.Sprintf("%s at %v for %s", time.Now().UTC(), prefix, u)
-	return scenario
+
+	scenario.StartTime = started.UTC()
+	scenario.EndTime = ended.UTC()
+	return scenario, nil
+}
+
+// GetStartTime helper method
+func (api *APIScenario) GetStartTime() time.Time {
+	if !api.StartTime.IsZero() {
+		return api.StartTime
+	}
+	return api.StartTime
+}
+
+// GetMillisTime helper method
+func (api *APIScenario) GetMillisTime() int64 {
+	return api.GetEndTime().UnixMilli() - api.GetStartTime().UnixMilli()
+}
+
+// GetEndTime helper method
+func (api *APIScenario) GetEndTime() time.Time {
+	if !api.EndTime.IsZero() {
+		return api.EndTime
+	}
+	return api.EndTime
+}
+
+// HasURL helper method
+func (api *APIScenario) HasURL() bool {
+	return api.BaseURL != ""
+}
+
+// GetNetURL helper method
+func (api *APIScenario) GetNetURL(u *url.URL) (*url.URL, error) {
+	return api.GetURL(u.Scheme + "://" + u.Host)
+}
+
+// GetURL helper method
+func (api *APIScenario) GetURL(defBase string) (u *url.URL, err error) {
+	if api.BaseURL != "" {
+		u, err = url.Parse(api.BaseURL)
+	} else {
+		u, err = url.Parse(defBase)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse base '%s' due to %s", defBase, err)
+	}
+	params := url.Values{}
+	for k, v := range api.Request.QueryParams {
+		params.Add(k, v)
+	}
+	u, err = url.Parse(u.Scheme + "://" + u.Host + api.Path)
+	if u != nil {
+		u.RawQuery = params.Encode()
+	}
+	return
 }
 
 // String
@@ -705,7 +769,7 @@ func (api *APIScenario) Validate() error {
 	}
 	if api.Path == "" {
 		debug.PrintStack()
-		return fmt.Errorf("scenario path is not specified")
+		return fmt.Errorf("scenario path is not specified %s", api.BaseURL)
 	}
 	if len(api.Path) > 200 {
 		return fmt.Errorf("path is too long %d", len(api.Path))
@@ -723,7 +787,8 @@ func (api *APIScenario) Validate() error {
 	if len(api.Name) > 200 {
 		return fmt.Errorf("scenario name is too long %d", len(api.Name))
 	}
-	if matched, err := regexp.Match(`^[\w\d-_\.]+$`, []byte(api.Name)); err == nil && !matched {
+	api.Name = strings.TrimSpace(api.Name)
+	if matched, err := regexp.Match(`^[\w\d-_\. ]+$`, []byte(api.Name)); err == nil && !matched {
 		return fmt.Errorf("scenario name is invalid with special characters %s", api.Name)
 	}
 	if len(api.Response.Contents) > 1024*1024*1024 {
@@ -880,12 +945,16 @@ func NormalizeGroup(title string, path string) string {
 		return title
 	}
 	n := strings.Index(path, "{")
-	if n != -1 {
+	if n > 0 {
 		path = path[0 : n-1]
+	} else if n == 0 {
+		path = ""
 	}
 	n = strings.Index(path, ":")
-	if n != -1 {
+	if n > 0 {
 		path = path[0 : n-1]
+	} else if n == 0 {
+		path = ""
 	}
 	if len(path) > 0 {
 		path = path[1:]

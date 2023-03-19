@@ -97,11 +97,14 @@ func (moc *OAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err error
 	if name == "" {
 		return fmt.Errorf("history name not specified in %s", c.Request().URL)
 	}
-	scenario, err := moc.scenarioRepository.LoadHistory(name)
+	scenarios, err := moc.scenarioRepository.LoadHistory(name, "", 0, 100)
 	if err != nil {
 		return err
 	}
-	b, err := oapi.MarshalScenarioToOpenAPI(scenario.Name, "", scenario)
+	if len(scenarios) == 0 {
+		return fmt.Errorf("history not found for %s", name)
+	}
+	b, err := oapi.MarshalScenarioToOpenAPI(scenarios[0].Name, "", scenarios[0])
 	if err != nil {
 		return err
 	}

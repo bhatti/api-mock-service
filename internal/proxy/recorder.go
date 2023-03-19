@@ -41,7 +41,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	}
 	u, err := url.Parse(mockURL)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse mock url due to %w", err)
 	}
 
 	var reqBody []byte
@@ -99,7 +99,7 @@ func saveMockResponse(
 	ended time.Time,
 	scenarioRepository repository.APIScenarioRepository) (resContentType string, err error) {
 
-	scenario := types.BuildScenarioFromHTTP(
+	scenario, err := types.BuildScenarioFromHTTP(
 		config,
 		"recorded-",
 		u,
@@ -115,12 +115,17 @@ func saveMockResponse(
 		"",
 		resHeaders,
 		"",
-		resStatus)
+		resStatus,
+		started,
+		ended)
+	if err != nil {
+		return "", err
+	}
 
 	if err = scenarioRepository.Save(scenario); err != nil {
 		return "", err
 	}
-	if err = scenarioRepository.SaveHistory(scenario, u, started, ended); err != nil {
+	if err = scenarioRepository.SaveHistory(scenario, u.String(), started, ended); err != nil {
 		return "", err
 	}
 	return
