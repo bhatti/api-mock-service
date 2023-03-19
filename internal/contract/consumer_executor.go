@@ -118,7 +118,7 @@ func AddMockResponse(
 			respHeaders.Add(k, val)
 		}
 	}
-	respHeaders.Add(types.MockScenarioName, scenario.Name)
+	respHeaders.Add(types.MockScenarioHeader, scenario.Name)
 	respHeaders.Add(types.MockScenarioPath, scenario.Path)
 	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
 	// Override wait time from request header

@@ -183,6 +183,7 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		return req, nil, err
 	}
 
+	req.Header[types.MockPlayback] = []string{fmt.Sprintf("%v", matchedScenario != nil)}
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 
 	resp := &http.Response{}

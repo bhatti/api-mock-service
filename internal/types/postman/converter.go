@@ -197,8 +197,8 @@ func (c *Converter) toScenario(
 	scenario.Name = items.Name + " " + items.ID
 	scenario.Description = items.Description
 	if group != "" {
-		//scenario.Group = group
-		//scenario.Tags = []string{group}
+		scenario.Group = group + "_" + scenario.Group
+		scenario.Tags = append(scenario.Tags, group)
 	}
 	for k, v := range c.variables {
 		if v != "" {
@@ -212,7 +212,8 @@ func (c *Converter) toScenario(
 		for _, v := range vals {
 			scenario.Authentication[k] = types.APIAuthorization{
 				Type:   k,
-				Name:   v.Key,
+				Name:   "Authorization",
+				Scheme: v.Key,
 				In:     "header",
 				Format: fmt.Sprintf("%v", v.Value),
 			}

@@ -21,7 +21,7 @@ func BuildMockScenarioKeyData(req *http.Request) (keyData *types.APIKeyData, err
 
 	keyData = &types.APIKeyData{
 		Method:                   method,
-		Name:                     req.Header.Get(types.MockScenarioName),
+		Name:                     req.Header.Get(types.MockScenarioHeader),
 		Path:                     req.URL.Path,
 		AssertQueryParamsPattern: make(map[string]string),
 		AssertHeadersPattern:     map[string]string{types.ContentTypeHeader: req.Header.Get(types.ContentTypeHeader)},

@@ -19,6 +19,9 @@ import (
 // MockRecordMode header
 const MockRecordMode = "X-Mock-Record"
 
+// MockPlayback header
+const MockPlayback = "X-Mock-Playback"
+
 // MockRecordModeDisabled disabled value
 const MockRecordModeDisabled = "false"
 
@@ -28,8 +31,8 @@ const MockRecordModeEnabled = "true"
 // MockURL header
 const MockURL = "X-Mock-Url"
 
-// MockScenarioName header
-const MockScenarioName = "X-Mock-Scenario"
+// MockScenarioHeader header
+const MockScenarioHeader = "X-Mock-Scenario"
 
 // MockScenarioPath header
 const MockScenarioPath = "X-Mock-Path"
@@ -540,7 +543,7 @@ func BuildScenarioFromHTTP(
 	}
 	scenario := &APIScenario{
 		Method:         MethodType(method),
-		Name:           headerValue(reqHeaders, MockScenarioName, ""),
+		Name:           headerValue(reqHeaders, MockScenarioHeader, ""),
 		Path:           path,
 		BaseURL:        u.Scheme + "://" + u.Host,
 		Group:          group,
