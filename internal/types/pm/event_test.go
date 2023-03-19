@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"testing"
@@ -9,13 +9,13 @@ import (
 func TestEventCreateEvent(t *testing.T) {
 	assert.Equal(
 		t,
-		&Event{
+		&PostmanEvent{
 			Listen: Test,
-			Script: &Script{
+			Script: &PostmanScript{
 				Type: "text/javascript",
 				Exec: []string{"console.log(\"foo\")"},
 			},
 		},
-		CreateEvent(Test, []string{"console.log(\"foo\")"}),
+		CreatePostmanEvent(Test, []string{"console.log(\"foo\")"}),
 	)
 }

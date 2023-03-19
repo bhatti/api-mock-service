@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"errors"
@@ -10,13 +10,13 @@ import (
 func TestHeaderListMarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario       string
-		headerList     HeaderList
+		headerList     PostmanHeaderList
 		expectedOutput string
 	}{
 		{
-			"Successfully marshalling a HeaderList",
-			HeaderList{
-				Headers: []*Header{
+			"Successfully marshalling a PostmanHeaderList",
+			PostmanHeaderList{
+				Headers: []*PostmanHeader{
 					{
 						Key:         "Content-Type",
 						Value:       "application/json",
@@ -44,14 +44,14 @@ func TestHeaderListUnmarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario           string
 		bytes              []byte
-		expectedHeaderList HeaderList
+		expectedHeaderList PostmanHeaderList
 		expectedError      error
 	}{
 		{
-			"Successfully unmarshalling a HeaderList from a string",
+			"Successfully unmarshalling a PostmanHeaderList from a string",
 			[]byte("\"Content-Type: application/json\nAuthorization: Bearer a-bearer-token\n\""),
-			HeaderList{
-				Headers: []*Header{
+			PostmanHeaderList{
+				Headers: []*PostmanHeader{
 					{
 						Key:   "Content-Type",
 						Value: "application/json",
@@ -65,16 +65,16 @@ func TestHeaderListUnmarshalJSON(t *testing.T) {
 			nil,
 		},
 		{
-			"Successfully unmarshalling a HeaderList from an empty slice of bytes",
+			"Successfully unmarshalling a PostmanHeaderList from an empty slice of bytes",
 			make([]byte, 0),
-			HeaderList{},
+			PostmanHeaderList{},
 			nil,
 		},
 		{
-			"Successfully unmarshalling a HeaderList from an array of objects",
+			"Successfully unmarshalling a PostmanHeaderList from an array of objects",
 			[]byte("[{\"key\": \"Content-Type\",\"value\": \"application\\/json\",\"description\": \"The content type\"},{\"key\": \"Authorization\",\"value\": \"Bearer a-bearer-token\",\"description\": \"The Bearer token\"}]"),
-			HeaderList{
-				Headers: []*Header{
+			PostmanHeaderList{
+				Headers: []*PostmanHeader{
 					{
 						Key:         "Content-Type",
 						Value:       "application/json",
@@ -90,22 +90,22 @@ func TestHeaderListUnmarshalJSON(t *testing.T) {
 			nil,
 		},
 		{
-			"Failed to unmarshal a HeaderList because of an invalid header",
+			"Failed to unmarshal a PostmanHeaderList because of an invalid header",
 			[]byte("\"Content-Type\n\""),
-			HeaderList{},
+			PostmanHeaderList{},
 			errors.New("invalid header, missing key or value: Content-Type"),
 		},
 		{
-			"Failed to unmarshal a HeaderList because of an unsupported type",
+			"Failed to unmarshal a PostmanHeaderList because of an unsupported type",
 			[]byte("not-a-valid-header-list"),
-			HeaderList{},
+			PostmanHeaderList{},
 			errors.New("unsupported type for header list"),
 		},
 	}
 
 	for _, tc := range cases {
 
-		var hl HeaderList
+		var hl PostmanHeaderList
 		err := hl.UnmarshalJSON(tc.bytes)
 
 		assert.Equal(t, tc.expectedHeaderList, hl, tc.scenario)

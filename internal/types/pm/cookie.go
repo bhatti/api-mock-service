@@ -1,7 +1,7 @@
-package postman
+package pm
 
-// Cookie represents a cookie that follows the Google Chrome format (https://developer.chrome.com/extensions/cookies)
-type Cookie struct {
+// PostmanCookie represents a cookie that follows the Google Chrome format (https://developer.chrome.com/extensions/cookies)
+type PostmanCookie struct {
 	Domain     string      `json:"domain"`
 	Expires    string      `json:"expires,omitempty"`
 	MaxAge     string      `json:"maxAge,omitempty"`

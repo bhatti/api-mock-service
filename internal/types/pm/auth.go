@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"encoding/json"
@@ -30,27 +30,27 @@ const (
 	NTLM authType = "ntlm"
 )
 
-// AuthParam represents an attribute for any authentication method provided by Postman.
+// PostmanAuthParam represents an attribute for any authentication method provided by Postman.
 // For example "username" and "password" are set as auth attributes for Basic Authentication method.
-type AuthParam struct {
+type PostmanAuthParam struct {
 	Key   string      `json:"key,omitempty"`
 	Value interface{} `json:"value,omitempty"`
 	Type  string      `json:"type,omitempty"`
 }
 
-// Auth contains the authentication method used and its associated parameters.
-type Auth struct {
-	Type   authType     `json:"type,omitempty"`
-	APIKey []*AuthParam `json:"apikey,omitempty"`
-	AWSV4  []*AuthParam `json:"awsv4,omitempty"`
-	Basic  []*AuthParam `json:"basic,omitempty"`
-	Bearer []*AuthParam `json:"bearer,omitempty"`
-	Digest []*AuthParam `json:"digest,omitempty"`
-	Hawk   []*AuthParam `json:"hawk,omitempty"`
-	NoAuth []*AuthParam `json:"noauth,omitempty"`
-	OAuth1 []*AuthParam `json:"oauth1,omitempty"`
-	OAuth2 []*AuthParam `json:"oauth2,omitempty"`
-	NTLM   []*AuthParam `json:"ntlm,omitempty"`
+// PostmanAuth contains the authentication method used and its associated parameters.
+type PostmanAuth struct {
+	Type   authType            `json:"type,omitempty"`
+	APIKey []*PostmanAuthParam `json:"apikey,omitempty"`
+	AWSV4  []*PostmanAuthParam `json:"awsv4,omitempty"`
+	Basic  []*PostmanAuthParam `json:"basic,omitempty"`
+	Bearer []*PostmanAuthParam `json:"bearer,omitempty"`
+	Digest []*PostmanAuthParam `json:"digest,omitempty"`
+	Hawk   []*PostmanAuthParam `json:"hawk,omitempty"`
+	NoAuth []*PostmanAuthParam `json:"noauth,omitempty"`
+	OAuth1 []*PostmanAuthParam `json:"oauth1,omitempty"`
+	OAuth2 []*PostmanAuthParam `json:"oauth2,omitempty"`
+	NTLM   []*PostmanAuthParam `json:"ntlm,omitempty"`
 }
 
 // mAuth is used for marshalling/unmarshalling.
@@ -69,7 +69,7 @@ type mAuth struct {
 }
 
 // GetParams returns the parameters related to the authentication method in use.
-func (a *Auth) GetParams() []*AuthParam {
+func (a *PostmanAuth) GetParams() []*PostmanAuthParam {
 	switch a.Type {
 	case APIKey:
 		return a.APIKey
@@ -96,7 +96,7 @@ func (a *Auth) GetParams() []*AuthParam {
 	return nil
 }
 
-func (a *Auth) setParams(params []*AuthParam) {
+func (a *PostmanAuth) setParams(params []*PostmanAuthParam) {
 	switch a.Type {
 	case APIKey:
 		a.APIKey = params
@@ -121,11 +121,11 @@ func (a *Auth) setParams(params []*AuthParam) {
 	}
 }
 
-// UnmarshalJSON parses the JSON-encoded data and create an Auth from it.
-// Depending on the Postman Collection version, an auth property can either be an array or an object.
+// UnmarshalJSON parses the JSON-encoded data and create an PostmanAuth from it.
+// Depending on the Postman PostmanCollection version, an auth property can either be an array or an object.
 //   - v2.1.0 : Array
 //   - v2.0.0 : Object
-func (a *Auth) UnmarshalJSON(b []byte) (err error) {
+func (a *PostmanAuth) UnmarshalJSON(b []byte) (err error) {
 	var tmp mAuth
 	err = json.Unmarshal(b, &tmp)
 
@@ -165,7 +165,7 @@ func (a *Auth) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
-func unmarshalAuthParam(b []byte) (a []*AuthParam, err error) {
+func unmarshalAuthParam(b []byte) (a []*PostmanAuthParam, err error) {
 	if len(b) > 0 {
 		if b[0] != '{' && b[0] != '[' {
 			err = errors.New("unsupported type")
@@ -176,9 +176,9 @@ func unmarshalAuthParam(b []byte) (a []*AuthParam, err error) {
 	return
 }
 
-// MarshalJSON returns the JSON encoding of an Auth.
-func (a *Auth) MarshalJSON() ([]byte, error) {
-	return json.Marshal(Auth{
+// MarshalJSON returns the JSON encoding of an PostmanAuth.
+func (a *PostmanAuth) MarshalJSON() ([]byte, error) {
+	return json.Marshal(PostmanAuth{
 		Type:   a.Type,
 		APIKey: a.APIKey,
 		AWSV4:  a.AWSV4,
@@ -193,7 +193,7 @@ func (a *Auth) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func authParamsToMap(authParams []*AuthParam) map[string]interface{} {
+func authParamsToMap(authParams []*PostmanAuthParam) map[string]interface{} {
 	authParamsMap := make(map[string]interface{})
 
 	for _, authParam := range authParams {
@@ -203,18 +203,18 @@ func authParamsToMap(authParams []*AuthParam) map[string]interface{} {
 	return authParamsMap
 }
 
-// CreateAuth creates a new Auth struct with the given parameters.
-func CreateAuth(a authType, params ...*AuthParam) *Auth {
-	auth := &Auth{
+// CreateAuth creates a new PostmanAuth struct with the given parameters.
+func CreateAuth(a authType, params ...*PostmanAuthParam) *PostmanAuth {
+	auth := &PostmanAuth{
 		Type: a,
 	}
 	auth.setParams(params)
 	return auth
 }
 
-// CreateAuthParam creates a new AuthParam of type string.
-func CreateAuthParam(key string, value string) *AuthParam {
-	return &AuthParam{
+// CreateAuthParam creates a new PostmanAuthParam of type string.
+func CreateAuthParam(key string, value string) *PostmanAuthParam {
+	return &PostmanAuthParam{
 		Key:   key,
 		Value: value,
 		Type:  "string",

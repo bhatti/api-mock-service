@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"testing"
@@ -9,11 +9,11 @@ import (
 func TestCreateVariable(t *testing.T) {
 	assert.Equal(
 		t,
-		&Variable{
+		&PostmanVariable{
 			Name:  "a-name",
 			Value: "a-value",
 			Type:  "string",
 		},
-		CreateVariable("a-name", "a-value"),
+		CreatePostmanVariable("a-name", "a-value"),
 	)
 }

@@ -1,7 +1,8 @@
-package postman
+package pm
 
 import (
 	"errors"
+	"github.com/bhatti/api-mock-service/internal/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,17 +11,17 @@ import (
 func TestRequestMarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario       string
-		req            Request
+		req            PostmanRequest
 		expectedOutput string
 	}{
 		{
-			"Successfully marshalling a Request as an object (v2.1.0)",
-			Request{
-				Method: Post,
-				URL: &URL{
+			"Successfully marshalling a PostmanRequest as an object (v2.1.0)",
+			PostmanRequest{
+				Method: types.Post,
+				URL: &PostmanURL{
 					Raw: "http://www.google.fr",
 				},
-				Body: &Body{
+				Body: &PostmanRequestBody{
 					Mode: "raw",
 					Raw:  "raw-content",
 				},
@@ -40,28 +41,28 @@ func TestRequestUnmarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario        string
 		bytes           []byte
-		expectedRequest Request
+		expectedRequest PostmanRequest
 		expectedError   error
 	}{
 		{
-			"Successfully unmarshalling a Request as a string",
+			"Successfully unmarshalling a PostmanRequest as a string",
 			[]byte("\"http://www.google.fr\""),
-			Request{
-				Method: Get,
-				URL: &URL{
+			PostmanRequest{
+				Method: types.Get,
+				URL: &PostmanURL{
 					Raw: "http://www.google.fr",
 				},
 			},
 			nil,
 		},
 		{
-			"Successfully unmarshalling a Request URL with some content",
+			"Successfully unmarshalling a PostmanRequest PostmanURL with some content",
 			[]byte("{\"url\":{\"raw\": \"http://www.google.fr\"},\"body\":{\"mode\":\"raw\",\"raw\":\"awesome-body\"}}"),
-			Request{
-				URL: &URL{
+			PostmanRequest{
+				URL: &PostmanURL{
 					Raw: "http://www.google.fr",
 				},
-				Body: &Body{
+				Body: &PostmanRequestBody{
 					Mode: "raw",
 					Raw:  "awesome-body",
 				},
@@ -69,15 +70,15 @@ func TestRequestUnmarshalJSON(t *testing.T) {
 			nil,
 		},
 		{
-			"Failed to unmarshal a Request because of an unsupported type",
+			"Failed to unmarshal a PostmanRequest because of an unsupported type",
 			[]byte("not-a-valid-request"),
-			Request{},
+			PostmanRequest{},
 			errors.New("unsupported type"),
 		},
 	}
 
 	for _, tc := range cases {
-		var r Request
+		var r PostmanRequest
 		err := r.UnmarshalJSON(tc.bytes)
 		assert.Equal(t, tc.expectedRequest, r, tc.scenario)
 		assert.Equal(t, tc.expectedError, err, tc.scenario)

@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"encoding/json"

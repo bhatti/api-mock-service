@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"errors"
@@ -10,12 +10,12 @@ import (
 func TestDescriptionMarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario       string
-		description    Description
+		description    PostmanCollectionDescription
 		expectedOutput string
 	}{
 		{
-			"Successfully marshalling a Description as an object",
-			Description{
+			"Successfully marshalling a PostmanCollectionDescription as an object",
+			PostmanCollectionDescription{
 				Content: "My awesome collection",
 				Type:    "text/plain",
 				Version: "v1",
@@ -23,8 +23,8 @@ func TestDescriptionMarshalJSON(t *testing.T) {
 			`{"content":"My awesome collection","type":"text/plain","version":"v1"}`,
 		},
 		{
-			"Successfully marshalling a Description as a string",
-			Description{
+			"Successfully marshalling a PostmanCollectionDescription as a string",
+			PostmanCollectionDescription{
 				Content: "My awesome collection",
 			},
 			`"My awesome collection"`,
@@ -42,25 +42,25 @@ func TestDescriptionUnmarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario            string
 		bytes               []byte
-		expectedDescription Description
+		expectedDescription PostmanCollectionDescription
 		expectedError       error
 	}{
 		{
-			"Successfully unmarshalling a Description from a string",
+			"Successfully unmarshalling a PostmanCollectionDescription from a string",
 			[]byte(`"My awesome collection"`),
-			Description{Content: "My awesome collection"},
+			PostmanCollectionDescription{Content: "My awesome collection"},
 			nil,
 		},
 		{
-			"Successfully unmarshalling a Description from an empty slice of bytes",
+			"Successfully unmarshalling a PostmanCollectionDescription from an empty slice of bytes",
 			make([]byte, 0),
-			Description{},
+			PostmanCollectionDescription{},
 			nil,
 		},
 		{
-			"Successfully unmarshalling a Description",
+			"Successfully unmarshalling a PostmanCollectionDescription",
 			[]byte(`{"content":"My awesome collection","type":"text/plain","version":"v1"}`),
-			Description{
+			PostmanCollectionDescription{
 				Content: "My awesome collection",
 				Type:    "text/plain",
 				Version: "v1",
@@ -68,16 +68,16 @@ func TestDescriptionUnmarshalJSON(t *testing.T) {
 			nil,
 		},
 		{
-			"Failed to unmarshal a Description because of an unsupported type",
+			"Failed to unmarshal a PostmanCollectionDescription because of an unsupported type",
 			[]byte(`not-a-valid-description`),
-			Description{},
+			PostmanCollectionDescription{},
 			errors.New("unsupported type for description"),
 		},
 	}
 
 	for _, tc := range cases {
 
-		var d Description
+		var d PostmanCollectionDescription
 		err := d.UnmarshalJSON(tc.bytes)
 
 		assert.Equal(t, tc.expectedDescription, d, tc.scenario)

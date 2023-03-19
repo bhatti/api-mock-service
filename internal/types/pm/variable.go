@@ -1,7 +1,7 @@
-package postman
+package pm
 
-// A Variable allows you to store and reuse values in your requests and scripts.
-type Variable struct {
+// A PostmanVariable allows you to store and reuse values in your requests and scripts.
+type PostmanVariable struct {
 	ID          string `json:"id,omitempty"`
 	Key         string `json:"key,omitempty"`
 	Type        string `json:"type,omitempty"`
@@ -12,9 +12,9 @@ type Variable struct {
 	Disabled    bool   `json:"disabled,omitempty"`
 }
 
-// CreateVariable creates a new Variable of type string.
-func CreateVariable(name string, value string) *Variable {
-	return &Variable{
+// CreatePostmanVariable creates a new PostmanVariable of type string.
+func CreatePostmanVariable(name string, value string) *PostmanVariable {
+	return &PostmanVariable{
 		Name:  name,
 		Value: value,
 		Type:  "string",
@@ -22,7 +22,7 @@ func CreateVariable(name string, value string) *Variable {
 }
 
 // KeyName accessor
-func (v *Variable) KeyName() string {
+func (v *PostmanVariable) KeyName() string {
 	if v.Key != "" {
 		return v.Key
 	}

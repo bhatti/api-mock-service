@@ -94,7 +94,7 @@ func saveMockResponse(
 	resBody []byte,
 	resHeaders map[string][]string,
 	resStatus int,
-	resHttpVersion string,
+	resHTTPVersion string,
 	started time.Time,
 	ended time.Time,
 	scenarioRepository repository.APIScenarioRepository) (resContentType string, err error) {
@@ -106,7 +106,7 @@ func saveMockResponse(
 		req.Method,
 		"",
 		req.Proto,
-		resHttpVersion,
+		resHTTPVersion,
 		reqBody,
 		resBody,
 		req.URL.Query(),

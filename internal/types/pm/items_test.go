@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"testing"
@@ -10,20 +10,20 @@ func TestIsGroup(t *testing.T) {
 
 	cases := []struct {
 		scenario        string
-		item            Items
+		item            PostmanItems
 		expectedIsGroup bool
 	}{
 		{
-			"An item with Items is a group",
-			Items{
+			"An item with PostmanItems is a group",
+			PostmanItems{
 				Name:  "a-name",
-				Items: make([]*Items, 0),
+				Items: make([]*PostmanItems, 0),
 			},
 			true,
 		},
 		{
-			"An item without Items is not a group",
-			Items{
+			"An item without PostmanItems is not a group",
+			PostmanItems{
 				Name: "a-name",
 			},
 			false,
@@ -36,31 +36,31 @@ func TestIsGroup(t *testing.T) {
 }
 
 func TestAddItem(t *testing.T) {
-	itemGroup := Items{
+	itemGroup := PostmanItems{
 		Name:  "A group of items",
-		Items: make([]*Items, 0),
+		Items: make([]*PostmanItems, 0),
 	}
 
-	itemGroup.AddItem(&Items{
+	itemGroup.AddItem(&PostmanItems{
 		Name: "A basic item",
 	})
 
-	itemGroup.AddItem(&Items{
+	itemGroup.AddItem(&PostmanItems{
 		Name:  "A basic group item",
-		Items: make([]*Items, 0),
+		Items: make([]*PostmanItems, 0),
 	})
 
 	assert.Equal(
 		t,
-		Items{
+		PostmanItems{
 			Name: "A group of items",
-			Items: []*Items{
+			Items: []*PostmanItems{
 				{
 					Name: "A basic item",
 				},
 				{
 					Name:  "A basic group item",
-					Items: make([]*Items, 0),
+					Items: make([]*PostmanItems, 0),
 				},
 			},
 		},
@@ -69,9 +69,9 @@ func TestAddItem(t *testing.T) {
 }
 
 func TestAddItemGroup(t *testing.T) {
-	itemGroup := Items{
+	itemGroup := PostmanItems{
 		Name:  "A group of items",
-		Items: make([]*Items, 0),
+		Items: make([]*PostmanItems, 0),
 	}
 
 	itemGroup.AddItemGroup("an-item-group")
@@ -79,16 +79,16 @@ func TestAddItemGroup(t *testing.T) {
 
 	assert.Equal(
 		t,
-		Items{
+		PostmanItems{
 			Name: "A group of items",
-			Items: []*Items{
+			Items: []*PostmanItems{
 				{
 					Name:  "an-item-group",
-					Items: make([]*Items, 0),
+					Items: make([]*PostmanItems, 0),
 				},
 				{
 					Name:  "another-item-group",
-					Items: make([]*Items, 0),
+					Items: make([]*PostmanItems, 0),
 				},
 			},
 		},
@@ -99,12 +99,12 @@ func TestAddItemGroup(t *testing.T) {
 func TestItemsMarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario       string
-		item           Items
+		item           PostmanItems
 		expectedOutput string
 	}{
 		{
-			"Successfully marshalling an Item",
-			Items{
+			"Successfully marshalling an PostmanItem",
+			PostmanItems{
 				ID:   "a-unique-id",
 				Name: "an-item",
 			},
@@ -112,9 +112,9 @@ func TestItemsMarshalJSON(t *testing.T) {
 		},
 		{
 			"Successfully marshalling a GroupItem",
-			Items{
+			PostmanItems{
 				Name:  "a-group-item",
-				Items: make([]*Items, 0),
+				Items: make([]*PostmanItems, 0),
 			},
 			"{\"name\":\"a-group-item\",\"item\":[]}",
 		},
@@ -128,26 +128,26 @@ func TestItemsMarshalJSON(t *testing.T) {
 }
 
 func TestCreateItem(t *testing.T) {
-	c := CreateItem(Item{
+	c := CreatePostmanItem(PostmanItem{
 		Name:        "An item",
 		Description: "A description",
-		Variables: []*Variable{
+		Variables: []*PostmanVariable{
 			{
 				Name:  "variable-name",
 				Value: "variable-value",
 			},
 		},
-		Events: []*Event{
+		Events: []*PostmanEvent{
 			{
 				Listen: PreRequest,
-				Script: &Script{
+				Script: &PostmanScript{
 					Type: "text/javascript",
 					Exec: []string{"console.log(\"foo\")"},
 				},
 			},
 			{
 				Listen: Test,
-				Script: &Script{
+				Script: &PostmanScript{
 					Type: "text/javascript",
 					Exec: []string{"console.log(\"bar\")"},
 				},
@@ -155,12 +155,12 @@ func TestCreateItem(t *testing.T) {
 		},
 		ProtocolProfileBehavior: "a-protocol-profile-behavior",
 		ID:                      "an-id",
-		Request: &Request{
-			URL: &URL{
+		Request: &PostmanRequest{
+			URL: &PostmanURL{
 				Raw: "http://www.google.fr",
 			},
 		},
-		Responses: []*Response{
+		Responses: []*PostmanResponse{
 			{
 				Name: "a-response",
 			},
@@ -169,26 +169,26 @@ func TestCreateItem(t *testing.T) {
 
 	assert.Equal(
 		t,
-		&Items{
+		&PostmanItems{
 			Name:        "An item",
 			Description: "A description",
-			Variables: []*Variable{
+			Variables: []*PostmanVariable{
 				{
 					Name:  "variable-name",
 					Value: "variable-value",
 				},
 			},
-			Events: []*Event{
+			Events: []*PostmanEvent{
 				{
 					Listen: PreRequest,
-					Script: &Script{
+					Script: &PostmanScript{
 						Type: "text/javascript",
 						Exec: []string{"console.log(\"foo\")"},
 					},
 				},
 				{
 					Listen: Test,
-					Script: &Script{
+					Script: &PostmanScript{
 						Type: "text/javascript",
 						Exec: []string{"console.log(\"bar\")"},
 					},
@@ -196,12 +196,12 @@ func TestCreateItem(t *testing.T) {
 			},
 			ProtocolProfileBehavior: "a-protocol-profile-behavior",
 			ID:                      "an-id",
-			Request: &Request{
-				URL: &URL{
+			Request: &PostmanRequest{
+				URL: &PostmanURL{
 					Raw: "http://www.google.fr",
 				},
 			},
-			Responses: []*Response{
+			Responses: []*PostmanResponse{
 				{
 					Name: "a-response",
 				},
@@ -212,76 +212,76 @@ func TestCreateItem(t *testing.T) {
 }
 
 func TestCreateItemGroup(t *testing.T) {
-	c := CreateItemGroup(ItemGroup{
+	c := CreatePostmanItemGroup(PostmanItemGroup{
 		Name:        "An item",
 		Description: "A description",
-		Variables: []*Variable{
+		Variables: []*PostmanVariable{
 			{
 				Name:  "variable-name",
 				Value: "variable-value",
 			},
 		},
-		Events: []*Event{
+		Events: []*PostmanEvent{
 			{
 				Listen: PreRequest,
-				Script: &Script{
+				Script: &PostmanScript{
 					Type: "text/javascript",
 					Exec: []string{"console.log(\"foo\")"},
 				},
 			},
 			{
 				Listen: Test,
-				Script: &Script{
+				Script: &PostmanScript{
 					Type: "text/javascript",
 					Exec: []string{"console.log(\"bar\")"},
 				},
 			},
 		},
 		ProtocolProfileBehavior: "a-protocol-profile-behavior",
-		Items: []*Items{
+		Items: []*PostmanItems{
 			{
 				Name: "An item",
 			},
 		},
-		Auth: &Auth{
+		Auth: &PostmanAuth{
 			Type: Basic,
 		},
 	})
 
 	assert.Equal(
 		t,
-		&Items{
+		&PostmanItems{
 			Name:        "An item",
 			Description: "A description",
-			Variables: []*Variable{
+			Variables: []*PostmanVariable{
 				{
 					Name:  "variable-name",
 					Value: "variable-value",
 				},
 			},
-			Events: []*Event{
+			Events: []*PostmanEvent{
 				{
 					Listen: PreRequest,
-					Script: &Script{
+					Script: &PostmanScript{
 						Type: "text/javascript",
 						Exec: []string{"console.log(\"foo\")"},
 					},
 				},
 				{
 					Listen: Test,
-					Script: &Script{
+					Script: &PostmanScript{
 						Type: "text/javascript",
 						Exec: []string{"console.log(\"bar\")"},
 					},
 				},
 			},
 			ProtocolProfileBehavior: "a-protocol-profile-behavior",
-			Items: []*Items{
+			Items: []*PostmanItems{
 				{
 					Name: "An item",
 				},
 			},
-			Auth: &Auth{
+			Auth: &PostmanAuth{
 				Type: Basic,
 			},
 		},

@@ -5,7 +5,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/types/archive"
-	"github.com/bhatti/api-mock-service/internal/types/postman"
+	"github.com/bhatti/api-mock-service/internal/types/pm"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"net/http"
 	"strconv"
@@ -123,12 +123,12 @@ func (ehc *APIHistoryController) getExecHistoryHar(c web.APIContext) error {
 //
 //	200: postExecHistoryPostmanResponse
 func (ehc *APIHistoryController) postExecHistoryPostman(c web.APIContext) (err error) {
-	collection := &postman.Collection{}
+	collection := &pm.PostmanCollection{}
 	err = json.NewDecoder(c.Request().Body).Decode(collection)
 	if err != nil {
 		return err
 	}
-	scenarios := postman.ConvertPostmanToScenarios(ehc.config, collection, time.Time{}, time.Time{})
+	scenarios := pm.ConvertPostmanToScenarios(ehc.config, collection, time.Time{}, time.Time{})
 	for _, scenario := range scenarios {
 		u, err := scenario.GetURL("")
 		if err != nil {
@@ -158,7 +158,7 @@ func (ehc *APIHistoryController) getExecHistoryPostman(c web.APIContext) error {
 	if err != nil {
 		return err
 	}
-	collection := postman.ConvertScenariosToPostman("", scenarios...)
+	collection := pm.ConvertScenariosToPostman("", scenarios...)
 	return c.JSON(http.StatusOK, collection)
 }
 
@@ -236,17 +236,17 @@ type execHistoryPostmanParams struct {
 // ExecHistory history in the format of HAR format
 type execHistoryPostmanResponse struct {
 	// in:body
-	Body postman.Collection
+	Body pm.PostmanCollection
 }
 
 // swagger:parameters postExecHistoryPostman
 // The parameters for uploading har contents
 type postExecHistoryPostmanParams struct {
 	// in:body
-	Body postman.Collection
+	Body pm.PostmanCollection
 }
 
 // swagger:response postExecHistoryPostmanResponse
-// response for uploading postman
+// response for uploading pm
 type postExecHistoryPostmanResponseBody struct {
 }

@@ -29,6 +29,22 @@ const (
 	Options MethodType = "OPTIONS"
 	// Trace HTTP request
 	Trace MethodType = "TRACE"
+	// Copy HTTP Method.
+	Copy MethodType = "COPY"
+	// Link HTTP Method.
+	Link MethodType = "LINK"
+	// Unlink HTTP Method.
+	Unlink MethodType = "UNLINK"
+	// Purge HTTP Method.
+	Purge MethodType = "PURGE"
+	// Lock HTTP Method.
+	Lock MethodType = "LOCK"
+	// Unlock HTTP Method.
+	Unlock MethodType = "UNLOCK"
+	// Propfind HTTP Method.
+	Propfind MethodType = "PROPFIND"
+	// View HTTP Method.
+	View MethodType = "VIEW"
 )
 
 // ToMethod converts string to method

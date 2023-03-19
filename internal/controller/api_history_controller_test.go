@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/types/archive"
-	"github.com/bhatti/api-mock-service/internal/types/postman"
+	"github.com/bhatti/api-mock-service/internal/types/pm"
 	"io"
 	"net/http"
 	"net/url"
@@ -46,7 +46,7 @@ func Test_ShouldGetExecutionHistoryNames(t *testing.T) {
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
 	require.NoError(t, err)
 	ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
-	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+	ctx.Request().Header = http.Header{"PostmanAuth": []string{"0123456789"}}
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	err = mockScenarioRepository.SaveHistory(scenario, u.String(), time.Now(), time.Now())
 	require.NoError(t, err)
@@ -86,7 +86,7 @@ func Test_ShouldGetExecutionHistory(t *testing.T) {
 		u, err := url.Parse(fmt.Sprintf("http://localhost:8080?a=1&b=abc&page=%d&group=%s", i, "exec-1"))
 		require.NoError(t, err)
 		ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
-		ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+		ctx.Request().Header = http.Header{"PostmanAuth": []string{"0123456789"}}
 		// WHEN getting mock scenario groups
 		err = ctrl.getExecHistory(ctx)
 		// THEN it should not fail
@@ -123,7 +123,7 @@ func Test_ShouldGetExecutionHistoryHar(t *testing.T) {
 		u, err := url.Parse(fmt.Sprintf("http://localhost:8080?a=1&b=abc&page=%d&group=%s", i, "exec-1"))
 		require.NoError(t, err)
 		ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
-		ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+		ctx.Request().Header = http.Header{"PostmanAuth": []string{"0123456789"}}
 		// WHEN getting mock scenario groups
 		err = ctrl.getExecHistoryHar(ctx)
 		// THEN it should not fail
@@ -149,7 +149,7 @@ func Test_ShouldSaveHarContents(t *testing.T) {
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
 	ctx := web.NewStubContext(&http.Request{Body: reader, Method: string(scenario.Method), URL: u})
-	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}, "Content-Type": []string{"application/json"}}
+	ctx.Request().Header = http.Header{"PostmanAuth": []string{"0123456789"}, "Content-Type": []string{"application/json"}}
 
 	// WHEN creating mock scenario
 	err = ctrl.postExecHistoryHar(ctx)
@@ -184,12 +184,12 @@ func Test_ShouldGetExecutionHistoryPostman(t *testing.T) {
 		u, err := url.Parse(fmt.Sprintf("http://localhost:8080?a=1&b=abc&page=%d&group=%s", i, "exec-1"))
 		require.NoError(t, err)
 		ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
-		ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+		ctx.Request().Header = http.Header{"PostmanAuth": []string{"0123456789"}}
 		// WHEN getting mock scenario groups
 		err = ctrl.getExecHistoryPostman(ctx)
 		// THEN it should not fail
 		require.NoError(t, err)
-		res := ctx.Result.(*postman.Collection)
+		res := ctx.Result.(*pm.PostmanCollection)
 		require.Equal(t, 2, len(res.Items), fmt.Sprintf("i=%d", i))
 		for _, item := range res.Items {
 			require.Equal(t, 25, len(item.Items))
@@ -207,12 +207,12 @@ func Test_ShouldSavePostmanContents(t *testing.T) {
 	scenario := buildScenario(types.Post, "test1", "/path1", 1)
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
 	require.NoError(t, err)
-	scenariosToPostman := postman.ConvertScenariosToPostman("", scenario)
+	scenariosToPostman := pm.ConvertScenariosToPostman("", scenario)
 	b, err := json.Marshal(scenariosToPostman)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(b))
 	ctx := web.NewStubContext(&http.Request{Body: reader, Method: string(scenario.Method), URL: u})
-	ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}, "Content-Type": []string{"application/json"}}
+	ctx.Request().Header = http.Header{"PostmanAuth": []string{"0123456789"}, "Content-Type": []string{"application/json"}}
 
 	// WHEN creating mock scenario
 	err = ctrl.postExecHistoryPostman(ctx)

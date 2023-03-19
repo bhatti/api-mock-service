@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 func ConvertScenariosToPostman(
 	name string,
 	scenarios ...*types.APIScenario,
-) (c *Collection) {
+) (c *PostmanCollection) {
 	c = CreateCollection(name, name)
 	scenariosByGroup := make(map[string][]*types.APIScenario)
 	for _, scenario := range scenarios {
@@ -40,23 +40,23 @@ func ConvertScenariosToPostman(
 	return
 }
 
-func toItem(scenario *types.APIScenario) (*Items, error) {
+func toItem(scenario *types.APIScenario) (*PostmanItems, error) {
 	u, err := scenario.GetURL("http://0.0.0.0")
 	if err != nil {
 		return nil, err
 	}
-	return CreateItem(Item{
+	return CreatePostmanItem(PostmanItem{
 		Name:        scenario.Name,
 		Description: scenario.Description,
 		Request:     toRequest(string(scenario.Method), u, scenario.Request),
-		Responses:   []*Response{toResponse(scenario.Response)},
+		Responses:   []*PostmanResponse{toResponse(scenario.Response)},
 	}), nil
 }
 
-func toResponse(res types.APIResponse) *Response {
-	return &Response{
-		Headers: &HeaderList{Headers: buildHeadersArray(res.Headers)},
-		Cookies: make([]*Cookie, 0),
+func toResponse(res types.APIResponse) *PostmanResponse {
+	return &PostmanResponse{
+		Headers: &PostmanHeaderList{Headers: buildHeadersArray(res.Headers)},
+		Cookies: make([]*PostmanCookie, 0),
 		Body:    res.Contents,
 		Status:  "",
 		Code:    res.StatusCode,
@@ -64,24 +64,25 @@ func toResponse(res types.APIResponse) *Response {
 	}
 }
 
-func toRequest(method string, u *url.URL, req types.APIRequest) *Request {
-	return &Request{
+func toRequest(method string, u *url.URL, req types.APIRequest) *PostmanRequest {
+	return &PostmanRequest{
 		URL:    buildURL(u),
-		Method: Method(method),
+		Method: types.MethodType(method),
 		Auth:   nil, // TODO auth
 		Header: buildHeaders(req.Headers),
-		Body: &Body{
+		Body: &PostmanRequestBody{
 			Raw:      req.Contents,
 			FormData: req.PostParams,
 		},
 	}
 }
 
-type Converter struct {
+// PostmanConverter converter
+type PostmanConverter struct {
 	config    *types.Configuration
 	variables map[string]string
 	execs     []string
-	auth      map[string][]*AuthParam
+	auth      map[string][]*PostmanAuthParam
 	started   time.Time
 	ended     time.Time
 }
@@ -89,7 +90,7 @@ type Converter struct {
 // ConvertPostmanToScenarios builds scenarios from Postman contents
 func ConvertPostmanToScenarios(
 	config *types.Configuration,
-	collection *Collection,
+	collection *PostmanCollection,
 	started time.Time,
 	ended time.Time,
 ) (scenarios []*types.APIScenario) {
@@ -103,9 +104,9 @@ func ConvertPostmanToScenarios(
 	return
 }
 
-func (c *Converter) itemToScenario(
+func (c *PostmanConverter) itemToScenario(
 	group string,
-	items *Items,
+	items *PostmanItems,
 ) (scenarios []*types.APIScenario) {
 	c.addVariables(items.Variables)
 	c.addEvents(items.Events)
@@ -119,14 +120,14 @@ func (c *Converter) itemToScenario(
 				scenarios = append(scenarios, scenario)
 			} else {
 				log.WithFields(log.Fields{
-					"entry":    items,
-					"Response": res,
-					"Error":    err,
+					"entry":           items,
+					"PostmanResponse": res,
+					"Error":           err,
 				}).Warnf("failed to convert item to scenario")
 			}
 		}
 	} else {
-		scenario, err := c.toScenario(items, &Response{Headers: &HeaderList{}}, group)
+		scenario, err := c.toScenario(items, &PostmanResponse{Headers: &PostmanHeaderList{}}, group)
 		if err == nil {
 			scenarios = append(scenarios, scenario)
 		} else {
@@ -142,9 +143,9 @@ func (c *Converter) itemToScenario(
 	return
 }
 
-func (c *Converter) toScenario(
-	items *Items,
-	res *Response,
+func (c *PostmanConverter) toScenario(
+	items *PostmanItems,
+	res *PostmanResponse,
 	group string,
 ) (scenario *types.APIScenario, err error) {
 	if items.Request == nil {
@@ -173,7 +174,7 @@ func (c *Converter) toScenario(
 	c.handleVariableEvents(items.Name, headers)
 	scenario, err = types.BuildScenarioFromHTTP(
 		c.config,
-		"postman-",
+		"pm-",
 		u,
 		string(items.Request.Method),
 		"", // group
@@ -223,13 +224,13 @@ func (c *Converter) toScenario(
 	return scenario, nil
 }
 
-func (c *Converter) addVariables(variables []*Variable) {
+func (c *PostmanConverter) addVariables(variables []*PostmanVariable) {
 	for _, next := range variables {
 		c.variables[next.KeyName()] = next.Value
 	}
 }
 
-func (c *Converter) addEvents(events []*Event) {
+func (c *PostmanConverter) addEvents(events []*PostmanEvent) {
 	for _, event := range events {
 		if event.Script == nil || event.Disabled {
 			continue
@@ -269,19 +270,19 @@ func (c *Converter) addEvents(events []*Event) {
 	}
 }
 
-func (c *Converter) addAuth(auth *Auth) {
+func (c *PostmanConverter) addAuth(auth *PostmanAuth) {
 	if auth != nil && auth.GetParams() != nil {
 		c.auth[string(auth.Type)] = auth.GetParams()
 	}
 }
 
-func (c *Converter) handleVariableEvents(name string, headers map[string][]string) {
+func (c *PostmanConverter) handleVariableEvents(name string, headers map[string][]string) {
 	for _, exec := range c.execs {
 		c.handleEvent(name, exec, headers)
 	}
 }
 
-func (c *Converter) handleEvent(name string, exec string, headers map[string][]string) {
+func (c *PostmanConverter) handleEvent(name string, exec string, headers map[string][]string) {
 	if strings.Contains(exec, "pm.variables.set") {
 		var re = regexp.MustCompile(`pm.variables.set.[' ]+(\w+)[', ]+(.+)'\)`)
 		partsStr := strings.ReplaceAll(re.ReplaceAllString(exec, `$1=$2`), "'", "")
@@ -299,9 +300,9 @@ func (c *Converter) handleEvent(name string, exec string, headers map[string][]s
 				varName := strings.TrimSpace(strings.ReplaceAll(re.ReplaceAllString(parts[1], `$1`), "'", ""))
 				if c.variables[varName] == "" {
 					log.WithFields(log.Fields{
-						"Exec":      exec,
-						"Variables": c.variables,
-						"Variable":  varName,
+						"Exec":            exec,
+						"Variables":       c.variables,
+						"PostmanVariable": varName,
 					}).Warnf("unknown variable %s in postman event", varName)
 				} else {
 					re = regexp.MustCompile(`[+ ]*pm.variables.get\((.+)\)`)
@@ -322,12 +323,12 @@ func replaceTemplateVariables(s string) string {
 	return re.ReplaceAllString(s, `{{.$1}}`)
 }
 
-func buildConverter(config *types.Configuration, started time.Time, ended time.Time) *Converter {
-	converter := &Converter{
+func buildConverter(config *types.Configuration, started time.Time, ended time.Time) *PostmanConverter {
+	converter := &PostmanConverter{
 		config:    config,
 		variables: make(map[string]string),
 		execs:     make([]string, 0),
-		auth:      make(map[string][]*AuthParam),
+		auth:      make(map[string][]*PostmanAuthParam),
 		started:   started,
 		ended:     ended,
 	}

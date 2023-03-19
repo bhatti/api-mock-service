@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"encoding/json"
@@ -6,19 +6,19 @@ import (
 	"fmt"
 )
 
-// Description contains collection description.
-type Description struct {
+// PostmanCollectionDescription contains collection description.
+type PostmanCollectionDescription struct {
 	Content string `json:"content,omitempty"`
 	Type    string `json:"type,omitempty"`
 	Version string `json:"version,omitempty"`
 }
 
 // mDescription is used for marshalling/unmarshalling.
-type mDescription Description
+type mDescription PostmanCollectionDescription
 
-// MarshalJSON returns the JSON encoding of a Description.
-// If the Description only has a content, it is returned as a string.
-func (d Description) MarshalJSON() ([]byte, error) {
+// MarshalJSON returns the JSON encoding of a PostmanCollectionDescription.
+// If the PostmanCollectionDescription only has a content, it is returned as a string.
+func (d PostmanCollectionDescription) MarshalJSON() ([]byte, error) {
 	if d.Type == "" && d.Version == "" {
 		return []byte(fmt.Sprintf("\"%s\"", d.Content)), nil
 	}
@@ -30,9 +30,9 @@ func (d Description) MarshalJSON() ([]byte, error) {
 	})
 }
 
-// UnmarshalRequestJSON parses the JSON-encoded data and create a Description from it.
-// A Description can be created from an object or a string.
-func (d *Description) UnmarshalJSON(b []byte) (err error) {
+// UnmarshalJSON parses the JSON-encoded data and create a PostmanCollectionDescription from it.
+// A PostmanCollectionDescription can be created from an object or a string.
+func (d *PostmanCollectionDescription) UnmarshalJSON(b []byte) (err error) {
 	if len(b) == 0 {
 		return nil
 	} else if len(b) >= 2 && b[0] == '"' && b[len(b)-1] == '"' {

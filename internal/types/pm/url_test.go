@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"errors"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestURLString(t *testing.T) {
-	u := URL{
+	u := PostmanURL{
 		Raw: "a-raw-url",
 	}
 
@@ -18,21 +18,21 @@ func TestURLString(t *testing.T) {
 func TestURLMarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario       string
-		url            URL
+		url            PostmanURL
 		expectedOutput string
 	}{
 		{
-			"Successfully marshalling a raw URL as a struct (v2.1.0)",
-			URL{
+			"Successfully marshalling a raw PostmanURL as a struct (v2.1.0)",
+			PostmanURL{
 				Raw: "http://www.google.fr",
 			},
 			"{\"raw\":\"http://www.google.fr\"}",
 		},
 		{
-			"Successfully marshalling an URL with variables as a struct (v2.1.0)",
-			URL{
+			"Successfully marshalling an PostmanURL with variables as a struct (v2.1.0)",
+			PostmanURL{
 				Raw: "http://www.google.fr",
-				Variables: []*Variable{
+				Variables: []*PostmanVariable{
 					{
 						Name:  "a-variable",
 						Value: "an-awesome-value",
@@ -54,23 +54,23 @@ func TestURLUnmarshalJSON(t *testing.T) {
 	cases := []struct {
 		scenario      string
 		bytes         []byte
-		expectedURL   URL
+		expectedURL   PostmanURL
 		expectedError error
 	}{
 		{
-			"Successfully unmarshalling an URL as a string",
+			"Successfully unmarshalling an PostmanURL as a string",
 			[]byte("\"http://www.google.fr\""),
-			URL{
+			PostmanURL{
 				Raw: "http://www.google.fr",
 			},
 			nil,
 		},
 		{
-			"Successfully unmarshalling an URL with variables as a struct",
+			"Successfully unmarshalling an PostmanURL with variables as a struct",
 			[]byte("{\"raw\":\"http://www.google.fr\",\"variable\":[{\"name\":\"a-variable\",\"value\":\"an-awesome-value\"}]}"),
-			URL{
+			PostmanURL{
 				Raw: "http://www.google.fr",
-				Variables: []*Variable{
+				Variables: []*PostmanVariable{
 					{
 						Name:  "a-variable",
 						Value: "an-awesome-value",
@@ -80,11 +80,11 @@ func TestURLUnmarshalJSON(t *testing.T) {
 			nil,
 		},
 		{
-			"Successfully unmarshalling an URL with query as a struct",
+			"Successfully unmarshalling an PostmanURL with query as a struct",
 			[]byte("{\"raw\":\"http://www.google.fr\",\"query\":[{\"key\":\"param1\",\"value\":\"an-awesome-value\"}]}"),
-			URL{
+			PostmanURL{
 				Raw: "http://www.google.fr",
-				Query: []*QueryParam{
+				Query: []*PostmanQueryParam{
 					{
 						Key:   "param1",
 						Value: "an-awesome-value",
@@ -94,9 +94,9 @@ func TestURLUnmarshalJSON(t *testing.T) {
 			nil,
 		},
 		{
-			"Failed to unmarshal an URL because of an unsupported type",
+			"Failed to unmarshal an PostmanURL because of an unsupported type",
 			[]byte("not-a-valid-url"),
-			URL{},
+			PostmanURL{},
 			errors.New("unsupported type"),
 		},
 	}

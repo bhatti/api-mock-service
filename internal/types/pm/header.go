@@ -1,4 +1,4 @@
-package postman
+package pm
 
 import (
 	"encoding/json"
@@ -7,41 +7,41 @@ import (
 	"strings"
 )
 
-// Header represents an HTTP Header.
-type Header struct {
+// PostmanHeader represents an HTTP PostmanHeader.
+type PostmanHeader struct {
 	Key         string `json:"key"`
 	Value       string `json:"value"`
 	Disabled    bool   `json:"disabled,omitempty"`
 	Description string `json:"description,omitempty"`
 }
 
-// HeaderList contains a list of headers.
-type HeaderList struct {
-	Headers []*Header
+// PostmanHeaderList contains a list of headers.
+type PostmanHeaderList struct {
+	Headers []*PostmanHeader
 }
 
-func buildHeaders(kv map[string]string) (res []*Header) {
+func buildHeaders(kv map[string]string) (res []*PostmanHeader) {
 	for k, v := range kv {
-		res = append(res, &Header{Key: k, Value: v})
+		res = append(res, &PostmanHeader{Key: k, Value: v})
 	}
 	return
 }
 
-func buildHeadersArray(kv map[string][]string) (res []*Header) {
+func buildHeadersArray(kv map[string][]string) (res []*PostmanHeader) {
 	for k, v := range kv {
-		res = append(res, &Header{Key: k, Value: v[0]})
+		res = append(res, &PostmanHeader{Key: k, Value: v[0]})
 	}
 	return
 }
 
-// MarshalJSON returns the JSON encoding of a HeaderList.
-func (hl HeaderList) MarshalJSON() ([]byte, error) {
+// MarshalJSON returns the JSON encoding of a PostmanHeaderList.
+func (hl PostmanHeaderList) MarshalJSON() ([]byte, error) {
 	return json.Marshal(hl.Headers)
 }
 
-// UnmarshalRequestJSON parses the JSON-encoded data and create a HeaderList from it.
-// A HeaderList can be created from an array or a string.
-func (hl *HeaderList) UnmarshalJSON(b []byte) (err error) {
+// UnmarshalJSON parses the JSON-encoded data and create a PostmanHeaderList from it.
+// A PostmanHeaderList can be created from an array or a string.
+func (hl *PostmanHeaderList) UnmarshalJSON(b []byte) (err error) {
 	if len(b) == 0 {
 		return nil
 	} else if len(b) >= 2 && b[0] == '"' && b[len(b)-1] == '"' {
@@ -57,7 +57,7 @@ func (hl *HeaderList) UnmarshalJSON(b []byte) (err error) {
 				return fmt.Errorf("invalid header, missing key or value: %s", header)
 			}
 
-			hl.Headers = append(hl.Headers, &Header{
+			hl.Headers = append(hl.Headers, &PostmanHeader{
 				Key:   strings.TrimSpace(headerParts[0]),
 				Value: strings.TrimSpace(string(headerParts[1])),
 			})

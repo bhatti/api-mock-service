@@ -1,8 +1,9 @@
-package postman
+package pm
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -15,10 +16,10 @@ func Test_ShouldCreateCollection(t *testing.T) {
 
 	assert.Equal(
 		t,
-		&Collection{
-			Info: Info{
+		&PostmanCollection{
+			Info: PostmanInfo{
 				Name: "a-name",
-				Description: Description{
+				Description: PostmanCollectionDescription{
 					Content: "a-desc",
 				},
 			},
@@ -29,12 +30,12 @@ func Test_ShouldCreateCollection(t *testing.T) {
 
 func Test_ShouldAddItemIntoCollection(t *testing.T) {
 	BasicCollection := CreateCollection("Postman collection", "v2.1.0")
-	BasicCollection.AddItem(&Items{Name: "Item1"})
-	BasicCollection.AddItem(&Items{Name: "Item2"})
-	BasicCollection.AddItem(&Items{Name: "Item3"})
+	BasicCollection.AddItem(&PostmanItems{Name: "Item1"})
+	BasicCollection.AddItem(&PostmanItems{Name: "Item2"})
+	BasicCollection.AddItem(&PostmanItems{Name: "Item3"})
 
 	require.Equal(t,
-		[]*Items{
+		[]*PostmanItems{
 			{Name: "Item1"},
 			{Name: "Item2"},
 			{Name: "Item3"},
@@ -48,9 +49,9 @@ func Test_ShouldAddItemGroupIntoCollection(t *testing.T) {
 	BasicCollection.AddItemGroup("new-item-group")
 	BasicCollection.AddItemGroup("another-new-item-group")
 	require.Equal(t,
-		[]*Items{
-			{Name: "new-item-group", Items: make([]*Items, 0)},
-			{Name: "another-new-item-group", Items: make([]*Items, 0)},
+		[]*PostmanItems{
+			{Name: "new-item-group", Items: make([]*PostmanItems, 0)},
+			{Name: "another-new-item-group", Items: make([]*PostmanItems, 0)},
 		},
 		BasicCollection.Items,
 	)
@@ -60,7 +61,7 @@ func Test_ShouldParseCollection(t *testing.T) {
 	cases := []struct {
 		scenario           string
 		testFile           string
-		expectedCollection *Collection
+		expectedCollection *PostmanCollection
 		expectedError      error
 	}{
 		{
@@ -84,7 +85,7 @@ func Test_ShouldParseCollection(t *testing.T) {
 func Test_ShouldWriteCollection(t *testing.T) {
 	cases := []struct {
 		scenario       string
-		testCollection *Collection
+		testCollection *PostmanCollection
 		expectedFile   string
 		expectedError  error
 	}{
@@ -108,7 +109,7 @@ func Test_ShouldWriteCollection(t *testing.T) {
 }
 
 func Test_ShouldSimplePOSTItem(t *testing.T) {
-	c := CreateCollection("Test Collection", "My Test Collection")
+	c := CreateCollection("Test PostmanCollection", "My Test PostmanCollection")
 
 	file, err := os.Create("postman_collection.json")
 	require.NoError(t, err)
@@ -117,38 +118,38 @@ func Test_ShouldSimplePOSTItem(t *testing.T) {
 		_ = file.Close()
 	}()
 
-	pURL := URL{
+	pURL := PostmanURL{
 		Raw:      "https://test.com",
 		Protocol: "https",
 		Host:     []string{"test", "com"},
 	}
 
-	headers := []*Header{{
+	headers := []*PostmanHeader{{
 		Key:   "h1",
 		Value: "h1-value",
 	}}
 
-	pBody := Body{
+	pBody := PostmanRequestBody{
 		Mode:    "raw",
 		Raw:     "{\"a\":\"1234\",\"b\":123}",
-		Options: &BodyOptions{BodyOptionsRaw{Language: "json"}},
+		Options: &PostmanRequestBodyOptions{PostmanRequestBodyOptionsRaw{Language: "json"}},
 	}
 
-	pReq := Request{
-		Method: Post,
+	pReq := PostmanRequest{
+		Method: types.Post,
 		URL:    &pURL,
 		Header: headers,
 		Body:   &pBody,
 	}
 
-	cr := Request{
-		Method: Post,
+	cr := PostmanRequest{
+		Method: types.Post,
 		URL:    &pURL,
 		Header: pReq.Header,
 		Body:   pReq.Body,
 	}
 
-	item := CreateItem(Item{
+	item := CreatePostmanItem(PostmanItem{
 		Name:    "Test-POST",
 		Request: &cr,
 	})
@@ -163,7 +164,7 @@ func Test_ShouldSimplePOSTItem(t *testing.T) {
 }
 
 func Test_ShouldSimpleGETItem(t *testing.T) {
-	c := CreateCollection("Test Collection", "My Test Collection")
+	c := CreateCollection("Test PostmanCollection", "My Test PostmanCollection")
 
 	file, err := os.Create("postman_collection.json")
 	require.NoError(t, err)
@@ -172,33 +173,33 @@ func Test_ShouldSimpleGETItem(t *testing.T) {
 		_ = file.Close()
 	}()
 
-	pURL := URL{
+	pURL := PostmanURL{
 		Raw:      "https://test.com?a=3",
 		Protocol: "https",
 		Host:     []string{"test", "com"},
-		Query: []*QueryParam{
+		Query: []*PostmanQueryParam{
 			{Key: "param1", Value: "value1"},
 			{Key: "param2", Value: "value2"},
 		},
 	}
 
-	headers := []*Header{}
-	headers = append(headers, &Header{
+	headers := []*PostmanHeader{}
+	headers = append(headers, &PostmanHeader{
 		Key:   "h1",
 		Value: "h1-value",
 	})
-	headers = append(headers, &Header{
+	headers = append(headers, &PostmanHeader{
 		Key:   "h2",
 		Value: "h2-value",
 	})
 
-	pReq := Request{
-		Method: Get,
+	pReq := PostmanRequest{
+		Method: types.Get,
 		URL:    &pURL,
 		Header: headers,
 	}
 
-	item := CreateItem(Item{
+	item := CreatePostmanItem(PostmanItem{
 		Name:    "Test-GET",
 		Request: &pReq,
 	})
@@ -212,33 +213,33 @@ func Test_ShouldSimpleGETItem(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func buildV210Collection() *Collection {
-	return &Collection{
-		Info: Info{
+func buildV210Collection() *PostmanCollection {
+	return &PostmanCollection{
+		Info: PostmanInfo{
 			Name: "Go Collection",
-			Description: Description{
+			Description: PostmanCollectionDescription{
 				Content: "Awesome description",
 			},
 			Version: "v2.1.0",
 			Schema:  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		},
-		Items: []*Items{
+		Items: []*PostmanItems{
 			{
 				Name: "This is a folder",
-				Items: []*Items{
+				Items: []*PostmanItems{
 					{
 						Name: "An item inside a folder",
 					},
 				},
-				Variables: []*Variable{
+				Variables: []*PostmanVariable{
 					{
 						Name:  "api-key",
 						Value: "abcd1234",
 					},
 				},
-				Auth: &Auth{
+				Auth: &PostmanAuth{
 					Type: Bearer,
-					Bearer: []*AuthParam{
+					Bearer: []*PostmanAuthParam{
 						{
 							Key:   "token",
 							Value: "a-bearer-token",
@@ -249,31 +250,31 @@ func buildV210Collection() *Collection {
 			},
 			{
 				Name: "This is a request",
-				Request: &Request{
-					URL: &URL{
+				Request: &PostmanRequest{
+					URL: &PostmanURL{
 						Raw: "http://www.google.fr",
 					},
-					Method: Get,
+					Method: types.Get,
 				},
-				Responses: []*Response{
+				Responses: []*PostmanResponse{
 					{
 						Name: "This is a response",
-						OriginalRequest: &Request{
-							URL: &URL{
+						OriginalRequest: &PostmanRequest{
+							URL: &PostmanURL{
 								Raw: "http://www.google.fr",
 							},
-							Method: Get,
+							Method: types.Get,
 						},
 						Status: "OK",
 						Code:   200,
-						Cookies: []*Cookie{
+						Cookies: []*PostmanCookie{
 							{
 								Domain: "a-domain",
 								Path:   "a-path",
 							},
 						},
-						Headers: &HeaderList{
-							Headers: []*Header{
+						Headers: &PostmanHeaderList{
+							Headers: []*PostmanHeader{
 								{
 									Key:   "Content-Type",
 									Value: "application/json",
@@ -283,10 +284,10 @@ func buildV210Collection() *Collection {
 						Body: "the-body",
 					},
 				},
-				Events: []*Event{
+				Events: []*PostmanEvent{
 					{
 						Listen: PreRequest,
-						Script: &Script{
+						Script: &PostmanScript{
 							Type: "text/javascript",
 							Exec: []string{"console.log(\"foo\")"},
 						},
@@ -295,19 +296,19 @@ func buildV210Collection() *Collection {
 			},
 			{
 				Name: "JSON-RPC Request",
-				Request: &Request{
-					URL: &URL{
+				Request: &PostmanRequest{
+					URL: &PostmanURL{
 						Raw: "https://gurujsonrpc.appspot.com/guru",
-						Variables: []*Variable{
+						Variables: []*PostmanVariable{
 							{
 								Name:  "an-url-variable",
 								Value: "an-url-variable-value",
 							},
 						},
 					},
-					Auth: &Auth{
+					Auth: &PostmanAuth{
 						Type: Basic,
-						Basic: []*AuthParam{
+						Basic: []*PostmanAuthParam{
 							{
 								Key:   "password",
 								Value: "my-password",
@@ -315,37 +316,37 @@ func buildV210Collection() *Collection {
 							},
 						},
 					},
-					Method: Post,
-					Header: []*Header{
+					Method: types.Post,
+					Header: []*PostmanHeader{
 						{
 							Key:   "Content-Type",
 							Value: "application/json",
 						},
 					},
-					Body: &Body{
+					Body: &PostmanRequestBody{
 						Mode:    "raw",
 						Raw:     "{\"aKey\":\"a-value\"}",
-						Options: &BodyOptions{BodyOptionsRaw{Language: "json"}},
+						Options: &PostmanRequestBodyOptions{PostmanRequestBodyOptionsRaw{Language: "json"}},
 					},
 				},
 			},
 			{
 				Name:  "An empty folder",
-				Items: make([]*Items, 0),
+				Items: make([]*PostmanItems, 0),
 			},
 		},
-		Events: []*Event{
+		Events: []*PostmanEvent{
 			{
 				Listen: Test,
-				Script: &Script{
+				Script: &PostmanScript{
 					Type: "text/javascript",
 					Exec: []string{"console.log(\"bar\")"},
 				},
 			},
 		},
-		Auth: &Auth{
+		Auth: &PostmanAuth{
 			Type: "bearer",
-			Bearer: []*AuthParam{
+			Bearer: []*PostmanAuthParam{
 				{
 					Type:  "string",
 					Key:   "token",
@@ -353,7 +354,7 @@ func buildV210Collection() *Collection {
 				},
 			},
 		},
-		Variables: []*Variable{
+		Variables: []*PostmanVariable{
 			{
 				Name:  "a-global-collection-variable",
 				Value: "a-global-value",
