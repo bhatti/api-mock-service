@@ -48,11 +48,14 @@ func NewAPIHistoryController(
 //
 //	200: getExecHistoryResponse
 func (ehc *APIHistoryController) getExecHistory(c web.APIContext) error {
-	res := ehc.scenarioRepository.HistoryNames(c.QueryParam("group"))
-	if res == nil {
-		res = make([]string, 0)
+	name := c.QueryParam("name")
+	group := c.QueryParam("group")
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, page, pageSize)
+	if err != nil {
+		return err
 	}
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(http.StatusOK, scenarios)
 }
 
 // getExecHistoryNames handler

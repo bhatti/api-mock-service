@@ -59,6 +59,43 @@ func Test_ShouldGetExecutionHistoryNames(t *testing.T) {
 	require.True(t, len(names) > 0)
 }
 
+func Test_ShouldGetExecutionHistory(t *testing.T) {
+	config := types.BuildTestConfig()
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	webServer := web.NewStubWebServer()
+	ctrl := NewAPIHistoryController(config, mockScenarioRepository, webServer)
+	require.NoError(t, err)
+	u, err := url.Parse("https://localhost:8080")
+	require.NoError(t, err)
+	for i := 0; i < 120; i++ {
+		scenario := buildScenario(types.Post, "test1", fmt.Sprintf("/users/path/%d", i), i)
+		if i%2 == 0 {
+			scenario.Group = "exec-1"
+		} else {
+			scenario.Group = "exec-2"
+		}
+		scenario.BaseURL = u.String()
+		err = mockScenarioRepository.SaveHistory(scenario, u.String(), time.Now(), time.Now())
+		require.NoError(t, err)
+	}
+
+	for i := 0; i < 4; i++ {
+		reader := io.NopCloser(bytes.NewReader([]byte("test data")))
+		u, err := url.Parse(fmt.Sprintf("http://localhost:8080?a=1&b=abc&page=%d&group=%s", i, "exec-1"))
+		require.NoError(t, err)
+		ctx := web.NewStubContext(&http.Request{Body: reader, URL: u})
+		ctx.Request().Header = http.Header{"Auth": []string{"0123456789"}}
+		// WHEN getting mock scenario groups
+		err = ctrl.getExecHistory(ctx)
+		// THEN it should not fail
+		require.NoError(t, err)
+		res := ctx.Result.([]*types.APIScenario)
+		require.Equal(t, 50, len(res), fmt.Sprintf("i=%d", i))
+	}
+}
+
 func Test_ShouldGetExecutionHistoryHar(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
