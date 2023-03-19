@@ -68,6 +68,7 @@ API mock service for REST/HTTP based services with following features:
 - Support contract based testing from both consumer and producer sides.
 - Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input to next test scenarios.
 - Import test scenarios from HAR files (https://w3c.github.io/web-performance/specs/HAR/Overview.html) or export scenarios to HAR formats.
+- Import test scenarios from Postman collection or export scenarios to Postman formats.
 - Persist execution of test scenarios that can be replayed for consumer and producer based contract testing.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
@@ -1067,8 +1068,20 @@ curl -v http://localhost:8080/_history/har
 curl -v -X POST http://localhost:8080/_history/har --data-binary @myfile.har
 ```
 
+## Postman Collection Formats (https://schema.postman.com/collection/json/v2.1.0/draft-07/docs/index.html)
+
+### Download test scenarios as Postman Collection format
+```bash
+curl -v http://localhost:8080/_history/postman
+```
+
+### Upload test scenarios as Postman Collection format
+```bash
+curl -X 'POST' 'http://localhost:8000/_history/postman' -H 'Content-Type: */*' --data-binary @fixtures/postman.json
+```
+
 ## Swagger-UI
-The api-mock-service includes an embdded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL in your browser. And upload OpenAPI specification using:
+The api-mock-service includes an embedded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL in your browser. And upload OpenAPI specification using:
 
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi
