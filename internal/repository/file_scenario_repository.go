@@ -239,7 +239,7 @@ func (sr *FileAPIScenarioRepository) LookupAllByGroup(
 // LookupAll finds matching scenarios
 func (sr *FileAPIScenarioRepository) LookupAll(
 	other *types.APIKeyData,
-) (res []*types.APIKeyData, paramMismatchErrors int, keyDataLen int) {
+) (res []*types.APIKeyData, paramMismatchErrors int, keyDataLen int, lastErr error) {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
@@ -259,25 +259,35 @@ func (sr *FileAPIScenarioRepository) LookupAll(
 					"MismatchParams": paramMismatchErrors,
 					"Error":          err,
 				}).Infof("mock scenario didn't match for lookup...")
+				lastErr = err
+			} else if strings.Contains(err.Error(), "regex") {
+				log.WithFields(log.Fields{
+					"Other":          other.String(),
+					"Actual":         keyData.String(),
+					"MismatchParams": paramMismatchErrors,
+					"Error":          err,
+				}).Infof("mock scenario regex didn't match for lookup...")
+				lastErr = err
 			}
 		}
 	}
 	sortByUsageTime(res)
-	return filterScenariosByPredicate(res, other), paramMismatchErrors, len(keyDataMap)
+	return filterScenariosByPredicate(res, other), paramMismatchErrors, len(keyDataMap), lastErr
 }
 
 // Lookup finds top matching scenario
 func (sr *FileAPIScenarioRepository) Lookup(
 	other *types.APIKeyData,
 	inData map[string]any) (scenario *types.APIScenario, err error) {
-	matched, paramMismatchErrors, keyDataLen := sr.LookupAll(other)
+	matched, paramMismatchErrors, keyDataLen, lastErr := sr.LookupAll(other)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
-			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s", other.String()))
+			return nil, types.NewValidationError(fmt.Sprintf("could not match input parameters for API %s\n(%s)",
+				other.String(), lastErr))
 		}
 		fileName := sr.buildFileName(other.Method, other.Name, other.Path)
-		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s'], partial matched: %d",
-			other.String(), fileName, keyDataLen))
+		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s'], partial matched: %d (%s)",
+			other.String(), fileName, keyDataLen, lastErr))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
 	_ = atomic.AddUint64(&matched[0].RequestCount, 1)

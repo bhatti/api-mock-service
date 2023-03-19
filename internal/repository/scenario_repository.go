@@ -49,7 +49,7 @@ type APIScenarioRepository interface {
 		path string) error
 
 	// LookupAll finds matching scenarios
-	LookupAll(key *types.APIKeyData) ([]*types.APIKeyData, int, int)
+	LookupAll(key *types.APIKeyData) ([]*types.APIKeyData, int, int, error)
 
 	// LookupAllByGroup finds matching scenarios by group
 	LookupAllByGroup(group string) []*types.APIKeyData

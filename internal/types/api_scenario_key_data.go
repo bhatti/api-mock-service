@@ -103,8 +103,13 @@ func (kd *APIKeyData) Equals(other *APIKeyData) error {
 		}
 		err = fuzz.ValidateRegexMap(matchContents, regex)
 		if err != nil {
-			return NewValidationError(fmt.Sprintf("contents '%s' didn't match '%s' due to %s",
-				kd.AssertContentsPattern, other.AssertContentsPattern, err))
+			log.WithFields(log.Fields{
+				"Group":                      kd.Group,
+				"AssertContentsPattern":      kd.AssertContentsPattern,
+				"OtherAssertContentsPattern": other.AssertContentsPattern,
+				"Error":                      err,
+			}).Debugf("didn't match")
+			return NewValidationError(fmt.Sprintf("contents didn't match due to %s", err))
 		}
 	}
 
