@@ -1,0 +1,141 @@
+{
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "a-bearer-token",
+                "type": "string"
+            }
+        ]
+    },
+    "info": {
+        "name": "Go Collection",
+        "description": "Awesome description",
+        "version": "v2.1.0",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "This is a folder",
+            "variable": [
+                {
+                    "name": "api-key",
+                    "value": "abcd1234"
+                }
+            ],
+            "item": [
+                {
+                    "name": "An item inside a folder"
+                }
+            ],
+            "auth": {
+                "type": "bearer",
+                "bearer": [
+                    {
+                        "key": "token",
+                        "value": "a-bearer-token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "This is a request",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "console.log(\"foo\")"
+                        ]
+                    }
+                }
+            ],
+            "request": "http://www.google.fr",
+            "response": [
+                {
+                    "originalRequest": "http://www.google.fr",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "cookie": [
+                        {
+                            "domain": "a-domain",
+                            "path": "a-path"
+                        }
+                    ],
+                    "body": "the-body",
+                    "status": "OK",
+                    "code": 200,
+                    "name": "This is a response"
+                }
+            ]
+        },
+        {
+            "name": "JSON-RPC Request",
+            "request": {
+                "url": {
+                    "raw": "https://gurujsonrpc.appspot.com/guru",
+                    "variable": [
+                        {
+                            "name": "an-url-variable",
+                            "value": "an-url-variable-value"
+                        }
+                    ]
+                },
+                "auth": {
+                    "type": "basic",
+                    "basic": [
+                        {
+                            "key": "password",
+                            "value": "my-password",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"aKey\":\"a-value\"}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "An empty folder",
+            "item": []
+        }
+    ],
+    "event": [
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "console.log(\"bar\")"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "name": "a-global-collection-variable",
+            "value": "a-global-value"
+        }
+    ]
+}

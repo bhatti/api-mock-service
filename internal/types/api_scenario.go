@@ -791,7 +791,7 @@ func (api *APIScenario) Validate() error {
 		return fmt.Errorf("scenario name is too long %d", len(api.Name))
 	}
 	api.Name = strings.TrimSpace(api.Name)
-	if matched, err := regexp.Match(`^[\w\d-_\. ]+$`, []byte(api.Name)); err == nil && !matched {
+	if matched, err := regexp.Match(`^[\w\d-_\. ']+$`, []byte(api.Name)); err == nil && !matched {
 		return fmt.Errorf("scenario name is invalid with special characters %s", api.Name)
 	}
 	if len(api.Response.Contents) > 1024*1024*1024 {

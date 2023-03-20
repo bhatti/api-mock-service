@@ -5,6 +5,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/stretchr/testify/require"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 )
@@ -36,6 +37,7 @@ func Test_ShouldParseRegexAndReplaceBackVariables(t *testing.T) {
 	require.Equal(t, "{{.BaseUri_PreRegion_Pool}}{{.UserRegion}}{{.BaseUri_PostRegion}}", s)
 }
 
+// See https://developer.twitter.com/en/docs/tutorials/postman-getting-started
 func Test_ShouldReplacePostmanEvents(t *testing.T) {
 	execs := []string{
 		"pm.variables.set('ApiTargetNamespace', 'IdentityService.')",
@@ -43,7 +45,10 @@ func Test_ShouldReplacePostmanEvents(t *testing.T) {
 		"pm.request.headers.add({key: 'Content-Type', value: 'application/x-amz-json-1.1' })",
 		"pm.request.headers.add({key: 'X-Target1', value: pm.variables.get('ApiTargetNamespace')+pm.info.requestName })",
 		"pm.request.headers.add({key: 'X-Target2', value: pm.info.requestName + pm.variables.get('ApiTargetNamespace')+pm.info.requestName })",
+		"const [userId] = pm.environment.get('access_token').split('-');",
+		"pm.request.headers.add({key: 'X-Target3', value: pm.info.requestName + pm.environment.get('access_token')+pm.info.requestName })",
 	}
+	os.Setenv("access_token", "-abc123")
 	config := types.BuildTestConfig()
 	headers := make(map[string][]string)
 	c := buildConverter(config, time.Now(), time.Now())
@@ -55,4 +60,5 @@ func Test_ShouldReplacePostmanEvents(t *testing.T) {
 	require.Equal(t, "application/x-amz-json-1.1", headers[types.ContentTypeHeader][0])
 	require.Equal(t, "IdentityService.test-name", headers["X-Target1"][0])
 	require.Equal(t, "test-nameIdentityService.test-name", headers["X-Target2"][0])
+	require.Equal(t, "test-name-abc123test-name", headers["X-Target3"][0])
 }

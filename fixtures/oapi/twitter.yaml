@@ -2,6 +2,8 @@ openapi: 3.0.0
 servers:
   - description: Twitter API
     url: https://api.twitter.com
+  - description: Mock API
+    url: MOCK_SERVER_BASE_URL
 info:
   contact:
     name: Twitter Developers

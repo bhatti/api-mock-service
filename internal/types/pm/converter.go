@@ -6,6 +6,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/types"
 	log "github.com/sirupsen/logrus"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -251,13 +252,22 @@ func (c *PostmanConverter) addEvents(events []*PostmanEvent) {
 				continue
 			}
 			if strings.Contains(exec, "pm.variables.set") ||
+				strings.Contains(exec, "pm.variables.get") ||
+				strings.Contains(exec, "pm.environment.get") ||
 				strings.Contains(exec, "pm.request.headers.add") {
 				c.execs = append(c.execs, exec)
+			} else if strings.HasPrefix(exec, "/*") ||
+				strings.HasPrefix(exec, "*") ||
+				strings.HasPrefix(exec, "//") {
+				// ignore
 			} else if strings.Contains(exec, "pm.collectionVariables.unset") ||
 				strings.Contains(exec, "pm.response.json") ||
 				strings.Contains(exec, "pm.response.code") ||
 				strings.Contains(exec, "console.log") ||
+				strings.Contains(exec, "if (") ||
 				strings.Contains(exec, "}") ||
+				strings.Contains(exec, "pm.request.url") ||
+				strings.Contains(exec, "return") ||
 				strings.Contains(exec, "pm.collectionVariables.set") {
 				// ignore
 			} else {
@@ -307,6 +317,21 @@ func (c *PostmanConverter) handleEvent(name string, exec string, headers map[str
 				} else {
 					re = regexp.MustCompile(`[+ ]*pm.variables.get\((.+)\)`)
 					parts[1] = re.ReplaceAllString(parts[1], c.variables[varName])
+				}
+				re = regexp.MustCompile(`[ +]*pm.info.requestName`)
+				parts[1] = re.ReplaceAllString(parts[1], name)
+				headers[strings.TrimSpace(parts[0])] = []string{strings.TrimSpace(parts[1])}
+			} else if strings.Contains(parts[1], "pm.environment.get") {
+				re = regexp.MustCompile(`.*pm.environment.get\((.+)\).*`)
+				varName := strings.TrimSpace(strings.ReplaceAll(re.ReplaceAllString(parts[1], `$1`), "'", ""))
+				if os.Getenv(varName) == "" {
+					log.WithFields(log.Fields{
+						"Exec":        exec,
+						"EnvVariable": varName,
+					}).Warnf("unknown env variable %s in postman event", varName)
+				} else {
+					re = regexp.MustCompile(`[+ ]*pm.environment.get\((.+)\)`)
+					parts[1] = re.ReplaceAllString(parts[1], os.Getenv(varName))
 				}
 				re = regexp.MustCompile(`[ +]*pm.info.requestName`)
 				parts[1] = re.ReplaceAllString(parts[1], name)

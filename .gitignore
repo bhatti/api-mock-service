@@ -17,8 +17,6 @@ mock_history
 vendor/
 out
 .idea
-*json
-*yaml
 swagger-ui/TODO
 *py
 TODO
