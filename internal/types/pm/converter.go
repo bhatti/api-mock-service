@@ -263,10 +263,12 @@ func (c *PostmanConverter) addEvents(events []*PostmanEvent) {
 			} else if strings.Contains(exec, "pm.collectionVariables.unset") ||
 				strings.Contains(exec, "pm.response.json") ||
 				strings.Contains(exec, "pm.response.code") ||
-				strings.Contains(exec, "console.log") ||
+				strings.Contains(exec, "console.") ||
 				strings.Contains(exec, "if (") ||
 				strings.Contains(exec, "}") ||
 				strings.Contains(exec, "pm.request.url") ||
+				strings.Contains(exec, "const ") ||
+				strings.Contains(exec, "let ") ||
 				strings.Contains(exec, "return") ||
 				strings.Contains(exec, "pm.collectionVariables.set") {
 				// ignore
@@ -274,7 +276,7 @@ func (c *PostmanConverter) addEvents(events []*PostmanEvent) {
 				log.WithFields(log.Fields{
 					"Exec":      exec,
 					"Variables": c.variables,
-				}).Warnf("unknown postman event could not be imported")
+				}).Debugf("unknown postman event could not be imported")
 			}
 		}
 	}

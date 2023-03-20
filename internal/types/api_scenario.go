@@ -790,10 +790,7 @@ func (api *APIScenario) Validate() error {
 	if len(api.Name) > 200 {
 		return fmt.Errorf("scenario name is too long %d", len(api.Name))
 	}
-	api.Name = strings.TrimSpace(api.Name)
-	if matched, err := regexp.Match(`^[\w\d-_\. ']+$`, []byte(api.Name)); err == nil && !matched {
-		return fmt.Errorf("scenario name is invalid with special characters %s", api.Name)
-	}
+	api.Name = sanitizeSpecialChars(api.Name, "")
 	if len(api.Response.Contents) > 1024*1024*1024 {
 		return fmt.Errorf("contents is too long %d", len(api.Response.Contents))
 	}
@@ -894,6 +891,12 @@ func toFlatMap(headers map[string][]string) map[string]string {
 		flatHeaders[k] = v[0]
 	}
 	return flatHeaders
+}
+
+// sanitizeSpecialChars helper method
+func sanitizeSpecialChars(name string, rep string) string {
+	re := regexp.MustCompile(`[^\w\d-_\. ]`)
+	return strings.TrimSpace(re.ReplaceAllString(name, rep))
 }
 
 // SanitizeNonAlphabet helper method

@@ -205,10 +205,7 @@ func (kd *APIKeyData) Validate() error {
 	if len(kd.Name) > 200 {
 		return fmt.Errorf("key scenario name is too long %d", len(kd.Name))
 	}
-	kd.Name = strings.TrimSpace(kd.Name)
-	if matched, err := regexp.Match(`^[\w\d-_\. ']+$`, []byte(kd.Name)); err == nil && !matched {
-		return fmt.Errorf("key scenario name is invalid with special characters %s", kd.Name)
-	}
+	kd.Name = sanitizeSpecialChars(kd.Name, "")
 	return nil
 }
 

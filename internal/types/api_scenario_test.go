@@ -94,6 +94,11 @@ func Test_ShouldGetURL(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func Test_ShouldSanitizeSpecialChar(t *testing.T) {
+	require.Equal(t, "Delete Rules by rule ID", sanitizeSpecialChars("Delete Rules (by rule ID)", ""))
+	require.Equal(t, "Users followed Lists", sanitizeSpecialChars("User's followed Lists", ""))
+}
+
 func Test_ShouldGetStartEndTime(t *testing.T) {
 	// GIVEN a valid mock scenario
 	scenario := buildScenario()
@@ -139,7 +144,7 @@ func Test_ShouldNotValidateEmptyMockScenario(t *testing.T) {
 	require.Error(t, scenario.Validate())
 	scenario.Name = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Faucibus ornare suspendisse sed nisi lacus sed viverra tellus in. Lacus vel facilisis volutpat est velit egestas dui. Neque egestas congue quisque egestas diam in arcu. Risus pretium quam vulputate dignissim suspendisse. Iaculis urna id volutpat lacus laoreet. Viverra mauris in aliquam sem fringilla. Risus ultricies tristique nulla aliquet enim tortor at auctor urna. Feugiat nibh sed pulvinar proin gravida hendrerit lectus. Tempus imperdiet nulla malesuada pellentesque elit eget gravida cum sociis. Integer quis auctor elit sed vulputate mi sit amet mauris. Proin libero nunc consequat interdum varius sit amet mattis vulputate. Arcu ac tortor dignissim convallis aenean."
 	require.Error(t, scenario.Validate())
-	scenario.Name = "test1****"
+	scenario.Name = ""
 	require.Error(t, scenario.Validate())
 	scenario.Name = "test1"
 	scenario.Response.Contents = "test"
