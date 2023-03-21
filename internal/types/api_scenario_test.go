@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/stretchr/testify/require"
+	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 
 func Test_ShouldGetRequestAuthHeader(t *testing.T) {
 	// GIVEN a valid mock scenario
-	scenario := buildScenario()
+	scenario := BuildTestScenario(Get, "name", "/path", 1)
 	// WHEN fetching content type
 	require.Equal(t, "", scenario.Request.AuthHeader())
 	scenario.Request.Headers["authorization"] = "abc"
@@ -232,6 +233,88 @@ func Test_ToMethodShouldValidateMethod(t *testing.T) {
 	require.Equal(t, Options, m)
 	_, err = ToMethod("error")
 	require.Error(t, err)
+}
+
+func Test_ShouldBuildScenarioFromHTTPWithNilURL(t *testing.T) {
+	config := BuildTestConfig()
+	_, err := BuildScenarioFromHTTP(
+		config,
+		"prefix",
+		nil,
+		"POST",
+		"group",
+		"1.1",
+		"1.1",
+		[]byte("body"),
+		[]byte("body"),
+		map[string][]string{"q": {"val"}},
+		map[string][]string{"p": {"val"}},
+		map[string][]string{"h": {"val"}},
+		"application/json",
+		map[string][]string{"h": {"val"}},
+		"application/json",
+		200,
+		time.Now(),
+		time.Now())
+	require.Error(t, err)
+}
+
+func Test_ShouldBuildScenarioFromHTTP(t *testing.T) {
+	u, err := url.Parse("http://localhost:8000")
+	require.NoError(t, err)
+	config := BuildTestConfig()
+	scenario, err := BuildScenarioFromHTTP(
+		config,
+		"prefix",
+		u,
+		"POST",
+		"group",
+		"1.1",
+		"1.1",
+		[]byte("body"),
+		[]byte("body"),
+		map[string][]string{"q": {"val"}},
+		map[string][]string{"p": {"val"}},
+		map[string][]string{"h": {"val"}},
+		"application/json",
+		map[string][]string{"h": {"val"}},
+		"application/json",
+		200,
+		time.Now(),
+		time.Now())
+	require.NoError(t, err)
+	err = scenario.Request.Assert(
+		map[string]string{"q": "val"},
+		map[string]string{"p": "val"},
+		map[string][]string{"h": {"val"}},
+		[]byte("body"),
+		make(map[string]any))
+	require.Error(t, err)
+	err = scenario.Request.Assert(
+		map[string]string{"q": "val"},
+		map[string]string{"p": "val"},
+		map[string][]string{"Content-Type": {"application/json"}},
+		[]byte("body"),
+		make(map[string]any))
+	require.NoError(t, err)
+	err = scenario.Response.Assert(
+		map[string][]string{"h": {"val"}},
+		[]byte("body"),
+		map[string]any{"elapsed": 1, "status": 200})
+	require.Error(t, err)
+	err = scenario.Response.Assert(
+		map[string][]string{"Content-Type": {"application/json"}},
+		[]byte("body"),
+		map[string]any{"elapsed": 1, "status": 200})
+	require.NoError(t, err)
+
+	templateParams, queryParams, postParams, reqHeaders := scenario.Request.BuildTemplateParams(
+		&http.Request{URL: u}, map[string]string{"path": "val"},
+		map[string][]string{"h": {"val"}}, map[string]any{"x": 1})
+	require.Equal(t, 6, len(templateParams))
+	require.Equal(t, 2, len(queryParams))
+	require.Equal(t, 1, len(postParams))
+	require.Equal(t, 2, len(reqHeaders))
 }
 
 func Test_ShouldNormalizeGroup(t *testing.T) {

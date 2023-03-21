@@ -95,6 +95,15 @@ type APIRequest struct {
 	Variables map[string]string `yaml:"variables" json:"variables"`
 }
 
+func addAssertion(assertions []string, assert string) []string {
+	for _, next := range assertions {
+		if assert == next {
+			return assertions
+		}
+	}
+	return append(assertions, assert)
+}
+
 // ContentType find content-type
 func (r APIRequest) ContentType(defContentType string) string {
 	for k, v := range r.Headers {
@@ -527,13 +536,13 @@ func BuildScenarioFromHTTP(
 	}
 	reqHeaderAssertions := make(map[string]string)
 	if reqContentType != "" {
-		reqAssertions = append(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		reqAssertions = addAssertion(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
 			reqContentType))
 		reqHeaderAssertions[ContentTypeHeader] = reqContentType
 	}
 	respHeaderAssertions := make(map[string]string)
 	if resContentType != "" {
-		resAssertions = append(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		resAssertions = addAssertion(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
 			resContentType))
 		respHeaderAssertions[ContentTypeHeader] = resContentType
 	}

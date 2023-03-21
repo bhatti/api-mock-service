@@ -48,7 +48,7 @@ func Test_ShouldReplacePostmanEvents(t *testing.T) {
 		"const [userId] = pm.environment.get('access_token').split('-');",
 		"pm.request.headers.add({key: 'X-Target3', value: pm.info.requestName + pm.environment.get('access_token')+pm.info.requestName })",
 	}
-	os.Setenv("access_token", "-abc123")
+	_ = os.Setenv("access_token", "-abc123")
 	config := types.BuildTestConfig()
 	headers := make(map[string][]string)
 	c := buildConverter(config, time.Now(), time.Now())
@@ -61,4 +61,13 @@ func Test_ShouldReplacePostmanEvents(t *testing.T) {
 	require.Equal(t, "IdentityService.test-name", headers["X-Target1"][0])
 	require.Equal(t, "test-nameIdentityService.test-name", headers["X-Target2"][0])
 	require.Equal(t, "test-name-abc123test-name", headers["X-Target3"][0])
+}
+
+func Test_ShouldPreventPostman(t *testing.T) {
+	config := types.BuildTestConfig()
+	file, err := os.Open("../../../fixtures/twitter_postman.json")
+	require.NoError(t, err)
+	c, err := ParseCollection(file)
+	scenarios := ConvertPostmanToScenarios(config, c, time.Now(), time.Now())
+	require.Equal(t, 137, len(scenarios))
 }

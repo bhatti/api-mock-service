@@ -24,3 +24,10 @@ func Test_ShouldAddContractResponse(t *testing.T) {
 	require.Equal(t, 2, res.Succeeded)
 	require.Equal(t, 1, res.Failed)
 }
+
+func Test_ShouldAddContractRequest(t *testing.T) {
+	req := NewProducerContractRequest("url", 5)
+	req.Headers["h"] = []string{"val"}
+	req.Params["p"] = "val"
+	require.Equal(t, 2, len(req.Overrides()))
+}

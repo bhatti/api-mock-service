@@ -197,6 +197,14 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 	require.NoError(t, err)
 	blob := ctx.Result.([]byte)
 	require.True(t, len(blob) > 0)
+
+	ctx.Params["group"] = "unknown"
+	// WHEN fetching open-api specs
+	err = ctrl.getOpenAPISpecsByGroup(ctx)
+	// THEN it should return saved scenario
+	require.NoError(t, err)
+	blob = ctx.Result.([]byte)
+	require.True(t, len(blob) > 0)
 }
 
 func Test_ShouldGetOpenAPIByScenario(t *testing.T) {
