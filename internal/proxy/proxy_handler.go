@@ -66,6 +66,7 @@ func (h *Handler) Start() error {
 	proxy.OnRequest(proxyCondition()).DoFunc(h.handleRequest)
 	proxy.OnResponse(proxyCondition()).DoFunc(h.handleResponse)
 	proxy.Verbose = false
+	//http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	return http.ListenAndServe(fmt.Sprintf(":%d", h.config.ProxyPort), proxy)
 }
 
@@ -267,7 +268,6 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		return resp, err
 	}
 	resp.Body = utils.NopCloser(bytes.NewReader(resBytes))
-	resp.Header[types.ContentTypeHeader] = []string{resContentType}
 	resp.Header["Access-Control-Allow-Origin"] = []string{h.config.CORS}
 	resp.Header["Access-Control-Allow-Credentials"] = []string{"true"}
 	resp.Header["Access-Control-Allow-Methods"] = []string{"GET, POST, DELETE, PUT, PATCH, OPTIONS, HEAD"}
@@ -280,6 +280,13 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		agent = agent + " (" + resp.Header.Get("Via") + ")"
 	}
 	resp.Header["Via"] = []string{agent}
+	if resContentType != "" {
+		resp.Header[types.ContentTypeHeader] = []string{resContentType}
+	} else {
+		resp.Header[types.ContentTypeHeader] = []string{"application/json"}
+	}
+	resp.ContentLength = int64(len(resBytes))
+	resp.Header["Content-Length"] = []string{fmt.Sprintf("%d", len(resBytes))}
 	//resp.Header["Vary"] = []string{"Origin, Accept-Encoding""}
 	//resp.Header["Access-Control-Allow-Headers"] = []string{"Content-Type, api_key, Authorization"}
 	//resp.Header["Content-Security-Policy"] = []string{"default-src 'self', form-action 'self',script-src 'self'"}

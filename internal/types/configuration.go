@@ -130,11 +130,13 @@ func NewConfiguration(
 
 	config.Version = version
 	log.WithFields(log.Fields{
-		"Component":  "Mock-API-Service",
-		"Port":       config.HTTPPort,
-		"DataDir":    config.DataDir,
-		"Version":    version,
-		"UsedConfig": viper.ConfigFileUsed(),
+		"Component":             "Mock-API-Service",
+		"Port":                  config.HTTPPort,
+		"DataDir":               config.DataDir,
+		"Version":               version,
+		"ResignAllRequests":     config.AWS.ResignAllRequests,
+		"ResignOnlyExpiredDate": config.AWS.ResignOnlyExpiredDate,
+		"UsedConfig":            viper.ConfigFileUsed(),
 	}).Infof("loaded config file...")
 	return config, nil
 }

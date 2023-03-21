@@ -1,0 +1,32 @@
+var createCORSRequest = function(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+    // Most browsers.
+    xhr.open(method, url, true);
+  } else if (typeof XDomainRequest != "undefined") {
+    // IE8 & IE9
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+  } else {
+    // CORS not supported.
+    xhr = null;
+  }
+  return xhr;
+};
+
+var url = 'http://localhost:8000';
+var method = 'POST';
+var xhr = createCORSRequest(method, url);
+
+xhr.onload = function() {
+  // Success code goes here.
+};
+
+xhr.onerror = function(e) {
+  console.log(e);
+};
+
+
+xhr.setRequestHeader('X-Amz-Target', 'AWSCognitoIdentityProviderService.ListUserPools');
+xhr.setRequestHeader('Content-Type', 'application/x-amz-json-1.1');
+xhr.send();

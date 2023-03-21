@@ -128,5 +128,6 @@ func saveMockResponse(
 	if err = scenarioRepository.SaveHistory(scenario, u.String(), started, ended); err != nil {
 		return "", err
 	}
+	resContentType = scenario.Response.ContentType("")
 	return
 }
