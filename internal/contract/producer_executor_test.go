@@ -168,7 +168,8 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	require.NoError(t, err)
 	// AND a bad assertion
 	scenario.Request.Headers[types.AuthorizationHeader] = "AWS4-HMAC-SHA256"
-	scenario.Response.Assertions = types.AddAssertion(scenario.Response.Assertions, "VariableContains headers.Content-Type application/xjson")
+	scenario.Response.Assertions = types.AddAssertion(
+		scenario.Response.Assertions, "VariableContains headers.Content-Type application/xjson")
 	err = repo.Save(scenario)
 	require.NoError(t, err)
 
