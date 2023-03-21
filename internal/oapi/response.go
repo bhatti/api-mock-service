@@ -53,7 +53,7 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 	}
 	respHeaderAssertions := make(map[string]string)
 	if res.ContentType != "" {
-		assertions = append(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`, res.ContentType))
+		assertions = types.AddAssertion(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`, res.ContentType))
 		respHeaderAssertions[types.ContentTypeHeader] = res.ContentType
 	}
 	return types.APIResponse{

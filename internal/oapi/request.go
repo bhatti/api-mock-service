@@ -40,7 +40,7 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 
 	for _, header := range req.Headers {
 		if val := checkRequestHeader(header.Name, header.Pattern); val != "" {
-			assertions = append(assertions, val)
+			assertions = types.AddAssertion(assertions, val)
 		}
 	}
 

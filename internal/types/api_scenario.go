@@ -95,7 +95,8 @@ type APIRequest struct {
 	Variables map[string]string `yaml:"variables" json:"variables"`
 }
 
-func addAssertion(assertions []string, assert string) []string {
+// AddAssertion helper method
+func AddAssertion(assertions []string, assert string) []string {
 	for _, next := range assertions {
 		if assert == next {
 			return assertions
@@ -536,13 +537,13 @@ func BuildScenarioFromHTTP(
 	}
 	reqHeaderAssertions := make(map[string]string)
 	if reqContentType != "" {
-		reqAssertions = addAssertion(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		reqAssertions = AddAssertion(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
 			reqContentType))
 		reqHeaderAssertions[ContentTypeHeader] = reqContentType
 	}
 	respHeaderAssertions := make(map[string]string)
 	if resContentType != "" {
-		resAssertions = addAssertion(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		resAssertions = AddAssertion(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
 			resContentType))
 		respHeaderAssertions[ContentTypeHeader] = resContentType
 	}

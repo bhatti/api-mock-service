@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/url"
@@ -275,9 +276,9 @@ func Test_ShouldBuildScenarioFromHTTP(t *testing.T) {
 		[]byte("body"),
 		map[string][]string{"q": {"val"}},
 		map[string][]string{"p": {"val"}},
-		map[string][]string{"h": {"val"}},
+		map[string][]string{"Content-Type": {"application/json"}},
 		"application/json",
-		map[string][]string{"h": {"val"}},
+		map[string][]string{"Content-Type": {"application/json"}},
 		"application/json",
 		200,
 		time.Now(),
@@ -308,10 +309,11 @@ func Test_ShouldBuildScenarioFromHTTP(t *testing.T) {
 		map[string]any{"elapsed": 1, "status": 200})
 	require.NoError(t, err)
 
+	fmt.Printf("hhh %v\n", scenario.Request.Assertions)
 	templateParams, queryParams, postParams, reqHeaders := scenario.Request.BuildTemplateParams(
 		&http.Request{URL: u}, map[string]string{"path": "val"},
 		map[string][]string{"h": {"val"}}, map[string]any{"x": 1})
-	require.Equal(t, 6, len(templateParams))
+	require.Equal(t, 5, len(templateParams))
 	require.Equal(t, 2, len(queryParams))
 	require.Equal(t, 1, len(postParams))
 	require.Equal(t, 2, len(reqHeaders))
