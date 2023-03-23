@@ -260,6 +260,41 @@ func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 	require.NotNil(t, res)
 }
 
+func Test_ShouldHandleProxyCondition(t *testing.T) {
+	config := types.BuildTestConfig()
+	// GIVEN a mock scenario repository
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	proxyCond := handler.proxyCondition()
+	u, err := url.Parse("https://localhost:8080")
+	require.NoError(t, err)
+	require.True(t, proxyCond(&http.Request{URL: u}, nil))
+	u, err = url.Parse("https://localhost:8080/index.html")
+	require.NoError(t, err)
+	require.False(t, proxyCond(&http.Request{URL: u}, nil))
+	u, err = url.Parse("https://localhost:8080/index.txt")
+	require.NoError(t, err)
+	require.False(t, proxyCond(&http.Request{URL: u}, nil))
+	config.ProxyURLFilter = "(abc|123)"
+	u, err = url.Parse("https://localhost:8080")
+	require.NoError(t, err)
+	require.False(t, proxyCond(&http.Request{URL: u}, nil))
+	u, err = url.Parse("https://localhost:8080/abcd")
+	require.NoError(t, err)
+	require.True(t, proxyCond(&http.Request{URL: u}, nil))
+	u, err = url.Parse("https://localhost:8080/1234")
+	require.NoError(t, err)
+	require.True(t, proxyCond(&http.Request{URL: u}, nil))
+	u, err = url.Parse("https://localhost:8080/234")
+	require.NoError(t, err)
+	require.False(t, proxyCond(&http.Request{URL: u}, nil))
+	_ = saveProxyCert()
+}
+
 func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository

@@ -1134,7 +1134,7 @@ For example, you may capture a test scenario for a remote API using http proxy s
 ```bash
 export http_proxy="http://localhost:8081"
 export https_proxy="http://localhost:8081"
-curl -k -X POST https://jsonplaceholder.typicode.com/todos -d '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
+curl --cacert ca_cert.pem -X POST https://jsonplaceholder.typicode.com/todos -d '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 ```
 
 This will capture a API scenario such as:

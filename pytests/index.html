@@ -1,100 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-<link rel="stylesheet" href="/style.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/themes/prism-tomorrow.min.css" />
-<title>Test REST API</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/themes/prism-tomorrow.min.css"/>
+    <title>Test REST API</title>
 </head>
 <body class="px-2">
 <header class="container mx-auto max-w-4xl flex flex-col md:flex-row justify-between py-one mb-three">
-<h1>
-<a href="/" class="font-bold no-underline">Test REST APIs</a>
-</h1>
+    <h1>
+        <a href="/" class="font-bold no-underline">Test REST APIs</a>
+    </h1>
 
-<section class="container mx-auto max-w-4xl mb-four">
-<h2 class="text-2xl mb-one">Try it</h2>
-<p>Run this code here, in a console or from any site:</p>
-<select id="resource">
-    <option>posts</a>
-    <option>comments</a>
-    <option>albums</a>
-    <option>photos</a>
-    <option>todos</a>
-    <option>users</a>
-    <option>posts/1</a>
-    <option>comments/1</a>
-    <option>albums/1</a>
-    <option>photos/1</a>
-    <option>todos/1</a>
-    <option>users/1</a>
-</select>
-<button id="fetch-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Query Data</button>
-<pre><code id="result" class="language-javascript">{}</code></pre>
-<button id="update-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Update Changes</button>
-<p id="run-message" class="invisible">
-Congrats you've made successful call to REST APIs! 😃 🎉
-</p>
-</section>
-<script>
-  const result = document.getElementById('result')
-  let jsonResp = {}
-  const fetchButton = document.getElementById('fetch-button')
-  fetchButton.onclick = function () {
-    const root = location.protocol + '//jsonplaceholder.typicode.com/';
-    const resource = document.getElementById('resource').value;
-    const runMessage = document.getElementById('run-message');
+    <section class="container mx-auto max-w-4xl mb-four">
+        <h2 class="text-2xl mb-one">Try it</h2>
+        <p>Run this code here, in a console or from any site:</p>
+        <select id="resource">
+            <option>posts</option>
+            <option>comments</option>
+            <option>albums</option>
+            <option>photos</option>
+            <option>todos</option>
+            <option>users</option>
+            <option>posts/1</option>
+            <option>comments/1</option>
+            <option>albums/1</option>
+            <option>photos/1</option>
+            <option>todos/1</option>
+            <option>users/1</option>
+        </select>
+        <button id="fetch-button"
+                class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Query
+            Data
+        </button>
+        <pre><code id="result" class="language-javascript">{}</code></pre>
+        <button id="update-button"
+                class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded">Update
+            Changes
+        </button>
+        <p id="run-message" class="invisible">
+            Congrats you've made successful call to REST APIs! 😃 🎉
+        </p>
+    </section>
+    <script>
+        const result = document.getElementById('result')
+        let jsonResp = {}
+        const fetchButton = document.getElementById('fetch-button')
+        fetchButton.onclick = function () {
+            const root = 'https://jsonplaceholder.typicode.com/';
+            const resource = document.getElementById('resource').value;
+            const runMessage = document.getElementById('run-message');
 
-    const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        jsonResp = JSON.parse(xhr.responseText);
-        result.innerHTML = Prism.highlight(
-          xhr.responseText,
-          Prism.languages.javascript,
-          'javascript',
-        )
-        runMessage.className = ''
-      }
-    }
-    xhr.open("GET", root + resource, true);
-    xhr.send();
-  };
+            const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
 
-  const updateButton = document.getElementById('update-button')
-  updateButton.onclick = function () {
-    const root = location.protocol + '//jsonplaceholder.typicode.com/';
-    let resource = document.getElementById('resource').value;
-    const lastSlashIndex = resource.lastIndexOf('/');
-    if (lastSlashIndex !== -1) {
-        resource = resource.substring(0, lastSlashIndex);
-    }
-    const runMessage = document.getElementById('run-message');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    jsonResp = JSON.parse(xhr.responseText);
+                    result.innerHTML = Prism.highlight(
+                        xhr.responseText,
+                        Prism.languages.javascript,
+                        'javascript',
+                    )
+                    runMessage.className = ''
+                }
+            }
+            xhr.open("GET", root + resource + '?d=' + new Date().getTime(), true);
+            xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+            xhr.setRequestHeader("Expires", "Tue, 01 Jan 1980 1:00:00 GMT");
+            xhr.setRequestHeader("Pragma", "no-cache");
+            xhr.send();
+        };
 
-    const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        result.innerHTML = Prism.highlight(
-          xhr.responseText,
-          Prism.languages.javascript,
-          'javascript',
-        )
-        runMessage.className = '';
-      }
-    }
-    xhr.open("POST", root + resource, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    if (Array.isArray(jsonResp)) {
-        for (let i=0; i<jsonResp.length && i<1; i++) {
-          xhr.send(JSON.stringify(jsonResp[i]));
-        }
-    } else {
-       xhr.send(JSON.stringify(jsonResp));
-    }
-  };
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/prism.min.js"></script>
+        const updateButton = document.getElementById('update-button')
+        updateButton.onclick = function () {
+            const root = 'https://jsonplaceholder.typicode.com/';
+            let resource = document.getElementById('resource').value;
+            const lastSlashIndex = resource.lastIndexOf('/');
+            if (lastSlashIndex !== -1) {
+                resource = resource.substring(0, lastSlashIndex);
+            }
+            const runMessage = document.getElementById('run-message');
+
+            const xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    result.innerHTML = Prism.highlight(
+                        xhr.responseText,
+                        Prism.languages.javascript,
+                        'javascript',
+                    )
+                    runMessage.className = '';
+                }
+            }
+            xhr.open("POST", root + resource + '?d=' + new Date().getTime(), true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+            xhr.setRequestHeader("Expires", "Tue, 01 Jan 1980 1:00:00 GMT");
+            xhr.setRequestHeader("Pragma", "no-cache");
+            if (Array.isArray(jsonResp)) {
+                for (let i = 0; i < jsonResp.length && i < 1; i++) {
+                    xhr.send(JSON.stringify(jsonResp[i]));
+                }
+            } else {
+                xhr.send(JSON.stringify(jsonResp));
+            }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.21.0/prism.min.js"></script>
+</header>
 </body>
 </html>
 

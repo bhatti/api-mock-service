@@ -1,32 +1,95 @@
-var createCORSRequest = function(method, url) {
-  var xhr = new XMLHttpRequest();
-  if ("withCredentials" in xhr) {
-    // Most browsers.
-    xhr.open(method, url, true);
-  } else if (typeof XDomainRequest != "undefined") {
-    // IE8 & IE9
-    xhr = new XDomainRequest();
-    xhr.open(method, url);
-  } else {
-    // CORS not supported.
-    xhr = null;
-  }
-  return xhr;
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <title>Test CORS</title>
+</head>
+<body class="px-2">
+<header class="container mx-auto max-w-4xl flex flex-col md:flex-row justify-between py-one mb-three">
+    <h1>
+        <a href="/" class="font-bold no-underline">Test CORS</a>
+    </h1>
+    <section class="container mx-auto max-w-4xl mb-four">
+        <button id="fetch-button"
+                class="bg-green-500 hover:bg-green-700 text-white font-bold py-quarter my-quarter px-4 rounded"
+                onclick="submit();">Test Cors
+        </button>
+        <pre><code id="result" class="language-javascript">{}</code></pre>
+    </section>
+    <script>
+        const createCORSRequest = function (method, url) {
+            let xhr = new XMLHttpRequest();
+            const result = document.getElementById('result')
+            // about:config -> security.fileuri.strict_origin_policy -> false
+            // security.enterprise_roots.enabled = true
+            // See https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox
+            if ("withCredentials" in xhr) {
+                // Most browsers.
+                xhr.open(method, url, true);
+            } else if (typeof XDomainRequest != "undefined") {
+                // IE8 & IE9
+                xhr = new XDomainRequest();
+                xhr.open(method, url);
+            } else {
+                console.log('CORS not supported.');
+                result.innerText = 'CORS not supported.';
+                xhr = null;
+            }
+            return xhr;
+        };
 
-var url = 'http://localhost:8000';
-var method = 'POST';
-var xhr = createCORSRequest(method, url);
+        const submit = function () {
+            const result = document.getElementById('result')
+            const url = 'https://cognito-idp.us-west-2.amazonaws.com/';
+            const method = 'POST';
+            const xhr = createCORSRequest(method, url);
 
-xhr.onload = function() {
-  // Success code goes here.
-};
+            xhr.onload = function () {
+                // Success code goes here.
+            };
+            xhr.onerror = function (e) {
+                console.log(url, e.toString(), e);
+            };
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    result.innerText = xhr.responseText;
+                }
+            }
+            xhr.setRequestHeader('X-Amz-Target', 'AWSCognitoIdentityProviderService.ListUserPools');
+            xhr.setRequestHeader('Content-Type', 'application/x-amz-json-1.1');
+            xhr.setRequestHeader('Content-Length', '17');
+            xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+            xhr.setRequestHeader("Expires", "Tue, 01 Jan 1980 1:00:00 GMT");
+            xhr.setRequestHeader("Pragma", "no-cache");
+            xhr.send('{"MaxResults": 10}');
+        }
+        const _submit = function () {
+            const result = document.getElementById('result')
+            const url = 'https://jsonplaceholder.typicode.com/posts?d=' + new Date().getTime();
+            const method = 'GET';
+            const xhr = createCORSRequest(method, url);
 
-xhr.onerror = function(e) {
-  console.log(e);
-};
+            xhr.onload = function () {
+                // Success code goes here.
+            };
+            xhr.onerror = function (e) {
+                console.log(url, e.toString(), e);
+            };
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    result.innerText = xhr.responseText;
+                }
+            }
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");
+            xhr.setRequestHeader("Expires", "Tue, 01 Jan 1980 1:00:00 GMT");
+            xhr.setRequestHeader("Pragma", "no-cache");
+            xhr.send();
+        }
+    </script>
+</header>
+</body>
+</html>
 
 
-xhr.setRequestHeader('X-Amz-Target', 'AWSCognitoIdentityProviderService.ListUserPools');
-xhr.setRequestHeader('Content-Type', 'application/x-amz-json-1.1');
-xhr.send();

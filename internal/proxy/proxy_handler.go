@@ -2,6 +2,12 @@ package proxy
 
 import (
 	"bytes"
+	crand "crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -13,12 +19,17 @@ import (
 	"github.com/elazarl/goproxy"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"math/big"
+	"math/rand"
 	"net/http"
+	"os"
+	"regexp"
 	"strings"
 	"time"
 )
 
-//var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
+var acceptAllCerts = &tls.Config{InsecureSkipVerify: true}
+
 //var noProxyClient = &http.Client{Transport: &http.Transport{TLSClientConfig: acceptAllCerts}}
 
 var ignoredResponseHeaders = map[string]struct{}{
@@ -62,11 +73,22 @@ func NewProxyHandler(
 // Start runs the proxy server on a given port
 func (h *Handler) Start() error {
 	proxy := goproxy.NewProxyHttpServer()
-	proxy.OnRequest(proxyCondition()).HandleConnect(goproxy.AlwaysMitm)
-	proxy.OnRequest(proxyCondition()).DoFunc(h.handleRequest)
-	proxy.OnResponse(proxyCondition()).DoFunc(h.handleResponse)
+
+	proxy.OnRequest(h.proxyCondition()).HandleConnect(goproxy.AlwaysMitm)
+	proxy.OnRequest(h.proxyCondition()).DoFunc(h.handleRequest)
+	proxy.OnResponse(h.proxyCondition()).DoFunc(h.handleResponse)
 	proxy.Verbose = false
+	acceptAllCerts.VerifyPeerCertificate = func([][]byte, [][]*x509.Certificate) error {
+		return nil
+	}
+	proxy.Tr.TLSClientConfig = acceptAllCerts
 	//http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	//err := saveProxyCert()
+	//if err != nil {
+	//	log.WithFields(log.Fields{
+	//		"Error": err,
+	//	}).Warnf("failed to create proxy cert")
+	//}
 	return http.ListenAndServe(fmt.Sprintf(":%d", h.config.ProxyPort), proxy)
 }
 
@@ -304,8 +326,13 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 	return resp, nil
 }
 
-func proxyCondition() goproxy.ReqConditionFunc {
+func (h *Handler) proxyCondition() goproxy.ReqConditionFunc {
 	return func(req *http.Request, _ *goproxy.ProxyCtx) bool {
+		if h.config.ProxyURLFilter != "" {
+			if matched, err := regexp.Match(h.config.ProxyURLFilter, []byte(req.URL.String())); err == nil && !matched {
+				return false
+			}
+		}
 		return !strings.Contains(req.URL.Path, "html") && !strings.Contains(req.URL.Path, "txt")
 	}
 }
@@ -316,4 +343,44 @@ func getStartTime(ctx *goproxy.ProxyCtx) time.Time {
 		return ctx.UserData.(time.Time)
 	}
 	return time.Now()
+}
+
+func saveProxyCert() error {
+	cert, err := tls.X509KeyPair(goproxy.CA_CERT, goproxy.CA_KEY)
+	if err != nil {
+		return err
+	}
+	ca, err := x509.ParseCertificate(cert.Certificate[0])
+	if err != nil {
+		return err
+	}
+	start := time.Unix(time.Now().Unix()-2592000, 0) // 2592000  = 30 day
+	end := time.Unix(time.Now().Unix()+31536000, 0)  // 31536000 = 365 day
+	serial := big.NewInt(rand.Int63())
+	template := x509.Certificate{
+		SerialNumber: serial,
+		Issuer:       ca.Subject,
+		Subject: pkix.Name{
+			Organization: []string{"GoProxy untrusted MITM proxy Inc"},
+		},
+		NotBefore:             start,
+		NotAfter:              end,
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	caPrivKey, err := rsa.GenerateKey(crand.Reader, 4096)
+	if err != nil {
+		return err
+	}
+	derBytes, err := x509.CreateCertificate(crand.Reader, &template, &template, &caPrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		return err
+	}
+	certPEM := new(bytes.Buffer)
+	err = pem.Encode(certPEM, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	if err != nil {
+		return err
+	}
+	return os.WriteFile("cert.pem", certPEM.Bytes(), 0644)
 }

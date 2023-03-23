@@ -16,6 +16,8 @@ type Configuration struct {
 	HTTPPort int `yaml:"http_port" mapstructure:"http_port" env:"HTTP_PORT"`
 	// ProxyPort for server
 	ProxyPort int `yaml:"proxy_port" mapstructure:"proxy_port" env:"PROXY_PORT"`
+	// ProxyURLFilter for filtering url
+	ProxyURLFilter string `yaml:"proxy_url_filter" mapstructure:"proxy_url_filter" env:"PROXY_URL_FILTER"`
 	// ConnectionTimeout for remote server
 	ConnectionTimeout int `yaml:"connection_timeout" mapstructure:"connection_timeout"`
 	// DataDir for storing api scenarios, history, fixtures, assets, etc.
@@ -61,8 +63,9 @@ func NewConfiguration(
 	viper.SetDefault("log_level", "info")
 	viper.SetDefault("http_port", "8080")
 	viper.SetDefault("proxy_port", "8081")
+	viper.SetDefault("proxy_url_filter", "")
 	viper.SetDefault("data_dir", "default_mocks_data")
-	viper.SetDefault("user_agent", "MocService_"+version.Version)
+	viper.SetDefault("user_agent", "MockService_"+version.Version)
 	viper.SetDefault("match_header_regex", "Target")
 	viper.SetDefault("match_query_regex", "Target")
 	viper.SetDefault("max_history", "500")
@@ -130,13 +133,12 @@ func NewConfiguration(
 
 	config.Version = version
 	log.WithFields(log.Fields{
-		"Component":             "Mock-API-Service",
-		"Port":                  config.HTTPPort,
-		"DataDir":               config.DataDir,
-		"Version":               version,
-		"ResignAllRequests":     config.AWS.ResignAllRequests,
-		"ResignOnlyExpiredDate": config.AWS.ResignOnlyExpiredDate,
-		"UsedConfig":            viper.ConfigFileUsed(),
+		"Component":         "Mock-API-Service",
+		"Port":              config.HTTPPort,
+		"DataDir":           config.DataDir,
+		"Version":           version,
+		"ResignAllRequests": config.AWS.ResignAllRequests,
+		"UsedConfig":        viper.ConfigFileUsed(),
 	}).Infof("loaded config file...")
 	return config, nil
 }
