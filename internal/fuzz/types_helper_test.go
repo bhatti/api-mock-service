@@ -168,6 +168,18 @@ func Test_ShouldExtractTypesObject(t *testing.T) {
 	require.Equal(t, 4, len(actual))
 }
 
+func Test_ShouldReMarshalArrayOrObjectWithIndent(t *testing.T) {
+	input := `{"userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto"}`
+	res := ReMarshalArrayOrObjectWithIndent([]byte(input))
+	expected := `{
+  "body": "quia et rem eveniet architecto",
+  "id": 1,
+  "title": "sunt aut",
+  "userId": 1
+}`
+	require.Equal(t, expected, res)
+}
+
 func Test_ShouldExtractTypesNestedArray(t *testing.T) {
 	j := `{"userId": "sample123", "id": "us-west-1-1234", "regions": ["us-west-1", "us-east-1"], "account": "2a3BC", "description": "quia et rem eveniet architecto"}`
 	res, err := UnmarshalArrayOrObject([]byte(j))

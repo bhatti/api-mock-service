@@ -52,7 +52,7 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.APIScen
 			op = &openapi3.Operation{
 				Summary:     scenario.Name,
 				Description: scenario.Description,
-				OperationID: sanitizeScenarioName(scenario.Name),
+				OperationID: removeStatusHashFromScenarioName(scenario.Name),
 				Tags:        scenario.Tags,
 			}
 			ops[scenario.MethodPathTarget()] = op
@@ -184,7 +184,7 @@ func updateScenarioRequest(scenario *types.APIScenario, op *openapi3.Operation) 
 
 	res, _ := fuzz.UnmarshalArrayOrObject([]byte(scenario.Request.AssertContentsPatternOrContent()))
 	body := anyToSchema(res)
-	ref := sanitizeScenarioName(scenario.Name) + "Request"
+	ref := removeStatusHashFromScenarioName(scenario.Name) + "Request"
 	if body != nil && len(body.Properties) > 0 {
 		op.RequestBody = &openapi3.RequestBodyRef{
 			Value: &openapi3.RequestBody{
@@ -224,7 +224,7 @@ func updateScenarioResponse(scenario *types.APIScenario, op *openapi3.Operation)
 	}
 	res, _ := fuzz.UnmarshalArrayOrObject([]byte(scenario.Response.AssertContentsPatternOrContent()))
 	body := anyToSchema(res)
-	ref := sanitizeScenarioName(scenario.Name) + "Response"
+	ref := removeStatusHashFromScenarioName(scenario.Name) + "Response"
 
 	if body != nil && len(body.Properties) > 0 && scenario.Response.StatusCode == 200 {
 		resp.Value.Content[scenario.Response.ContentType("application/json")] = &openapi3.MediaType{
@@ -238,7 +238,7 @@ func updateScenarioResponse(scenario *types.APIScenario, op *openapi3.Operation)
 	return ref, body
 }
 
-func sanitizeScenarioName(name string) string {
+func removeStatusHashFromScenarioName(name string) string {
 	return regexp.MustCompile(`-+\d{3}-.*`).ReplaceAllString(name, "")
 }
 

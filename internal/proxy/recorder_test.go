@@ -73,6 +73,8 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	saved := ctx.Result.([]byte)
 	require.Equal(t, body, string(saved))
+	all := mockScenarioRepository.LookupAllByPath("/todos/10")
+	require.True(t, len(all) > 0)
 }
 
 func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {

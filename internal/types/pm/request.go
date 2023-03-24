@@ -67,7 +67,7 @@ func (r *PostmanRequest) MarshalJSON() ([]byte, error) {
 		return []byte(fmt.Sprintf("\"%s\"", r.URL)), nil
 	}
 
-	return json.Marshal(PostmanRequest{
+	return json.MarshalIndent(PostmanRequest{
 		URL:         r.URL,
 		Auth:        r.Auth,
 		Proxy:       r.Proxy,
@@ -76,7 +76,7 @@ func (r *PostmanRequest) MarshalJSON() ([]byte, error) {
 		Description: r.Description,
 		Header:      r.Header,
 		Body:        r.Body,
-	})
+	}, "", "  ")
 }
 
 // UnmarshalJSON parses the JSON-encoded data and create a PostmanRequest from it.

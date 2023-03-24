@@ -27,7 +27,7 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 	var exampleContents []byte
 	if obj, err := fuzz.UnmarshalArrayOrObject(quotedContents); err == nil {
 		obj = fuzz.GenerateFuzzData(obj)
-		if out, err := json.Marshal(obj); err == nil && obj != nil {
+		if out, err := json.MarshalIndent(obj, "", "  "); err == nil && obj != nil {
 			exampleContents = out
 		}
 	}

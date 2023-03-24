@@ -562,8 +562,8 @@ func BuildScenarioFromHTTP(
 			QueryParams:              make(map[string]string),
 			PostParams:               make(map[string]string),
 			Headers:                  make(map[string]string),
-			Contents:                 string(reqBody),
-			ExampleContents:          string(reqBody),
+			Contents:                 fuzz.ReMarshalArrayOrObjectWithIndent(reqBody),
+			ExampleContents:          fuzz.ReMarshalArrayOrObjectWithIndent(reqBody),
 			HTTPVersion:              reqHTTPVersion,
 			AssertQueryParamsPattern: make(map[string]string),
 			AssertHeadersPattern:     reqHeaderAssertions,
@@ -573,8 +573,8 @@ func BuildScenarioFromHTTP(
 		},
 		Response: APIResponse{
 			Headers:               resHeaders,
-			Contents:              string(resBody),
-			ExampleContents:       string(resBody),
+			Contents:              fuzz.ReMarshalArrayOrObjectWithIndent(resBody),
+			ExampleContents:       fuzz.ReMarshalArrayOrObjectWithIndent(resBody),
 			StatusCode:            resStatus,
 			HTTPVersion:           resHTTPVersion,
 			AssertHeadersPattern:  respHeaderAssertions,
@@ -757,21 +757,21 @@ func (api *APIScenario) BuildURL(overrideBaseURL string) string {
 // Digest of scenario
 func (api *APIScenario) Digest() string {
 	h := adler32.New()
-	h.Write([]byte(api.Method))
-	h.Write([]byte(api.Group))
-	h.Write([]byte(api.Path))
-	h.Write([]byte(api.Request.Contents))
+	_, _ = h.Write([]byte(api.Method))
+	_, _ = h.Write([]byte(api.Group))
+	_, _ = h.Write([]byte(api.Path))
+	_, _ = h.Write([]byte(api.Request.Contents))
 	for k, v := range api.Request.AssertQueryParamsPattern {
-		h.Write([]byte(k))
-		h.Write([]byte(v))
+		_, _ = h.Write([]byte(k))
+		_, _ = h.Write([]byte(v))
 	}
 	for k, v := range api.Request.AssertHeadersPattern {
-		h.Write([]byte(k))
-		h.Write([]byte(v))
+		_, _ = h.Write([]byte(k))
+		_, _ = h.Write([]byte(v))
 	}
-	h.Write([]byte(api.Request.AssertContentsPattern))
-	h.Write([]byte(api.Response.Contents))
-	h.Write([]byte(api.Response.ContentsFile))
+	_, _ = h.Write([]byte(api.Request.AssertContentsPattern))
+	_, _ = h.Write([]byte(api.Response.Contents))
+	_, _ = h.Write([]byte(api.Response.ContentsFile))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 

@@ -26,13 +26,21 @@ func TestRequestMarshalJSON(t *testing.T) {
 					Raw:  "raw-content",
 				},
 			},
-			"{\"url\":{\"raw\":\"http://www.google.fr\"},\"method\":\"POST\",\"body\":{\"mode\":\"raw\",\"raw\":\"raw-content\"}}",
+			`{
+  "url": {
+    "raw": "http://www.google.fr"
+  },
+  "method": "POST",
+  "body": {
+    "mode": "raw",
+    "raw": "raw-content"
+  }
+}`,
 		},
 	}
 
 	for _, tc := range cases {
 		bytes, _ := tc.req.MarshalJSON()
-
 		assert.Equal(t, tc.expectedOutput, string(bytes), tc.scenario)
 	}
 }

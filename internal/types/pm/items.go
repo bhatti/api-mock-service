@@ -100,7 +100,7 @@ func (i *PostmanItems) AddItemGroup(name string) (f *PostmanItems) {
 func (i PostmanItems) MarshalJSON() ([]byte, error) {
 
 	if i.IsGroup() {
-		return json.Marshal(PostmanItemGroup{
+		return json.MarshalIndent(PostmanItemGroup{
 			Name:                    i.Name,
 			Description:             i.Description,
 			Variables:               i.Variables,
@@ -108,10 +108,10 @@ func (i PostmanItems) MarshalJSON() ([]byte, error) {
 			ProtocolProfileBehavior: i.ProtocolProfileBehavior,
 			Items:                   i.Items,
 			Auth:                    i.Auth,
-		})
+		}, "", "  ")
 	}
 
-	return json.Marshal(PostmanItem{
+	return json.MarshalIndent(PostmanItem{
 		Name:                    i.Name,
 		Description:             i.Description,
 		Variables:               i.Variables,
@@ -120,5 +120,5 @@ func (i PostmanItems) MarshalJSON() ([]byte, error) {
 		ID:                      i.ID,
 		Request:                 i.Request,
 		Responses:               i.Responses,
-	})
+	}, "", "  ")
 }

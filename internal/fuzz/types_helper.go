@@ -92,10 +92,23 @@ func UnmarshalArrayOrObjectAndExtractTypes(str string, dataTemplate DataTemplate
 	return FlatRegexMap(res), nil
 }
 
+// ReMarshalArrayOrObjectWithIndent helper method to unmarshal and marshal with indent
+func ReMarshalArrayOrObjectWithIndent(b []byte) string {
+	res, err := UnmarshalArrayOrObject(b)
+	if err != nil {
+		return string(b)
+	}
+	out, err := json.MarshalIndent(res, "", "  ")
+	if err != nil {
+		return string(b)
+	}
+	return string(out)
+}
+
 // UnmarshalArrayOrObjectAndExtractTypesAndMarshal helper method to unmarshal, add types and marshal again
 func UnmarshalArrayOrObjectAndExtractTypesAndMarshal(str string, dataTemplate DataTemplateRequest) (string, error) {
 	res, err := UnmarshalArrayOrObjectAndExtractTypes(str, dataTemplate)
-	b, err := json.Marshal(res)
+	b, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {
 		return "", err
 	}

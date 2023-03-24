@@ -176,7 +176,7 @@ func marshalPropertyValueWithTypes(params []Property, dataTemplate fuzz.DataTemp
 	if err != nil {
 		return "", fmt.Errorf("failed to unmarshal params object/array '%s' due to %w", matchContents, err)
 	}
-	j, err := json.Marshal(fuzz.FlatRegexMap(res))
+	j, err := json.MarshalIndent(fuzz.FlatRegexMap(res), "", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal params flat map due to %w", err)
 	}
@@ -187,9 +187,9 @@ func marshalPropertyValue(params []Property, dataTemplate fuzz.DataTemplateReque
 	out = []byte{}
 	arr := propertyValue(params, dataTemplate)
 	if len(arr) > 1 {
-		out, err = json.Marshal(arr)
+		out, err = json.MarshalIndent(arr, "", "  ")
 	} else if len(arr) > 0 {
-		out, err = json.Marshal(arr[0])
+		out, err = json.MarshalIndent(arr[0], "", "  ")
 	}
 	if stripQuotes {
 		return stripNumericBooleanQuotes(out), nil

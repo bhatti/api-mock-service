@@ -108,7 +108,10 @@ func TestItemsMarshalJSON(t *testing.T) {
 				ID:   "a-unique-id",
 				Name: "an-item",
 			},
-			"{\"name\":\"an-item\",\"id\":\"a-unique-id\"}",
+			`{
+  "name": "an-item",
+  "id": "a-unique-id"
+}`,
 		},
 		{
 			"Successfully marshalling a GroupItem",
@@ -116,7 +119,10 @@ func TestItemsMarshalJSON(t *testing.T) {
 				Name:  "a-group-item",
 				Items: make([]*PostmanItems, 0),
 			},
-			"{\"name\":\"a-group-item\",\"item\":[]}",
+			`{
+  "name": "a-group-item",
+  "item": []
+}`,
 		},
 	}
 

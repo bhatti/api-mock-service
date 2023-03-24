@@ -364,7 +364,7 @@ func buildRequestBody(
 		}).Infof("failed to unmarshal request")
 		return "", nil
 	}
-	j, err := json.Marshal(fuzz.GenerateFuzzData(res))
+	j, err := json.MarshalIndent(fuzz.GenerateFuzzData(res), "", "  ")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"Component": "ProducerExecutor",
