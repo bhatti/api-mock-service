@@ -101,7 +101,7 @@ func saveMockResponse(
 
 	scenario, err := types.BuildScenarioFromHTTP(
 		config,
-		"recorded-",
+		"Recorded",
 		u,
 		req.Method,
 		"",

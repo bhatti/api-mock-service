@@ -239,7 +239,7 @@ func updateScenarioResponse(scenario *types.APIScenario, op *openapi3.Operation)
 }
 
 func sanitizeScenarioName(name string) string {
-	return regexp.MustCompile(`-\d{3}-.*`).ReplaceAllString(name, "")
+	return regexp.MustCompile(`-+\d{3}-.*`).ReplaceAllString(name, "")
 }
 
 func sanitizeRegexValue(val any) (string, any) {
@@ -302,7 +302,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	case map[string]any:
 		hm := val.(map[string]any)
 		prop := &openapi3.Schema{
-			Description: "object-any-map, example " + strVal,
+			Description: "", //object-any-map, example " + strVal,
 			Properties:  make(openapi3.Schemas),
 			Type:        "object",
 		}
@@ -344,6 +344,8 @@ func anyToSchema(val any) *openapi3.Schema {
 			grandChild := anyToSchema(v)
 			if grandChild != nil {
 				prop.Items.Value.Example = v
+				prop.Items.Value.Description = fmt.Sprintf("%v", grandChild)
+				// TODO add ref to object
 				if grandChild.Type == "integer" || grandChild.Type == "float" ||
 					grandChild.Type == "number" || grandChild.Type == "string" ||
 					grandChild.Type == "boolean" || grandChild.Type == "bool" {

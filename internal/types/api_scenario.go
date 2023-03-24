@@ -1,11 +1,11 @@
 package types
 
 import (
-	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	log "github.com/sirupsen/logrus"
+	"hash/adler32"
 	"net/http"
 	"net/url"
 	"os"
@@ -658,7 +658,7 @@ func BuildScenarioFromHTTP(
 		}
 	}
 	if scenario.Name == "" {
-		scenario.SetName(prefix + scenario.Group + "-")
+		scenario.SetName(prefix + scenario.Group) // Request / Response are added
 	}
 	scenario.Tags = []string{scenario.Group}
 	if scenario.Response.StatusCode >= 300 {
@@ -756,7 +756,7 @@ func (api *APIScenario) BuildURL(overrideBaseURL string) string {
 
 // Digest of scenario
 func (api *APIScenario) Digest() string {
-	h := sha1.New()
+	h := adler32.New()
 	h.Write([]byte(api.Method))
 	h.Write([]byte(api.Group))
 	h.Write([]byte(api.Path))

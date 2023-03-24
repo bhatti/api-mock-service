@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 )
@@ -292,7 +293,13 @@ func Test_ShouldHandleProxyCondition(t *testing.T) {
 	u, err = url.Parse("https://localhost:8080/234")
 	require.NoError(t, err)
 	require.False(t, proxyCond(&http.Request{URL: u}, nil))
-	_ = saveProxyCert()
+}
+
+func Test_SaveProxyCert(t *testing.T) {
+	err := saveProxyCert()
+	require.NoError(t, err)
+	err = os.Remove("cert.pem")
+	require.NoError(t, err)
 }
 
 func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {

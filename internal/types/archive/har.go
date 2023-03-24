@@ -434,7 +434,7 @@ func toScenario(config *types.Configuration, entry HarEntry) (*types.APIScenario
 	ended := started.Add(time.Duration(entry.Time) * time.Millisecond)
 	return types.BuildScenarioFromHTTP(
 		config,
-		"recorded-",
+		"HAR",
 		u,
 		entry.Request.Method,
 		entry.PageRef,
