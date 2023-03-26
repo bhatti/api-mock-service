@@ -21,6 +21,61 @@ func Test_ShouldValidateProperMockScenario(t *testing.T) {
 	require.True(t, scenario.Digest() != "")
 }
 
+func Test_ShouldAssertRequestContentsPatternOrContent(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.Request.Contents = "content"
+	scenario.Request.ExampleContents = "example"
+	require.Equal(t, "example", scenario.Request.AssertContentsPatternOrContent())
+	scenario.Request.ExampleContents = ""
+	scenario.Request.AssertContentsPattern = "assert"
+	require.Equal(t, "assert", scenario.Request.AssertContentsPatternOrContent())
+	scenario.Request.ExampleContents = ""
+	scenario.Request.AssertContentsPattern = ""
+	require.Equal(t, "content", scenario.Request.AssertContentsPatternOrContent())
+}
+
+func Test_ShouldAssertResponseContentsPatternOrContent(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.Response.Contents = "content"
+	scenario.Response.ExampleContents = "example"
+	require.Equal(t, "example", scenario.Response.AssertContentsPatternOrContent())
+	scenario.Response.ExampleContents = ""
+	scenario.Response.AssertContentsPattern = "assert"
+	require.Equal(t, "assert", scenario.Response.AssertContentsPatternOrContent())
+	scenario.Response.ExampleContents = ""
+	scenario.Response.AssertContentsPattern = ""
+	require.Equal(t, "content", scenario.Response.AssertContentsPatternOrContent())
+}
+
+func Test_ShouldBuildURL(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.Path = "/path1/abc"
+	require.Equal(t, "/path1/abc", scenario.BuildURL(""))
+	require.Equal(t, "xyz/path1/abc", scenario.BuildURL("xyz"))
+}
+
+func Test_ShouldAddAWSHeaders(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.addAWSHeaders()
+	require.Equal(t, 3, len(scenario.Authentication))
+	require.Equal(t, "apiKey", scenario.Authentication["aws.auth.sigv4"].Type)
+	require.Equal(t, "apiKey", scenario.Authentication["smithy.scenario.httpApiKeyAuth"].Type)
+	require.Equal(t, "http", scenario.Authentication["bearerAuth"].Type)
+}
+
+func Test_ShouldAddAuthHeaders(t *testing.T) {
+	// GIVEN a valid mock scenario
+	scenario := buildScenario()
+	scenario.addAuthHeaders()
+	require.Equal(t, 2, len(scenario.Authentication))
+	require.Equal(t, "http", scenario.Authentication["basicAuth"].Type)
+	require.Equal(t, "http", scenario.Authentication["bearerAuth"].Type)
+}
+
 func Test_ShouldGetRequestAuthHeader(t *testing.T) {
 	// GIVEN a valid mock scenario
 	scenario := BuildTestScenario(Get, "name", "/path", 1)
@@ -330,12 +385,13 @@ func Test_ShouldNormalizeGroup(t *testing.T) {
 
 func buildScenario() *APIScenario {
 	scenario := &APIScenario{
-		Method:      Post,
-		Name:        "scenario",
-		Path:        "/path1/\\\\//test1//abc////",
-		Description: "",
-		Group:       "test-group",
-		Tags:        []string{"tag1", "tag2"},
+		Method:         Post,
+		Name:           "scenario",
+		Path:           "/path1/\\\\//test1//abc////",
+		Description:    "",
+		Group:          "test-group",
+		Tags:           []string{"tag1", "tag2"},
+		Authentication: make(map[string]APIAuthorization),
 		Request: APIRequest{
 			Headers: make(map[string]string),
 			AssertQueryParamsPattern: map[string]string{

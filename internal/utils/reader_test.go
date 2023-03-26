@@ -17,6 +17,19 @@ func Test_ShouldNotReadAllWithNilBody(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func Test_ShouldReadAllAgain(t *testing.T) {
+	// GIVEN a string
+	str := "test data"
+	// WHEN reading all
+	b, r, err := ReadAll(io.NopCloser(bytes.NewReader([]byte(str))))
+	// THEN it should return byte data without error
+	require.NoError(t, err)
+	require.Equal(t, "test data", string(b))
+	b, r, err = ReadAll(r)
+	require.NoError(t, err)
+	require.Equal(t, "test data", string(b))
+}
+
 func Test_ShouldReadAll(t *testing.T) {
 	// GIVEN a string
 	str := "test data"

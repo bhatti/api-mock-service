@@ -113,7 +113,11 @@ func (c *PostmanConverter) itemToScenario(
 	c.addEvents(items.Events)
 	c.addAuth(items.Auth)
 	if items.IsGroup() {
-		group = items.Name
+		if group != "" {
+			group = group + "_" + items.Name
+		} else {
+			group = items.Name
+		}
 	} else if len(items.Responses) > 0 {
 		for _, res := range items.Responses {
 			scenario, err := c.toScenario(items, res, group)

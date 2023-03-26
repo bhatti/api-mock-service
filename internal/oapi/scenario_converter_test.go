@@ -37,9 +37,15 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 	}
 	scenarios := make([]*types.APIScenario, 0)
-	for _, key := range repo.LookupAllByGroup("SpecConvert") {
+	methods := []types.MethodType{types.Post, types.Get, types.Put, types.Delete,
+		types.Options, types.Head, types.Patch, types.Connect, types.Trace}
+	for i, key := range repo.LookupAllByGroup("SpecConvert") {
 		scenario, err := repo.Lookup(key, nil)
 		require.NoError(t, err)
+		if i > 0 {
+			scenario.BaseURL = "https://localhost:8080"
+		}
+		scenario.Method = methods[i%len(methods)]
 		scenarios = append(scenarios, scenario)
 	}
 	_, err = MarshalScenarioToOpenAPI("t-api", "t-version", scenarios...)

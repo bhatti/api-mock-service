@@ -623,39 +623,9 @@ func BuildScenarioFromHTTP(
 
 	authHeader := scenario.Request.AuthHeader()
 	if strings.Contains(authHeader, "AWS") {
-		scenario.Authentication["aws.auth.sigv4"] = APIAuthorization{
-			Type:   "apiKey",
-			Name:   AuthorizationHeader,
-			In:     "header",
-			Scheme: "x-amazon-apigateway-authtype",
-			Format: "awsSigv4",
-		}
-		scenario.Authentication["smithy.scenario.httpApiKeyAuth"] = APIAuthorization{
-			Type: "apiKey",
-			Name: "x-scenario-key",
-			In:   "header",
-		}
-		scenario.Authentication["bearerAuth"] = APIAuthorization{
-			Type:   "http",
-			Name:   AuthorizationHeader,
-			In:     "header",
-			Scheme: "bearer",
-			Format: "JWT",
-		}
+		scenario.addAWSHeaders()
 	} else if authHeader != "" {
-		scenario.Authentication["basicAuth"] = APIAuthorization{
-			Type:   "http",
-			Name:   AuthorizationHeader,
-			In:     "header",
-			Scheme: "basic",
-		}
-		scenario.Authentication["bearerAuth"] = APIAuthorization{
-			Type:   "http",
-			Name:   AuthorizationHeader,
-			In:     "header",
-			Scheme: "bearer",
-			Format: "auth-scheme",
-		}
+		scenario.addAuthHeaders()
 	}
 	if scenario.Name == "" {
 		scenario.SetName(prefix + scenario.Group) // Request / Response are added
@@ -671,6 +641,44 @@ func BuildScenarioFromHTTP(
 	scenario.StartTime = started.UTC()
 	scenario.EndTime = ended.UTC()
 	return scenario, nil
+}
+
+func (api *APIScenario) addAuthHeaders() {
+	api.Authentication["basicAuth"] = APIAuthorization{
+		Type:   "http",
+		Name:   AuthorizationHeader,
+		In:     "header",
+		Scheme: "basic",
+	}
+	api.Authentication["bearerAuth"] = APIAuthorization{
+		Type:   "http",
+		Name:   AuthorizationHeader,
+		In:     "header",
+		Scheme: "bearer",
+		Format: "auth-scheme",
+	}
+}
+
+func (api *APIScenario) addAWSHeaders() {
+	api.Authentication["aws.auth.sigv4"] = APIAuthorization{
+		Type:   "apiKey",
+		Name:   AuthorizationHeader,
+		In:     "header",
+		Scheme: "x-amazon-apigateway-authtype",
+		Format: "awsSigv4",
+	}
+	api.Authentication["smithy.scenario.httpApiKeyAuth"] = APIAuthorization{
+		Type: "apiKey",
+		Name: "x-scenario-key",
+		In:   "header",
+	}
+	api.Authentication["bearerAuth"] = APIAuthorization{
+		Type:   "http",
+		Name:   AuthorizationHeader,
+		In:     "header",
+		Scheme: "bearer",
+		Format: "JWT",
+	}
 }
 
 // GetStartTime helper method
