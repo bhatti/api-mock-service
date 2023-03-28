@@ -287,7 +287,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	case map[string]string:
 		hm := val.(map[string]string)
 		prop := &openapi3.Schema{
-			Description: "object-string-map " + strVal,
+			Description: "object-string-map ", // + strVal,
 			Properties:  make(openapi3.Schemas),
 			Type:        "object",
 		}
@@ -302,7 +302,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	case map[string]any:
 		hm := val.(map[string]any)
 		prop := &openapi3.Schema{
-			Description: "", //object-any-map, example " + strVal,
+			Description: "object-any-map ", // + strVal,
 			Properties:  make(openapi3.Schemas),
 			Type:        "object",
 		}
@@ -318,7 +318,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	case []string:
 		arr := val.([]string)
 		prop := &openapi3.Schema{
-			Description: "string-array " + strVal,
+			Description: "string-array ", // + strVal,
 			Type:        "array",
 			Items: &openapi3.SchemaRef{Value: &openapi3.Schema{
 				Type: "string",
@@ -333,7 +333,7 @@ func anyToSchema(val any) *openapi3.Schema {
 	case []any:
 		arr := val.([]any)
 		prop := &openapi3.Schema{
-			Description: "any-array " + strVal,
+			Description: "any-array ", // + strVal,
 			Type:        "array",
 			Items: &openapi3.SchemaRef{Value: &openapi3.Schema{
 				Properties: make(openapi3.Schemas),
@@ -344,7 +344,7 @@ func anyToSchema(val any) *openapi3.Schema {
 			grandChild := anyToSchema(v)
 			if grandChild != nil {
 				prop.Items.Value.Example = v
-				prop.Items.Value.Description = fmt.Sprintf("%v", grandChild)
+				prop.Items.Value.Description = "array-child" //fmt.Sprintf("%v", grandChild)
 				// TODO add ref to object
 				if grandChild.Type == "integer" || grandChild.Type == "float" ||
 					grandChild.Type == "number" || grandChild.Type == "string" ||
@@ -352,6 +352,9 @@ func anyToSchema(val any) *openapi3.Schema {
 					prop.Items.Value.Pattern = grandChild.Pattern
 				}
 				prop.Items.Value.Type = grandChild.Type
+				prop.Items.Value.AdditionalProperties = &openapi3.SchemaRef{
+					Value: grandChild,
+				}
 			}
 		}
 		return prop

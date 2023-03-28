@@ -10,6 +10,59 @@ import (
 	"testing"
 )
 
+func Test_ShouldConvertAnyToSchema(t *testing.T) {
+	b := `
+{
+  "account": "21212423423",
+  "boo": [
+    true,
+    false
+  ],
+  "id": "us-west2_test1",
+  "items": [
+    1.1,
+    2
+  ],
+  "locations": [
+    {
+      "lat": 12.5,
+      "lng": 12
+    }
+  ],
+  "logs": [
+    {
+      "config": {
+        "timeout": 5
+      },
+      "created_at": 123,
+      "id": 1,
+      "name": "jake"
+    },
+    {
+      "config": {
+        "timeout": 6
+      },
+      "created_at": 234,
+      "id": 2,
+      "name": "larry"
+    }
+  ],
+  "name": "sample-id5",
+  "regions": [
+    "us-east-2",
+    "us-west-2"
+  ],
+  "taxes": [
+    123,
+    14
+  ]
+}`
+	obj, err := fuzz.UnmarshalArrayOrObject([]byte(b))
+	require.NoError(t, err)
+	schema := anyToSchema(obj)
+	require.NotNil(t, schema)
+}
+
 func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN mock scenarios from open-api specifications
