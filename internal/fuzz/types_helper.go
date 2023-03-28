@@ -126,13 +126,7 @@ func ExtractTopPrimitiveAttributes(b []byte, max int) (res []string) {
 	if strings.HasPrefix(str, "{") {
 		m := make(map[string]any)
 		if err := json.Unmarshal(b, &m); err == nil {
-			for k := range m {
-				val := m[k]
-				if reflect.TypeOf(val).String() == "string" ||
-					strings.HasPrefix(reflect.TypeOf(val).String(), "float") {
-					res = append(res, k)
-				}
-			}
+			res = extractTopPrimitiveAttributes("", m, res)
 		}
 	}
 
@@ -143,6 +137,25 @@ func ExtractTopPrimitiveAttributes(b []byte, max int) (res []string) {
 		res = res[:max]
 	}
 	return
+}
+
+func extractTopPrimitiveAttributes(prefix string, m map[string]any, res []string) []string {
+	for k := range m {
+		val := m[k]
+		kk := prefix + k
+		switch val.(type) {
+		case string:
+			res = append(res, kk)
+		case float64:
+			res = append(res, kk)
+		case float32:
+			res = append(res, kk)
+		case map[string]any:
+			hm := val.(map[string]any)
+			res = extractTopPrimitiveAttributes(kk+".", hm, res)
+		}
+	}
+	return res
 }
 
 // UnmarshalArrayOrObject helper function to unmarshal bytes based on object/array

@@ -55,6 +55,8 @@ func FindVariable(name string, data any) any {
 			}
 		}
 		return all
+	case []string:
+		return data
 	case []any:
 		params := data.([]any)
 		var all []any
