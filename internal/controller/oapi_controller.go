@@ -7,6 +7,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
 	"github.com/bhatti/api-mock-service/internal/utils"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"net/http"
 	"strings"
@@ -183,6 +184,11 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 			return err
 		}
 	}
+	log.WithFields(log.Fields{
+		"API":       "postMockOAPIScenario",
+		"Specs":     len(specs),
+		"Scenarios": len(scenarios),
+	}).Infof("added scenario from open-api...")
 	return c.JSON(http.StatusOK, scenarios)
 }
 

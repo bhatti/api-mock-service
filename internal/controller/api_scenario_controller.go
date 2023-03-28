@@ -157,10 +157,6 @@ func (msc *APIScenarioController) getAPIScenarioNames(c web.APIContext) error {
 	if path == "" {
 		return fmt.Errorf("path not specified")
 	}
-	log.WithFields(log.Fields{
-		"Method": method,
-		"Path":   path,
-	}).Infof("getting api scenario names...")
 	names, err := msc.scenarioRepository.GetScenariosNames(method, path)
 	if err != nil {
 		return err
