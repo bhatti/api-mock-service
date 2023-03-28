@@ -24,8 +24,8 @@ type awsLoggerAdapter struct {
 // IgnoredRequestHeaders headers
 var IgnoredRequestHeaders = map[string]struct{}{
 	types.AuthorizationHeader: {},
+	types.ContentLengthHeader: {},
 	"User-Agent":              {},
-	"Content-Length":          {},
 	"Accept":                  {},
 	"Accept-Language":         {},
 	"Accept-Encoding":         {},

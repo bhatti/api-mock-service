@@ -143,6 +143,7 @@ func AddMockResponse(
 			scenario.Response.ContentsFile,
 			scenario.Path)
 	}
+	respHeaders.Set(types.ContentLengthHeader, fmt.Sprintf("%d", len(respBody)))
 
 	if err == nil {
 		scenario.Response.Contents = string(respBody)

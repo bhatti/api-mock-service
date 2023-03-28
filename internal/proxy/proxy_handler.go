@@ -295,7 +295,6 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 	resp.Header["Access-Control-Allow-Methods"] = []string{"GET, POST, DELETE, PUT, PATCH, OPTIONS, HEAD"}
 	resp.Header["Access-Control-Allow-Headers"] = []string{"*"}
 	resp.Header["Access-Control-Max-Age"] = []string{"1728000"}
-	resp.Header["Content-Length"] = []string{"0"}
 	resp.Header["Access-Control-Expose-Headers"] = []string{"Content-Length,Content-Range"}
 	agent := h.config.UserAgent
 	if resp.Header.Get("Via") != "" {
@@ -308,7 +307,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		resp.Header[types.ContentTypeHeader] = []string{"application/json"}
 	}
 	resp.ContentLength = int64(len(resBytes))
-	resp.Header["Content-Length"] = []string{fmt.Sprintf("%d", len(resBytes))}
+	resp.Header[types.ContentLengthHeader] = []string{fmt.Sprintf("%d", len(resBytes))}
 	//resp.Header["Vary"] = []string{"Origin, Accept-Encoding""}
 	//resp.Header["Access-Control-Allow-Headers"] = []string{"Content-Type, api_key, Authorization"}
 	//resp.Header["Content-Security-Policy"] = []string{"default-src 'self', form-action 'self',script-src 'self'"}
