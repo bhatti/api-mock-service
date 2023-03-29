@@ -15,15 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// UnescapeHTML flag
-const UnescapeHTML = "UnescapeHTML"
-
-// RequestCount name
-const RequestCount = "_RequestCount"
-
-// FixtureDataExt extension
-const FixtureDataExt = ".dat"
-
 // ParseTemplate parses GO template with dynamic parameters
 func ParseTemplate(dir string, byteBody []byte, data any) ([]byte, error) {
 	body := string(byteBody)
