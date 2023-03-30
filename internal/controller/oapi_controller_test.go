@@ -71,7 +71,7 @@ func Test_ShouldCreateTwitterMockScenarioFromOAPI(t *testing.T) {
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
-	arrScenarios := ctx.Result.([]*types.APIScenario)
+	arrScenarios := ctx.Result.([]*types.APIKeyData)
 	require.Equal(t, 112, len(arrScenarios))
 }
 
@@ -94,7 +94,7 @@ func Test_ShouldCreatePetsMockScenarioFromOAPI(t *testing.T) {
 
 	// THEN it should return saved scenario
 	require.NoError(t, err)
-	arrScenarios := ctx.Result.([]*types.APIScenario)
+	arrScenarios := ctx.Result.([]*types.APIKeyData)
 	require.Equal(t, 10, len(arrScenarios))
 }
 
@@ -185,7 +185,7 @@ func Test_ShouldGetOpenAPIByGroup(t *testing.T) {
 	// THEN it should return saved scenario
 	require.NoError(t, err)
 
-	arrScenarios := ctx.Result.([]*types.APIScenario)
+	arrScenarios := ctx.Result.([]*types.APIKeyData)
 	// WHEN fetching open-api specs without group
 	err = ctrl.getOpenAPISpecsByGroup(ctx)
 	//  THEN it should not fail
@@ -227,7 +227,7 @@ func Test_ShouldGetOpenAPIByScenario(t *testing.T) {
 	// THEN it should return saved scenario
 	require.NoError(t, err)
 
-	arrScenarios := ctx.Result.([]*types.APIScenario)
+	arrScenarios := ctx.Result.([]*types.APIKeyData)
 
 	// WHEN fetching open-api specs without method, path, name
 	err = ctrl.getOpenAPISpecsByScenario(ctx)

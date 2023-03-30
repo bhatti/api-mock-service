@@ -166,7 +166,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 	if err != nil {
 		return err
 	}
-	scenarios := make([]*types.APIScenario, 0)
+	keyscenarios := make([]*types.APIKeyData, 0)
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		if err != nil {
@@ -176,7 +176,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 		if err != nil {
 			return err
 		}
-		scenarios = append(scenarios, scenario)
+		keyscenarios = append(keyscenarios, scenario.ToKeyData())
 	}
 	if len(specs) > 0 {
 		err = moc.oapiRepository.SaveRaw(specs[0].Title, data)
@@ -187,9 +187,9 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 	log.WithFields(log.Fields{
 		"API":       "postMockOAPIScenario",
 		"Specs":     len(specs),
-		"Scenarios": len(scenarios),
+		"Scenarios": len(keyscenarios),
 	}).Infof("added scenario from open-api...")
-	return c.JSON(http.StatusOK, scenarios)
+	return c.JSON(http.StatusOK, keyscenarios)
 }
 
 // ********************************* Swagger types ***********************************
