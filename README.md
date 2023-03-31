@@ -1366,6 +1366,15 @@ When you execute contract tests using `curl -k -v -X POST http://localhost:8080/
 
 The output will show the attributes that were captured based on the `set_variables` configuration.
 
+## HTTP Proxy via Browser
+You can proxy HTTP/HTTPS traffic in your browser by setting proxy setting such as:
+
+![browser-proxy](images/browser_proxy.png)
+
+Note: You may need to import root certificate for api-mock-service by adding https://github.com/bhatti/api-mock-service/blob/main/ca_cert.pem to your browser, e.g.,
+
+![browser-proxy](images/import_cert.png)
+
 ## Static Assets
 The api-mock-service can serve any static assets from a user-defined folder and then serve it as follows:
 ```bash
