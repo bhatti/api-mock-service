@@ -166,7 +166,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 	if err != nil {
 		return err
 	}
-	keyscenarios := make([]*types.APIKeyData, 0)
+	apiKeyData := make([]*types.APIKeyData, 0)
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		if err != nil {
@@ -176,7 +176,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 		if err != nil {
 			return err
 		}
-		keyscenarios = append(keyscenarios, scenario.ToKeyData())
+		apiKeyData = append(apiKeyData, scenario.ToKeyData())
 	}
 	if len(specs) > 0 {
 		err = moc.oapiRepository.SaveRaw(specs[0].Title, data)
@@ -187,9 +187,9 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 	log.WithFields(log.Fields{
 		"API":       "postMockOAPIScenario",
 		"Specs":     len(specs),
-		"Scenarios": len(keyscenarios),
+		"Scenarios": len(apiKeyData),
 	}).Infof("added scenario from open-api...")
-	return c.JSON(http.StatusOK, keyscenarios)
+	return c.JSON(http.StatusOK, apiKeyData)
 }
 
 // ********************************* Swagger types ***********************************
@@ -205,7 +205,7 @@ type apiScenarioOAPICreateParams struct {
 // swagger:response apiScenarioOAPIResponse
 type apiScenarioOAPIResponseBody struct {
 	// in:body
-	Body types.APIScenario
+	Body []types.APIKeyData
 }
 
 // The params for group

@@ -2002,7 +2002,9 @@ responses:
   apiScenarioOAPIResponse:
     description: APIScenario body for update
     schema:
-      $ref: '#/definitions/APIScenario'
+      items:
+        $ref: '#/definitions/APIKeyData'
+      type: array
   apiScenarioPathsResponse:
     description: APIScenario summary and paths
     schema:

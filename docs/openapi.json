@@ -628,7 +628,10 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIScenario"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/APIKeyData"
+                  }
                 }
               }
             }
@@ -2991,7 +2994,10 @@
         "content": {
           "*/*": {
             "schema": {
-              "$ref": "#/components/schemas/APIScenario"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/APIKeyData"
+              }
             }
           }
         }

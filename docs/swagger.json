@@ -2607,7 +2607,10 @@
     "apiScenarioOAPIResponse": {
       "description": "APIScenario body for update",
       "schema": {
-        "$ref": "#/definitions/APIScenario"
+        "items": {
+          "$ref": "#/definitions/APIKeyData"
+        },
+        "type": "array"
       }
     },
     "apiScenarioPathsResponse": {
