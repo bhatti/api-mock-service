@@ -87,7 +87,8 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	if err != nil {
 		return err
 	}
-	// Embedding this check in between matchErr because by default lookup uses path and may not have path
+
+	// Embedding this check for chaos settings
 	if groupConfig, err := r.groupConfigRepository.Load(scenario.Group); err == nil {
 		status := groupConfig.GetHTTPStatus()
 		if status >= 300 {

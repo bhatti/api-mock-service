@@ -53,30 +53,6 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		}
 	}
 	matchedScenario, matchErr := cx.scenarioRepository.Lookup(key, overrides)
-	if matchedScenario != nil {
-		key.Group = matchedScenario.Group
-	}
-	// Embedding this check in between matchErr because by default lookup uses path and may not have path
-	if groupConfig, err := cx.groupConfigRepository.Load(key.Group); err == nil {
-		status := groupConfig.GetHTTPStatus()
-		if status >= 300 {
-			return c.String(
-				status,
-				"injected fault from consumer-executor")
-		}
-		delay := groupConfig.GetDelayLatency()
-		if delay > 0 {
-			log.WithFields(log.Fields{
-				"Component":   "ConsumerExecutor",
-				"Group":       key.Group,
-				"GroupConfig": groupConfig,
-				"Scenario":    key,
-				"Delay":       delay,
-			}).Infof("artificial sleep wait")
-			time.Sleep(delay)
-		}
-	}
-
 	if matchErr != nil {
 		var validationErr *types.ValidationError
 		var notFoundErr *types.NotFoundError
@@ -97,6 +73,7 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		time.Now(),
 		cx.scenarioRepository,
 		cx.fixtureRepository,
+		cx.groupConfigRepository,
 	)
 	if err != nil {
 		return err
@@ -117,6 +94,7 @@ func AddMockResponse(
 	ended time.Time,
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
+	groupConfigRepository repository.GroupConfigRepository,
 ) (respBody []byte, err error) {
 	var inBody []byte
 	inBody, req.Body, err = utils.ReadAll(req.Body)
@@ -149,11 +127,37 @@ func AddMockResponse(
 	respHeaders.Add(types.MockScenarioHeader, scenario.Name)
 	respHeaders.Add(types.MockScenarioPath, scenario.Path)
 	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
+	// Embedding this check to return chaos response based on group config
+	if groupConfig, err := groupConfigRepository.Load(scenario.Group); err == nil {
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			scenario.Response.StatusCode = status
+			return []byte("injected fault from consumer-executor"), nil
+		}
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "ConsumerExecutor-AddMockResponse",
+				"Scenario":    scenario.Name,
+				"Group":       scenario.Group,
+				"GroupConfig": groupConfig,
+				"Delay":       delay,
+			}).Infof("chaos sleep wait")
+			time.Sleep(delay)
+		}
+	}
+
 	// Override wait time from request header
 	if reqHeaders.Get(types.MockWaitBeforeReply) != "" {
 		scenario.WaitBeforeReply, _ = time.ParseDuration(reqHeaders.Get(types.MockWaitBeforeReply))
 	}
 	if scenario.WaitBeforeReply > 0 {
+		log.WithFields(log.Fields{
+			"Component": "ConsumerExecutor-AddMockResponse",
+			"Scenario":  scenario.Name,
+			"Group":     scenario.Group,
+			"Delay":     scenario.WaitBeforeReply,
+		}).Infof("scenario sleep wait")
 		time.Sleep(scenario.WaitBeforeReply)
 	}
 	// Override response status from request header

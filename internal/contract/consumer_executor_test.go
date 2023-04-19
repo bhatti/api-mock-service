@@ -369,9 +369,10 @@ func Test_ShouldLookupPutMockScenariosWithChaos(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	groupConfigRepository.Save("todos", &types.GroupConfig{
+	err = groupConfigRepository.Save("todos", &types.GroupConfig{
 		ChaosEnabled: true,
 	})
+	require.NoError(t, err)
 	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
@@ -406,7 +407,7 @@ func Test_ShouldLookupPutMockScenariosWithChaos(t *testing.T) {
 		},
 	})
 	// this may fail based on chaos
-	player.Execute(ctx)
+	_ = player.Execute(ctx)
 }
 
 func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
@@ -463,6 +464,8 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
 	matchedScenario := types.BuildTestScenario(types.Post, "name", "/path", 10)
@@ -479,6 +482,7 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
+		groupConfigRepository,
 	)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), `didn't match required request query param 'a' with regex '\d+'`)
@@ -490,6 +494,8 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}, "ETag": []string{"123"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
@@ -509,6 +515,7 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
+		groupConfigRepository,
 	)
 	require.NoError(t, err)
 }
@@ -519,6 +526,8 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
@@ -538,6 +547,7 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
+		groupConfigRepository,
 	)
 	require.Error(t, err)
 }
@@ -548,6 +558,8 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
 	reqHeader := http.Header{"X1": []string{"val1"}, "ETag": []string{"123"}}
 	resHeader := http.Header{"X1": []string{"val1"}}
@@ -571,6 +583,7 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 		time.Now(),
 		scenarioRepository,
 		fixtureRepository,
+		groupConfigRepository,
 	)
 	require.NoError(t, err)
 }
