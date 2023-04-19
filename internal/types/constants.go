@@ -3,6 +3,9 @@ package types
 // MockRecordMode header
 const MockRecordMode = "X-Mock-Record"
 
+// MockGroup header
+const MockGroup = "X-Mock-Group"
+
 // MockPlayback header
 const MockPlayback = "X-Mock-Playback"
 

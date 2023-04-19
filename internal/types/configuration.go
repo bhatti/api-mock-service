@@ -35,6 +35,7 @@ type Configuration struct {
 	// AssertPostParamsPattern to always match HTTP post params and store them in match-query parameters of api scenario
 	AssertPostParamsPattern string `yaml:"assert_post_params_pattern" mapstructure:"assert_post_params_pattern" env:"ASSERT_POST_PATTERN"`
 	CORS                    string `yaml:"cors" mapstructure:"cors" env:"MOCK_CORS"`
+	RecordOnly              bool   `yaml:"record_only" mapstructure:"record_only" env:"RECORD_ONLY"`
 	Debug                   bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`

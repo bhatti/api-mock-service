@@ -27,7 +27,9 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		scenario := types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)
@@ -92,6 +94,8 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
 	data, err := os.ReadFile("../../fixtures/oapi/describe-job.json")
 	require.NoError(t, err)
 	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
@@ -99,7 +103,7 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(specs))
 	// AND executor
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		require.NoError(t, err)
@@ -135,7 +139,9 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books/:id", i)))
@@ -182,7 +188,9 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
@@ -226,7 +234,9 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -268,7 +278,9 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/{topic}/{id}", i)))
@@ -314,7 +326,9 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 
 	b, err = fuzz.ParseTemplate("../../fixtures", b, map[string]any{"id": "123"})
 	require.NoError(t, err)
@@ -346,6 +360,58 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 	require.Contains(t, obj["email"], "@")
 }
 
+func Test_ShouldLookupPutMockScenariosWithChaos(t *testing.T) {
+	config := types.BuildTestConfig()
+	// GIVEN a mock scenario repository
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository.Save("todos", &types.GroupConfig{
+		ChaosEnabled: true,
+	})
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	// AND a set of mock scenarios
+	for i := 0; i < 3; i++ {
+		scenario := types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)
+		scenario.Group = "todos"
+		require.NoError(t, scenarioRepository.Save(scenario))
+	}
+	u, err := url.Parse("https://jsonplaceholder.typicode.com/blah")
+	// WHEN looking up non-existing API
+	ctx := web.NewStubContext(
+		&http.Request{
+			Method: "PUT",
+			URL:    u,
+			Header: http.Header{
+				types.ContentTypeHeader: []string{"application/json"},
+			},
+		},
+	)
+	// THEN it should not find it
+	err = player.Execute(ctx)
+	require.Error(t, err)
+
+	u, err = url.Parse("https://jsonplaceholder.typicode.com/api/todos/202?a=123&b=abc")
+	require.NoError(t, err)
+	// WHEN looking up todos by PUT with different query param
+	ctx = web.NewStubContext(&http.Request{
+		Method: "PUT",
+		URL:    u,
+		Header: http.Header{
+			types.ContentTypeHeader: []string{"application/json"},
+			"ETag":                  []string{"123"},
+		},
+	})
+	err = player.Execute(ctx)
+	require.NoError(t, err)
+	// THEN it should find it
+	saved := ctx.Result.([]byte)
+	require.Equal(t, "test body", string(saved))
+}
+
 func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN a mock scenario repository
@@ -353,7 +419,9 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))

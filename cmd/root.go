@@ -79,7 +79,7 @@ func RunServer(_ *cobra.Command, args []string) {
 			Errorf("Failed to parse config...")
 		os.Exit(1)
 	}
-	scenarioRepo, fixturesRepo, oapiRepo, err := buildRepos(serverConfig)
+	scenarioRepo, fixturesRepo, oapiRepo, groupConfigRepo, err := buildRepos(serverConfig)
 	if err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup repositories...")
@@ -87,7 +87,7 @@ func RunServer(_ *cobra.Command, args []string) {
 	}
 	webServer := web.NewDefaultWebServer(serverConfig)
 	httpClient := web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig))
-	if err = buildControllers(serverConfig, scenarioRepo, fixturesRepo, oapiRepo, httpClient, webServer); err != nil {
+	if err = buildControllers(serverConfig, scenarioRepo, fixturesRepo, oapiRepo, groupConfigRepo, httpClient, webServer); err != nil {
 		log.WithFields(log.Fields{"Error": err}).
 			Errorf("failed to setup controller...")
 		os.Exit(3)
@@ -95,16 +95,17 @@ func RunServer(_ *cobra.Command, args []string) {
 	go func() {
 		fmt.Printf("⇨ http proxy started on \x1b[32m[::]:%d\033[0m\n", serverConfig.ProxyPort)
 		adapter := web.NewWebServerAdapter()
-		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
-		executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
+		recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo, groupConfigRepo)
+		executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, httpClient)
 		_ = controller.NewOAPIController(InternalOAPI, scenarioRepo, oapiRepo, adapter)
+		_ = controller.NewGroupConfigController(groupConfigRepo, adapter)
 		_ = controller.NewAPIScenarioController(scenarioRepo, oapiRepo, adapter)
 		_ = controller.NewAPIHistoryController(serverConfig, scenarioRepo, adapter)
 		_ = controller.NewAPIFixtureController(fixturesRepo, adapter)
 		_ = controller.NewAPIProxyController(recorder, adapter)
 		_ = controller.NewProducerContractController(executor, adapter)
 		webServer.Embed(SwaggerContent, "/swagger-ui/*", "swagger-ui")
-		log.Fatal(proxy.NewProxyHandler(serverConfig, web.NewAWSSigner(serverConfig), scenarioRepo, fixturesRepo, adapter).Start())
+		log.Fatal(proxy.NewProxyHandler(serverConfig, web.NewAWSSigner(serverConfig), scenarioRepo, fixturesRepo, groupConfigRepo, adapter).Start())
 	}()
 
 	webServer.Start(":" + strconv.Itoa(serverConfig.HTTPPort))
@@ -156,6 +157,7 @@ func buildRepos(serverConfig *types.Configuration) (
 	scenarioRepo repository.APIScenarioRepository,
 	fixtureRepo repository.APIFixtureRepository,
 	oapiRepo repository.OAPIRepository,
+	groupConfigRepo repository.GroupConfigRepository,
 	err error) {
 	scenarioRepo, err = repository.NewFileAPIScenarioRepository(serverConfig)
 	if err != nil {
@@ -166,6 +168,10 @@ func buildRepos(serverConfig *types.Configuration) (
 		return
 	}
 	oapiRepo, err = repository.NewFileOAPIRepository(serverConfig)
+	if err != nil {
+		return
+	}
+	groupConfigRepo, err = repository.NewFileGroupConfigRepository(serverConfig)
 	return
 }
 
@@ -174,13 +180,15 @@ func buildControllers(
 	scenarioRepo repository.APIScenarioRepository,
 	fixtureRepo repository.APIFixtureRepository,
 	oapiRepo repository.OAPIRepository,
+	groupConfigRepo repository.GroupConfigRepository,
 	httpClient web.HTTPClient,
 	webServer web.Server,
 ) (err error) {
-	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo)
-	player := contract.NewConsumerExecutor(scenarioRepo, fixtureRepo)
-	executor := contract.NewProducerExecutor(scenarioRepo, httpClient)
+	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo, groupConfigRepo)
+	player := contract.NewConsumerExecutor(scenarioRepo, fixtureRepo, groupConfigRepo)
+	executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, httpClient)
 	_ = controller.NewOAPIController(InternalOAPI, scenarioRepo, oapiRepo, webServer)
+	_ = controller.NewGroupConfigController(groupConfigRepo, webServer)
 	_ = controller.NewAPIScenarioController(scenarioRepo, oapiRepo, webServer)
 	_ = controller.NewAPIHistoryController(serverConfig, scenarioRepo, webServer)
 	_ = controller.NewAPIFixtureController(fixtureRepo, webServer)

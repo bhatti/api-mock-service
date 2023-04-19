@@ -44,7 +44,7 @@ var contractCmd = &cobra.Command{
 			log.Errorf("failed to parse config %s", err)
 			os.Exit(2)
 		}
-		scenarioRepo, _, _, err := buildRepos(serverConfig)
+		scenarioRepo, _, _, groupConfigRepo, err := buildRepos(serverConfig)
 		if err != nil {
 			log.Errorf("failed to setup scenario repository %s", err)
 			os.Exit(3)
@@ -53,7 +53,7 @@ var contractCmd = &cobra.Command{
 		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 		contractReq := types.NewProducerContractRequest(baseURL, executionTimes)
 		contractReq.Verbose = verbose
-		executor := contract.NewProducerExecutor(scenarioRepo, web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig)))
+		executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig)))
 		contractRes := executor.ExecuteByGroup(context.Background(), &http.Request{}, group, dataTemplate, contractReq)
 		log.WithFields(log.Fields{
 			"Errors":    contractRes.Errors,

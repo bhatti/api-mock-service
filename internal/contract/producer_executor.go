@@ -23,22 +23,25 @@ import (
 
 // ProducerExecutor structure
 type ProducerExecutor struct {
-	scenarioRepository repository.APIScenarioRepository
-	client             web.HTTPClient
+	scenarioRepository    repository.APIScenarioRepository
+	groupConfigRepository repository.GroupConfigRepository
+	client                web.HTTPClient
 }
 
 // NewProducerExecutor executes contracts for producers
 func NewProducerExecutor(
 	scenarioRepository repository.APIScenarioRepository,
+	groupConfigRepository repository.GroupConfigRepository,
 	client web.HTTPClient) *ProducerExecutor {
 	return &ProducerExecutor{
-		scenarioRepository: scenarioRepository,
-		client:             client,
+		scenarioRepository:    scenarioRepository,
+		groupConfigRepository: groupConfigRepository,
+		client:                client,
 	}
 }
 
 // Execute an API with fuzz data request
-func (x *ProducerExecutor) Execute(
+func (px *ProducerExecutor) Execute(
 	ctx context.Context,
 	req *http.Request,
 	scenarioKey *types.APIKeyData,
@@ -58,14 +61,14 @@ func (x *ProducerExecutor) Execute(
 	}
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
-		scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
+		scenario, err := px.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 		if err != nil {
 			contractResponse.Add(scenarioKey.Name, nil, err)
 			contractResponse.Metrics = sli.Summary()
 			return contractResponse
 		}
 		url := scenario.BuildURL(contractReq.BaseURL)
-		resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+		resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
 		contractResponse.Add(scenario.Name, resContents, err)
 		time.Sleep(scenario.WaitBeforeReply)
 	}
@@ -86,7 +89,7 @@ func (x *ProducerExecutor) Execute(
 }
 
 // ExecuteByHistory executes execution history for an API with fuzz data request
-func (x *ProducerExecutor) ExecuteByHistory(
+func (px *ProducerExecutor) ExecuteByHistory(
 	ctx context.Context,
 	req *http.Request,
 	group string,
@@ -94,7 +97,7 @@ func (x *ProducerExecutor) ExecuteByHistory(
 	contractReq *types.ProducerContractRequest,
 ) *types.ProducerContractResponse {
 	started := time.Now()
-	execHistory := x.scenarioRepository.HistoryNames(group)
+	execHistory := px.scenarioRepository.HistoryNames(group)
 	contractResponse := types.NewProducerContractResponse()
 	log.WithFields(log.Fields{
 		"Component":               "ProducerExecutor",
@@ -108,7 +111,7 @@ func (x *ProducerExecutor) ExecuteByHistory(
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioName := range execHistory {
-			scenarios, err := x.scenarioRepository.LoadHistory(scenarioName, "", 0, 100)
+			scenarios, err := px.scenarioRepository.LoadHistory(scenarioName, "", 0, 100)
 			if err != nil {
 				contractResponse.Add(fmt.Sprintf("%s_%d", scenarioName, i), nil, err)
 				contractResponse.Metrics = sli.Summary()
@@ -119,7 +122,7 @@ func (x *ProducerExecutor) ExecuteByHistory(
 					sli.RegisterHistogram(scenario.SafeName())
 				}
 				url := scenario.BuildURL(contractReq.BaseURL)
-				resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+				resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
 				contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
 				time.Sleep(scenario.WaitBeforeReply)
 			}
@@ -140,7 +143,7 @@ func (x *ProducerExecutor) ExecuteByHistory(
 }
 
 // ExecuteByGroup executes an API with fuzz data request
-func (x *ProducerExecutor) ExecuteByGroup(
+func (px *ProducerExecutor) ExecuteByGroup(
 	ctx context.Context,
 	req *http.Request,
 	group string,
@@ -148,7 +151,7 @@ func (x *ProducerExecutor) ExecuteByGroup(
 	contractReq *types.ProducerContractRequest,
 ) *types.ProducerContractResponse {
 	started := time.Now()
-	scenarioKeys := x.scenarioRepository.LookupAllByGroup(group)
+	scenarioKeys := px.scenarioRepository.LookupAllByGroup(group)
 	contractResponse := types.NewProducerContractResponse()
 	log.WithFields(log.Fields{
 		"Component":               "ProducerExecutor",
@@ -167,14 +170,14 @@ func (x *ProducerExecutor) ExecuteByGroup(
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioKey := range scenarioKeys {
-			scenario, err := x.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
+			scenario, err := px.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 			if err != nil {
 				contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
 				contractResponse.Metrics = sli.Summary()
 				return contractResponse
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := x.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+			resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
 			contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
 			time.Sleep(scenario.WaitBeforeReply)
 		}
@@ -195,7 +198,7 @@ func (x *ProducerExecutor) ExecuteByGroup(
 }
 
 // execute an API with fuzz data request
-func (x *ProducerExecutor) execute(
+func (px *ProducerExecutor) execute(
 	ctx context.Context,
 	req *http.Request,
 	url string,
@@ -258,7 +261,7 @@ func (x *ProducerExecutor) execute(
 		"QueryParams": queryParams,
 	}).Debugf("before execute")
 
-	statusCode, httpVersion, resBody, resHeaders, err := x.client.Handle(
+	statusCode, httpVersion, resBody, resHeaders, err := px.client.Handle(
 		ctx, url, string(scenario.Method), reqHeaders, queryParams, reqBody)
 	elapsed := time.Now().UnixMilli() - started
 	sli.AddHistogram(scenario.SafeName(), float64(elapsed)/1000.0, nil)
@@ -318,6 +321,9 @@ func (x *ProducerExecutor) execute(
 			contractReq.Params = map[string]any{}
 		}
 		setVariables := map[string]any{}
+		for k, v := range px.groupConfigRepository.Variables(scenario.Group) {
+			setVariables[k] = v
+		}
 
 		for _, propName := range scenario.Response.SetVariables {
 			val := fuzz.FindVariable(propName, resContents)

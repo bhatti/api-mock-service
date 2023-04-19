@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/utils"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"time"
@@ -15,20 +16,24 @@ import (
 
 // Recorder structure
 type Recorder struct {
-	config             *types.Configuration
-	client             web.HTTPClient
-	scenarioRepository repository.APIScenarioRepository
+	config                *types.Configuration
+	client                web.HTTPClient
+	scenarioRepository    repository.APIScenarioRepository
+	groupConfigRepository repository.GroupConfigRepository
 }
 
 // NewRecorder instantiates controller for updating api -scenarios
 func NewRecorder(
 	config *types.Configuration,
 	client web.HTTPClient,
-	scenarioRepository repository.APIScenarioRepository) *Recorder {
+	scenarioRepository repository.APIScenarioRepository,
+	groupConfigRepository repository.GroupConfigRepository,
+) *Recorder {
 	return &Recorder{
-		config:             config,
-		client:             client,
-		scenarioRepository: scenarioRepository,
+		config:                config,
+		client:                client,
+		scenarioRepository:    scenarioRepository,
+		groupConfigRepository: groupConfigRepository,
 	}
 }
 
@@ -42,6 +47,22 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	u, err := url.Parse(mockURL)
 	if err != nil {
 		return fmt.Errorf("failed to parse mock url due to %w", err)
+	}
+	if groupConfig, err := r.groupConfigRepository.Load(c.Request().Header.Get(types.MockGroup)); err == nil {
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			return c.Blob(status, "application/json", []byte("injected fault from recorder"))
+		}
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "Recorder",
+				"Group":       c.Request().Header.Get(types.MockGroup),
+				"GroupConfig": groupConfig,
+				"Delay":       delay,
+			}).Infof("artificial sleep wait")
+			time.Sleep(delay)
+		}
 	}
 
 	var reqBody []byte

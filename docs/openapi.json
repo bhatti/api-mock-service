@@ -376,6 +376,63 @@
         }
       }
     },
+    "/_groups/{group}/config": {
+      "get": {
+        "tags": [
+          "group-config"
+        ],
+        "description": "Returns group config",
+        "operationId": "getGroupConfig",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "APIScenario body for getting group-config",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupConfig"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "group-config"
+        ],
+        "description": "Saves group config",
+        "operationId": "putGroupConfig",
+        "requestBody": {
+          "content": {
+            "*/*": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupConfig"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "description": "APIScenario body for updating group-config",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "Body"
+      }
+    },
     "/_history": {
       "get": {
         "tags": [
@@ -1570,6 +1627,50 @@
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
         "format": "int64",
         "x-go-package": "time"
+      },
+      "GroupConfig": {
+        "type": "object",
+        "properties": {
+          "chaos_enabled": {
+            "type": "boolean",
+            "description": "ChaosEnabled to enable faults and delays",
+            "x-go-name": "ChaosEnabled"
+          },
+          "http_errors": {
+            "type": "array",
+            "description": "HTTPErrors to return for failure",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "x-go-name": "HTTPErrors"
+          },
+          "max_additional_latency": {
+            "$ref": "#/components/schemas/Duration"
+          },
+          "mean_time_between_additional_latency": {
+            "type": "number",
+            "description": "MeanTimeBetweenAdditionalLatency for adding delay",
+            "format": "double",
+            "x-go-name": "MeanTimeBetweenAdditionalLatency"
+          },
+          "mean_time_between_failure": {
+            "type": "number",
+            "description": "MeanTimeBetweenFailure for failure",
+            "format": "double",
+            "x-go-name": "MeanTimeBetweenFailure"
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Variables to set for templates",
+            "x-go-name": "Variables"
+          }
+        },
+        "description": "GroupConfig for group configuration",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
       "Har": {
         "type": "object",
@@ -3075,12 +3176,26 @@
           }
         }
       },
+      "groupConfigResponse": {
+        "description": "APIScenario body for getting group-config",
+        "content": {
+          "*/*": {
+            "schema": {
+              "$ref": "#/components/schemas/GroupConfig"
+            }
+          }
+        }
+      },
       "postExecHistoryHarResponse": {
         "description": "",
         "content": {}
       },
       "postExecHistoryPostmanResponse": {
         "description": "",
+        "content": {}
+      },
+      "putGroupConfigResponse": {
+        "description": "APIScenario body for updating group-config",
         "content": {}
       }
     }

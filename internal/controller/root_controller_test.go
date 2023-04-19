@@ -22,7 +22,9 @@ func Test_ShouldNotPlayNonExistingAPI(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -51,7 +53,9 @@ func Test_ShouldPlayGetProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
@@ -89,7 +93,9 @@ func Test_ShouldPlayDeleteProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -121,7 +127,9 @@ func Test_ShouldPlayPostProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Post, fmt.Sprintf("books_post_%d", i), "/api/books/:topic", i)))
@@ -152,7 +160,9 @@ func Test_ShouldPlayPutProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Put, fmt.Sprintf("books_put_%d", i), "/api/books/:topic/:id", i)))
@@ -183,7 +193,9 @@ func Test_ShouldPlayConnectProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Connect, fmt.Sprintf("books_Connect_%d", i), "/api/books/:topic/:id", i)))
@@ -214,7 +226,9 @@ func Test_ShouldPlayHeadProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Head, fmt.Sprintf("books_Head_%d", i), "/api/books/:topic/:id", i)))
@@ -245,7 +259,9 @@ func Test_ShouldPlayOptionsProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Options, fmt.Sprintf("books_Options_%d", i), "/api/books/:topic/:id", i)))
@@ -276,7 +292,9 @@ func Test_ShouldPlayPatchProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Patch, fmt.Sprintf("books_Patch_%d", i), "/api/books/:topic/:id", i)))
@@ -307,7 +325,9 @@ func Test_ShouldPlayTraceProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	player := contract.NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(buildScenario(types.Trace, fmt.Sprintf("books_Trace_%d", i), "/api/books/:topic/:id", i)))

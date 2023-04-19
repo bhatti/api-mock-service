@@ -23,14 +23,16 @@ var baseURL = "https://mocksite.local"
 func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	// GIVEN scenario repository
 	config := types.BuildTestConfig()
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, &types.APIKeyData{}, dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -42,15 +44,17 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 
 func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	_, err = saveTestScenario("../../fixtures/create_user.yaml", repo)
+	_, err = saveTestScenario("../../fixtures/create_user.yaml", scenarioRepository)
 	require.NoError(t, err)
-	_, err = saveTestScenario("../../fixtures/get_user.yaml", repo)
+	_, err = saveTestScenario("../../fixtures/get_user.yaml", scenarioRepository)
 	require.NoError(t, err)
-	_, err = saveTestScenario("../../fixtures/users.yaml", repo)
+	_, err = saveTestScenario("../../fixtures/users.yaml", scenarioRepository)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -63,7 +67,7 @@ func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 	client.AddMapping("GET", baseURL+"/users", web.NewStubHTTPResponse(200,
 		`{"User": {"Directory": "my_dir3", "Username": "my_user3@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, client)
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 	// THEN it should execute saved scenario
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	res := executor.ExecuteByHistory(context.Background(), &http.Request{}, "user_group", dataTemplate, contractReq)
@@ -75,15 +79,17 @@ func Test_ShouldExecuteScenariosByHistory(t *testing.T) {
 
 func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	_, err = saveTestScenario("../../fixtures/create_user.yaml", repo)
+	_, err = saveTestScenario("../../fixtures/create_user.yaml", scenarioRepository)
 	require.NoError(t, err)
-	_, err = saveTestScenario("../../fixtures/get_user.yaml", repo)
+	_, err = saveTestScenario("../../fixtures/get_user.yaml", scenarioRepository)
 	require.NoError(t, err)
-	_, err = saveTestScenario("../../fixtures/users.yaml", repo)
+	_, err = saveTestScenario("../../fixtures/users.yaml", scenarioRepository)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -96,7 +102,7 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 	client.AddMapping("GET", baseURL+"/users", web.NewStubHTTPResponse(200,
 		`{"User": {"Directory": "my_dir3", "Username": "my_user3@foo.cc", "DesiredDeliveryMediums": ["EMAIL"]}}`))
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, client)
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 	// THEN it should execute saved scenario
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	res := executor.ExecuteByGroup(context.Background(), &http.Request{}, "user_group", dataTemplate, contractReq)
@@ -109,22 +115,24 @@ func Test_ShouldExecuteChainedGroupScenarios(t *testing.T) {
 func Test_ShouldExecuteGetTodo(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", scenarioRepository)
 	require.NoError(t, err)
 	scenario.Path = "/todos/10"
 	scenario.Response.Assertions = []string{"VariableContains contents.id 10", "VariableContains contents.title illo"}
-	err = repo.Save(scenario)
+	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -136,11 +144,13 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 func Test_ShouldExecutePutPosts(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", scenarioRepository)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -148,7 +158,7 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -160,17 +170,19 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", scenarioRepository)
 	require.NoError(t, err)
 	// AND a bad assertion
 	scenario.Request.Headers[types.AuthorizationHeader] = "AWS4-HMAC-SHA256"
 	scenario.Response.Assertions = types.AddAssertion(
 		scenario.Response.Assertions, "VariableContains headers.Content-Type application/xjson")
-	err = repo.Save(scenario)
+	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -178,7 +190,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {
@@ -191,15 +203,17 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", scenarioRepository)
 	require.NoError(t, err)
 	// AND bad matching header
 	scenario.Response.AssertHeadersPattern[types.ContentTypeHeader] = "application/xjson"
-	err = repo.Save(scenario)
+	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -207,7 +221,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 
 	// WHEN executing scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
@@ -222,15 +236,17 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", scenarioRepository)
 	require.NoError(t, err)
 	// AND missing header
 	scenario.Request.Headers["Content-Type"] = "blah"
-	err = repo.Save(scenario)
+	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -238,7 +254,7 @@ func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {
@@ -251,15 +267,17 @@ func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/put_posts.yaml", scenarioRepository)
 	require.NoError(t, err)
 	// AND missing header
 	scenario.Response.AssertHeadersPattern["Abc-Content-Type"] = "application/xjson"
-	err = repo.Save(scenario)
+	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -267,7 +285,7 @@ func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {
@@ -280,11 +298,13 @@ func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 func Test_ShouldExecutePostProductScenario(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/save_product.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/save_product.yaml", scenarioRepository)
 	require.NoError(t, err)
 
 	client := web.NewStubHTTPClient()
@@ -295,7 +315,7 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, client)
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -307,11 +327,13 @@ func Test_ShouldExecutePostProductScenario(t *testing.T) {
 func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/get_comment.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/get_comment.yaml", scenarioRepository)
 	require.NoError(t, err)
 
 	client := web.NewStubHTTPClient()
@@ -330,7 +352,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, client)
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {
@@ -343,11 +365,13 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND a valid scenario
-	scenario, err := saveTestScenario("../../fixtures/get_comment.yaml", repo)
+	scenario, err := saveTestScenario("../../fixtures/get_comment.yaml", scenarioRepository)
 	require.NoError(t, err)
 
 	client := web.NewStubHTTPClient()
@@ -358,7 +382,7 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest(baseURL, 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(repo, client)
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -371,7 +395,9 @@ func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {
 func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND mock scenarios from open-api specifications
@@ -390,7 +416,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 		if scenario.Response.StatusCode == 200 {
 			scenario.Group = "bad_v1_job"
 		}
-		err = repo.Save(scenario)
+		err = scenarioRepository.Save(scenario)
 		require.NoError(t, err)
 	}
 	// AND valid template for random data
@@ -399,7 +425,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 	contractReq.Params = data
 	contractReq.Verbose = true
 	// AND executor
-	executor := NewProducerExecutor(repo, client)
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 	// WHEN executing scenario
 	res := executor.ExecuteByGroup(context.Background(), &http.Request{}, "bad_v1_job", dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -415,7 +441,9 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	b, err := os.ReadFile("../../fixtures/oapi/jobs-openapi.json")
 	require.NoError(t, err)
 	// AND scenario repository
-	repo, err := repository.NewFileAPIScenarioRepository(config)
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	// AND valid template for random data
@@ -430,7 +458,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 		scenario.Group = fmt.Sprintf("good_spec_%d", i)
 		// WHEN saving scenario to mock scenario repository
-		err = repo.Save(scenario)
+		err = scenarioRepository.Save(scenario)
 		// THEN it should save scenario
 		require.NoError(t, err)
 		// WITH mock web client
@@ -438,9 +466,9 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		contractReq.Verbose = false
 		contractReq.Params = data
 		// AND executor
-		executor := NewProducerExecutor(repo, client)
+		executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)
 		// AND should return saved scenario
-		saved, err := repo.Lookup(scenario.ToKeyData(), nil)
+		saved, err := scenarioRepository.Lookup(scenario.ToKeyData(), nil)
 		require.NoError(t, err)
 		if scenario.Response.StatusCode != saved.Response.StatusCode {
 			t.Fatalf("unexpected status %d != %d", scenario.Response.StatusCode, saved.Response.StatusCode)

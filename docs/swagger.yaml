@@ -295,6 +295,40 @@ definitions:
     format: int64
     type: integer
     x-go-package: time
+  GroupConfig:
+    description: GroupConfig for group configuration
+    properties:
+      chaos_enabled:
+        description: ChaosEnabled to enable faults and delays
+        type: boolean
+        x-go-name: ChaosEnabled
+      http_errors:
+        description: HTTPErrors to return for failure
+        items:
+          format: int64
+          type: integer
+        type: array
+        x-go-name: HTTPErrors
+      max_additional_latency:
+        $ref: '#/definitions/Duration'
+      mean_time_between_additional_latency:
+        description: MeanTimeBetweenAdditionalLatency for adding delay
+        format: double
+        type: number
+        x-go-name: MeanTimeBetweenAdditionalLatency
+      mean_time_between_failure:
+        description: MeanTimeBetweenFailure for failure
+        format: double
+        type: number
+        x-go-name: MeanTimeBetweenFailure
+      variables:
+        additionalProperties:
+          type: string
+        description: Variables to set for templates
+        type: object
+        x-go-name: Variables
+    type: object
+    x-go-package: github.com/bhatti/api-mock-service/internal/types
   Har:
     description: Har is a container type for deserialization
     properties:
@@ -1566,6 +1600,34 @@ paths:
       summary: Finds api test-fixture names for given method and path.
       tags:
       - api-test-fixtures
+  /_groups/{group}/config:
+    get:
+      description: Returns group config
+      operationId: getGroupConfig
+      parameters:
+      - in: path
+        name: group
+        required: true
+        type: string
+        x-go-name: Group
+      responses:
+        "200":
+          $ref: '#/responses/groupConfigResponse'
+      tags:
+      - group-config
+    put:
+      description: Saves group config
+      operationId: putGroupConfig
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/GroupConfig'
+      responses:
+        "200":
+          $ref: '#/responses/putGroupConfigResponse'
+      tags:
+      - group-config
   /_history:
     get:
       operationId: getExecHistory
@@ -2037,8 +2099,14 @@ responses:
       items:
         $ref: '#/definitions/APIScenario'
       type: array
+  groupConfigResponse:
+    description: APIScenario body for getting group-config
+    schema:
+      $ref: '#/definitions/GroupConfig'
   postExecHistoryHarResponse:
     description: ""
   postExecHistoryPostmanResponse:
     description: ""
+  putGroupConfigResponse:
+    description: APIScenario body for updating group-config
 swagger: "2.0"

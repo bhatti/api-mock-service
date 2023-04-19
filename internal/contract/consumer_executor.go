@@ -6,6 +6,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,23 +17,26 @@ import (
 
 // ConsumerExecutor structure
 type ConsumerExecutor struct {
-	scenarioRepository repository.APIScenarioRepository
-	fixtureRepository  repository.APIFixtureRepository
+	scenarioRepository    repository.APIScenarioRepository
+	fixtureRepository     repository.APIFixtureRepository
+	groupConfigRepository repository.GroupConfigRepository
 }
 
 // NewConsumerExecutor instantiates controller for updating api-scenarios
 func NewConsumerExecutor(
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
+	groupConfigRepository repository.GroupConfigRepository,
 ) *ConsumerExecutor {
 	return &ConsumerExecutor{
-		scenarioRepository: scenarioRepository,
-		fixtureRepository:  fixtureRepository,
+		scenarioRepository:    scenarioRepository,
+		fixtureRepository:     fixtureRepository,
+		groupConfigRepository: groupConfigRepository,
 	}
 }
 
 // Execute request and replays stubbed response
-func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
+func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 	started := time.Now()
 	key, err := web.BuildMockScenarioKeyData(c.Request())
 	if err != nil {
@@ -48,16 +52,41 @@ func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 			overrides[k] = v[0]
 		}
 	}
-	matchedScenario, err := p.scenarioRepository.Lookup(key, overrides)
-	if err != nil {
+	matchedScenario, matchErr := cx.scenarioRepository.Lookup(key, overrides)
+	if matchedScenario != nil {
+		key.Group = matchedScenario.Group
+	}
+	// Embedding this check in between matchErr because by default lookup uses path and may not have path
+	if groupConfig, err := cx.groupConfigRepository.Load(key.Group); err == nil {
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			return c.Blob(
+				status,
+				"application/json",
+				[]byte("injected fault from consumer-executor"))
+		}
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "ConsumerExecutor",
+				"Group":       key.Group,
+				"GroupConfig": groupConfig,
+				"Scenario":    key,
+				"Delay":       delay,
+			}).Infof("artificial sleep wait")
+			time.Sleep(delay)
+		}
+	}
+
+	if matchErr != nil {
 		var validationErr *types.ValidationError
 		var notFoundErr *types.NotFoundError
-		if errors.As(err, &validationErr) {
-			return c.String(400, err.Error())
-		} else if errors.As(err, &notFoundErr) {
-			return c.String(404, err.Error())
+		if errors.As(matchErr, &validationErr) {
+			return c.String(400, matchErr.Error())
+		} else if errors.As(matchErr, &notFoundErr) {
+			return c.String(404, matchErr.Error())
 		}
-		return err
+		return matchErr
 	}
 
 	respBody, err := AddMockResponse(
@@ -67,8 +96,8 @@ func (p *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		matchedScenario,
 		started,
 		time.Now(),
-		p.scenarioRepository,
-		p.fixtureRepository,
+		cx.scenarioRepository,
+		cx.fixtureRepository,
 	)
 	if err != nil {
 		return err

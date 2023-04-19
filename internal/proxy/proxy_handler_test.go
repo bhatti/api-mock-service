@@ -23,8 +23,10 @@ func Test_ShouldNotStartProxyServer(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 	config.ProxyPort = -1
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	require.Error(t, handler.Start())
 }
 
@@ -35,6 +37,8 @@ func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/path2")
 	require.NoError(t, err)
@@ -43,7 +47,7 @@ func Test_ShouldNotHandleProxyRequestWithNotFoundError(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.Nil(t, res)
 }
@@ -55,6 +59,8 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/path?a=b")
 	require.NoError(t, err)
@@ -63,7 +69,7 @@ func Test_ShouldNotHandleProxyRequestWithValidationError(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.Nil(t, res)
 }
@@ -75,6 +81,8 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	scenario := types.BuildTestScenario(types.Post, "todos", "/vabc5/api/todos", 0)
@@ -90,7 +98,7 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 			"ETag":                  []string{"123"},
 			types.ContentTypeHeader: []string{"application/json"}},
 	}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
@@ -102,6 +110,8 @@ func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	scenario := types.BuildTestScenario(types.Post, "todos", "/api/todos", 0)
 	require.NoError(t, scenarioRepository.Save(scenario))
@@ -111,7 +121,7 @@ func Test_ShouldHandleProxyRequestFixturesWithAdapter(t *testing.T) {
 	adapter.GET("/_fixtures/:method/:name/:path", adapterHandler)
 	adapter.POST("/_fixtures/:method/:name/:path", adapterHandler)
 	adapter.DELETE("/_fixtures/:method/:name/:path", adapterHandler)
-	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, adapter)
+	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, adapter)
 
 	methodPaths := map[string]string{
 		"/_fixtures/POST/fixtures/my/path?a=1&b=1": "GET",
@@ -162,6 +172,8 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	scenario := types.BuildTestScenario(types.Post, "todos", "/api/todos", 0)
 	require.NoError(t, scenarioRepository.Save(scenario))
@@ -173,7 +185,7 @@ func Test_ShouldHandleProxyRequestScenariosWithAdapter(t *testing.T) {
 	adapter.POST("/_scenarios", adapterHandler)
 	adapter.DELETE("/_scenarios/:method/:name/:path", adapterHandler)
 	adapter.POST("/_oapi", adapterHandler)
-	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, adapter)
+	proxy := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, adapter)
 
 	methodPaths := map[string]string{
 		"/_scenarios?a=1&b=1":                     "GET",
@@ -218,6 +230,8 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=b")
 	require.NoError(t, err)
@@ -230,7 +244,7 @@ func Test_ShouldHandleProxyResponseWithoutRequestBody(t *testing.T) {
 		Request: req,
 		Header:  http.Header{},
 	}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
@@ -242,8 +256,10 @@ func Test_ShouldHandleProxyResponseWithoutResponse(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	require.Nil(t, handler.handleResponse(nil, &goproxy.ProxyCtx{}))
 }
 
@@ -254,9 +270,11 @@ func Test_ShouldHandleProxyResponseWithoutRequest(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	res := &http.Response{}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
@@ -268,8 +286,10 @@ func Test_ShouldHandleProxyCondition(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	proxyCond := handler.proxyCondition()
 	u, err := url.Parse("https://localhost:8080")
 	require.NoError(t, err)
@@ -309,6 +329,8 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
 	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=b")
 	require.NoError(t, err)
@@ -322,7 +344,7 @@ func Test_ShouldHandleProxyResponseWithoutResponseBody(t *testing.T) {
 		Request: req,
 		Header:  http.Header{},
 	}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
@@ -333,6 +355,8 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
 
 	u, err := url.Parse("http://localhost:8080/api/todos?a=b")
@@ -348,7 +372,7 @@ func Test_ShouldHandleProxyResponseWithRequestAndResponseBody(t *testing.T) {
 		Body:    io.NopCloser(bytes.NewReader([]byte("test"))),
 		Header:  http.Header{"X1": []string{"val1"}, types.ContentTypeHeader: []string{"json"}},
 	}
-	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, web.NewWebServerAdapter())
+	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	res = handler.handleResponse(res, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}

@@ -46,11 +46,12 @@ var ignoredResponseHeaders = map[string]struct{}{
 
 // Handler structure
 type Handler struct {
-	config             *types.Configuration
-	awsSigner          web.AWSSigner
-	scenarioRepository repository.APIScenarioRepository
-	fixtureRepository  repository.APIFixtureRepository
-	adapter            web.Adapter
+	config                *types.Configuration
+	awsSigner             web.AWSSigner
+	scenarioRepository    repository.APIScenarioRepository
+	fixtureRepository     repository.APIFixtureRepository
+	groupConfigRepository repository.GroupConfigRepository
+	adapter               web.Adapter
 }
 
 // NewProxyHandler instantiates controller for updating api-scenarios
@@ -59,14 +60,16 @@ func NewProxyHandler(
 	awsSigner web.AWSSigner,
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
+	groupConfigRepository repository.GroupConfigRepository,
 	adapter web.Adapter,
 ) *Handler {
 	return &Handler{
-		config:             config,
-		awsSigner:          awsSigner,
-		scenarioRepository: scenarioRepository,
-		fixtureRepository:  fixtureRepository,
-		adapter:            adapter,
+		config:                config,
+		awsSigner:             awsSigner,
+		scenarioRepository:    scenarioRepository,
+		fixtureRepository:     fixtureRepository,
+		groupConfigRepository: groupConfigRepository,
+		adapter:               adapter,
 	}
 }
 
@@ -108,6 +111,33 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 
 func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
 	ctx.UserData = time.Now()
+	if groupConfig, err := h.groupConfigRepository.Load(req.Header.Get(types.MockGroup)); err == nil {
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			resp := &http.Response{}
+			resp.Request = req
+			resp.TransferEncoding = req.TransferEncoding
+			resp.Header = make(http.Header)
+			resp.Header.Add(types.ContentTypeHeader, "application/json")
+			resp.StatusCode = status
+			resp.Status = http.StatusText(status)
+			respBody := []byte("injected fault from proxy-handler")
+			buf := bytes.NewBuffer(respBody)
+			resp.ContentLength = int64(buf.Len())
+			resp.Body = io.NopCloser(buf)
+			return req, resp, nil
+		}
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "ProxyHandler",
+				"Group":       req.Header.Get(types.MockGroup),
+				"GroupConfig": groupConfig,
+				"Delay":       delay,
+			}).Infof("artificial sleep wait")
+			time.Sleep(delay)
+		}
+	}
 	var err error
 	_, req.Body, err = utils.ReadAll(req.Body)
 	if err != nil {
@@ -123,13 +153,14 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 	case utils.ResetReader:
 		_ = req.Body.(utils.ResetReader).Reset()
 	}
-	if req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
+	if h.config.RecordOnly || req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
 		log.WithFields(log.Fields{
-			"UserAgent": req.Header.Get("User-Agent"),
-			"Host":      req.Host,
-			"Path":      req.URL,
-			"Method":    req.Method,
-			"Headers":   req.Header,
+			"UserAgent":        req.Header.Get("User-Agent"),
+			"ConfigRecordOnly": h.config.RecordOnly,
+			"Host":             req.Host,
+			"Path":             req.URL,
+			"Method":           req.Method,
+			"Headers":          req.Header,
 		}).Infof("proxy server skipped local lookup due to record-mode")
 		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
