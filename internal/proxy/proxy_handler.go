@@ -153,11 +153,11 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 			"URL":          req.URL,
 			"Method":       req.Method,
 			"OldAuth":      oldAuth,
-			"Header":       req.Header,
 			"AWSInfo":      awsInfo,
 			"Error":        err,
 			"AWSKey":       web.GetHeaderParamOrEnvValue(nil, web.AWSAccessKey),
 			"HasAWSSecret": web.GetHeaderParamOrEnvValue(nil, web.AWSSecretKey) != "",
+			//"Header":       req.Header,
 		}).Infof("proxy server checked for aws-request")
 		if err == nil {
 			return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
@@ -187,10 +187,10 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		"Host":            req.Host,
 		"Path":            req.URL,
 		"Method":          req.Method,
-		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
 		"AWSAuthSig4":     awsAuthSig4,
 		"Error":           matchErr,
+		//"Headers":         req.Header,
 	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
 	if matchErr != nil {
 		return req, nil, matchErr
@@ -321,10 +321,10 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		resp.Header.Del(k)
 	}
 	log.WithFields(log.Fields{
-		"Response":    resp,
-		"Length":      len(resBytes),
-		"ReqHeaders":  resp.Request.Header,
-		"RespHeaders": resp.Header,
+		"Response": resp,
+		"Length":   len(resBytes),
+		//"ReqHeaders":  resp.Request.Header,
+		//"RespHeaders": resp.Header,
 	}).Infof("proxy server recorded response")
 	resp.Request.Header = make(http.Header) // reset headers for next request in case we are using it.
 	return resp, nil
