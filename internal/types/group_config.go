@@ -19,45 +19,46 @@ type GroupConfig struct {
 	// MaxAdditionalLatency for max delay
 	MaxAdditionalLatency time.Duration `json:"max_additional_latency" mapstructure:"max_additional_latency"`
 	// HTTPErrors to return for failure
-	HTTPErrors []int        `json:"http_errors" mapstructure:"http_errors"`
-	rnd        *rand.Rand   `json:"-" mapstructure:"-"`
-	lock       sync.RWMutex `json:"-" mapstructure:"-"`
+	HTTPErrors []int `json:"http_errors" mapstructure:"http_errors"`
+	rnd        *rand.Rand
+	lock       sync.RWMutex
 }
 
+// GetHTTPStatus accessor
 func (gc *GroupConfig) GetHTTPStatus() int {
 	if !gc.checkInit() {
 		return 0
 	}
-	var prob = 1.0 / float64(gc.MeanTimeBetweenFailure)
-
-	// Sample uniformly over [0,1)
-	sample := gc.rnd.Float64()
-
-	if prob < sample {
+	if !gc.checkProbability(gc.MeanTimeBetweenFailure) {
 		return 0
 	}
 	return gc.HTTPErrors[gc.rnd.Intn(len(gc.HTTPErrors))]
 }
 
-func (gc *GroupConfig) GetDelayLatency() time.Duration {
-	if !gc.checkInit() {
-		return 0
-	}
-
-	var prob = 1.0 / float64(gc.MeanTimeBetweenFailure)
+func (gc *GroupConfig) checkProbability(mean float64) bool {
+	var prob = 1.0 / mean
 
 	// Sample uniformly over [0,1)
 	sample := gc.rnd.Float64()
 
-	if prob >= sample {
-		additional := float64(gc.rnd.Intn(int(gc.MaxAdditionalLatency.Seconds()*10)) + 1)
-		d := time.Second * time.Duration(sample*additional)
-		if d.Seconds() > gc.MaxAdditionalLatency.Seconds() {
-			d = gc.MaxAdditionalLatency
-		}
-		return d
+	return prob < sample
+}
+
+// GetDelayLatency calculates latency
+func (gc *GroupConfig) GetDelayLatency() time.Duration {
+	if !gc.checkInit() {
+		return 0
 	}
-	return 0
+	if !gc.checkProbability(gc.MeanTimeBetweenFailure) {
+		return 0
+	}
+	additional := float64(gc.rnd.Intn(int(gc.MaxAdditionalLatency.Seconds()*10)) + 1)
+	sample := gc.rnd.Float64() + 0.1
+	d := time.Second * time.Duration(sample*additional)
+	if d.Seconds() > gc.MaxAdditionalLatency.Seconds() {
+		d = gc.MaxAdditionalLatency
+	}
+	return d
 }
 
 func (gc *GroupConfig) checkInit() bool {

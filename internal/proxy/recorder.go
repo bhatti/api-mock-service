@@ -48,22 +48,6 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to parse mock url due to %w", err)
 	}
-	if groupConfig, err := r.groupConfigRepository.Load(c.Request().Header.Get(types.MockGroup)); err == nil {
-		status := groupConfig.GetHTTPStatus()
-		if status >= 300 {
-			return c.Blob(status, "application/json", []byte("injected fault from recorder"))
-		}
-		delay := groupConfig.GetDelayLatency()
-		if delay > 0 {
-			log.WithFields(log.Fields{
-				"Component":   "Recorder",
-				"Group":       c.Request().Header.Get(types.MockGroup),
-				"GroupConfig": groupConfig,
-				"Delay":       delay,
-			}).Infof("artificial sleep wait")
-			time.Sleep(delay)
-		}
-	}
 
 	var reqBody []byte
 	reqBody, c.Request().Body, err = utils.ReadAll(c.Request().Body)
@@ -88,7 +72,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		return err
 	}
 
-	resContentType, err := saveMockResponse(
+	scenario, resContentType, err := saveMockResponse(
 		r.config,
 		u,
 		c.Request(),
@@ -102,6 +86,23 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 		r.scenarioRepository)
 	if err != nil {
 		return err
+	}
+	// Embedding this check in between matchErr because by default lookup uses path and may not have path
+	if groupConfig, err := r.groupConfigRepository.Load(scenario.Group); err == nil {
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			return c.String(status, "injected fault from recorder")
+		}
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "Recorder",
+				"Group":       scenario.Group,
+				"GroupConfig": groupConfig,
+				"Delay":       delay,
+			}).Infof("artificial sleep wait")
+			time.Sleep(delay)
+		}
 	}
 
 	return c.Blob(status, resContentType, resBytes)
@@ -118,9 +119,9 @@ func saveMockResponse(
 	resHTTPVersion string,
 	started time.Time,
 	ended time.Time,
-	scenarioRepository repository.APIScenarioRepository) (resContentType string, err error) {
+	scenarioRepository repository.APIScenarioRepository) (scenario *types.APIScenario, resContentType string, err error) {
 
-	scenario, err := types.BuildScenarioFromHTTP(
+	scenario, err = types.BuildScenarioFromHTTP(
 		config,
 		"Recorded",
 		u,
@@ -140,14 +141,14 @@ func saveMockResponse(
 		started,
 		ended)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 
 	if err = scenarioRepository.Save(scenario); err != nil {
-		return "", err
+		return nil, "", err
 	}
 	if err = scenarioRepository.SaveHistory(scenario, u.String(), started, ended); err != nil {
-		return "", err
+		return nil, "", err
 	}
 	resContentType = scenario.Response.ContentType("")
 	return

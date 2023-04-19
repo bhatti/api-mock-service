@@ -84,8 +84,10 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
+	groupConfigRepository.Save("my-group5", &types.GroupConfig{ChaosEnabled: true})
 
 	scenario := types.BuildTestScenario(types.Post, "todos", "/vabc5/api/todos", 0)
+	scenario.Group = "my-group5"
 	require.NoError(t, scenarioRepository.Save(scenario))
 
 	u, err := url.Parse("http://localhost:8080/vabc5/api/todos?a=3&b=abc")
@@ -100,6 +102,8 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 	}
 	handler := NewProxyHandler(config, web.NewAWSSigner(config), scenarioRepository, fixtureRepository, groupConfigRepository, web.NewWebServerAdapter())
 	_, res := handler.handleRequest(req, &goproxy.ProxyCtx{})
+	require.NotNil(t, res)
+	_, res = handler.handleRequest(req, &goproxy.ProxyCtx{})
 	require.NotNil(t, res)
 }
 

@@ -1276,7 +1276,7 @@ curl -X PUT http://localhost:8080/_groups/group-name/config -d `{
   "chaos_enabled": true,
   "mean_time_between_failure": 3,
   "mean_time_between_additional_latency": 4,
-  "max_additional_latency": 3000000000,
+  "max_additional_latency": 3s,
   "http_errors": [
     400,
     401

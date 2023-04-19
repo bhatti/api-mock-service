@@ -463,7 +463,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 		require.NoError(t, err)
 		// WITH mock web client
 		client, data := buildJobsTestClient("AC1234567890", "RUNNING", "/good", scenario.Response.StatusCode)
-		contractReq.Verbose = false
+		contractReq.Verbose = i%2 == 0
 		contractReq.Params = data
 		// AND executor
 		executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, client)

@@ -137,5 +137,6 @@ func (a *ServerAdapter) Stop() {
 func (a *ServerAdapter) Static(string, string) {
 }
 
+// Embed skeleton
 func (a *ServerAdapter) Embed(embed.FS, string, string) {
 }

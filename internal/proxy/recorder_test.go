@@ -81,12 +81,40 @@ func Test_ShouldRecordGetProxyRequests(t *testing.T) {
 	require.True(t, len(all) > 0)
 }
 
+func Test_ShouldRecordDeleteProxyRequestsWithChaos(t *testing.T) {
+	config := types.BuildTestConfig()
+	// GIVEN repository and controller for mock scenario
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	err = groupConfigRepository.Save("todos_101", &types.GroupConfig{ChaosEnabled: true})
+	require.NoError(t, err)
+	client := web.NewStubHTTPClient()
+	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
+	recorder := NewRecorder(config, client, mockScenarioRepository, groupConfigRepository)
+	u, err := url.Parse("http://localhost:8080")
+	require.NoError(t, err)
+	ctx := web.NewStubContext(&http.Request{
+		Method: "DELETE",
+		URL:    u,
+		Header: map[string][]string{
+			types.MockURL: {"https://jsonplaceholder.typicode.com/todos/101"},
+		},
+	})
+
+	// WHEN invoking DELETE proxy API, it may fail
+	_ = recorder.Handle(ctx)
+}
+
 func Test_ShouldRecordDeleteProxyRequests(t *testing.T) {
 	config := types.BuildTestConfig()
 	// GIVEN repository and controller for mock scenario
 	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
+	require.NoError(t, err)
+	err = groupConfigRepository.Save("todos_101", &types.GroupConfig{ChaosEnabled: false})
 	require.NoError(t, err)
 	client := web.NewStubHTTPClient()
 	client.AddMapping("DELETE", "https://jsonplaceholder.typicode.com/todos/101", web.NewStubHTTPResponse(200, "{}"))
@@ -238,7 +266,7 @@ func Test_ShouldSaveMockResponse(t *testing.T) {
 		Method: "POST",
 		Header: resHeaders,
 	}
-	_, err = saveMockResponse(
+	_, _, err = saveMockResponse(
 		config,
 		u,
 		req,

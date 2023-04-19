@@ -60,10 +60,9 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 	if groupConfig, err := cx.groupConfigRepository.Load(key.Group); err == nil {
 		status := groupConfig.GetHTTPStatus()
 		if status >= 300 {
-			return c.Blob(
+			return c.String(
 				status,
-				"application/json",
-				[]byte("injected fault from consumer-executor"))
+				"injected fault from consumer-executor")
 		}
 		delay := groupConfig.GetDelayLatency()
 		if delay > 0 {

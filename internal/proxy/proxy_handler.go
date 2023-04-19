@@ -111,33 +111,6 @@ func (h *Handler) handleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http
 
 func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response, error) {
 	ctx.UserData = time.Now()
-	if groupConfig, err := h.groupConfigRepository.Load(req.Header.Get(types.MockGroup)); err == nil {
-		status := groupConfig.GetHTTPStatus()
-		if status >= 300 {
-			resp := &http.Response{}
-			resp.Request = req
-			resp.TransferEncoding = req.TransferEncoding
-			resp.Header = make(http.Header)
-			resp.Header.Add(types.ContentTypeHeader, "application/json")
-			resp.StatusCode = status
-			resp.Status = http.StatusText(status)
-			respBody := []byte("injected fault from proxy-handler")
-			buf := bytes.NewBuffer(respBody)
-			resp.ContentLength = int64(buf.Len())
-			resp.Body = io.NopCloser(buf)
-			return req, resp, nil
-		}
-		delay := groupConfig.GetDelayLatency()
-		if delay > 0 {
-			log.WithFields(log.Fields{
-				"Component":   "ProxyHandler",
-				"Group":       req.Header.Get(types.MockGroup),
-				"GroupConfig": groupConfig,
-				"Delay":       delay,
-			}).Infof("artificial sleep wait")
-			time.Sleep(delay)
-		}
-	}
 	var err error
 	_, req.Body, err = utils.ReadAll(req.Body)
 	if err != nil {
@@ -209,7 +182,7 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		return req, nil, err
 	}
 
-	matchedScenario, err := h.scenarioRepository.Lookup(key, nil)
+	matchedScenario, matchErr := h.scenarioRepository.Lookup(key, nil)
 	log.WithFields(log.Fields{
 		"Host":            req.Host,
 		"Path":            req.URL,
@@ -217,10 +190,42 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		"Headers":         req.Header,
 		"MatchedScenario": matchedScenario,
 		"AWSAuthSig4":     awsAuthSig4,
-		"Error":           err,
+		"Error":           matchErr,
 	}).Infof("proxy server request received [playback=%v]", matchedScenario != nil)
-	if err != nil {
-		return req, nil, err
+	group := req.Header.Get(types.MockGroup)
+	if matchedScenario != nil {
+		group = matchedScenario.Group
+	}
+	// Embedding this check in between matchErr because by default lookup uses path and may not have path
+	if groupConfig, err := h.groupConfigRepository.Load(group); err == nil {
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			resp := &http.Response{}
+			resp.Request = req
+			resp.TransferEncoding = req.TransferEncoding
+			resp.Header = make(http.Header)
+			resp.Header.Add(types.ContentTypeHeader, "application/json")
+			resp.StatusCode = status
+			resp.Status = http.StatusText(status)
+			respBody := []byte("injected fault from proxy-handler")
+			buf := bytes.NewBuffer(respBody)
+			resp.ContentLength = int64(buf.Len())
+			resp.Body = io.NopCloser(buf)
+			return req, resp, nil
+		}
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "ProxyHandler",
+				"Group":       group,
+				"GroupConfig": groupConfig,
+				"Delay":       delay,
+			}).Infof("artificial sleep wait")
+			time.Sleep(delay)
+		}
+	}
+	if matchErr != nil {
+		return req, nil, matchErr
 	}
 	respHeader := make(http.Header)
 	respBody, err := contract.AddMockResponse(
@@ -305,7 +310,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		return resp, err
 	}
 
-	resContentType, err := saveMockResponse(
+	_, resContentType, err := saveMockResponse(
 		h.config,
 		resp.Request.URL,
 		resp.Request,
