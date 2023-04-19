@@ -1268,20 +1268,16 @@ Note: the group path parameter in above URL is optional and you can omit if you 
 ## Group Variables and Chaos Configurations
 In addition to specifying variables for each scenario, you can also use APIs to store group variables and chaos config, e.g.
 ```bash
-curl -X PUT http://localhost:8080/_groups/group-name/config -d `{
+curl -X PUT http://localhost:8080/_groups/group-name/config -d '{
   "variables": {
-    "var1": "val1",
-    "var2": "val2",
+    "v1": "val"
   },
-  "chaos_enabled": true,
-  "mean_time_between_failure": 3,
-  "mean_time_between_additional_latency": 4,
-  "max_additional_latency": 3s,
-  "http_errors": [
-    400,
-    401
-  ]
-}`
+  "chaos_enabled": false,
+  "mean_time_between_failure": 4,
+  "mean_time_between_additional_latency": 8,
+  "max_additional_latency": 3000000000,
+  "http_errors": [400, 401, 500]
+}'
 ```
 In above example, variables `var1` and `var2` will be added to all scenarios belonging to `group-name`. In addition, it will enable
 chaos testing for the group so that 30% of tests will fail with errors (HTTP 400 or 401) and 40% requests will add latency delays.
