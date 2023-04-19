@@ -24,6 +24,9 @@ const MockScenarioHeader = "X-Mock-Scenario"
 // MockScenarioPath header
 const MockScenarioPath = "X-Mock-Path"
 
+// MockChaosEnabled header
+const MockChaosEnabled = "X-Mock-Chaos-Enabled"
+
 // ContentTypeHeader header
 const ContentTypeHeader = "Content-Type"
 

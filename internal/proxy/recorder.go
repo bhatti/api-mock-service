@@ -90,6 +90,7 @@ func (r *Recorder) Handle(c web.APIContext) (err error) {
 
 	// Embedding this check for chaos settings
 	if groupConfig, err := r.groupConfigRepository.Load(scenario.Group); err == nil {
+		resHeaders[types.MockChaosEnabled] = []string{fmt.Sprintf("%v", groupConfig.ChaosEnabled)}
 		status := groupConfig.GetHTTPStatus()
 		if status >= 300 {
 			return c.String(status, "injected fault from recorder")

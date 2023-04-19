@@ -129,6 +129,7 @@ func AddMockResponse(
 	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
 	// Embedding this check to return chaos response based on group config
 	if groupConfig, err := groupConfigRepository.Load(scenario.Group); err == nil {
+		respHeaders.Add(types.MockChaosEnabled, fmt.Sprintf("%v", groupConfig.ChaosEnabled))
 		status := groupConfig.GetHTTPStatus()
 		if status >= 300 {
 			scenario.Response.StatusCode = status
