@@ -1286,6 +1286,8 @@ curl -X PUT http://localhost:8080/_groups/group-name/config -d `{
 In above example, variables `var1` and `var2` will be added to all scenarios belonging to `group-name`. In addition, it will enable
 chaos testing for the group so that 30% of tests will fail with errors (HTTP 400 or 401) and 40% requests will add latency delays.
 
+*Note*: You can use `global` group to share variables for all scenarios but chaos settings are not shared across groups.
+
 ## Chaining Scenarios for Group Contract Testing
 An API scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 
 You can capture or define multiple scenarios for a group and then execute them in a specific order and then pass certain properties 
