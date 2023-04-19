@@ -1280,7 +1280,7 @@ curl -X PUT http://localhost:8080/_groups/group-name/config -d '{
 }'
 ```
 In above example, variables `var1` and `var2` will be added to all scenarios belonging to `group-name`. In addition, it will enable
-chaos testing for the group so that 30% of tests will fail with errors (HTTP 400 or 401) and 40% requests will add latency delays.
+chaos testing for the group so that 1/4th of tests will fail with errors (HTTP 400 or 401) and 1/8th requests will add latency delays.
 
 *Note*: You can use `global` group to share variables for all scenarios but chaos settings are not shared across groups.
 
