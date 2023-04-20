@@ -95,6 +95,8 @@ type putGroupsConfigParams struct {
 // APIScenario body for getting group-config
 // swagger:response groupConfigResponse
 type groupConfigResponseBody struct {
+	// in:path
+	Group string `json:"group"`
 	// in:body
 	Body types.GroupConfig
 }

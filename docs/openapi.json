@@ -398,6 +398,14 @@
         "responses": {
           "200": {
             "description": "APIScenario body for getting group-config",
+            "headers": {
+              "group": {
+                "description": "in:path",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "content": {
               "*/*": {
                 "schema": {
@@ -3181,6 +3189,14 @@
       },
       "groupConfigResponse": {
         "description": "APIScenario body for getting group-config",
+        "headers": {
+          "group": {
+            "description": "in:path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
         "content": {
           "*/*": {
             "schema": {
