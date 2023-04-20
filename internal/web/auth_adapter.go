@@ -35,12 +35,11 @@ func (a *authAdapter) HandleAuth(req *http.Request) (bool, string, error) {
 
 	if a.config.AuthBearerToken != "" {
 		req.Header.Set(types.AuthorizationHeader, "Bearer "+a.config.AuthBearerToken)
-		return true, "bearer-token", nil
+		return true, "bearer-token-auth", nil
 	} else if a.config.BasicAuth.Username != "" && a.config.BasicAuth.Password != "" {
 		req.SetBasicAuth(a.config.BasicAuth.Username, a.config.BasicAuth.Password)
-		return true, "basic", nil
+		return true, "basic-auth", nil
 	} else {
 		return a.awsSigner.AWSSign(req, staticCredentials)
 	}
-	return false, "", nil
 }

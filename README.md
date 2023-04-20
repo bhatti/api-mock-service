@@ -559,72 +559,71 @@ You can use loops and conditional primitives of template language (https://golan
 generate dynamic responses as follows:
 
 ```yaml
-                                                     method: GET
-                                                     name: get_devices
-                                                     path: /devices
-                                                     description: ""
-                                                     predicate: ""
-                                                     group: devices
-                                                     request:
-                                                       assert_headers_pattern:
-                                                         Content-Type: "application/json; charset=utf-8"
-                                                     response:
-                                                       headers:
-                                                         "Server":
-                                                           - "SampleAPI"
-                                                         "Connection":
-                                                           - "keep-alive"
-                                                       content_type: application/json
-                                                       contents: >
-                                                         {
-                                                         "Devices": [
-  { { - range $val := Iterate .pageSize } }
-  {
-    "UUID": "{{SeededUUID $val}}",
-    "Line": { {{SeededFileLine "lines.txt" $val } }, "Type": "Public", "IsManaged": false },
-                                                                         "Amount": {{JSONFileProperty "props.yaml" "amount"}},
-                                                                         "SerialNumber": "{{UUID}}",
-                                                                         "MacAddress": "{{UUID}}",
-                                                                         "Imei": "{{UUID}}",
-                                                                         "AssetNumber": "{{RandString 20}}",
-                                                                         "LocationGroupId": {
-                                                                           "Id": {
-                                                                             "Value": {{RandIntMax 1000 } },
-                                                                         },
-                                                                                              "Name": "{{SeededCity $val}}",
-                                                                                              "UUID": "{{UUID}}"
-                                                                       },
-                                                                         "DeviceFriendlyName": "Device for {{SeededName $val}}",
-                                                                         "LastSeen": "{{Time}}",
-                                                                         "Email": "{{RandEmail}}",
-                                                                         "Phone": "{{RandPhone}}",
-                                                                         "EnrollmentStatus": {{SeededBool $val}}
-                                                                         "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
-                                                                         "Group": {{RandCity}},
-                                                                         "Date": {{TimeFormat "3:04PM"}},
-                                                                         "BatteryLevel": "{{RandFloatMax 100}}%",
-                                                                         "StrEnum": {{EnumString "ONE TWO THREE"}},
-                                                                         "IntEnum": {{EnumInt 10 20 30}},
-                                                                         "ProcessorArchitecture": {{RandIntMax 1000}},
-                                                                         "TotalPhysicalMemory": {{RandIntMax 1000000}},
-                                                                         "VirtualMemory": {{RandIntMax 1000000}},
-                                                                         "AvailablePhysicalMemory": {{RandIntMax 1000000}},
-                                                                         "CompromisedStatus": {{RandBool}},
-                                                                         "Add": {{Add 2 1}},
-                                                                         "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
-                                                                       }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
-  { { end } }
+method: GET
+name: get_devices
+path: /devices
+description: ""
+request:
+  match_content_type: "application/json; charset=utf-8"
+response:
+  headers:
+    "Server":
+      - "SampleAPI"
+    "Connection":
+      - "keep-alive"
+    "Content-Type":
+      - "application/json"
+  contents: >
+    {
+    "Devices": [
+        {{- range $val := Iterate .pageSize }}
+      {
+        "UUID": "{{SeededUUID $val}}",
+        "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
+        "Token": "{{FileProperty "props.yaml" "token"}}",
+        "Amount": {{JSONFileProperty "props.yaml" "amount"}},
+        "SerialNumber": "{{UUID}}",
+        "MacAddress": "{{UUID}}",
+        "Imei": "{{UUID}}",
+        "AssetNumber": "{{RandString 20}}",
+        "LocationGroupId": {
+         "Id": {
+           "Value": {{RandIntMax 1000}},
+         },
+         "Name": "{{SeededCity $val}}",
+         "UUID": "{{UUID}}"
+        },
+        "DeviceFriendlyName": "Device for {{SeededName $val}}",
+        "LastSeen": "{{Time}}",
+        "Email": "{{RandEmail}}",
+        "Phone": "{{RandPhone}}",
+        "EnrollmentStatus": {{SeededBool $val}}
+        "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
+        "Group": {{RandCity}},
+        "Date": {{TimeFormat "3:04PM"}},
+        "BatteryLevel": "{{RandFloatMax 100}}%",
+        "StrEnum": {{EnumString "ONE TWO THREE"}},
+        "IntEnum": {{EnumInt 10 20 30}},
+        "ProcessorArchitecture": {{RandIntMax 1000}},
+        "TotalPhysicalMemory": {{RandIntMax 1000000}},
+        "VirtualMemory": {{RandIntMax 1000000}},
+        "AvailablePhysicalMemory": {{RandIntMax 1000000}},
+        "CompromisedStatus": {{RandBool}},
+        "Add": {{Add 2 1}},
+        "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
+      }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
+        {{ end }}
 ],
-                                                     "Page": {{.page}},
-                                                     "PageSize": {{.pageSize}},
-                                                     "Total": {{.pageSize}}
+"Page": {{.page}},
+"PageSize": {{.pageSize}},
+"Total": {{.pageSize}}
 }
-                                                       {{if NthRequest 10 }}
-                                                     status_code: {{EnumInt 500 501}}
-                                                       {{else}}
-                                                     status_code: {{EnumInt 200 400}}
-                                                       {{end}}
-                                                     wait_before_reply: {{.page}}s
+  {{if NthRequest 10 }}
+status_code: {{EnumInt 500 501}}
+  {{else}}
+status_code: {{EnumInt 200 400}}
+  {{end}}
+wait_before_reply: {{.page}}s    
 ```
 
 Above example includes a number of template primitives and custom functions to generate dynamic contents such as:
