@@ -398,14 +398,6 @@
         "responses": {
           "200": {
             "description": "APIScenario body for getting group-config",
-            "headers": {
-              "group": {
-                "description": "in:path",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
             "content": {
               "*/*": {
                 "schema": {
@@ -422,6 +414,18 @@
         ],
         "description": "Saves group config",
         "operationId": "putGroupConfig",
+        "parameters": [
+          {
+            "name": "group",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "x-go-name": "Group"
+            },
+            "x-go-name": "Group"
+          }
+        ],
         "requestBody": {
           "content": {
             "*/*": {
@@ -3189,14 +3193,6 @@
       },
       "groupConfigResponse": {
         "description": "APIScenario body for getting group-config",
-        "headers": {
-          "group": {
-            "description": "in:path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        },
         "content": {
           "*/*": {
             "schema": {

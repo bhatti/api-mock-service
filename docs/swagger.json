@@ -2038,6 +2038,13 @@
         "operationId": "putGroupConfig",
         "parameters": [
           {
+            "in": "path",
+            "name": "group",
+            "required": true,
+            "type": "string",
+            "x-go-name": "Group"
+          },
+          {
             "in": "body",
             "name": "Body",
             "schema": {
@@ -2754,12 +2761,6 @@
     },
     "groupConfigResponse": {
       "description": "APIScenario body for getting group-config",
-      "headers": {
-        "group": {
-          "description": "in:path",
-          "type": "string"
-        }
-      },
       "schema": {
         "$ref": "#/definitions/GroupConfig"
       }
