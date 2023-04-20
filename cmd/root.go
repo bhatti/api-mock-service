@@ -185,7 +185,7 @@ func buildControllers(
 	webServer web.Server,
 ) (err error) {
 	recorder := proxy.NewRecorder(serverConfig, httpClient, scenarioRepo, groupConfigRepo)
-	player := contract.NewConsumerExecutor(scenarioRepo, fixtureRepo, groupConfigRepo)
+	player := contract.NewConsumerExecutor(serverConfig, scenarioRepo, fixtureRepo, groupConfigRepo)
 	executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, httpClient)
 	_ = controller.NewOAPIController(InternalOAPI, scenarioRepo, oapiRepo, webServer)
 	_ = controller.NewGroupConfigController(groupConfigRepo, webServer)

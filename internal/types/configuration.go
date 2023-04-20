@@ -73,6 +73,7 @@ func NewConfiguration(
 	viper.SetDefault("assert_headers_pattern", "")
 	viper.SetDefault("assert_query_params_pattern", "")
 	viper.SetDefault("cors", "*")
+	viper.SetDefault("record_only", "false")
 	viper.SetDefault("debug", "false")
 	viper.SetDefault("aws.strip", "")
 	viper.SetDefault("aws.name", "")
@@ -139,6 +140,7 @@ func NewConfiguration(
 		"DataDir":           config.DataDir,
 		"Version":           version,
 		"ResignAllRequests": config.AWS.ResignAllRequests,
+		"RecordOnly":        config.RecordOnly,
 		"UsedConfig":        viper.ConfigFileUsed(),
 	}).Infof("loaded config file...")
 	return config, nil

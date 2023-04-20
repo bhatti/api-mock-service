@@ -126,17 +126,6 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 	case utils.ResetReader:
 		_ = req.Body.(utils.ResetReader).Reset()
 	}
-	if h.config.RecordOnly || req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
-		log.WithFields(log.Fields{
-			"UserAgent":        req.Header.Get("User-Agent"),
-			"ConfigRecordOnly": h.config.RecordOnly,
-			"Host":             req.Host,
-			"Path":             req.URL,
-			"Method":           req.Method,
-			"Headers":          req.Header,
-		}).Infof("proxy server skipped local lookup due to record-mode")
-		return req, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
-	}
 
 	staticCredentials := credentials.NewStaticCredentials(
 		web.GetHeaderParamOrEnvValue(nil, web.AWSAccessKey),
@@ -158,23 +147,23 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 			"AWSKey":       web.GetHeaderParamOrEnvValue(nil, web.AWSAccessKey),
 			"HasAWSSecret": web.GetHeaderParamOrEnvValue(nil, web.AWSSecretKey) != "",
 			//"Header":       req.Header,
-		}).Infof("proxy server checked for aws-request")
-		if err == nil {
-			return req, nil, types.NewNotFoundError("proxy server skipped aws-request")
-		}
+		}).Infof("proxy server checked for aws-request (continue)")
+		// changed to not return here
 	}
 
-	res, err := h.adapter.Invoke(req)
-	if err == nil && res != nil {
-		log.WithFields(log.Fields{
-			"Host":        req.Host,
-			"Path":        req.URL,
-			"Method":      req.Method,
-			"Headers":     req.Header,
-			"AWSAuthSig4": awsAuthSig4,
-		}).Debugf("proxy server redirected request to internal controllers")
-		req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
-		return req, res, nil
+	{
+		res, err := h.adapter.Invoke(req)
+		if err == nil && res != nil {
+			log.WithFields(log.Fields{
+				"Host":        req.Host,
+				"Path":        req.URL,
+				"Method":      req.Method,
+				"Headers":     req.Header,
+				"AWSAuthSig4": awsAuthSig4,
+			}).Debugf("proxy server redirected request to internal controllers")
+			req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
+			return req, res, nil
+		}
 	}
 
 	key, err := web.BuildMockScenarioKeyData(req)
@@ -203,6 +192,7 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		matchedScenario,
 		getStartTime(ctx),
 		time.Now(),
+		h.config,
 		h.scenarioRepository,
 		h.fixtureRepository,
 		h.groupConfigRepository,
@@ -249,7 +239,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 
 	log.WithFields(log.Fields{
 		"Response": resp,
-	}).Infof("proxy server response received")
+	}).Debugf("proxy server response received")
 
 	var reqBytes []byte
 	var err error
@@ -279,7 +269,7 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		return resp, err
 	}
 
-	_, resContentType, err := saveMockResponse(
+	scenario, resContentType, err := saveMockResponse(
 		h.config,
 		resp.Request.URL,
 		resp.Request,
@@ -321,8 +311,10 @@ func (h *Handler) doHandleResponse(resp *http.Response, ctx *goproxy.ProxyCtx) (
 		resp.Header.Del(k)
 	}
 	log.WithFields(log.Fields{
-		"Response": resp,
+		"Path":     resp.Request.URL,
+		"Method":   resp.Request.Method,
 		"Length":   len(resBytes),
+		"Scenario": scenario,
 		//"ReqHeaders":  resp.Request.Header,
 		//"RespHeaders": resp.Header,
 	}).Infof("proxy server recorded response")

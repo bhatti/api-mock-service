@@ -29,7 +29,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		scenario := types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/:id", i)
@@ -103,7 +103,7 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(specs))
 	// AND executor
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	for _, spec := range specs {
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		require.NoError(t, err)
@@ -141,7 +141,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Post, fmt.Sprintf("book_post_%d", i), "/api/:topic/books/:id", i)))
@@ -190,7 +190,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Get, fmt.Sprintf("books_get_%d", i), "/api/books/:topic/:id", i)))
@@ -236,7 +236,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/:topic/:id", i)))
@@ -280,7 +280,7 @@ func Test_ShouldLookupDeleteMockScenariosWithBraces(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(mockScenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, mockScenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, mockScenarioRepository.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("books_delete_%d", i), "/api/books/{topic}/{id}", i)))
@@ -328,7 +328,7 @@ func Test_ShouldGenerateGetCustomerResponse(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 
 	b, err = fuzz.ParseTemplate("../../fixtures", b, map[string]any{"id": "123"})
 	require.NoError(t, err)
@@ -373,7 +373,7 @@ func Test_ShouldLookupPutMockScenariosWithChaos(t *testing.T) {
 		ChaosEnabled: true,
 	})
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		scenario := types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)
@@ -419,7 +419,7 @@ func Test_ShouldLookupPutMockScenariosWithBraces(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
 	require.NoError(t, err)
-	player := NewConsumerExecutor(scenarioRepository, fixtureRepository, groupConfigRepository)
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	// AND a set of mock scenarios
 	for i := 0; i < 3; i++ {
 		require.NoError(t, scenarioRepository.Save(types.BuildTestScenario(types.Put, fmt.Sprintf("todo_put_%d", i), "/api/todos/{id}", i)))
@@ -480,6 +480,7 @@ func Test_ShouldAddMockResponseWithNilRequestWithoutQueryParams(t *testing.T) {
 		matchedScenario,
 		time.Now(),
 		time.Now(),
+		config,
 		scenarioRepository,
 		fixtureRepository,
 		groupConfigRepository,
@@ -513,6 +514,7 @@ func Test_ShouldAddMockResponseWithNilRequest(t *testing.T) {
 		matchedScenario,
 		time.Now(),
 		time.Now(),
+		config,
 		scenarioRepository,
 		fixtureRepository,
 		groupConfigRepository,
@@ -545,6 +547,7 @@ func Test_ShouldNotAddMockResponseWithoutQueryParams(t *testing.T) {
 		matchedScenario,
 		time.Now(),
 		time.Now(),
+		config,
 		scenarioRepository,
 		fixtureRepository,
 		groupConfigRepository,
@@ -581,6 +584,7 @@ func Test_ShouldAddMockResponseWithRequest(t *testing.T) {
 		matchedScenario,
 		time.Now(),
 		time.Now(),
+		config,
 		scenarioRepository,
 		fixtureRepository,
 		groupConfigRepository,

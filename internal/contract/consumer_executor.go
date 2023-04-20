@@ -17,6 +17,7 @@ import (
 
 // ConsumerExecutor structure
 type ConsumerExecutor struct {
+	config                *types.Configuration
 	scenarioRepository    repository.APIScenarioRepository
 	fixtureRepository     repository.APIFixtureRepository
 	groupConfigRepository repository.GroupConfigRepository
@@ -24,11 +25,13 @@ type ConsumerExecutor struct {
 
 // NewConsumerExecutor instantiates controller for updating api-scenarios
 func NewConsumerExecutor(
+	config *types.Configuration,
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
 	groupConfigRepository repository.GroupConfigRepository,
 ) *ConsumerExecutor {
 	return &ConsumerExecutor{
+		config:                config,
 		scenarioRepository:    scenarioRepository,
 		fixtureRepository:     fixtureRepository,
 		groupConfigRepository: groupConfigRepository,
@@ -71,6 +74,7 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		matchedScenario,
 		started,
 		time.Now(),
+		cx.config,
 		cx.scenarioRepository,
 		cx.fixtureRepository,
 		cx.groupConfigRepository,
@@ -92,6 +96,7 @@ func AddMockResponse(
 	scenario *types.APIScenario,
 	started time.Time,
 	ended time.Time,
+	config *types.Configuration,
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
 	groupConfigRepository repository.GroupConfigRepository,
@@ -127,25 +132,24 @@ func AddMockResponse(
 	respHeaders.Add(types.MockScenarioHeader, scenario.Name)
 	respHeaders.Add(types.MockScenarioPath, scenario.Path)
 	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
+
 	// Embedding this check to return chaos response based on group config
-	if groupConfig, err := groupConfigRepository.Load(scenario.Group); err == nil {
-		respHeaders.Add(types.MockChaosEnabled, fmt.Sprintf("%v", groupConfig.ChaosEnabled))
-		status := groupConfig.GetHTTPStatus()
-		if status >= 300 {
-			scenario.Response.StatusCode = status
-			return []byte("injected fault from consumer-executor"), nil
-		}
-		delay := groupConfig.GetDelayLatency()
-		if delay > 0 {
-			log.WithFields(log.Fields{
-				"Component":   "ConsumerExecutor-AddMockResponse",
-				"Scenario":    scenario.Name,
-				"Group":       scenario.Group,
-				"GroupConfig": groupConfig,
-				"Delay":       delay,
-			}).Infof("chaos sleep wait")
-			time.Sleep(delay)
-		}
+	if b := CheckChaosForScenarioGroup(groupConfigRepository, scenario, respHeaders); b != nil {
+		return b, nil
+	}
+
+	if config.RecordOnly || req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
+		log.WithFields(log.Fields{
+			"Component":        "ConsumerExecutor-AddMockResponse",
+			"ConfigRecordOnly": config.RecordOnly,
+			"Host":             req.Host,
+			"Path":             req.URL,
+			"Method":           req.Method,
+			"Scenario":         scenario.Name,
+			"Group":            scenario.Group,
+			//"Headers":          req.Header,
+		}).Infof("proxy server skipped local lookup due to record-mode")
+		return nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
 
 	// Override wait time from request header
@@ -199,4 +203,31 @@ func AddMockResponse(
 	}
 
 	return
+}
+
+// CheckChaosForScenarioGroup helper method
+func CheckChaosForScenarioGroup(
+	groupConfigRepository repository.GroupConfigRepository,
+	scenario *types.APIScenario,
+	respHeaders http.Header) []byte {
+	if groupConfig, err := groupConfigRepository.Load(scenario.Group); err == nil {
+		respHeaders.Add(types.MockChaosEnabled, fmt.Sprintf("%v", groupConfig.ChaosEnabled))
+		delay := groupConfig.GetDelayLatency()
+		if delay > 0 {
+			log.WithFields(log.Fields{
+				"Component":   "ConsumerExecutor-AddMockResponse",
+				"Scenario":    scenario.Name,
+				"Group":       scenario.Group,
+				"GroupConfig": groupConfig,
+				"Delay":       delay,
+			}).Debugf("chaos sleep wait")
+			time.Sleep(delay)
+		}
+		status := groupConfig.GetHTTPStatus()
+		if status >= 300 {
+			scenario.Response.StatusCode = status
+			return []byte("injected fault from consumer-executor")
+		}
+	}
+	return nil
 }
