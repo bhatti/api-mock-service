@@ -309,8 +309,11 @@ definitions:
           type: integer
         type: array
         x-go-name: HTTPErrors
-      max_additional_latency:
-        $ref: '#/definitions/Duration'
+      max_additional_latency_secs:
+        description: MaxAdditionalLatency for max delay
+        format: double
+        type: number
+        x-go-name: MaxAdditionalLatencySecs
       mean_time_between_additional_latency:
         description: MeanTimeBetweenAdditionalLatency for adding delay
         format: double

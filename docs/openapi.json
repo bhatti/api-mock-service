@@ -1645,8 +1645,11 @@
             },
             "x-go-name": "HTTPErrors"
           },
-          "max_additional_latency": {
-            "$ref": "#/components/schemas/Duration"
+          "max_additional_latency_secs": {
+            "type": "number",
+            "description": "MaxAdditionalLatency for max delay",
+            "format": "double",
+            "x-go-name": "MaxAdditionalLatencySecs"
           },
           "mean_time_between_additional_latency": {
             "type": "number",

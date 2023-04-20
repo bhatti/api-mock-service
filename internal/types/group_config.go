@@ -17,7 +17,7 @@ type GroupConfig struct {
 	// MeanTimeBetweenAdditionalLatency for adding delay
 	MeanTimeBetweenAdditionalLatency float64 `json:"mean_time_between_additional_latency" mapstructure:"mean_time_between_additional_latency"`
 	// MaxAdditionalLatency for max delay
-	MaxAdditionalLatency time.Duration `json:"max_additional_latency" mapstructure:"max_additional_latency"`
+	MaxAdditionalLatencySecs float64 `json:"max_additional_latency_secs" mapstructure:"max_additional_latency_secs"`
 	// HTTPErrors to return for failure
 	HTTPErrors []int `json:"http_errors" mapstructure:"http_errors"`
 	rnd        *rand.Rand
@@ -52,11 +52,11 @@ func (gc *GroupConfig) GetDelayLatency() time.Duration {
 	if !gc.checkProbability(gc.MeanTimeBetweenFailure) {
 		return 0
 	}
-	additional := float64(gc.rnd.Intn(int(gc.MaxAdditionalLatency.Seconds()*10)) + 1)
+	additional := float64(gc.rnd.Intn(int(gc.MaxAdditionalLatencySecs*100)) + 1)
 	sample := gc.rnd.Float64() + 0.1
 	d := time.Second * time.Duration(sample*additional)
-	if d.Seconds() > gc.MaxAdditionalLatency.Seconds() {
-		d = gc.MaxAdditionalLatency
+	if d.Seconds() > gc.MaxAdditionalLatencySecs {
+		d = time.Second * time.Duration(gc.MaxAdditionalLatencySecs)
 	}
 	return d
 }
@@ -73,8 +73,8 @@ func (gc *GroupConfig) checkInit() bool {
 	if gc.MeanTimeBetweenAdditionalLatency <= 0 {
 		gc.MeanTimeBetweenAdditionalLatency = 3
 	}
-	if gc.MaxAdditionalLatency <= 0 {
-		gc.MaxAdditionalLatency = time.Second * 2
+	if gc.MaxAdditionalLatencySecs <= 0 {
+		gc.MaxAdditionalLatencySecs = 2
 	}
 	if len(gc.HTTPErrors) == 0 {
 		gc.HTTPErrors = []int{400, 401, 500}

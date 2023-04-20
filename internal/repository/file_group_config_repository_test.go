@@ -4,7 +4,6 @@ import (
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 func Test_ShouldSaveAndGetGroupConfig(t *testing.T) {
@@ -17,7 +16,7 @@ func Test_ShouldSaveAndGetGroupConfig(t *testing.T) {
 			Variables:                        map[string]string{name + "v1": "val"},
 			MeanTimeBetweenAdditionalLatency: 8,
 			MeanTimeBetweenFailure:           4,
-			MaxAdditionalLatency:             time.Second * 3,
+			MaxAdditionalLatencySecs:         3,
 			HTTPErrors:                       []int{400, 401},
 		}
 		// WHEN saving group config
@@ -31,7 +30,7 @@ func Test_ShouldSaveAndGetGroupConfig(t *testing.T) {
 		require.Equal(t, gc.Variables, loaded.Variables)
 		require.Equal(t, gc.MeanTimeBetweenFailure, loaded.MeanTimeBetweenFailure)
 		require.Equal(t, gc.MeanTimeBetweenAdditionalLatency, loaded.MeanTimeBetweenAdditionalLatency)
-		require.Equal(t, gc.MaxAdditionalLatency, loaded.MaxAdditionalLatency)
+		require.Equal(t, gc.MaxAdditionalLatencySecs, loaded.MaxAdditionalLatencySecs)
 		require.Equal(t, gc.HTTPErrors, loaded.HTTPErrors)
 	}
 	vars := groupConfigRepository.Variables("test1abc")

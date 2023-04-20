@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"testing"
-	"time"
 )
 
 func Test_InitializeSwaggerStructsForGroupConfigController(t *testing.T) {
@@ -107,7 +106,7 @@ func Test_ShouldPutGroupConfig(t *testing.T) {
 		Variables:                        map[string]string{"v1": "val"},
 		MeanTimeBetweenAdditionalLatency: 8,
 		MeanTimeBetweenFailure:           4,
-		MaxAdditionalLatency:             time.Second * 3,
+		MaxAdditionalLatencySecs:         3,
 	}
 	data, err := json.Marshal(gc)
 	require.NoError(t, err)

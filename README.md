@@ -4,76 +4,113 @@
 
 ### Problems with Testing
 
-Testing methodologies such as unit-testing, integration-testing, functional-testing, chaos/contract testing/game days, etc. are a key part of software development lifecycle for
+Testing methodologies such as unit-testing, integration-testing, functional-testing, chaos/contract testing/game days,
+etc. are a key part of software development lifecycle for
 building reliable and robust software systems. However, these testing methodologies pose several problems such as:
-- Tests require regular maintenance same as the code, however tests often don't receive the same attention and code rot is common with the tests. This makes the tests brittle that often break with the changes and tests become difficult to understand.
-- The size of tests also pose a challenge as the code grows, which further adds development cost of syncing tests with the code updates.
-- Integration/functional tests further add risks when testing for hard to reproduce conditions with real services. Also, real services keep their own state, which could be updated externally so regression testing can't be reliably performed. 
-- You may need to inject failures, time delays, network failures or timeouts for chaos testing/game days, which require special tooling and development effort.
-- The functional/load tests also need to check for non-functional requirements when building distributed systems such as concurrency, performance, scalability and failures. This requires not only testing for robust server side code but also testing for clients/sdks that can handle various error conditions.
-- Testing for backward and forward compatibility is hard as different clients may be using a subset of functionality. This requires solid support for contract based testing from consumer's and producer's perspectives.
+
+- Tests require regular maintenance same as the code, however tests often don't receive the same attention and code rot
+  is common with the tests. This makes the tests brittle that often break with the changes and tests become difficult to
+  understand.
+- The size of tests also pose a challenge as the code grows, which further adds development cost of syncing tests with
+  the code updates.
+- Integration/functional tests further add risks when testing for hard to reproduce conditions with real services. Also,
+  real services keep their own state, which could be updated externally so regression testing can't be reliably
+  performed.
+- You may need to inject failures, time delays, network failures or timeouts for chaos testing/game days, which require
+  special tooling and development effort.
+- The functional/load tests also need to check for non-functional requirements when building distributed systems such as
+  concurrency, performance, scalability and failures. This requires not only testing for robust server side code but
+  also testing for clients/sdks that can handle various error conditions.
+- Testing for backward and forward compatibility is hard as different clients may be using a subset of functionality.
+  This requires solid support for contract based testing from consumer's and producer's perspectives.
 
 ### Facilitate testing with the api-mock-service
 
-The api-mock-service helps with the integration/functional/contract/chaos testing by mocking dependent services and injecting failures in the implementation. 
-It allows testing both the server side and client side code with the property-based/generative/fuzzing/stochastic testing techniques.
-The property-based/generative techniques reduce the size of test suites by automatically generating test input data using fuzz-data generators.
+The api-mock-service helps with the integration/functional/contract/chaos testing by mocking dependent services and
+injecting failures in the implementation.
+It allows testing both the server side and client side code with the property-based/generative/fuzzing/stochastic
+testing techniques.
+The property-based/generative techniques reduce the size of test suites by automatically generating test input data
+using fuzz-data generators.
 
 ### Use-Cases
 
-- As a service owner, I need to mock remote dependent service(s) by capturing/recording request/responses through an HTTP proxy so that I can play it back when testing the remote service(s) without connecting with them.
+- As a service owner, I need to mock remote dependent service(s) by capturing/recording request/responses through an
+  HTTP proxy so that I can play it back when testing the remote service(s) without connecting with them.
 
 ![use-case-1](images/mock_uc1.png)
 
-- As a service owner, I need to mock remote dependent service(s) based on a open-api/swagger specifications so that my service client can test all service behavior per specifications for the remote service(s) even when remote service is not fully implemented or accessible.
+- As a service owner, I need to mock remote dependent service(s) based on a open-api/swagger specifications so that my
+  service client can test all service behavior per specifications for the remote service(s) even when remote service is
+  not fully implemented or accessible.
 
 ![use-case-2](images/mock_uc2.png)
 
-- As a service owner, I need to mock remote dependent service(s) based on a api scenario defined in a template so that my service client can test service behavior per expected request/response in the template even when remote service is not fully implemented or accessible.
+- As a service owner, I need to mock remote dependent service(s) based on a api scenario defined in a template so that
+  my service client can test service behavior per expected request/response in the template even when remote service is
+  not fully implemented or accessible.
 
 ![use-case-3](images/mock_uc3.png)
 
-- As a service owner, I need to inject various response behavior and faults to the output of a remote service so that I can build a robust client that prevents cascading failures and is more resilient to unexpected faults.
+- As a service owner, I need to inject various response behavior and faults to the output of a remote service so that I
+  can build a robust client that prevents cascading failures and is more resilient to unexpected faults.
 
 ![use-case-4](images/mock_uc4.png)
 
-- As a developer, I need a playground to try out remote service APIs and learn how the behave with different test data scenarios so that I can understand the API behavior better while referring to the API specs.
+- As a developer, I need a playground to try out remote service APIs and learn how the behave with different test data
+  scenarios so that I can understand the API behavior better while referring to the API specs.
 
 ![use-case-5](images/mock_uc5.png)
 
-- As a service owner, I need to define test cases with faulty or fuzz responses to test my own service so that I can predict how it will behave with various input data and assert the service response based on expected behavior.
+- As a service owner, I need to define test cases with faulty or fuzz responses to test my own service so that I can
+  predict how it will behave with various input data and assert the service response based on expected behavior.
 
 ![use-case-6](images/mock_uc6.png)
- 
+
 ### Features
 
 API mock service for REST/HTTP based services with following features:
 
-- Record API request/response by working as a HTTP proxy server (native http/https or via API) between client and remote service.
+- Record API request/response by working as a HTTP proxy server (native http/https or via API) between client and remote
+  service.
 - Playback API response that were previously recorded based on request parameters.
-- Define API behavior manually by specifying request parameters and response contents using static data or dynamic data based on GO templating language.
-- Generate API behavior from open standards such as Open API/Swagger and automatically create constraints and regex based on the specification. 
-- Customize API behavior using a GO template language so that users can generate dynamic contents based on input parameters or other configuration. 
-- Generate large responses using the template language with dynamic loops so that you can test performance of your system.
-- Define multiple test scenarios for the API based on different input parameters or simulating various error cases that are difficult to reproduce with real services.
+- Define API behavior manually by specifying request parameters and response contents using static data or dynamic data
+  based on GO templating language.
+- Generate API behavior from open standards such as Open API/Swagger and automatically create constraints and regex
+  based on the specification.
+- Customize API behavior using a GO template language so that users can generate dynamic contents based on input
+  parameters or other configuration.
+- Generate large responses using the template language with dynamic loops so that you can test performance of your
+  system.
+- Define multiple test scenarios for the API based on different input parameters or simulating various error cases that
+  are difficult to reproduce with real services.
 - Store API request/responses locally as files so that it’s easy to port stubbed request/responses to any machine.
-- Allow users to define API request/response with various formats such as XML/JSON/YAML and upload them to the api-mock-service.
+- Allow users to define API request/response with various formats such as XML/JSON/YAML and upload them to the
+  api-mock-service.
 - Support test fixtures that can be uploaded to the api-mock-service and can be used to generate API responses.
-- Define a collection of helper methods to generate different kind of random data such as UDID, dates, URI, Regex, text and numeric data.
-- Ability to playback all test scenarios or a specific scenario and change API behavior dynamically with different input parameters.
-- Support multiple api scenarios for the same API that can be selected either using round-robin order, custom predicates based on parameters or based on scenario name.
-- Inject error conditions and artificial delays so that you can test how your system handles error conditions that are difficult to reproduce or use for game days/contract/chaos testing.
-- Generate client requests for a remote API for contract, chaos and stochastic testing where a set of requests are sent with a dynamic data generated based on regex or other constraints.
+- Define a collection of helper methods to generate different kind of random data such as UDID, dates, URI, Regex, text
+  and numeric data.
+- Ability to playback all test scenarios or a specific scenario and change API behavior dynamically with different input
+  parameters.
+- Support multiple api scenarios for the same API that can be selected either using round-robin order, custom predicates
+  based on parameters or based on scenario name.
+- Inject error conditions and artificial delays so that you can test how your system handles error conditions that are
+  difficult to reproduce or use for game days/contract/chaos testing.
+- Generate client requests for a remote API for contract, chaos and stochastic testing where a set of requests are sent
+  with a dynamic data generated based on regex or other constraints.
 - Create a playground for testing APIs interactively so that users can learn the APIs quickly.
 - Support contract based testing from both consumer and producer sides.
-- Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input to next test scenarios.
-- Import test scenarios from HAR files (https://w3c.github.io/web-performance/specs/HAR/Overview.html) or export scenarios to HAR formats.
+- Chain group tests and execute them in a specific order so that output of a one test scenario can be used as an input
+  to next test scenarios.
+- Import test scenarios from HAR files (https://w3c.github.io/web-performance/specs/HAR/Overview.html) or export
+  scenarios to HAR formats.
 - Import test scenarios from Postman collection or export scenarios to Postman formats.
 - Persist execution of test scenarios that can be replayed for consumer and producer based contract testing.
 
 This service is based on an older mock-service https://github.com/bhatti/PlexMockServices, I wrote a while ago.
-As, it's written in GO, you can either download GO runtime environment or use Docker to install it locally. 
-If you haven't installed docker, you can download the community version from https://docs.docker.com/engine/installation/ 
+As, it's written in GO, you can either download GO runtime environment or use Docker to install it locally.
+If you haven't installed docker, you can download the community version
+from https://docs.docker.com/engine/installation/
 or find installer for your OS on https://docs.docker.com/get-docker/.
 
 ```bash
@@ -96,6 +133,7 @@ make && ./out/bin/api-mock-service
 ```
 
 For full command line options, execute api-mock-service -h that will show you command line options such as:
+
 ```bash
 Starts api-mock-service
 
@@ -120,12 +158,16 @@ Use "api-mock-service [command] --help" for more information about a command.
 ```
 
 ## API Docs
-See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
+
+See Swagger API docs at https://petstore.swagger.io
+?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
 
 ## Recording a API Scenario via HTTP/HTTPS Proxy
+
 Once you have the API mock service running, the mock service will start two ports on startup, first port
 (default 8080) will be used to record/play API scenarios, updating templates or uploading OpenAPIs. The second
 port (default 8081) will setup an HTTP/HTTPS proxy server that you can point to record your scenarios, e.g.
+
 ```shell
 export http_proxy="http://localhost:8081"
 export https_proxy="http://localhost:8081"
@@ -133,22 +175,27 @@ export https_proxy="http://localhost:8081"
 curl -k -v -H "Authorization: Bearer sk_test_xxxx" https://api.stripe.com/v1/customers/cus_xxx/cash_balance
 ```
 
-Above curl command will automatically record all requests and responses and create API scenario to play it back. For example, if you call the same 
-API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for record by adding `X-Mock-Record: true`  header to your request.
+Above curl command will automatically record all requests and responses and create API scenario to play it back. For
+example, if you call the same
+API again, it will return a local response instead of contacting the server. You can customize the proxy behavior for
+record by adding `X-Mock-Record: true`  header to your request.
 
 ### Proxy Settings in other languages
+
 In addition to specifying HTTP proxy as environment variables, here is how you can specify in other languages:
 
 #### Java
+
 ```java
-System.getProperties().put("http.proxyHost", "<HOST>"); // Use https prefix if running mock-service behind TLS
-System.getProperties().put("http.proxyPort", "<PORT>");
-System.getProperties().put("http.proxyUser", "");
-System.getProperties().put("http.proxyPassword", "");
+System.getProperties().put("http.proxyHost","<HOST>"); // Use https prefix if running mock-service behind TLS
+        System.getProperties().put("http.proxyPort","<PORT>");
+        System.getProperties().put("http.proxyUser","");
+        System.getProperties().put("http.proxyPassword","");
 
 ```
 
 #### Python
+
 ```python
 proxy_servers = {
     'http': 'http://localhost:9000',
@@ -159,11 +206,12 @@ headers = { 'Content-Type': 'application/json' }
 resp = requests.post(API_URL, json = DATA , headers = headers, proxies = proxy_servers, verify = False)
 ```
 
-Note: You may need to disable strict origin policy in your browser if testing via browser, e.g. set 
+Note: You may need to disable strict origin policy in your browser if testing via browser, e.g. set
 `about:config -> security.fileuri.strict_origin_policy` to `false` in Firefox.
 
 ## Recording a API Scenario via HTTP request
-Alternatively, you can use invoke an internal API as a pass through to invoke a remote API so that you can 
+
+Alternatively, you can use invoke an internal API as a pass through to invoke a remote API so that you can
 automatically record API behavior and play it back later, e.g.
 
 ```bash
@@ -171,17 +219,21 @@ curl -H "X-Mock-Url: https://api.stripe.com/v1/customers/cus_**/cash_balance" \
 	-H "Authorization: Bearer sk_test_***" http://localhost:8080/_proxy
 ```
 
-In above example, the curl command is passing the URL of real service as an HTTP header ``X-Mock-Url``. In addition, you can pass 
-other authorization headers as needed. 
+In above example, the curl command is passing the URL of real service as an HTTP header ``X-Mock-Url``. In addition, you
+can pass
+other authorization headers as needed.
 
 ## Viewing the Recorded API Scenario
-The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For example, you may see a file under:
+
+The API mock-service will store the request/response in a YAML file under a data directory that you can specify. For
+example, you may see a file under:
 
 ```bash
 default_mocks_data/v1/customers/cus_***/cash_balance/GET/recorded-scenario-***.scr
 ```
 
-Note: the sensitive authentication or customer keys are masked in above example but you will see following contents in the captured data file:
+Note: the sensitive authentication or customer keys are masked in above example but you will see following contents in
+the captured data file:
 
 ```yaml
 method: GET
@@ -191,18 +243,18 @@ description: recorded at 2022-10-29 04:26:17.24776 +0000 UTC
 group: v1_customers_cus_xx_cash_balance
 predicate: {{NthRequest 2}}
 request:
-  assert_query_params_pattern: {}
+  assert_query_params_pattern: { }
   assert_headers_pattern:
     Content-Type: ""
   assert_contents_pattern: '{}'
-  path_params: {}
-  query_params: {}
+  path_params: { }
+  query_params: { }
   headers:
     Accept: '*/*'
     Authorization: Bearer sk_test_xxx
     User-Agent: curl/7.65.2
     X-Mock-Url: https://api.stripe.com/v1/customers/cus_/cash_balance
-  contents: ""  
+  contents: ""
 response:
   headers:
     Access-Control-Allow-Credentials:
@@ -243,40 +295,49 @@ response:
     }
   contents_file: ""
   status_code: 200
-  assert_headers_pattern: {}
+  assert_headers_pattern: { }
   assert_contents_pattern: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
-  assertions: []
+  assertions: [ ]
 wait_before_reply: 0s
 ```
 
 Above example defines a api scenario for testing /v1/customers/cus_**/cash_balance path. A test scenario includes:
+
 ### Predicate
-- This is a boolean condition if you need to enable or disable a scenario test based on dynamic parameters or request count.
- 
+
+- This is a boolean condition if you need to enable or disable a scenario test based on dynamic parameters or request
+  count.
+
 ### Group
+
 - This specifies the group for related test scenarios.
 
 ### Request Matching Parameters:
+
 You can define match parameters based on:
 
 - URL Query Parameters
 - URL Request Headers
 - Request Body
-  
+
 You can use these parameters so that test scenario is executed only when the parameters match, e.g.
+
 ```yaml
     assert_query_params_pattern:
-      name: [a-z0-9]{1,50}
+      name: [ a-z0-9 ]{ 1,50 }
     assert_headers_pattern:
       Content-Type: "application/json"
 ```
-The matching request parameters will be used to select the api scenario to execute and you can use regular expressions to validate, 
-e.g. above example will be matched if content-type is `application/json` and it will validate that name query parameter is alphanumeric from 1-50 size.
 
+The matching request parameters will be used to select the api scenario to execute and you can use regular expressions
+to validate,
+e.g. above example will be matched if content-type is `application/json` and it will validate that name query parameter
+is alphanumeric from 1-50 size.
 
 ### Request Parameters:
 
-The request parameters show the contents captured from the record/play so that you can use and customize to define matching parameters.
+The request parameters show the contents captured from the record/play so that you can use and customize to define
+matching parameters.
 
 - URL Query Parameters
 - URL Request Headers
@@ -292,21 +353,26 @@ The response properties will include:
 - Status Code
 - Matching header and contents
 - Assertions
-You can copy recorded scenario to another folder and use templates to customize it and then upload it for playback.
+  You can copy recorded scenario to another folder and use templates to customize it and then upload it for playback.
 
-The matching header and contents use `assert_headers_pattern` and `assert_contents_pattern` similar to request to validate response in case you want to test response from a real service for chaos testing.
+The matching header and contents use `assert_headers_pattern` and `assert_contents_pattern` similar to request to
+validate response in case you want to test response from a real service for chaos testing.
 Similarly, `assertions` defines a set of predicates to test against response from a real service:
+
 ```yaml
     assertions:
-        - VariableGE contents.id 10
-        - VariableContains contents.title illo
-        - VariableMatches headers.Pragma no-cache 
+      - VariableGE contents.id 10
+      - VariableContains contents.title illo
+      - VariableMatches headers.Pragma no-cache 
 ```
-Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result headers matches `Pragma: no-cache` header.
+
+Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result
+headers matches `Pragma: no-cache` header.
 
 ## Playback the API Scenario
 
 You can playback the recorded response from above example as follows:
+
 ```bash
 % curl http://localhost:8080/v1/customers/cus_***/cash_balance
 ```
@@ -327,11 +393,12 @@ Which will return captured response such as:
 
 ```
 
-Though, you can customize your template with dynamic properties or conditional logic but you can also send HTTP headers 
-for `X-Mock-Response-Status` to override HTTP status to return or `X-Mock-Wait-Before-Reply` to add artificial latency using duration syntax. 
-
+Though, you can customize your template with dynamic properties or conditional logic but you can also send HTTP headers
+for `X-Mock-Response-Status` to override HTTP status to return or `X-Mock-Wait-Before-Reply` to add artificial latency
+using duration syntax.
 
 ### Debug Headers from Playback
+
 The playback request will return api-headers to indicate the selected API scenario, path and request count, e.g.
 
 ```
@@ -341,7 +408,9 @@ X-Mock-Scenario: setDefaultState-bfb86eb288c9abf2988822938ef6d4aa3bd654a15e77158
 ```
 
 ## Upload API Scenario
+
 You can customize the recorded scenario, e.g. you can add path variables to above API as follows:
+
 ```yaml
 method: GET
 name: stripe-cash-balance
@@ -389,7 +458,7 @@ response:
       }
     }
   status_code: 200
-  assert_headers_pattern: {}
+  assert_headers_pattern: { }
   assert_contents_pattern: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
   assertions:
     - VariableContains contents.livemode false
@@ -397,22 +466,27 @@ response:
 wait_before_reply: 1s
 ```
 
-In above example, I assigned a name stripe-cash-balance to the api scenario and changed API path to 
-`/v1/customers/:customer/cash_balance` so that it can capture customer-id as a path variable. I added a regular expression to 
-ensure that the HTTP request includes an Authorization header matching `Bearer sk_test_[0-9a-fA-F]{10}$` and defined dynamic properties 
+In above example, I assigned a name stripe-cash-balance to the api scenario and changed API path to
+`/v1/customers/:customer/cash_balance` so that it can capture customer-id as a path variable. I added a regular
+expression to
+ensure that the HTTP request includes an Authorization header matching `Bearer sk_test_[0-9a-fA-F]{10}$` and defined
+dynamic properties
 such as `{{.customer}}, {{.page}} and {{.pageSize}}` so that they will be replaced at runtime.
 
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/stripe-customer.yaml \
 	http://localhost:8080/_scenarios
 ```
+
 and then play it back as follows:
+
 ```bash
 curl -v -H "Authorization: Bearer sk_test_0123456789" \
 	"http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
 
 and it will generate:
+
 ```json
 {
   "object": "cash_balance",
@@ -427,7 +501,11 @@ and it will generate:
 }
 
 ```
-As you can see, the values of customer, page and pageSize are dynamically updated. You can upload multiple api scenarios for the same API and the mock-api-service will play it back sequentially. For example, you can upload another scenario for above API as follows:
+
+As you can see, the values of customer, page and pageSize are dynamically updated. You can upload multiple api scenarios
+for the same API and the mock-api-service will play it back sequentially. For example, you can upload another scenario
+for above API as follows:
+
 ```yaml
 method: GET
 name: stripe-customer-failure
@@ -435,23 +513,27 @@ path: /v1/customers/:customer/cash_balance
 predicate: {{NthRequest 2}}
 group: my_group
 request:
-    assert_headers_pattern:
-        Authorization:
-            - Bearer sk_test
+  assert_headers_pattern:
+    Authorization:
+      - Bearer sk_test
 response:
-    headers:
-        Stripe-Version:
-            - "2018-09-06"
-    content_type: application/json
-    contents: My custom error
-    status_code: 500
+  headers:
+    Stripe-Version:
+      - "2018-09-06"
+  content_type: application/json
+  contents: My custom error
+  status_code: 500
 wait_before_reply: 1s
 ```
+
 And then play it back:
+
 ```bash
 curl -v "http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
+
 which will return response with following error response
+
 ```
 > GET /v1/customers/123/cash_balance?page=2&pageSize=55 HTTP/1.1
 > Host: localhost:8080
@@ -471,97 +553,111 @@ which will return response with following error response
 ```
 
 ## Dynamic Templates with API Scenarios
-You can use loops and conditional primitives of template language (https://golangdocs.com/templates-in-golang) to generate dynamic responses as follows:
+
+You can use loops and conditional primitives of template language (https://golangdocs.com/templates-in-golang) to
+generate dynamic responses as follows:
+
 ```yaml
-method: GET
-name: get_devices
-path: /devices
-description: ""
-predicate: ""
-group: devices
-request:
-    assert_headers_pattern:
-      Content-Type: "application/json; charset=utf-8"
-response:
-    headers:
-        "Server":
-            - "SampleAPI"
-        "Connection":
-            - "keep-alive"
-    content_type: application/json
-    contents: >
-     {
-     "Devices": [
-{{- range $val := Iterate .pageSize }}
-      {
-        "UUID": "{{SeededUUID $val}}",
-        "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
-        "Amount": {{JSONFileProperty "props.yaml" "amount"}},
-        "SerialNumber": "{{UUID}}",
-        "MacAddress": "{{UUID}}",
-        "Imei": "{{UUID}}",
-        "AssetNumber": "{{RandString 20}}",
-        "LocationGroupId": {
-         "Id": {
-           "Value": {{RandIntMax 1000}},
-         },
-         "Name": "{{SeededCity $val}}",
-         "UUID": "{{UUID}}"
-        },
-        "DeviceFriendlyName": "Device for {{SeededName $val}}",
-        "LastSeen": "{{Time}}",
-        "Email": "{{RandEmail}}",
-        "Phone": "{{RandPhone}}",
-        "EnrollmentStatus": {{SeededBool $val}}
-        "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
-        "Group": {{RandCity}},
-        "Date": {{TimeFormat "3:04PM"}},
-        "BatteryLevel": "{{RandFloatMax 100}}%",
-        "StrEnum": {{EnumString "ONE TWO THREE"}},
-        "IntEnum": {{EnumInt 10 20 30}},
-        "ProcessorArchitecture": {{RandIntMax 1000}},
-        "TotalPhysicalMemory": {{RandIntMax 1000000}},
-        "VirtualMemory": {{RandIntMax 1000000}},
-        "AvailablePhysicalMemory": {{RandIntMax 1000000}},
-        "CompromisedStatus": {{RandBool}},
-        "Add": {{Add 2 1}},
-        "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
-      }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
-{{ end }}
-     ],
-     "Page": {{.page}},
-     "PageSize": {{.pageSize}},
-     "Total": {{.pageSize}}
-     }
-    {{if NthRequest 10 }}
-    status_code: {{EnumInt 500 501}}
-    {{else}}
-    status_code: {{EnumInt 200 400}}
-    {{end}}
-wait_before_reply: {{.page}}s
+                                                     method: GET
+                                                     name: get_devices
+                                                     path: /devices
+                                                     description: ""
+                                                     predicate: ""
+                                                     group: devices
+                                                     request:
+                                                       assert_headers_pattern:
+                                                         Content-Type: "application/json; charset=utf-8"
+                                                     response:
+                                                       headers:
+                                                         "Server":
+                                                           - "SampleAPI"
+                                                         "Connection":
+                                                           - "keep-alive"
+                                                       content_type: application/json
+                                                       contents: >
+                                                         {
+                                                         "Devices": [
+  { { - range $val := Iterate .pageSize } }
+  {
+    "UUID": "{{SeededUUID $val}}",
+    "Line": { {{SeededFileLine "lines.txt" $val } }, "Type": "Public", "IsManaged": false },
+                                                                         "Amount": {{JSONFileProperty "props.yaml" "amount"}},
+                                                                         "SerialNumber": "{{UUID}}",
+                                                                         "MacAddress": "{{UUID}}",
+                                                                         "Imei": "{{UUID}}",
+                                                                         "AssetNumber": "{{RandString 20}}",
+                                                                         "LocationGroupId": {
+                                                                           "Id": {
+                                                                             "Value": {{RandIntMax 1000 } },
+                                                                         },
+                                                                                              "Name": "{{SeededCity $val}}",
+                                                                                              "UUID": "{{UUID}}"
+                                                                       },
+                                                                         "DeviceFriendlyName": "Device for {{SeededName $val}}",
+                                                                         "LastSeen": "{{Time}}",
+                                                                         "Email": "{{RandEmail}}",
+                                                                         "Phone": "{{RandPhone}}",
+                                                                         "EnrollmentStatus": {{SeededBool $val}}
+                                                                         "ComplianceStatus": {{RandRegex "^AC[0-9a-fA-F]{32}$"}}
+                                                                         "Group": {{RandCity}},
+                                                                         "Date": {{TimeFormat "3:04PM"}},
+                                                                         "BatteryLevel": "{{RandFloatMax 100}}%",
+                                                                         "StrEnum": {{EnumString "ONE TWO THREE"}},
+                                                                         "IntEnum": {{EnumInt 10 20 30}},
+                                                                         "ProcessorArchitecture": {{RandIntMax 1000}},
+                                                                         "TotalPhysicalMemory": {{RandIntMax 1000000}},
+                                                                         "VirtualMemory": {{RandIntMax 1000000}},
+                                                                         "AvailablePhysicalMemory": {{RandIntMax 1000000}},
+                                                                         "CompromisedStatus": {{RandBool}},
+                                                                         "Add": {{Add 2 1}},
+                                                                         "Dict": {{Dict "one" 1 "two" 2 "three" 3}}
+                                                                       }{{if LastIter $val $.PageSize}}{{else}},  {{end}}
+  { { end } }
+],
+                                                     "Page": {{.page}},
+                                                     "PageSize": {{.pageSize}},
+                                                     "Total": {{.pageSize}}
+}
+                                                       {{if NthRequest 10 }}
+                                                     status_code: {{EnumInt 500 501}}
+                                                       {{else}}
+                                                     status_code: {{EnumInt 200 400}}
+                                                       {{end}}
+                                                     wait_before_reply: {{.page}}s
 ```
+
 Above example includes a number of template primitives and custom functions to generate dynamic contents such as:
+
 ### Loops
+
 GO template support loops that can be used to generate multiple data entries in the response, e.g.
+
 ```yaml
-{{- range $val := Iterate .pageSize }}
+{ { - range $val := Iterate .pageSize } }
 ```
 
 ### Artificial Delays
+
 You can specify artificial delay for the API request as follows:
+
 ```yaml
 wait_before_reply: {{.page}}s
 ```
+
 Above example shows delay based on page number but you can use any parameter to customize this behavior.
 
 ### Builtin functions
+
 Go template allows custom functions that can provide customized behavior for generating test data, e.g.:
+
 #### Add numbers
+
 ```yaml
   "Num": "{{Add 1 2}}",
 ```
 
 #### Date/Time
+
 ```yaml
   "LastSeen": "{{Time}}",
   "Date": {{Date}},
@@ -570,6 +666,7 @@ Go template allows custom functions that can provide customized behavior for gen
 ```
 
 #### Comparison
+
 ```yaml
   {{if EQ .MyVariable 10 }}
   {{if GE .MyVariable 10 }}
@@ -580,12 +677,14 @@ Go template allows custom functions that can provide customized behavior for gen
 ```
 
 #### Enums
+
 ```yaml
   "StrEnum": {{EnumString "ONE TWO THREE"}},
   "IntEnum": {{EnumInt 10 20 30}},
 ```
 
 ### Random Data
+
 ```yaml
   "SerialNumber": "{{UUID}}",
   "AssetNumber": "{{RandString 20}}",
@@ -606,7 +705,7 @@ Go template allows custom functions that can provide customized behavior for gen
   "SeededUSState": "{{SeededUSState 0}}}",
   "RandUSStateAbbr": "{{RandUSStateAbbr}}",
   "SeededUSStateAbbr": "{{SeededUSStateAbbr 0}}",
-  "RandUSPostal":"{{RandUSPostal}}" ,
+  "RandUSPostal": "{{RandUSPostal}}" ,
   "SeededUSPostal": "{{SeededUSPostal 0}}",
   "RandAddress": "{{RandAddress}}",
   "SeededAddress": "{{SeededAddress 0}}",
@@ -630,6 +729,7 @@ Go template allows custom functions that can provide customized behavior for gen
 ```
 
 ### Request count and Conditional Logic
+
 ```yaml
 {{if NthRequest 10 }}   -- for every 10th request
 {{if GERequest 10 }}    -- if number of requests made to API so far are >= 10
@@ -637,25 +737,29 @@ Go template allows custom functions that can provide customized behavior for gen
 ```
 
 The template syntax allows you to define a conditional logic such as:
+
 ```yaml
     {{if NthRequest 10 }}
     status_code: {{AnyInt 500 501}}
-    {{else}}
+      {{else}}
     status_code: {{AnyInt 200 400}}
-    {{end}}
+      {{end}}
 ```
-In above example, the API will return HTTP status 500 or 501 for every 10th request and 200 or 400 for other requests. You can use conditional syntax to simulate different error status or customize response.
 
+In above example, the API will return HTTP status 500 or 501 for every 10th request and 200 or 400 for other requests.
+You can use conditional syntax to simulate different error status or customize response.
 
 ### Loops
-```yaml
-  {{- range $val := Iterate 10}}
 
-     {{if LastIter $val 10}}{{else}},{{end}}
-  {{ end }}
+```yaml
+  { { - range $val := Iterate 10 } }
+
+    {{if LastIter $val 10}}{{else}},{{end}}
+  { { end } }
 ```
 
 ### Variables
+
 ```yaml
      {{if ResponseTimeMillisLE 300}}
      {{if ResponseStatusMatches "(200|201)"}}
@@ -671,69 +775,96 @@ In above example, the API will return HTTP status 500 or 501 for every 10th requ
 ```
 
 ### Test fixtures
-The api-mock-service allows you to upload a test fixture that you can refer in your template, e.g. 
+
+The api-mock-service allows you to upload a test fixture that you can refer in your template, e.g.
+
 ```bash
   "Line": { {{SeededFileLine "lines.txt" $val}}, "Type": "Public", "IsManaged": false },
 ```
-Above example loads a random line from a lines.txt fixture. As you may need to generate a deterministic random data in some cases, 
-you can use Seeded functions to generate predictable data so that the service returns same data. Following example will read a 
+
+Above example loads a random line from a lines.txt fixture. As you may need to generate a deterministic random data in
+some cases,
+you can use Seeded functions to generate predictable data so that the service returns same data. Following example will
+read a
 text fixture to load a property from a file:
+
 ```bash
   "Amount": {{JSONFileProperty "props.yaml" "amount"}},
 ```
 
 This template file will generate content as follows:
+
 ```json
-{ "Devices": [
- {
-   "UUID": "fe49b338-4593-43c9-b1e9-67581d000000",
-   "Line": { "ApplicationName": "Chase", "Version": "3.80", "ApplicationIdentifier": "com.chase.sig.android", "Type": "Public", "IsManaged": false },
-   "Amount": {"currency":"$","value":100},
-   "SerialNumber": "47c2d7c3-c930-4194-b560-f7b89b33bc2a",
-   "MacAddress": "1e015eac-68d2-42ee-9e8f-73fb80958019",
-   "Imei": "5f8cae1b-c5e3-4234-a238-1c38d296f73a",
-   "AssetNumber": "9z0CZSA03ZbUNiQw2aiF",
-   "LocationGroupId": {
-    "Id": {
-      "Value": 980
+{
+  "Devices": [
+    {
+      "UUID": "fe49b338-4593-43c9-b1e9-67581d000000",
+      "Line": {
+        "ApplicationName": "Chase",
+        "Version": "3.80",
+        "ApplicationIdentifier": "com.chase.sig.android",
+        "Type": "Public",
+        "IsManaged": false
+      },
+      "Amount": {
+        "currency": "$",
+        "value": 100
+      },
+      "SerialNumber": "47c2d7c3-c930-4194-b560-f7b89b33bc2a",
+      "MacAddress": "1e015eac-68d2-42ee-9e8f-73fb80958019",
+      "Imei": "5f8cae1b-c5e3-4234-a238-1c38d296f73a",
+      "AssetNumber": "9z0CZSA03ZbUNiQw2aiF",
+      "LocationGroupId": {
+        "Id": {
+          "Value": 980
+        },
+        "Name": "Houston",
+        "UUID": "3bde6570-c0d4-488f-8407-10f35902cd99"
+      },
+      "DeviceFriendlyName": "Device for Alexander",
+      "LastSeen": "2022-10-29T11:25:25-07:00",
+      "Email": "john.smith@abc.com",
+      "Phone": "1-408-454-1507",
+      "EnrollmentStatus": true,
+      "ComplianceStatus": "ACa3E07B0F2cA00d0fbFe88f5c6DbC6a9e",
+      "Group": "Chicago",
+      "Date": "11:25AM",
+      "BatteryLevel": "43%",
+      "StrEnum": "ONE",
+      "IntEnum": 20,
+      "ProcessorArchitecture": 243,
+      "TotalPhysicalMemory": 320177,
+      "VirtualMemory": 768345,
+      "AvailablePhysicalMemory": 596326,
+      "CompromisedStatus": false,
+      "Add": 3
     },
-    "Name": "Houston",
-    "UUID": "3bde6570-c0d4-488f-8407-10f35902cd99"
-   },
-   "DeviceFriendlyName": "Device for Alexander",
-   "LastSeen": "2022-10-29T11:25:25-07:00",
-   "Email": "john.smith@abc.com",
-   "Phone": "1-408-454-1507",
-   "EnrollmentStatus": true,
-   "ComplianceStatus": "ACa3E07B0F2cA00d0fbFe88f5c6DbC6a9e",
-   "Group": "Chicago",
-   "Date": "11:25AM",
-   "BatteryLevel": "43%",
-   "StrEnum": "ONE",
-   "IntEnum": 20,
-   "ProcessorArchitecture": 243,
-   "TotalPhysicalMemory": 320177,
-   "VirtualMemory": 768345,
-   "AvailablePhysicalMemory": 596326,
-   "CompromisedStatus": false,
-   "Add": 3
- },
-...
- ], "Page": 2, "PageSize": 55, "Total": 55 }  
+    ...
+  ],
+  "Page": 2,
+  "PageSize": 55,
+  "Total": 55
+}  
 ```
 
 ## Playing back a specific api scenario
-You can pass a header for ``X-Mock-Scenario`` to specify the name of scenario if you have multiple scenarios for the same API, e.g. 
+
+You can pass a header for ``X-Mock-Scenario`` to specify the name of scenario if you have multiple scenarios for the
+same API, e.g.
+
 ```bash
 curl -v -H "X-Mock-Scenario: stripe-cash-balance" -H "Authorization: Bearer sk_test_0123456789" \
 	"http://localhost:8080/v1/customers/123/cash_balance?page=2&pageSize=55"
 ```
 
-You can also customize response status by overriding the request header with `X-Mock-Response-Status` and delay before return by
+You can also customize response status by overriding the request header with `X-Mock-Response-Status` and delay before
+return by
 overriding `X-Mock-Wait-Before-Reply` header.
 
 ## Using Test Fixtures
+
 You can define a test data in your test fixtures and then upload as follows:
+
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/lines.txt \
 	http://localhost:8080/_fixtures/GET/lines.txt/devices
@@ -742,8 +873,10 @@ curl -v -H "Content-Type: application/yaml" --data-binary @fixtures/props.yaml \
     http://localhost:8080/_fixtures/GET/props.yaml/devices	
 ```
 
-In above example, test fixtures for `lines.txt` and `props.yaml` will be uploaded and will be available for all `GET` requests 
-under `/devices` URL path. You can then refer to above fixture in your templates. You can also use this to serve any binary files, 
+In above example, test fixtures for `lines.txt` and `props.yaml` will be uploaded and will be available for all `GET`
+requests
+under `/devices` URL path. You can then refer to above fixture in your templates. You can also use this to serve any
+binary files,
 e.g. you can define an image template file as follows:
 
 ```yaml
@@ -754,33 +887,37 @@ description: ""
 predicate: ""
 request:
 response:
-    headers:
-      "Last-Modified":
-        - {{Time}}
-      "ETag":
-        - {{RandString 10}}
-      "Cache-Control":
-        - max-age={{RandIntMinMax 1000 5000}}
-    content_type: image/png
-    contents_file: mockup.png
-    status_code: 200
+  headers:
+    "Last-Modified":
+      - {{Time}}
+    "ETag":
+      - {{RandString 10}}
+    "Cache-Control":
+      - max-age={{RandIntMinMax 1000 5000}}
+  content_type: image/png
+  contents_file: mockup.png
+  status_code: 200
 ```
 
 Then upload a binary image using:
+
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/mockup.png \
 	http://localhost:8080/_fixtures/GET/mockup.png/images/mock_image
 ```
 
 And then serve the image using:
+
 ```bash
 curl -v "http://localhost:8080/images/mock_image"
 ```
 
-## Custom Functions 
+## Custom Functions
+
 ### Numeric Random Data
 
-Following functions can be used to generate numeric data within a range or with a seed to always generate deterministic test data:
+Following functions can be used to generate numeric data within a range or with a seed to always generate deterministic
+test data:
 
 - Random
 - SeededRandom
@@ -790,7 +927,8 @@ Following functions can be used to generate numeric data within a range or with 
 
 ### Text Random Data
 
-Following functions can be used to generate numeric data within a range or with a seed to always generate deterministic test data:
+Following functions can be used to generate numeric data within a range or with a seed to always generate deterministic
+test data:
 
 - RandStringMinMax
 - RandStringArrayMinMax
@@ -852,7 +990,7 @@ Following functions can be used to generate a string from a set of Enum values:
 
 Following functions can be used to generate an integer from a set of Enum values:
 
--  EnumInt
+- EnumInt
 
 ### Random Names
 
@@ -888,19 +1026,22 @@ Following functions can be used to generate random data from a fixture file:
 - YAMLFileProperty
 
 ## Generate API Behavior from OpenAPI or Swagger Specifications
-If you are using Open API (https://www.openapis.org/) or Swagger for API specifications, you can simply upload a YAML based API specification. For example, here is a sample Open API specification from Twilio:
+
+If you are using Open API (https://www.openapis.org/) or Swagger for API specifications, you can simply upload a YAML
+based API specification. For example, here is a sample Open API specification from Twilio:
+
 ```yaml
 openapi: 3.0.1
 paths:
   /v1/AuthTokens/Promote:
     servers:
-    - url: https://accounts.twilio.com
+      - url: https://accounts.twilio.com
     description: Auth Token promotion
     x-twilio:
       defaultOutputProperties:
-      - account_sid
-      - auth_token
-      - date_created
+        - account_sid
+        - auth_token
+        - date_created
       pathType: instance
       mountName: auth_token_promotion
     post:
@@ -919,49 +1060,51 @@ paths:
 ...
 
 
-   schemas:
-     accounts.v1.auth_token_promotion:
-       type: object
-       properties:
-         account_sid:
-           type: string
-           minLength: 34
-           maxLength: 34
-           pattern: ^AC[0-9a-fA-F]{32}$
-           nullable: true
-           description: The SID of the Account that the secondary Auth Token was created
-             for
-         auth_token:
-           type: string
-           nullable: true
-           description: The promoted Auth Token
-         date_created:
-           type: string
-           format: date-time
-           nullable: true
-           description: The ISO 8601 formatted date and time in UTC when the resource
-             was created
-         date_updated:
-           type: string
-           format: date-time
-           nullable: true
-           description: The ISO 8601 formatted date and time in UTC when the resource
-             was last updated
-         url:
-           type: string
-           format: uri
-           nullable: true
-           description: The URI for this resource, relative to `https://accounts.twilio.com`
+schemas:
+  accounts.v1.auth_token_promotion:
+    type: object
+    properties:
+      account_sid:
+        type: string
+        minLength: 34
+        maxLength: 34
+        pattern: ^AC[0-9a-fA-F]{32}$
+        nullable: true
+        description: The SID of the Account that the secondary Auth Token was created
+          for
+      auth_token:
+        type: string
+        nullable: true
+        description: The promoted Auth Token
+      date_created:
+        type: string
+        format: date-time
+        nullable: true
+        description: The ISO 8601 formatted date and time in UTC when the resource
+          was created
+      date_updated:
+        type: string
+        format: date-time
+        nullable: true
+        description: The ISO 8601 formatted date and time in UTC when the resource
+          was last updated
+      url:
+        type: string
+        format: uri
+        nullable: true
+        description: The URI for this resource, relative to `https://accounts.twilio.com`
 ...         
 ```
 
 You can then upload the API specification as:
+
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/twilio_accounts_v1.yaml \
 		http://localhost:8080/_oapi
 ```
 
-It will generate a api scenarios for each API based on mime-type, status-code, parameter formats, regex, data ranges, e.g.,
+It will generate a api scenarios for each API based on mime-type, status-code, parameter formats, regex, data ranges,
+e.g.,
 
 ```yaml
 method: POST
@@ -971,24 +1114,24 @@ description: Promote the secondary Auth Token to primary. After promoting the ne
 group: v1_AuthTokens_Promote
 predicate: ""
 request:
-    assert_query_params_pattern: {}
-    assert_headers_pattern: {}
-    assert_contents_pattern: '{}'
-    path_params: {}
-    query_params: {}
-    headers: {}
-    contents: ""
+  assert_query_params_pattern: { }
+  assert_headers_pattern: { }
+  assert_contents_pattern: '{}'
+  path_params: { }
+  query_params: { }
+  headers: { }
+  contents: ""
 response:
-    headers: {}
-    contents: |>
-      {"account_sid":"{{RandRegex `^AC[0-9a-fA-F]{32}$`}}",
-      "auth_token":"{{RandStringMinMax 0 0}}","date_created":"{{Time}}",
-      "date_updated":"{{Time}}","url":"{{RandURL}}"}
-    contents_file: ""
-    status_code: 200
-    assert_headers_pattern: {}
-    assert_contents_pattern: '{"account_sid":"(__string__^AC[0-9a-fA-F]{32}$)","auth_token":"(__string__\\w+)"}'
-    assertions: []
+  headers: { }
+  contents: |>
+    {"account_sid":"{{RandRegex `^AC[0-9a-fA-F]{32}$`}}",
+    "auth_token":"{{RandStringMinMax 0 0}}","date_created":"{{Time}}",
+    "date_updated":"{{Time}}","url":"{{RandURL}}"}
+  contents_file: ""
+  status_code: 200
+  assert_headers_pattern: { }
+  assert_contents_pattern: '{"account_sid":"(__string__^AC[0-9a-fA-F]{32}$)","auth_token":"(__string__\\w+)"}'
+  assertions: [ ]
 wait_before_reply: 0s
 ```
 
@@ -1009,11 +1152,15 @@ Which will generate dynamic response as follows:
   "url": "https://Billy.com"
 }
 ```
+
 ## Listing all API Scenarios
+
 You can list all available APIs using:
+
 ```shell
 curl -v http://localhost:8080/_scenarios
 ```
+
 Which will return summary of APIs such as:
 
 ```json
@@ -1053,17 +1200,19 @@ Which will return summary of APIs such as:
     "LastUsageTime": 0,
     "RequestCount": 0
   },
-...  
+  ...  
 ```
 
 ## HAR Formats (https://w3c.github.io/web-performance/specs/HAR/Overview.html)
 
 ### Download test scenarios as HAR format
+
 ```bash
 curl -v http://localhost:8080/_history/har
 ```
 
 ### Upload test scenarios as HAR format
+
 ```bash
 curl -v -X POST http://localhost:8080/_history/har --data-binary @myfile.har
 ```
@@ -1071,39 +1220,45 @@ curl -v -X POST http://localhost:8080/_history/har --data-binary @myfile.har
 ## Postman Collection Formats (https://schema.postman.com/collection/json/v2.1.0/draft-07/docs/index.html)
 
 ### Download test scenarios as Postman Collection format
+
 ```bash
 curl -v http://localhost:8080/_history/postman
 ```
 
 ### Upload test scenarios as Postman Collection format
+
 ```bash
 curl -X 'POST' 'http://localhost:8000/_history/postman' -H 'Content-Type: */*' --data-binary @fixtures/postman.json
 ```
 
 ## Swagger-UI
-The api-mock-service includes an embedded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL in your browser. And upload OpenAPI specification using:
+
+The api-mock-service includes an embedded swagger-ui, which you can access using `http://localhost:8000/swagger-ui/` URL
+in your browser. And upload OpenAPI specification using:
 
 ```bash
 curl -H "Content-Type: application/yaml" --data-binary @fixtures/oapi/jobs-openapi.json http://localhost:8000/_oapi
 ```
 
-You can then play with APIs on your browser with URL `http://localhost:8000/swagger-ui/`, e.g., following is a screenshot for internal specifications for APIs:
+You can then play with APIs on your browser with URL `http://localhost:8000/swagger-ui/`, e.g., following is a
+screenshot for internal specifications for APIs:
 
 ![internal-api](images/swagger_internal.png)
 
 Alternatively, you can start swagger-UI as follows:
 
-
 ```bash
 docker run -p 8080:8080 -e BASE_URL=/swagger -e SWAGGER_JSON=/data/jobs-openapi.json -v $(pwd)/fixtures/oapi:/data swaggerapi/swagger-ui
 ```
+
 You can then play with APIs on your browser with URL `http://localhost:8080`:
 
 ![swagger-ui](images/swagger.png)
 
 ## Contract Testing
 
-This tool can be used for consumer-driven contract testing by generating stub responses and producer-driven contract testing by generating tests, e.g.
+This tool can be used for consumer-driven contract testing by generating stub responses and producer-driven contract
+testing by generating tests, e.g.
 
 ### Generate stub responses for consumer driven contract testing using Open-API
 
@@ -1125,9 +1280,10 @@ This tool can be used for consumer-driven contract testing by generating stub re
 
 ![Playground for Contract Testing](images/contract_playground.png)
 
-
 ## Contract Testing CLI
-In addition to serving a api-mock-service, you can also use a builtin contract client to test remote services for stochastic testing
+
+In addition to serving a api-mock-service, you can also use a builtin contract client to test remote services for
+stochastic testing
 by generating random data based on regex or API specifications.
 For example, you may capture a test scenario for a remote API using http proxy such as:
 
@@ -1138,6 +1294,7 @@ curl --cacert ca_cert.pem -X POST https://jsonplaceholder.typicode.com/todos -d 
 ```
 
 This will capture a API scenario such as:
+
 ```yaml
 method: POST
 name: recorded-todos-6ded24d43a7d3d65430958b467fbfbe75fe5bb9dfb7bb5821e4b3a0c5ac0f6c5
@@ -1147,93 +1304,96 @@ order: 0
 group: todos
 predicate: ""
 request:
-    assert_query_params_pattern: {}
-    assert_headers_pattern:
-        Content-Type: application/x-www-form-urlencoded
-    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    path_params: {}
-    query_params: {}
-    headers:
-        Accept: '*/*'
-        Content-Length: "75"
-        Content-Type: application/x-www-form-urlencoded
-        User-Agent: curl/7.65.2
-    contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
+  assert_query_params_pattern: { }
+  assert_headers_pattern:
+    Content-Type: application/x-www-form-urlencoded
+  assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+  path_params: { }
+  query_params: { }
+  headers:
+    Accept: '*/*'
+    Content-Length: "75"
+    Content-Type: application/x-www-form-urlencoded
+    User-Agent: curl/7.65.2
+  contents: '{ "userId": 1, "id": 1, "title": "delectus aut autem", "completed": false }'
 response:
-    headers:
-        Access-Control-Allow-Credentials:
-            - "true"
-        Access-Control-Expose-Headers:
-            - Location
-        Alt-Svc:
-            - h3=":443"; ma=86400, h3-29=":443"; ma=86400
-        Cache-Control:
-            - no-cache
-        Cf-Cache-Status:
-            - DYNAMIC
-        Cf-Ray:
-            - 77adb1d3bab8c4ed-SEA
-        Connection:
-            - keep-alive
-        Content-Length:
-            - "110"
-        Content-Type:
-            - application/json; charset=utf-8
-        Date:
-            - Sat, 17 Dec 2022 06:45:13 GMT
-        Etag:
-            - W/"6e-RK9/3wRHz0Km8441rbi3vda+OPg"
-        Expires:
-            - "-1"
-        Location:
-            - http://jsonplaceholder.typicode.com/todos/201
-        Nel:
-            - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
-        Pragma:
-            - no-cache
-        Report-To:
-            - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=qMvfKDkgk2LDTsTQbgkEKwlwh0sbesM6eL3i6EPw0SffJFI21E5X1W16zULSrK2BG34ZOGaAe93KUm%2ByGY9r2UeE0MzTS4BBNK9NhUb5x14k0%2BXhOE%2FgHuW13yKlszX45O04%2FtFGo%2BHt1GLytp54"}],"group":"cf-nel","max_age":604800}'
-        Server:
-            - cloudflare
-        Server-Timing:
-            - cf-q-config;dur=8.000002708286e-06
-        Vary:
-            - Origin, X-HTTP-Method-Override, Accept-Encoding
-        Via:
-            - 1.1 vegur
-        X-Content-Type-Options:
-            - nosniff
-        X-Powered-By:
-            - Express
-        X-Ratelimit-Limit:
-            - "1000"
-        X-Ratelimit-Remaining:
-            - "999"
-        X-Ratelimit-Reset:
-            - "1671259562"
-    contents: |-
-        {
-          "{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }": "",
-          "id": 201
-        }
-    contents_file: ""
-    status_code: 201
-    assert_headers_pattern: {}
-    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
-    set_variables: []
-    assertions: []
+  headers:
+    Access-Control-Allow-Credentials:
+      - "true"
+    Access-Control-Expose-Headers:
+      - Location
+    Alt-Svc:
+      - h3=":443"; ma=86400, h3-29=":443"; ma=86400
+    Cache-Control:
+      - no-cache
+    Cf-Cache-Status:
+      - DYNAMIC
+    Cf-Ray:
+      - 77adb1d3bab8c4ed-SEA
+    Connection:
+      - keep-alive
+    Content-Length:
+      - "110"
+    Content-Type:
+      - application/json; charset=utf-8
+    Date:
+      - Sat, 17 Dec 2022 06:45:13 GMT
+    Etag:
+      - W/"6e-RK9/3wRHz0Km8441rbi3vda+OPg"
+    Expires:
+      - "-1"
+    Location:
+      - http://jsonplaceholder.typicode.com/todos/201
+    Nel:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+    Pragma:
+      - no-cache
+    Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v3?s=qMvfKDkgk2LDTsTQbgkEKwlwh0sbesM6eL3i6EPw0SffJFI21E5X1W16zULSrK2BG34ZOGaAe93KUm%2ByGY9r2UeE0MzTS4BBNK9NhUb5x14k0%2BXhOE%2FgHuW13yKlszX45O04%2FtFGo%2BHt1GLytp54"}],"group":"cf-nel","max_age":604800}'
+    Server:
+      - cloudflare
+    Server-Timing:
+      - cf-q-config;dur=8.000002708286e-06
+    Vary:
+      - Origin, X-HTTP-Method-Override, Accept-Encoding
+    Via:
+      - 1.1 vegur
+    X-Content-Type-Options:
+      - nosniff
+    X-Powered-By:
+      - Express
+    X-Ratelimit-Limit:
+      - "1000"
+    X-Ratelimit-Remaining:
+      - "999"
+    X-Ratelimit-Reset:
+      - "1671259562"
+  contents: |-
+    {
+      "{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }": "",
+      "id": 201
+    }
+  contents_file: ""
+  status_code: 201
+  assert_headers_pattern: { }
+  assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+  set_variables: [ ]
+  assertions: [ ]
 wait_before_reply: 0s
 ```
 
 ### Producer Contract Testing By Group
 
-You can then customize this scenario with additional assertions and you may remove all response contents as they won't be used. Note that
+You can then customize this scenario with additional assertions and you may remove all response contents as they won't
+be used. Note that
 above scenario is defined with group `todos`. You can then submit a request for contract testing as follows:
+
 ```bash
 curl -k -v -X POST http://localhost:8080/_contracts/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'
 ```
 
 Above request will submit 10 requests to the todo server with random data and return response such as:
+
 ```yaml
 {
   "results": {
@@ -1246,27 +1406,35 @@ Above request will submit 10 requests to the todo server with random data and re
       "{\"completed\":\"false\",\"id\":\"0\",\"title\":\"malitia\",\"userId\":\" 5\"}": ""
     }
   },
-  "errors": {},
+  "errors": { },
   "succeeded": 2,
   "failed": 0
 }
 ```
 
-If you have a local captured data, you can also run contract client with a command line without running api-mock server, e.g.:
+If you have a local captured data, you can also run contract client with a command line without running api-mock server,
+e.g.:
+
 ```bash
 go run main.go contract --base_url https://jsonplaceholder.typicode.com --group todos --times 10
 ```
 
 ### Producer Contract Testing By History
+
 You can also execute producer contracts by history of previously executed contracts, e.g.,
+
 ```bash
 curl -k -v -X POST http://localhost:8080/_contracts/history/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'
 ```
 
-Note: the group path parameter in above URL is optional and you can omit if you just want to execute all execution history.
+Note: the group path parameter in above URL is optional and you can omit if you just want to execute all execution
+history.
 
 ## Group Variables and Chaos Configurations
-In addition to specifying variables for each scenario, you can also use APIs to store group variables and chaos config, e.g.
+
+In addition to specifying variables for each scenario, you can also use APIs to store group variables and chaos config,
+e.g.
+
 ```bash
 curl -X PUT http://localhost:8080/_groups/group-name/config -d '{
   "variables": {
@@ -1275,19 +1443,26 @@ curl -X PUT http://localhost:8080/_groups/group-name/config -d '{
   "chaos_enabled": false,
   "mean_time_between_failure": 4,
   "mean_time_between_additional_latency": 8,
-  "max_additional_latency": 3000000000,
+  "max_additional_latency_secs": 2.5,
   "http_errors": [400, 401, 500]
 }'
 ```
-In above example, variables `var1` and `var2` will be added to all scenarios belonging to `group-name`. In addition, it will enable
-chaos testing for the group so that 1/4th of tests will fail with errors (HTTP 400 or 401) and 1/8th requests will add latency delays.
+
+In above example, variables `var1` and `var2` will be added to all scenarios belonging to `group-name`. In addition, it
+will enable
+chaos testing for the group so that 1/4th of tests will fail with errors (HTTP 400 or 401) and 1/8th requests will add
+latency delays.
 
 *Note*: You can use `global` group to share variables for all scenarios but chaos settings are not shared across groups.
 
 ## Chaining Scenarios for Group Contract Testing
-An API scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another. 
-You can capture or define multiple scenarios for a group and then execute them in a specific order and then pass certain properties 
-from one test to another. For example, following scenario creates a todo item with order 0 and captures `id` and `title` properties:
+
+An API scenario can be defined with a group, an order and a pipeline for passing response from one scenario to another.
+You can capture or define multiple scenarios for a group and then execute them in a specific order and then pass certain
+properties
+from one test to another. For example, following scenario creates a todo item with order 0 and captures `id` and `title`
+properties:
+
 ```yaml
 method: POST
 name: post-todo
@@ -1296,34 +1471,35 @@ order: 0
 group: todos
 predicate: ""
 request:
-    assert_query_params_pattern: {}
-    assert_headers_pattern:
-        Mock-Url: https://jsonplaceholder.typicode.com/todos/2
-        x-api-key: '[\x20-\x7F]{1,128}'
-        Content-Type: application/x-www-form-urlencoded
-    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    path_params:
-        id: '\d{3}'
+  assert_query_params_pattern: { }
+  assert_headers_pattern:
+    Mock-Url: https://jsonplaceholder.typicode.com/todos/2
+    x-api-key: '[\x20-\x7F]{1,128}'
+    Content-Type: application/x-www-form-urlencoded
+  assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+  path_params:
+    id: '\d{3}'
 response:
-    headers:
-        Access-Control-Allow-Credentials:
-            - "true"
-    content_type: ""
-    contents: |-
-        {
-          "id": {{RandIntMinMax 1 10}}
-        }
-    status_code: 200
-    assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
-    set_variables:
-      - id
-      - title
-    assertions:
-      - VariableGE contents.id 0
+  headers:
+    Access-Control-Allow-Credentials:
+      - "true"
+  content_type: ""
+  contents: |-
+    {
+      "id": {{RandIntMinMax 1 10}}
+    }
+  status_code: 200
+  assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
+  set_variables:
+    - id
+    - title
+  assertions:
+    - VariableGE contents.id 0
 wait_before_reply: 1s
 ```
 
 The set variables can be used as input parameters for another scenario such as:
+
 ```yaml
 method: GET
 name: todo-get
@@ -1331,40 +1507,43 @@ path: /todos/:id
 order: 1
 group: todos
 request:
-    assert_query_params_pattern: {}
-    assert_headers_pattern:
-        Mock-Url: https://jsonplaceholder.typicode.com/todos/10
-        x-api-key: '[\x20-\x7F]{1,32}'
-    headers:
-        x-api-key: '[\x20-\x7F]{1,32}'
-    query_params:
-        group: '[a-zA-Z]{5,10}'
-    path_params:
-        id: '[0-9]{4,10}'
-    match_content_type: ""
-    assert_contents_pattern: ""
+  assert_query_params_pattern: { }
+  assert_headers_pattern:
+    Mock-Url: https://jsonplaceholder.typicode.com/todos/10
+    x-api-key: '[\x20-\x7F]{1,32}'
+  headers:
+    x-api-key: '[\x20-\x7F]{1,32}'
+  query_params:
+    group: '[a-zA-Z]{5,10}'
+  path_params:
+    id: '[0-9]{4,10}'
+  match_content_type: ""
+  assert_contents_pattern: ""
 response:
-    headers: {}
-    content_type: ""
-    contents: |-
-        {
-                        "userId": 15,
-                        "id": {{.id}},
-                        "title": "illo test title",
-                        "completed": true
-                  }
-    assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    set_variables:
-      - id
-      - userId
-    status_code: 200
-    assertions:
-        - VariableGE contents.userId 0
-        - VariableContains contents.title illo
+  headers: { }
+  content_type: ""
+  contents: |-
+    {
+                    "userId": 15,
+                    "id": {{.id}},
+                    "title": "illo test title",
+                    "completed": true
+              }
+  assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
+  set_variables:
+    - id
+    - userId
+  status_code: 200
+  assertions:
+    - VariableGE contents.userId 0
+    - VariableContains contents.title illo
 wait_before_reply: 1s
 ```
 
-When you execute contract tests using `curl -k -v -X POST http://localhost:8080/_contracts/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'`, it will execute:
+When you execute contract tests
+using `curl -k -v -X POST http://localhost:8080/_contracts/todos -d '{"base_url": "https://jsonplaceholder.typicode.com", "execution_times": 2}'`
+, it will execute:
+
 ```yaml
 {
   "results": {
@@ -1376,7 +1555,7 @@ When you execute contract tests using `curl -k -v -X POST http://localhost:8080/
       "userId": 15
     }
   },
-  "errors": {},
+  "errors": { },
   "succeeded": 2,
   "failed": 0
 }
@@ -1385,16 +1564,20 @@ When you execute contract tests using `curl -k -v -X POST http://localhost:8080/
 The output will show the attributes that were captured based on the `set_variables` configuration.
 
 ## HTTP Proxy via Browser
+
 You can proxy HTTP/HTTPS traffic in your browser by setting proxy setting such as:
 
 ![browser-proxy](images/browser_proxy.png)
 
-Note: You may need to import root certificate for api-mock-service by adding https://github.com/bhatti/api-mock-service/blob/main/ca_cert.pem to your browser, e.g.,
+Note: You may need to import root certificate for api-mock-service by
+adding https://github.com/bhatti/api-mock-service/blob/main/ca_cert.pem to your browser, e.g.,
 
 ![browser-proxy](images/import_cert.png)
 
 ## Static Assets
+
 The api-mock-service can serve any static assets from a user-defined folder and then serve it as follows:
+
 ```bash
 cp static-file default_assets
 
@@ -1407,6 +1590,8 @@ curl http://localhost:8080/_assets/default_assets
 
 ## Related Articles
 
-- Property-based and Generative testing for Microservices - https://shahbhat.medium.com/property-based-and-generative-testing-for-microservices-1c6df1abb40b
+- Property-based and Generative testing for Microservices
+  - https://shahbhat.medium.com/property-based-and-generative-testing-for-microservices-1c6df1abb40b
 - Contract Testing for REST APIs - https://shahbhat.medium.com/contract-testing-for-rest-apis-31680ed6bbf3
-- See Swagger API docs at https://petstore.swagger.io?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
+- See Swagger API docs at https://petstore.swagger.io
+  ?url=https://raw.githubusercontent.com/bhatti/api-mock-service/main/docs/swagger.yaml
