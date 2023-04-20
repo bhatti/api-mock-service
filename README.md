@@ -1430,7 +1430,7 @@ curl -k -v -X POST http://localhost:8080/_contracts/history/todos -d '{"base_url
 Note: the group path parameter in above URL is optional and you can omit if you just want to execute all execution
 history.
 
-## Group Variables and Chaos Configurations
+## Group Variables and Configurations
 
 In addition to specifying variables for each scenario, you can also use APIs to store group variables and chaos config,
 e.g.
@@ -1450,10 +1450,49 @@ curl -X PUT http://localhost:8080/_groups/group-name/config -d '{
 
 In above example, variables `var1` and `var2` will be added to all scenarios belonging to `group-name`. In addition, it
 will enable
-chaos testing for the group so that 1/4th of tests will fail with errors (HTTP 400 or 401) and 1/8th requests will add
+chaos testing for the group so that up-to 1/4th of tests will fail with errors (HTTP 400 or 401) and up-to 1/8th requests will add
 latency delays.
 
 *Note*: You can use `global` group to share variables for all scenarios but chaos settings are not shared across groups.
+
+## Consumer-Driven Chaos Testing
+
+The API consumer can inject failures and delays in following ways:
+### Multiple Mock Scenario
+ 
+You can define multiple mock scenarios with different response-codes, response-contents and the api-mock-server will playback
+the mock scenarios in round-robin fashion.
+
+### GO Templates with Mock Scenario
+
+You can also use directives from GO template to return different response codes based on input parameters or random values, 
+e.g., following snippet will return 500 or 501 for every 10th request otherwise it will return 200 or 400.
+```yaml
+     {{if NthRequest 10 }}
+     status_code: {{EnumInt 500 501}}
+     {{else}}
+     status_code: {{EnumInt 200 400}}
+     {{end}}
+```
+
+Similarly, you can add delay based on input parameter, e.g.,
+```yaml
+ wait_before_reply: {{.page}}s
+```
+
+### Using HTTP Proxy (or Recorder)
+If you just need the API consumer to connect to the real server, you can define chaos settings for the group of your APIs as shown above, e.g.,
+```json
+{
+  "chaos_enabled": true,
+  "mean_time_between_failure": 5,
+  "mean_time_between_additional_latency": 4,
+  "max_additional_latency_secs": 5,
+  "http_errors": [400, 401, 500]
+}
+```
+Once you upload the group configuration and set `chaos_enabled` to true, the api-mock-server will inject failures 
+for up-to 1/5th of the time and additional latency (max 5 second) for up-to 1/4th of time.
 
 ## Chaining Scenarios for Group Contract Testing
 
