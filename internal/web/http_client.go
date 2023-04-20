@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	log "github.com/sirupsen/logrus"
@@ -44,15 +43,15 @@ type HTTPClient interface {
 
 // DefaultHTTPClient implements HTTPClient
 type DefaultHTTPClient struct {
-	config    *types.Configuration
-	awsSigner AWSSigner
+	config      *types.Configuration
+	authAdapter AuthAdapter
 }
 
 // NewHTTPClient creates structure for HTTPClient
-func NewHTTPClient(config *types.Configuration, awsSigner AWSSigner) *DefaultHTTPClient {
+func NewHTTPClient(config *types.Configuration, authAdapter AuthAdapter) *DefaultHTTPClient {
 	return &DefaultHTTPClient{
-		config:    config,
-		awsSigner: awsSigner,
+		config:      config,
+		authAdapter: authAdapter,
 	}
 }
 
@@ -125,12 +124,7 @@ func (w *DefaultHTTPClient) execute(
 		}
 	}
 
-	staticCredentials := credentials.NewStaticCredentials(
-		GetHeaderParamOrEnvValue(internalKeyMap, AWSAccessKey),
-		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecretKey),
-		GetHeaderParamOrEnvValue(internalKeyMap, AWSSecurityToken, AWSSessionToken),
-	)
-	awsAuthSig4, awsInfo, awsErr := w.awsSigner.AWSSign(req, staticCredentials)
+	awsAuthSig4, awsInfo, awsErr := w.authAdapter.HandleAuth(req)
 	headers = req.Header
 	client := httpClient(w.config)
 	resp, err := client.Do(req)

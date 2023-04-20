@@ -135,7 +135,7 @@ make && ./out/bin/api-mock-service
 For full command line options, execute api-mock-service -h that will show you command line options such as:
 
 ```bash
-Starts api-mock-service
+Starts api mock service
 
 Usage:
   api-mock-service [flags]
@@ -143,13 +143,14 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
+  config      config will output the current configuration
   contract    Executes contract client
   help        Help about any command
   version     Version will output the current build information
 
 Flags:
       --config string    config file
-      --dataDir string   data dir to store api contracts and history
+      --dataDir string   data dir to store API contracts and history
   -h, --help             help for api-mock-service
       --httpPort int     HTTP port to listen
       --proxyPort int    Proxy port to listen
@@ -188,9 +189,9 @@ In addition to specifying HTTP proxy as environment variables, here is how you c
 
 ```java
 System.getProperties().put("http.proxyHost","<HOST>"); // Use https prefix if running mock-service behind TLS
-        System.getProperties().put("http.proxyPort","<PORT>");
-        System.getProperties().put("http.proxyUser","");
-        System.getProperties().put("http.proxyPassword","");
+System.getProperties().put("http.proxyPort","<PORT>");
+System.getProperties().put("http.proxyUser","");
+System.getProperties().put("http.proxyPassword","");
 
 ```
 

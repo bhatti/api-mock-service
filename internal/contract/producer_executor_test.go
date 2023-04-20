@@ -32,7 +32,7 @@ func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, &types.APIKeyData{}, dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -132,7 +132,7 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 	// WHEN executing scenario
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -158,7 +158,7 @@ func Test_ShouldExecutePutPosts(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 	// THEN it should execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for _, err := range res.Errors {
@@ -190,7 +190,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {
@@ -221,7 +221,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// AND executor
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 
 	// WHEN executing scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
@@ -254,7 +254,7 @@ func Test_ShouldNotExecutePutPostsWithMissingRequestHeaders(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {
@@ -285,7 +285,7 @@ func Test_ShouldNotExecutePutPostsWithMissingResponseHeaders(t *testing.T) {
 	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1)
 
 	// WHEN executing scenario
-	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAWSSigner(config)))
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
 	// THEN it should not execute saved scenario
 	res := executor.Execute(context.Background(), &http.Request{}, scenario.ToKeyData(), dataTemplate, contractReq)
 	for k, err := range res.Errors {

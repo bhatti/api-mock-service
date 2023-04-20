@@ -10,7 +10,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -47,7 +46,7 @@ var ignoredResponseHeaders = map[string]struct{}{
 // Handler structure
 type Handler struct {
 	config                *types.Configuration
-	awsSigner             web.AWSSigner
+	authAdapter           web.AuthAdapter
 	scenarioRepository    repository.APIScenarioRepository
 	fixtureRepository     repository.APIFixtureRepository
 	groupConfigRepository repository.GroupConfigRepository
@@ -57,7 +56,7 @@ type Handler struct {
 // NewProxyHandler instantiates controller for updating api-scenarios
 func NewProxyHandler(
 	config *types.Configuration,
-	awsSigner web.AWSSigner,
+	authAdapter web.AuthAdapter,
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
 	groupConfigRepository repository.GroupConfigRepository,
@@ -65,7 +64,7 @@ func NewProxyHandler(
 ) *Handler {
 	return &Handler{
 		config:                config,
-		awsSigner:             awsSigner,
+		authAdapter:           authAdapter,
 		scenarioRepository:    scenarioRepository,
 		fixtureRepository:     fixtureRepository,
 		groupConfigRepository: groupConfigRepository,
@@ -127,14 +126,8 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		_ = req.Body.(utils.ResetReader).Reset()
 	}
 
-	staticCredentials := credentials.NewStaticCredentials(
-		web.GetHeaderParamOrEnvValue(nil, web.AWSAccessKey),
-		web.GetHeaderParamOrEnvValue(nil, web.AWSSecretKey),
-		web.GetHeaderParamOrEnvValue(nil, web.AWSSecurityToken, web.AWSSessionToken),
-	)
-
 	oldAuth := req.Header.Get(types.AuthorizationHeader)
-	awsAuthSig4, awsInfo, err := h.awsSigner.AWSSign(req, staticCredentials)
+	awsAuthSig4, awsInfo, err := h.authAdapter.HandleAuth(req)
 
 	if awsAuthSig4 {
 		log.WithFields(log.Fields{

@@ -53,7 +53,7 @@ var contractCmd = &cobra.Command{
 		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 		contractReq := types.NewProducerContractRequest(baseURL, executionTimes)
 		contractReq.Verbose = verbose
-		executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, web.NewHTTPClient(serverConfig, web.NewAWSSigner(serverConfig)))
+		executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, web.NewHTTPClient(serverConfig, web.NewAuthAdapter(serverConfig)))
 		contractRes := executor.ExecuteByGroup(context.Background(), &http.Request{}, group, dataTemplate, contractReq)
 		log.WithFields(log.Fields{
 			"Errors":    contractRes.Errors,

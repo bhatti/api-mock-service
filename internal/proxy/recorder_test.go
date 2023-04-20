@@ -288,7 +288,7 @@ func Test_ShouldRecordRealPostProxyRequests(t *testing.T) {
 	require.NoError(t, err)
 	groupConfigRepository, err := repository.NewFileGroupConfigRepository(types.BuildTestConfig())
 	require.NoError(t, err)
-	client := web.NewHTTPClient(config, web.NewAWSSigner(config))
+	client := web.NewHTTPClient(config, web.NewAuthAdapter(config))
 	reqBody := []byte(`{ "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }`)
 	recorder := NewRecorder(config, client, mockScenarioRepository, groupConfigRepository)
 	reader := io.NopCloser(bytes.NewReader(reqBody))

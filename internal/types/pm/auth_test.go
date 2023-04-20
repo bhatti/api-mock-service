@@ -2,6 +2,7 @@ package pm
 
 import (
 	"errors"
+	"github.com/bhatti/api-mock-service/internal/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 
 func TestGetParams(t *testing.T) {
 	auth := PostmanAuth{
-		Type: APIKey,
+		Type: types.APIKey,
 		APIKey: []*PostmanAuthParam{
 			{
 				Type:  "string",
@@ -84,12 +85,12 @@ func TestGetParams(t *testing.T) {
 
 	cases := []struct {
 		scenario       string
-		authType       authType
+		authType       types.AuthType
 		expectedParams []*PostmanAuthParam
 	}{
 		{
 			"GetParams for ApiKey",
-			APIKey,
+			types.APIKey,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -100,7 +101,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for AWSV4",
-			AWSV4,
+			types.AWSV4,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -111,7 +112,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for Basic",
-			Basic,
+			types.Basic,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -122,7 +123,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for Bearer",
-			Bearer,
+			types.Bearer,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -133,7 +134,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for Digest",
-			Digest,
+			types.Digest,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -144,7 +145,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for Hawk",
-			Hawk,
+			types.Hawk,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -155,7 +156,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for NoAuth",
-			NoAuth,
+			types.NoAuth,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -166,7 +167,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for OAuth1",
-			OAuth1,
+			types.OAuth1,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -177,7 +178,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for OAuth2",
-			OAuth2,
+			types.OAuth2,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -188,7 +189,7 @@ func TestGetParams(t *testing.T) {
 		},
 		{
 			"GetParams for NTLM",
-			NTLM,
+			types.NTLM,
 			[]*PostmanAuthParam{
 				{
 					Type:  "string",
@@ -227,7 +228,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Successfully unmarshalling a basic PostmanAuth v2.1.0",
 			[]byte("{\"type\":\"basic\",\"basic\":[{\"key\":\"a-key\",\"value\":\"a-value\"}]}"),
 			&PostmanAuth{
-				Type: Basic,
+				Type: types.Basic,
 				Basic: []*PostmanAuthParam{
 					{
 						Key:   "a-key",
@@ -242,7 +243,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal apiKey auth because of an unsupported format",
 			[]byte("{\"type\":\"apikey\",\"apikey\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: APIKey,
+				Type: types.APIKey,
 			},
 			errors.New("unsupported type"),
 		},
@@ -250,7 +251,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal awsv4 auth because of an unsupported format",
 			[]byte("{\"type\":\"awsv4\",\"awsv4\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: AWSV4,
+				Type: types.AWSV4,
 			},
 			errors.New("unsupported type"),
 		},
@@ -258,7 +259,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal basic auth because of an unsupported format",
 			[]byte("{\"type\":\"basic\",\"basic\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: Basic,
+				Type: types.Basic,
 			},
 			errors.New("unsupported type"),
 		},
@@ -266,7 +267,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal bearer auth because of an unsupported format",
 			[]byte("{\"type\":\"bearer\",\"bearer\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: Bearer,
+				Type: types.Bearer,
 			},
 			errors.New("unsupported type"),
 		},
@@ -274,7 +275,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal digest auth because of an unsupported format",
 			[]byte("{\"type\":\"digest\",\"digest\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: Digest,
+				Type: types.Digest,
 			},
 			errors.New("unsupported type"),
 		},
@@ -282,7 +283,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal hawk auth because of an unsupported format",
 			[]byte("{\"type\":\"hawk\",\"hawk\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: Hawk,
+				Type: types.Hawk,
 			},
 			errors.New("unsupported type"),
 		},
@@ -290,7 +291,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal noauth auth because of an unsupported format",
 			[]byte("{\"type\":\"noauth\",\"noauth\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: NoAuth,
+				Type: types.NoAuth,
 			},
 			errors.New("unsupported type"),
 		},
@@ -298,7 +299,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal oauth1 auth because of an unsupported format",
 			[]byte("{\"type\":\"oauth1\",\"oauth1\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: OAuth1,
+				Type: types.OAuth1,
 			},
 			errors.New("unsupported type"),
 		},
@@ -306,7 +307,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal oauth2 auth because of an unsupported format",
 			[]byte("{\"type\":\"oauth2\",\"oauth2\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: OAuth2,
+				Type: types.OAuth2,
 			},
 			errors.New("unsupported type"),
 		},
@@ -314,7 +315,7 @@ func TestAuthUnmarshalJSON(t *testing.T) {
 			"Failed to unmarshal ntlm auth because of an unsupported format",
 			[]byte("{\"type\":\"ntlm\",\"ntlm\":\"invalid-auth-param\"}"),
 			&PostmanAuth{
-				Type: NTLM,
+				Type: types.NTLM,
 			},
 			errors.New("unsupported type"),
 		},
@@ -339,7 +340,7 @@ func TestAuthMarshalJSON(t *testing.T) {
 		{
 			"Successfully marshalling an PostmanAuth v2.1.0",
 			&PostmanAuth{
-				Type: Basic,
+				Type: types.Basic,
 				Basic: []*PostmanAuthParam{
 					{
 						Key:   "a-key",
@@ -367,7 +368,7 @@ func TestCreateAuth(t *testing.T) {
 	}{
 		{
 			scenario: "Create apikey auth",
-			auth: CreateAuth(APIKey, &PostmanAuthParam{
+			auth: CreateAuth(types.APIKey, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -383,7 +384,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create awsv4 auth",
-			auth: CreateAuth(AWSV4, &PostmanAuthParam{
+			auth: CreateAuth(types.AWSV4, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -399,7 +400,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create basic auth",
-			auth: CreateAuth(Basic, &PostmanAuthParam{
+			auth: CreateAuth(types.Basic, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -415,7 +416,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create bearer auth",
-			auth: CreateAuth(Bearer, &PostmanAuthParam{
+			auth: CreateAuth(types.Bearer, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -431,7 +432,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create digest auth",
-			auth: CreateAuth(Digest, &PostmanAuthParam{
+			auth: CreateAuth(types.Digest, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -447,7 +448,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create hawk auth",
-			auth: CreateAuth(Hawk, &PostmanAuthParam{
+			auth: CreateAuth(types.Hawk, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -463,7 +464,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create noauth auth",
-			auth: CreateAuth(NoAuth, &PostmanAuthParam{
+			auth: CreateAuth(types.NoAuth, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -479,7 +480,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create oauth1 auth",
-			auth: CreateAuth(OAuth1, &PostmanAuthParam{
+			auth: CreateAuth(types.OAuth1, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -495,7 +496,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create oauth2 auth",
-			auth: CreateAuth(OAuth2, &PostmanAuthParam{
+			auth: CreateAuth(types.OAuth2, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),
@@ -511,7 +512,7 @@ func TestCreateAuth(t *testing.T) {
 		},
 		{
 			scenario: "Create ntlm auth",
-			auth: CreateAuth(NTLM, &PostmanAuthParam{
+			auth: CreateAuth(types.NTLM, &PostmanAuthParam{
 				Key:   "a-key",
 				Value: "a-value",
 			}),

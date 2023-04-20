@@ -377,6 +377,11 @@
       "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
+    "AuthType": {
+      "description": "AuthType for API authorization",
+      "type": "string",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
     "Duration": {
       "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
       "format": "int64",
@@ -1123,7 +1128,7 @@
           "x-go-name": "OAuth2"
         },
         "type": {
-          "$ref": "#/definitions/authType"
+          "$ref": "#/definitions/AuthType"
         }
       },
       "title": "PostmanAuth contains the authentication method used and its associated parameters.",
@@ -1752,10 +1757,6 @@
       },
       "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-    },
-    "authType": {
-      "type": "string",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
     }
   },
   "paths": {

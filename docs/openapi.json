@@ -1634,6 +1634,11 @@
         "description": "APIScenario defines mock scenario for APIs",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
       },
+      "AuthType": {
+        "type": "string",
+        "description": "AuthType for API authorization",
+        "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+      },
       "Duration": {
         "type": "integer",
         "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
@@ -2382,7 +2387,7 @@
             "x-go-name": "OAuth2"
           },
           "type": {
-            "$ref": "#/components/schemas/authType"
+            "$ref": "#/components/schemas/AuthType"
           }
         },
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
@@ -3021,10 +3026,6 @@
         },
         "description": "ProducerContractResponse for returning summary of producer based test results",
         "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-      },
-      "authType": {
-        "type": "string",
-        "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
       }
     },
     "responses": {

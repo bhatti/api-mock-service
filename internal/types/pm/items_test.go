@@ -1,6 +1,7 @@
 package pm
 
 import (
+	"github.com/bhatti/api-mock-service/internal/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -250,7 +251,7 @@ func TestCreateItemGroup(t *testing.T) {
 			},
 		},
 		Auth: &PostmanAuth{
-			Type: Basic,
+			Type: types.Basic,
 		},
 	})
 
@@ -288,7 +289,7 @@ func TestCreateItemGroup(t *testing.T) {
 				},
 			},
 			Auth: &PostmanAuth{
-				Type: Basic,
+				Type: types.Basic,
 			},
 		},
 		c,

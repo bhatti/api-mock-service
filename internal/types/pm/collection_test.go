@@ -238,7 +238,7 @@ func buildV210Collection() *PostmanCollection {
 					},
 				},
 				Auth: &PostmanAuth{
-					Type: Bearer,
+					Type: types.Bearer,
 					Bearer: []*PostmanAuthParam{
 						{
 							Key:   "token",
@@ -307,7 +307,7 @@ func buildV210Collection() *PostmanCollection {
 						},
 					},
 					Auth: &PostmanAuth{
-						Type: Basic,
+						Type: types.Basic,
 						Basic: []*PostmanAuthParam{
 							{
 								Key:   "password",

@@ -39,8 +39,18 @@ type Configuration struct {
 	Debug                   bool   `yaml:"debug" mapstructure:"debug" env:"MOCK_DEBUG"`
 	// Version of API
 	Version *Version `yaml:"-" mapstructure:"-" json:"-"`
+	// UserAgent for mock api server
+	AuthBearerToken string `yaml:"auth_bearer_token" mapstructure:"auth_bearer_token" env:"AUTH_TOKEN"`
 	// AWSConfig
 	AWS AWSConfig `yaml:"aws" mapstructure:"aws"`
+	// BasicAuth
+	BasicAuth BasicAuthConfig `yaml:"basic_auth" mapstructure:"basic_auth"`
+}
+
+// BasicAuthConfig config
+type BasicAuthConfig struct {
+	Username string `yaml:"username" mapstructure:"username" env:"USERNAME"`
+	Password string `yaml:"password" mapstructure:"password" env:"PASSWORD"`
 }
 
 // AWSConfig config
@@ -73,8 +83,11 @@ func NewConfiguration(
 	viper.SetDefault("assert_headers_pattern", "")
 	viper.SetDefault("assert_query_params_pattern", "")
 	viper.SetDefault("cors", "*")
+	viper.SetDefault("auth_bearer_token", "")
 	viper.SetDefault("record_only", "false")
 	viper.SetDefault("debug", "false")
+	viper.SetDefault("basic_auth.username", "")
+	viper.SetDefault("basic_auth.password", "")
 	viper.SetDefault("aws.strip", "")
 	viper.SetDefault("aws.name", "")
 	viper.SetDefault("aws.aws_region", "")

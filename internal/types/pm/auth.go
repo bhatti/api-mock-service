@@ -3,31 +3,7 @@ package pm
 import (
 	"encoding/json"
 	"errors"
-)
-
-type authType string
-
-const (
-	// APIKey stands for API Key Authentication.
-	APIKey authType = "apikey"
-	// AWSV4 is Amazon AWS Authentication.
-	AWSV4 authType = "awsv4"
-	// Basic Authentication.
-	Basic authType = "basic"
-	// Bearer Token Authentication.
-	Bearer authType = "bearer"
-	// Digest Authentication.
-	Digest authType = "digest"
-	// Hawk Authentication.
-	Hawk authType = "hawk"
-	// NoAuth Authentication.
-	NoAuth authType = "noauth"
-	// OAuth1 Authentication.
-	OAuth1 authType = "oauth1"
-	// OAuth2 Authentication.
-	OAuth2 authType = "oauth2"
-	// NTLM Authentication.
-	NTLM authType = "ntlm"
+	"github.com/bhatti/api-mock-service/internal/types"
 )
 
 // PostmanAuthParam represents an attribute for any authentication method provided by Postman.
@@ -40,7 +16,7 @@ type PostmanAuthParam struct {
 
 // PostmanAuth contains the authentication method used and its associated parameters.
 type PostmanAuth struct {
-	Type   authType            `json:"type,omitempty"`
+	Type   types.AuthType      `json:"type,omitempty"`
 	APIKey []*PostmanAuthParam `json:"apikey,omitempty"`
 	AWSV4  []*PostmanAuthParam `json:"awsv4,omitempty"`
 	Basic  []*PostmanAuthParam `json:"basic,omitempty"`
@@ -55,7 +31,7 @@ type PostmanAuth struct {
 
 // mAuth is used for marshalling/unmarshalling.
 type mAuth struct {
-	Type   authType        `json:"type,omitempty"`
+	Type   types.AuthType  `json:"type,omitempty"`
 	APIKey json.RawMessage `json:"apikey,omitempty"`
 	AWSV4  json.RawMessage `json:"awsv4,omitempty"`
 	Basic  json.RawMessage `json:"basic,omitempty"`
@@ -71,25 +47,25 @@ type mAuth struct {
 // GetParams returns the parameters related to the authentication method in use.
 func (a *PostmanAuth) GetParams() []*PostmanAuthParam {
 	switch a.Type {
-	case APIKey:
+	case types.APIKey:
 		return a.APIKey
-	case AWSV4:
+	case types.AWSV4:
 		return a.AWSV4
-	case Basic:
+	case types.Basic:
 		return a.Basic
-	case Bearer:
+	case types.Bearer:
 		return a.Bearer
-	case Digest:
+	case types.Digest:
 		return a.Digest
-	case Hawk:
+	case types.Hawk:
 		return a.Hawk
-	case NoAuth:
+	case types.NoAuth:
 		return a.NoAuth
-	case OAuth1:
+	case types.OAuth1:
 		return a.OAuth1
-	case OAuth2:
+	case types.OAuth2:
 		return a.OAuth2
-	case NTLM:
+	case types.NTLM:
 		return a.NTLM
 	}
 
@@ -98,25 +74,25 @@ func (a *PostmanAuth) GetParams() []*PostmanAuthParam {
 
 func (a *PostmanAuth) setParams(params []*PostmanAuthParam) {
 	switch a.Type {
-	case APIKey:
+	case types.APIKey:
 		a.APIKey = params
-	case AWSV4:
+	case types.AWSV4:
 		a.AWSV4 = params
-	case Basic:
+	case types.Basic:
 		a.Basic = params
-	case Bearer:
+	case types.Bearer:
 		a.Bearer = params
-	case Digest:
+	case types.Digest:
 		a.Digest = params
-	case Hawk:
+	case types.Hawk:
 		a.Hawk = params
-	case NoAuth:
+	case types.NoAuth:
 		a.NoAuth = params
-	case OAuth1:
+	case types.OAuth1:
 		a.OAuth1 = params
-	case OAuth2:
+	case types.OAuth2:
 		a.OAuth2 = params
-	case NTLM:
+	case types.NTLM:
 		a.NTLM = params
 	}
 }
@@ -204,7 +180,7 @@ func authParamsToMap(authParams []*PostmanAuthParam) map[string]interface{} {
 }
 
 // CreateAuth creates a new PostmanAuth struct with the given parameters.
-func CreateAuth(a authType, params ...*PostmanAuthParam) *PostmanAuth {
+func CreateAuth(a types.AuthType, params ...*PostmanAuthParam) *PostmanAuth {
 	auth := &PostmanAuth{
 		Type: a,
 	}
