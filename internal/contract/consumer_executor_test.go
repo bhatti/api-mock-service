@@ -99,12 +99,16 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 	data, err := os.ReadFile("../../fixtures/oapi/describe-job.json")
 	require.NoError(t, err)
 	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
-	specs, err := oapi.Parse(context.Background(), data, dataTempl)
+	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
+
 	require.NoError(t, err)
-	require.Equal(t, 1, len(specs))
+	require.Len(t, specs, 6)
 	// AND executor
 	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
 	for _, spec := range specs {
+		if spec.Response.StatusCode != 200 {
+			continue
+		}
 		scenario, err := spec.BuildMockScenario(dataTempl)
 		require.NoError(t, err)
 		require.True(t, scenario.Request.Headers["x-api-key"] != "")

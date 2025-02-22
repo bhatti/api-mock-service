@@ -35,96 +35,130 @@ func ParseAPISpec(
 	if op == nil {
 		return
 	}
+
+	// Extract all parameters first
+	reqHeaders, queryParams, pathParams := extractParameters(op.Parameters, dataTemplate)
+
+	// Handle request body content types
 	reqContent := make(map[string]*openapi3.MediaType)
 	if op.RequestBody != nil && op.RequestBody.Value != nil {
 		reqContent = op.RequestBody.Value.Content
 	}
-	reqHeaders := make([]Property, 0)
-	queryParams := make([]Property, 0)
-	pathParams := make([]Property, 0)
-	for _, param := range op.Parameters {
-		if param.Value.Name == "" {
-			param.Value.Name = param.Ref
-		}
-		if param.Value.Schema != nil {
-			property := schemaToProperty(param.Value.Name, true, param.Value.In, param.Value.Schema.Value, dataTemplate)
-			property.Required = param.Value.Required
-			if param.Value.In == "path" {
-				pathParams = append(pathParams, property)
-			} else if param.Value.In == "header" {
-				reqHeaders = append(reqHeaders, property)
-			} else {
-				queryParams = append(queryParams, property)
-			}
-		}
-	}
 
+	// Process responses
 	for status, resp := range op.Responses {
+		if resp.Value == nil {
+			continue
+		}
+
 		respHeaders := extractHeaders(resp.Value.Headers, dataTemplate)
 
-		for resContentType, resMedia := range resp.Value.Content {
+		// Handle no content responses
+		if len(resp.Value.Content) == 0 {
+			// Maintain backward compatibility by still looping through reqContent
 			if len(reqContent) > 0 {
 				for reqContentType, reqMedia := range reqContent {
-					reqHeaders = append(reqHeaders,
-						Property{
-							Name:    "Content-Type",
-							Pattern: reqContentType,
-							Type:    "string",
-							In:      "header",
-						})
-					spec := &APISpec{
-						ID:          op.OperationID,
-						Description: op.Description,
-						Method:      method,
-						Path:        path,
-						Title:       title,
-						Request: Request{
-							Headers:     reqHeaders,
-							QueryParams: queryParams,
-							PathParams:  pathParams,
-							Body:        make([]Property, 0),
-						},
-						Response: Response{
-							Headers:     respHeaders,
-							ContentType: resContentType,
-							Body: []Property{schemaToProperty("", false,
-								"body", resMedia.Schema.Value, dataTemplate)},
-							StatusCode: parseResponseStatus(status),
-						},
+					headers := append([]Property{}, reqHeaders...) // Create copy of headers
+					headers = append(headers, Property{
+						Name:    "Content-Type",
+						Pattern: reqContentType,
+						Type:    "string",
+						In:      "header",
+					})
+
+					spec := createBaseSpec(op, title, method, path, status)
+					spec.Request = Request{
+						Headers:     headers,
+						QueryParams: queryParams,
+						PathParams:  pathParams,
+						Body:        make([]Property, 0),
 					}
 					if op.RequestBody != nil && op.RequestBody.Value != nil {
 						spec.Request.Body = append(spec.Request.Body,
-							schemaToProperty("", true,
-								"body", reqMedia.Schema.Value, dataTemplate))
+							schemaToProperty("", true, "body", reqMedia.Schema.Value, dataTemplate))
+					}
+					spec.Response = Response{
+						Headers:    respHeaders,
+						StatusCode: parseResponseStatus(status),
 					}
 					specs = append(specs, spec)
 				}
 			} else {
-				spec := &APISpec{
-					ID:          op.OperationID,
-					Description: op.Description,
-					Method:      method,
-					Path:        path,
-					Title:       title,
-					Request: Request{
-						Headers:     reqHeaders,
+				// No request content, create single spec
+				spec := createBaseSpec(op, title, method, path, status)
+				spec.Request = Request{
+					Headers:     reqHeaders,
+					QueryParams: queryParams,
+					PathParams:  pathParams,
+					Body:        make([]Property, 0),
+				}
+				spec.Response = Response{
+					Headers:    respHeaders,
+					StatusCode: parseResponseStatus(status),
+				}
+				specs = append(specs, spec)
+			}
+			continue
+		}
+
+		// Handle responses with content
+		for resContentType, resMedia := range resp.Value.Content {
+			if resMedia.Schema == nil || resMedia.Schema.Value == nil {
+				continue
+			}
+
+			if len(reqContent) > 0 {
+				for reqContentType, reqMedia := range reqContent {
+					headers := append([]Property{}, reqHeaders...) // Create copy of headers
+					headers = append(headers, Property{
+						Name:    "Content-Type",
+						Pattern: reqContentType,
+						Type:    "string",
+						In:      "header",
+					})
+
+					spec := createBaseSpec(op, title, method, path, status)
+					spec.Request = Request{
+						Headers:     headers,
 						QueryParams: queryParams,
 						PathParams:  pathParams,
 						Body:        make([]Property, 0),
-					},
-					Response: Response{
+					}
+					if op.RequestBody != nil && op.RequestBody.Value != nil {
+						spec.Request.Body = append(spec.Request.Body,
+							schemaToProperty("", true, "body", reqMedia.Schema.Value, dataTemplate))
+					}
+					spec.Response = Response{
 						Headers:     respHeaders,
 						ContentType: resContentType,
 						Body: []Property{schemaToProperty("", false,
 							"body", resMedia.Schema.Value, dataTemplate)},
 						StatusCode: parseResponseStatus(status),
-					},
+					}
+					specs = append(specs, spec)
+				}
+			} else {
+				// No request content, create single spec
+				spec := createBaseSpec(op, title, method, path, status)
+				spec.Request = Request{
+					Headers:     reqHeaders,
+					QueryParams: queryParams,
+					PathParams:  pathParams,
+					Body:        make([]Property, 0),
+				}
+				spec.Response = Response{
+					Headers:     respHeaders,
+					ContentType: resContentType,
+					Body: []Property{schemaToProperty("", false,
+						"body", resMedia.Schema.Value, dataTemplate)},
+					StatusCode: parseResponseStatus(status),
 				}
 				specs = append(specs, spec)
 			}
 		}
 	}
-	return
+
+	return specs
 }
 
 // BuildMockScenario builds api scenario from open-API spec
@@ -326,4 +360,44 @@ func parseResponseStatus(status string) int {
 		code = 200
 	}
 	return code
+}
+
+func createBaseSpec(op *openapi3.Operation, title string, method types.MethodType, path string, status string) *APISpec {
+	return &APISpec{
+		ID:          op.OperationID,
+		Description: op.Description,
+		Method:      method,
+		Path:        path,
+		Title:       title,
+	}
+}
+
+func extractParameters(params openapi3.Parameters, dataTemplate fuzz.DataTemplateRequest) (reqHeaders, queryParams, pathParams []Property) {
+	reqHeaders = make([]Property, 0)
+	queryParams = make([]Property, 0)
+	pathParams = make([]Property, 0)
+
+	for _, param := range params {
+		if param.Value == nil || param.Value.Schema == nil || param.Value.Schema.Value == nil {
+			continue
+		}
+
+		if param.Value.Name == "" {
+			param.Value.Name = param.Ref
+		}
+
+		property := schemaToProperty(param.Value.Name, true, param.Value.In, param.Value.Schema.Value, dataTemplate)
+		property.Required = param.Value.Required
+
+		switch param.Value.In {
+		case "path":
+			pathParams = append(pathParams, property)
+		case "header":
+			reqHeaders = append(reqHeaders, property)
+		case "query":
+			queryParams = append(queryParams, property)
+		}
+	}
+
+	return reqHeaders, queryParams, pathParams
 }

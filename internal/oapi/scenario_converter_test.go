@@ -74,7 +74,8 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
-	specs, err := Parse(context.Background(), b, dataTemplate)
+	specs, _, err := Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
+
 	require.NoError(t, err)
 
 	for _, spec := range specs {

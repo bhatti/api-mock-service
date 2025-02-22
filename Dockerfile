@@ -1,4 +1,4 @@
-FROM golang:1.19.2-alpine as go-builder
+FROM golang:1.23.6-alpine as go-builder
 COPY . /src
 WORKDIR /src
 ENV GO111MODULE=on
@@ -6,7 +6,7 @@ RUN apk add --no-cache git make bash
 RUN apk add build-base
 RUN make build
 
-FROM alpine:3.13
+FROM alpine:3.21
 ENTRYPOINT ["/api-mock-service"]
 
 ARG HTTP_PORT

@@ -9,6 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/lucasjones/reggen v0.0.0-20200904144131-37ba4fa293bb
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/oklog/ulid/v2 v2.1.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/client_model v0.3.0
 	github.com/sirupsen/logrus v1.9.0
@@ -17,6 +18,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/twinj/uuid v1.0.0
 	github.com/zach-klippenstein/goregen v0.0.0-20160303162051-795b5e3961ea
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -65,5 +67,4 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/stretchr/testify.v1 v1.2.2 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

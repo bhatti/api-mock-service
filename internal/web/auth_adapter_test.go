@@ -62,6 +62,7 @@ func Test_ShouldHandleBasicAuth(t *testing.T) {
 
 	config.BasicAuth.Username = "aa"
 	config.BasicAuth.Password = "bb"
+	config.BasicAuth.Enabled = true
 	ok, _, err = adapter.HandleAuth(req)
 	assert.NoError(t, err)
 	assert.True(t, ok)

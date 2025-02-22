@@ -1,0 +1,5616 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Alps API",
+    "version": "v2"
+  },
+  "servers": [
+    {
+      "url": "/alps"
+    }
+  ],
+  "security": [
+    {
+      "JWT": []
+    }
+  ],
+  "paths": {
+    "/api/v1/account_acats_in_progress/{account}": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Pending Transfers",
+        "description": "Get all pending transfers for a given account.\r\nRequired Permissions are [alps.read]",
+        "operationId": "AcatApi_GetIsInTransfer",
+        "parameters": [
+          {
+            "name": "account",
+            "in": "path",
+            "description": "The account to check.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InTransferResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InTransferResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/InTransferResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/InTransferResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/acats/{acatsControlNumber}/asset/{sequenceNumber}": {
+      "delete": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Block asset",
+        "description": "Request to block an asset; in case if the asset cannot be held back by the regulation of the DTC this call will provide a negative result.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "AcatApi_DeleteAsset",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "description": "The ACATS control number to use.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "sequenceNumber",
+            "in": "path",
+            "description": "The sequence number of the asset to reject.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "comment",
+            "in": "query",
+            "description": "The comment to send to the contra-party.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/acats/case/{processingCaseId}/asset/{sequenceNumber}": {
+      "delete": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Block asset",
+        "description": "Request to block an asset; in case if the asset cannot be held back by the regulation of the DTC this call will provide a negative result.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "AcatApi_DeleteAssetByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "description": "The Processing Case Id of the transfer.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sequenceNumber",
+            "in": "path",
+            "description": "The sequence number of the asset to reject.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "comment",
+            "in": "query",
+            "description": "The comment to send to the contra-party.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveAssetResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/acats/{acatsControlNumber}/reject": {
+      "delete": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Reject a transfer",
+        "description": "Reject a given transfer with the provided reason.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "AcatApi_DeleteTransfer",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "description": "The ACATS control number to reject.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "rejectReason.reason",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DOCUMENTATION_NEEDED",
+                "CLIENT_RESCINDED",
+                "MISSING_AUTHORIZATION_SIGNATURE",
+                "CREDIT_POLICY_VIOLATED"
+              ]
+            }
+          },
+          {
+            "name": "rejectReason.comment",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/acats/case/{processingCaseId}/reject": {
+      "delete": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Reject a transfer",
+        "description": "Reject a given transfer with the provided reason.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "AcatApi_DeleteTransferByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "description": "The Processing Case ID of the transfer to reject.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "rejectReason.reason",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DOCUMENTATION_NEEDED",
+                "CLIENT_RESCINDED",
+                "MISSING_AUTHORIZATION_SIGNATURE",
+                "CREDIT_POLICY_VIOLATED"
+              ]
+            }
+          },
+          {
+            "name": "rejectReason.comment",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectTransferResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/{acatsControlNumber}": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Case summary",
+        "description": "Request the current case summary for a given ACATS transfer.\r\nRequired Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetSnapshot",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "description": "The ACATS control number for which to retrieve the snapshot info.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/case/{processingCaseId}": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Case summary",
+        "description": "Request the current case summary for a given ACATS transfer.\r\nRequired Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetSnapshotByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "description": "The Processing Case ID of the transfer.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatSnapshotV2WebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/{acatsControlNumber}/details": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Case details",
+        "description": "Request the current details for a given ACATS.\r\nRequired Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetSnapshotDetails",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "description": "The ACATS control number for which to retrieve the details.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/case/{processingCaseId}/details": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Case details",
+        "description": "Request the current details for a given ACAT.\r\nRequired Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetSnapshotDetailsByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "description": "The Processing Case ID of the transfer.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlpsAcatDetailV2WebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/{acatId}/status": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Case Status",
+        "description": "Anonymously request the status for a given ACATS.\r\nRequired Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetAcatsAnonymousStatus",
+        "parameters": [
+          {
+            "name": "acatId",
+            "in": "path",
+            "description": "The Anonymous ACAT ID of the transfer.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousStatusDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousStatusDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousStatusDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousStatusDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/open": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Gets open Acats counts by type, direction, and category",
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetOpenAcats",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAcatsSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAcatsSummaryDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAcatsSummaryDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenAcatsSummaryDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/acats/search": {
+      "get": {
+        "tags": [
+          "ACATS API"
+        ],
+        "summary": "Searches for ACATS based on the provided filters",
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "AcatApiV2_GetAcats",
+        "parameters": [
+          {
+            "name": "acatsSearchDto.errors",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.accountNumber",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.branchCode",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.acatControlNumber",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.createdOnStart",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "acatsSearchDto.createdOnEnd",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "acatsSearchDto.alpsStatus",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "INITIAL",
+                  "CONTRA_PARTY",
+                  "NSCC",
+                  "FINISHED",
+                  "REQUEST_ALPS_APPROVAL",
+                  "REQUEST_MARGINS_APPROVAL",
+                  "REVIEW_ERROR",
+                  "SETTLING",
+                  "CREATE_SWEEPING_REQUEST",
+                  "INVALID",
+                  "CREATE_REQUEST",
+                  "REQUEST_ERROR",
+                  "REVIEW_ALPS_APPROVAL",
+                  "REVIEW_MARGIN_APPROVAL",
+                  "REQUEST_CONTRA_PARTY_APPROVAL",
+                  "ERROR",
+                  "TRANSFER_COMPLETE",
+                  "REGISTERING_FUNDS",
+                  "PENDING_OMNI_ACTION"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.processingDirection",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "UNDEFINED",
+                  "LEAVING",
+                  "JOINING",
+                  "INTERNAL"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.transferType",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "UNDEFINED",
+                  "FAIL_REVERSAL_BROKER_TO_BROKER_ONLY",
+                  "FULL_TRANSFER",
+                  "MUTUAL_FUND_CLEANUP",
+                  "PARTIAL_TRANSFER_DELIVERER",
+                  "PARTIAL_TRANSFER_RECEIVER",
+                  "POSITION_TRANSFER_FUND_FIRM_TO_MUTUAL_FUND_COMPANY_ONLY",
+                  "RECLAIM",
+                  "RESIDUAL_CREDIT"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.rejectReason",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "NONE",
+                  "SSN_TAX_ID",
+                  "ACCOUNT_TITLE",
+                  "DOCUMENTATION_MISSING",
+                  "ACCOUNT_FLAT",
+                  "ACCOUNT_NUMBER",
+                  "DUPLICATE",
+                  "IN_DISTRIBUTION_OR_TRANSFER",
+                  "CLIENT_RESCINDED",
+                  "AUTHORIZATION_SIGNATURE_MISSING",
+                  "POSITION_TRANSFER_FUND",
+                  "CREDIT_POLICY_VIOLATION",
+                  "RCR_REJECT",
+                  "PTD_REJECT",
+                  "FRV_REJECT",
+                  "RCL_REJECT",
+                  "MFC_REJECT",
+                  "PTF_REJECT",
+                  "NSCC_REJECT"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.alpsActionReason",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.processingCaseId",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.nsccStatus",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "UNDEFINED",
+                  "REQUEST",
+                  "REQUEST_ADJUST",
+                  "REQUEST_ADJUST_PAST",
+                  "REQUEST_PAST",
+                  "REQUEST_REJECT",
+                  "REVIEW",
+                  "REVIEW_ADJUST_DELIVERER",
+                  "REVIEW_ERROR",
+                  "REVIEW_ACCELERATE",
+                  "REVIEW_ADJUST_RECEIVER_ACCELERATE",
+                  "SETTLE_PREP",
+                  "SETTLE_CLOSE",
+                  "CLOSE_PURGE",
+                  "REQUEST_500",
+                  "MEMO_PURGE_PARTIAL_TRANSFER_REQUEST_RECEIVER",
+                  "REJECT",
+                  "SYSTEM_PURGE",
+                  "ERROR",
+                  "PARTIAL_REQUEST",
+                  "INITIATE_REQUEST",
+                  "TRANSFER_COMPLETE"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.customerName",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.contraFirmName",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.contraAccountNumber",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.alpsRecommendedAction",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "NONE",
+                  "ACCEPT_ASSETS",
+                  "ATTACH_ASSETS",
+                  "REJECT",
+                  "RESUBMIT",
+                  "INITIATE_TRANSFER",
+                  "ADD_ASSET",
+                  "DELETE_ASSET",
+                  "ADJUST_ASSET",
+                  "PURGE",
+                  "REJECT_SSN_TAX_ID_MISMATCH",
+                  "REJECT_ACCOUNT_TITLE_MISMATCH",
+                  "REJECT_DOCUMENTATION_NEEDED",
+                  "REJECT_ACCOUNT_FLAT",
+                  "REJECT_INVALID_ACCOUNT_NUMBER",
+                  "REJECT_DUPLICATE",
+                  "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+                  "REJECT_CLIENT_RESCINDED",
+                  "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+                  "REJECT_CREDIT_POLICY_VIOLATION",
+                  "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+                  "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+                  "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+                  "REJECT_FAIL_REVERSAL_REJECT",
+                  "REJECT_RECLAIM_REJECT",
+                  "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+                  "ACCEPT",
+                  "ACCELERATE",
+                  "WAITING_ON_CONTRA_PARTY",
+                  "WAITING_ON_NSCC",
+                  "SUBMIT_FR_RECORD"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.userOverrideAction",
+            "in": "query",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "NONE",
+                  "ACCEPT_ASSETS",
+                  "ATTACH_ASSETS",
+                  "REJECT",
+                  "RESUBMIT",
+                  "INITIATE_TRANSFER",
+                  "ADD_ASSET",
+                  "DELETE_ASSET",
+                  "ADJUST_ASSET",
+                  "PURGE",
+                  "REJECT_SSN_TAX_ID_MISMATCH",
+                  "REJECT_ACCOUNT_TITLE_MISMATCH",
+                  "REJECT_DOCUMENTATION_NEEDED",
+                  "REJECT_ACCOUNT_FLAT",
+                  "REJECT_INVALID_ACCOUNT_NUMBER",
+                  "REJECT_DUPLICATE",
+                  "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+                  "REJECT_CLIENT_RESCINDED",
+                  "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+                  "REJECT_CREDIT_POLICY_VIOLATION",
+                  "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+                  "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+                  "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+                  "REJECT_FAIL_REVERSAL_REJECT",
+                  "REJECT_RECLAIM_REJECT",
+                  "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+                  "ACCEPT",
+                  "ACCELERATE",
+                  "WAITING_ON_CONTRA_PARTY",
+                  "WAITING_ON_NSCC",
+                  "SUBMIT_FR_RECORD"
+                ]
+              }
+            }
+          },
+          {
+            "name": "acatsSearchDto.isScheduled",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "acatsSearchDto.isSubmitted",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "acatsSearchDto.isFinal",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "acatsSearchDto.transferSummary",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PENDING_NEEDS_REVIEW",
+                "ACCEPTED",
+                "REJECTED",
+                "ERROR",
+                "UNDEFINED"
+              ]
+            }
+          },
+          {
+            "name": "acatsSearchDto.minTotalAccountValue",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "acatsSearchDto.maxTotalAccountValue",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "acatsSearchDto.alpsStatusLastUpdatedDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "acatsSearchDto.nsccStatusLastUpdatedDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatsSearchResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatsSearchResponseDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatsSearchResponseDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcatsSearchResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/documents/types": {
+      "get": {
+        "tags": [
+          "DOCUMENTS API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "DocumentsApi_GetDocumentTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTypeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTypeDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTypeDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentTypeDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{accountNumber}/{documentTypes}": {
+      "get": {
+        "tags": [
+          "DOCUMENTS API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "DocumentsApi_GetScannedDocumentsByType",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentTypes",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsResponseDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsResponseDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/margin/{accountNumber}/{acatsControlNumber}": {
+      "get": {
+        "tags": [
+          "MARGIN API"
+        ],
+        "summary": "Get Margin Details",
+        "description": "Gets margin details for the account and proposed transfer\r\nRequired Permissions are [alps.read]",
+        "operationId": "MarginApi_GetMarginDetails",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarginDetailsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarginDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/margin/{accountNumber}/case/{processingCaseId}": {
+      "get": {
+        "tags": [
+          "MARGIN API"
+        ],
+        "summary": "Get Margin Details",
+        "description": "Gets margin details for the account and proposed transfer\r\nRequired Permissions are [alps.read]",
+        "operationId": "MarginApi_GetMarginDetailsByCaseId",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarginDetailsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarginDetailsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/omni/pendingrequests": {
+      "get": {
+        "tags": [
+          "OMNI CORRESPONDENT API"
+        ],
+        "summary": "Get Pending Outgoing Requests",
+        "description": "Gets pending outgoing transfer requests for omni correspondent.\r\nRequired Permissions are [alps.read]",
+        "operationId": "OmniCorrespondentApi_GetOmniPendingRequests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OmniPendingRequestsResultWebDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OmniPendingRequestsResultWebDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OmniPendingRequestsResultWebDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OmniPendingRequestsResultWebDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/omni/assetupload": {
+      "post": {
+        "tags": [
+          "OMNI CORRESPONDENT API"
+        ],
+        "summary": "Upload Assets For Outgoing Transfers",
+        "description": "Uploads assets for an omni outgoing transfer.\r\nRequired Permissions are [alps.modify]",
+        "operationId": "OmniCorrespondentApi_PostOmniAssetUpload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OmniAssetUploadWebDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OmniAssetUploadWebDto"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/OmniAssetUploadWebDto"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/OmniAssetUploadWebDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/OmniAssetUploadWebDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OmniAssetUploadResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OmniAssetUploadResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OmniAssetUploadResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/OmniAssetUploadResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "submittedOmniUpload"
+      }
+    },
+    "/api/v2/restrictionlists/blackgray": {
+      "get": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "View BlackGrayList",
+        "description": "Retrieve using correspondent id of currently logged in user\r\nRequired Permissions are [alps.read]",
+        "operationId": "RestrictionList_GetBlackGrayListInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "Update BlackGraylist",
+        "description": "Update using posted json body and logged in correspondent\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "RestrictionList_PostBlackGraylistInfo",
+        "requestBody": {
+          "description": "Array of BlackGraylist items to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BlackGrayListItemDto"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BlackGrayListItemDto"
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BlackGrayListItemDto"
+                }
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BlackGrayListItemDto"
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BlackGrayListItemDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "newBlackGrayList"
+      }
+    },
+    "/api/v2/restrictionlists/white": {
+      "get": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "View Whitelist",
+        "description": "Retrieve whitelist for current correspondent\r\nRequired Permissions are [alps.read]",
+        "operationId": "RestrictionList_GetWhiteListInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "Update Whitelist",
+        "description": "Update using posted json body and logged in correspondent\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "RestrictionList_PostWhiteListInfo",
+        "requestBody": {
+          "description": "Array of whitelist items to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WhiteListItemDto"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WhiteListItemDto"
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WhiteListItemDto"
+                }
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WhiteListItemDto"
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WhiteListItemDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "newWhiteList"
+      }
+    },
+    "/api/v2/restrictionlists/white/csv": {
+      "get": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "Get Whitelist csv",
+        "description": "Retrieve csv using logged in correspondent\r\nRequired Permissions are [alps.read]",
+        "operationId": "RestrictionList_GetWhiteListCsv",
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "Update WhiteList by csv",
+        "description": "Update whitelist with attached csv\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "RestrictionList_PostWhiteListInfoCsv",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WhiteListItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/restrictionlists/blackgray/csv": {
+      "get": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "View BlackGraylist csv",
+        "description": "Retrieve blackgray csv using currently logged in correspondent\r\nRequired Permissions are [alps.read]",
+        "operationId": "RestrictionList_GetBlackGrayListCsv",
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "Update BlackGraylist by csv",
+        "description": "Replace current blackgraylist with submitted csv for logged in correspondent\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "RestrictionList_PostBlackGrayListInfoCsv",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlackGrayListItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v2/restrictionlists/assettype": {
+      "get": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "View AssetTypeRestrictions",
+        "description": "Retrieve using correspondent id of currently logged in user\r\nRequired Permissions are [alps.read]",
+        "operationId": "RestrictionList_GetAssetTypeRestrictionInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RESTRICTION LISTS API"
+        ],
+        "summary": "Update AssetTypeRestrictions",
+        "description": "Update using posted json body and logged in correspondent\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "RestrictionList_PostAssetTypeRestrictionInfo",
+        "requestBody": {
+          "description": "Array of AssetTypeRestriction items to update",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                }
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                }
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                }
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetTypeRestrictionWebDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "newAssetTypeRestrictionInput"
+      }
+    },
+    "/api/v1/simulator/reviewAccept/{acatsControlNumber}": {
+      "put": {
+        "tags": [
+          "SIMULATOR API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "SimulatorApi_PutReviewAccept",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/simulator/reviewAccelerate/{acatsControlNumber}": {
+      "put": {
+        "tags": [
+          "SIMULATOR API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "SimulatorApi_PutReviewAccelerate",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/simulator/reviewReject/{acatsControlNumber}": {
+      "put": {
+        "tags": [
+          "SIMULATOR API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "SimulatorApi_PutReviewReject",
+        "parameters": [
+          {
+            "name": "acatsControlNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/simulator/reviewAccept/case/{processingCaseId}": {
+      "put": {
+        "tags": [
+          "SIMULATOR API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "SimulatorApi_PutReviewAcceptByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/simulator/reviewAccelerate/case/{processingCaseId}": {
+      "put": {
+        "tags": [
+          "SIMULATOR API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "SimulatorApi_PutReviewAccelerateByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/simulator/reviewReject/case/{processingCaseId}": {
+      "put": {
+        "tags": [
+          "SIMULATOR API"
+        ],
+        "description": "Required Permissions are [alps.read]",
+        "operationId": "SimulatorApi_PutReviewRejectByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content",
+            "content": {}
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/simulator/tif": {
+      "post": {
+        "tags": [
+          "SIMULATOR TIF API"
+        ],
+        "summary": "Create Simulator Transfer Request",
+        "description": "Creates a transfer initiation request for the simulator.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "SimulatorTransferInitiationApi_PostSimulatorTransferInitiationForm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorTransferInitiationWebDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorTransferInitiationWebDto"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorTransferInitiationWebDto"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorTransferInitiationWebDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SimulatorTransferInitiationWebDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "submittedSimulatorTif"
+      }
+    },
+    "/api/v1/tif": {
+      "post": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Create Request",
+        "description": "Creates a transfer initiation request.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PostTransferInitiationForm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferInitiationWebDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferInitiationWebDto"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferInitiationWebDto"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferInitiationWebDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferInitiationWebDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        },
+        "x-codegen-request-body-name": "submittedTif"
+      }
+    },
+    "/api/v1/tif/{tifId}": {
+      "put": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Sign Request",
+        "description": "Sign a previously created transfer; this will initiate a submission to the NSCC, so be aware that all documentation required for this tif is on file.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PutSign",
+        "parameters": [
+          {
+            "name": "tifId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/tif/case/{processingCaseId}": {
+      "put": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Sign Request",
+        "description": "Sign a previously created transfer; this will initiate a submission to the NSCC, so be aware that all documentation required for this tif is on file.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PutSignByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/tif/fullToPartial/{acatscontrolnumber}": {
+      "post": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Convert Full To Partial",
+        "description": "Convert a failed (due to rule violating assets) full transfer to a partial transfer without the violating assets\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PostConvertFullToPartial",
+        "parameters": [
+          {
+            "name": "acatscontrolnumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/tif/fullToPartial/case/{processingCaseId}": {
+      "post": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Convert Full To Partial",
+        "description": "Convert a failed (due to rule violating assets) full transfer to a partial transfer without the violating assets\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PostConvertFullToPartialByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationResultWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/tif/{tifId}/attachment": {
+      "put": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Attach files",
+        "description": "Add files to a newly created transfer.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PutTifAttachment",
+        "parameters": [
+          {
+            "name": "tifId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "attachment"
+                ],
+                "type": "object",
+                "properties": {
+                  "attachment": {
+                    "type": "string",
+                    "description": "The file to upload",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/api/v1/tif/case/{processingCaseId}/attachment": {
+      "put": {
+        "tags": [
+          "TIF API"
+        ],
+        "summary": "Attach files",
+        "description": "Add files to a newly created transfer.\r\nRequired Permissions are [alps.modify, alps.read]",
+        "operationId": "TransferInitiationApi_PutTifAttachmentByCaseId",
+        "parameters": [
+          {
+            "name": "processingCaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "attachment"
+                ],
+                "type": "object",
+                "properties": {
+                  "attachment": {
+                    "type": "string",
+                    "description": "The file to upload",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferInitiationAttachmentResultsWebDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Make sure you have a valid JWT token. If you got it at some point but are getting this error, make sure it has not expired.",
+            "content": {}
+          },
+          "403": {
+            "description": "The provided credentials are insufficient to see this resource.",
+            "content": {}
+          },
+          "400": {
+            "description": "This is a bad request. Please make sure that all the required data is provided and the format of the request is accurate.",
+            "content": {}
+          },
+          "404": {
+            "description": "The requested resource was not found.",
+            "content": {}
+          },
+          "500": {
+            "description": "We messed up. Please let us know so we can fix it ASAP.",
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "InTransferResultWebDto": {
+        "type": "object",
+        "properties": {
+          "transfers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InTransferWebDto"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "InTransferWebDto": {
+        "type": "object",
+        "properties": {
+          "acatKey": {
+            "type": "string"
+          },
+          "controlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "currentStatus": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "INITIATE_REQUEST",
+              "REQUEST",
+              "REQUEST_ADJUST",
+              "REQUEST_ADJUST_PAST",
+              "REQUEST_PAST",
+              "REQUEST_REJECT",
+              "REVIEW",
+              "REVIEW_ADJUST_DELIVERER",
+              "REVIEW_ERROR",
+              "REVIEW_ACCELERATE",
+              "REVIEW_ADJUST_RECEIVER_ACCELERATE",
+              "SETTLE_PREP",
+              "SETTLE_CLOSE",
+              "CLOSE_PURGE",
+              "PARTIAL_REQUEST",
+              "MEMO_PURGE_PARTIAL_TRANSFER_REQUEST_RECEIVER",
+              "REJECT",
+              "SYSTEM_PURGE",
+              "TRANSFER_COMPLETE"
+            ]
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "LEAVING",
+              "JOINING"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "INTERNAL",
+              "EXTERNAL"
+            ]
+          }
+        }
+      },
+      "ValidationErrorWebDto": {
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "string",
+            "enum": [
+              "GENERAL_ERROR",
+              "REQUIRED_VALUE",
+              "LENGTH_MISMATCH",
+              "NOT_FOUND",
+              "INVALID_VALUE",
+              "RANGE_ERROR",
+              "ACCESS_DENIED"
+            ]
+          },
+          "fieldName": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "attemptedValue": {
+            "type": "string"
+          }
+        }
+      },
+      "RemoveAssetResultWebDto": {
+        "type": "object",
+        "properties": {
+          "adpNumber": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "RejectTransferDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "DOCUMENTATION_NEEDED",
+              "CLIENT_RESCINDED",
+              "MISSING_AUTHORIZATION_SIGNATURE",
+              "CREDIT_POLICY_VIOLATED"
+            ]
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectTransferResultWebDto": {
+        "type": "object",
+        "properties": {
+          "acatsControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "INITIATE_TRANSFER",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "AcatSnapshotV2WebDto": {
+        "type": "object",
+        "properties": {
+          "acatsControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "processingCaseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tifId": {
+            "type": "string"
+          },
+          "clientReferenceId": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "LEAVING",
+              "JOINING",
+              "INTERNAL"
+            ]
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "FAIL_REVERSAL_BROKER_TO_BROKER_ONLY",
+              "FULL_TRANSFER",
+              "MUTUAL_FUND_CLEANUP",
+              "PARTIAL_TRANSFER_DELIVERER",
+              "PARTIAL_TRANSFER_RECEIVER",
+              "POSITION_TRANSFER_FUND_FIRM_TO_MUTUAL_FUND_COMPANY_ONLY",
+              "RECLAIM",
+              "RESIDUAL_CREDIT"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/SnapshotStatusWebDto"
+          },
+          "nextCycle": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "previousCycle": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/SnapshotAccountInfo"
+          },
+          "deliverer": {
+            "$ref": "#/components/schemas/SnapshotAccountInfo"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "SnapshotStatusWebDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "alpsRecommendedAction": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "isScheduled": {
+            "type": "boolean"
+          },
+          "isSubmitted": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "INITIAL",
+              "CONTRA_PARTY",
+              "NSCC",
+              "FINISHED",
+              "REQUEST_ALPS_APPROVAL",
+              "REQUEST_MARGINS_APPROVAL",
+              "REVIEW_ERROR",
+              "SETTLING",
+              "CREATE_SWEEPING_REQUEST",
+              "INVALID",
+              "CREATE_REQUEST",
+              "REQUEST_ERROR",
+              "REVIEW_ALPS_APPROVAL",
+              "REVIEW_MARGIN_APPROVAL",
+              "REQUEST_CONTRA_PARTY_APPROVAL",
+              "ERROR",
+              "TRANSFER_COMPLETE",
+              "REGISTERING_FUNDS",
+              "PENDING_OMNI_ACTION"
+            ]
+          },
+          "nsccState": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "INITIATE_REQUEST",
+              "REQUEST",
+              "REQUEST_ADJUST",
+              "REQUEST_ADJUST_PAST",
+              "REQUEST_PAST",
+              "REQUEST_REJECT",
+              "REVIEW",
+              "REVIEW_ADJUST_DELIVERER",
+              "REVIEW_ERROR",
+              "REVIEW_ACCELERATE",
+              "REVIEW_ADJUST_RECEIVER_ACCELERATE",
+              "SETTLE_PREP",
+              "SETTLE_CLOSE",
+              "CLOSE_PURGE",
+              "PARTIAL_REQUEST",
+              "MEMO_PURGE_PARTIAL_TRANSFER_REQUEST_RECEIVER",
+              "REJECT",
+              "SYSTEM_PURGE",
+              "TRANSFER_COMPLETE"
+            ]
+          },
+          "nsccSubState": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "SSN_TAX_ID",
+              "ACCOUNT_TITLE",
+              "DOCUMENTATION_MISSING",
+              "ACCOUNT_FLAT",
+              "ACCOUNT_NUMBER",
+              "DUPLICATE",
+              "IN_DISTRIBUTION_OR_TRANSFER",
+              "CLIENT_RESCINDED",
+              "AUTHORIZATION_SIGNATURE_MISSING",
+              "POSITION_TRANSFER_FUND",
+              "CREDIT_POLICY_VIOLATION",
+              "RCR_REJECT",
+              "PTD_REJECT",
+              "FRV_REJECT",
+              "RCL_REJECT",
+              "MFC_REJECT",
+              "PTF_REJECT",
+              "NSCC_REJECT"
+            ]
+          },
+          "rejectReason": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "SSN_TAX_ID",
+              "ACCOUNT_TITLE",
+              "DOCUMENTATION_MISSING",
+              "ACCOUNT_FLAT",
+              "ACCOUNT_NUMBER",
+              "DUPLICATE",
+              "IN_DISTRIBUTION_OR_TRANSFER",
+              "CLIENT_RESCINDED",
+              "AUTHORIZATION_SIGNATURE_MISSING",
+              "POSITION_TRANSFER_FUND",
+              "CREDIT_POLICY_VIOLATION",
+              "RCR_REJECT",
+              "PTD_REJECT",
+              "FRV_REJECT",
+              "RCL_REJECT",
+              "MFC_REJECT",
+              "PTF_REJECT",
+              "NSCC_REJECT"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "alpsActionReason": {
+            "type": "string"
+          }
+        }
+      },
+      "SnapshotAccountInfo": {
+        "type": "object",
+        "properties": {
+          "accountNumber": {
+            "type": "string"
+          },
+          "participantName": {
+            "type": "string"
+          },
+          "participantNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AlpsAcatDetailV2WebDto": {
+        "type": "object",
+        "properties": {
+          "acatsControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "processingCaseId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tifId": {
+            "type": "string"
+          },
+          "clientReferenceId": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "LEAVING",
+              "JOINING",
+              "INTERNAL"
+            ]
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "FAIL_REVERSAL_BROKER_TO_BROKER_ONLY",
+              "FULL_TRANSFER",
+              "MUTUAL_FUND_CLEANUP",
+              "PARTIAL_TRANSFER_DELIVERER",
+              "PARTIAL_TRANSFER_RECEIVER",
+              "POSITION_TRANSFER_FUND_FIRM_TO_MUTUAL_FUND_COMPANY_ONLY",
+              "RECLAIM",
+              "RESIDUAL_CREDIT"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/SnapshotStatusWebDto"
+          },
+          "nextCycle": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "previousCycle": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receiver": {
+            "$ref": "#/components/schemas/DetailAccountInfo"
+          },
+          "deliverer": {
+            "$ref": "#/components/schemas/DetailAccountInfo"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          },
+          "requestedAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetWebDto"
+            }
+          },
+          "deliveringAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetWebDto"
+            }
+          },
+          "nonDeliverableAssets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetWebDto"
+            }
+          },
+          "anonymousStatus": {
+            "$ref": "#/components/schemas/AnonymousStatusDto"
+          },
+          "anonymousKey": {
+            "type": "string"
+          },
+          "caseStates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseStateDetailsWebDto"
+            }
+          }
+        }
+      },
+      "DetailAccountInfo": {
+        "type": "object",
+        "properties": {
+          "accountTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "403B",
+                "401K",
+                "529_PLAN",
+                "457_PLAN",
+                "AGENCY",
+                "BANK_CUSTODY",
+                "BENEFICIARY",
+                "BENEFICIARY_ROTH_IRA",
+                "CORPORATE",
+                "COTRUSTEE",
+                "CUSTODIAN_UGMA",
+                "DIRECT_ROLLOVER",
+                "COVERDELL_IRA",
+                "ESTATE",
+                "HEALTH_SAVINGS_ACCOUNT",
+                "IRA",
+                "JOINT",
+                "MEDICAL_SAVINGS_ACCOUNT",
+                "OTHER",
+                "QUALIFIED/PROFIT_SHARING/PENSION",
+                "ROTH_IRA",
+                "SIMPLE_IRA",
+                "SARSEP",
+                "SINGLE",
+                "TRUST",
+                "ROTH_SEP",
+                "Roth_Simple",
+                "ROTH_SOLO_401K",
+                "ROTH_401K",
+                "SEP_IRA",
+                "SOLO_401K"
+              ]
+            }
+          },
+          "accountTitle": {
+            "type": "string"
+          },
+          "primarySsnOrTaxId": {
+            "type": "string"
+          },
+          "secondarySsnOrTaxId": {
+            "type": "string"
+          },
+          "interestedPartySsnOrTaxId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetWebDto"
+            }
+          },
+          "isMarginAccount": {
+            "type": "boolean"
+          },
+          "correspondentName": {
+            "type": "string"
+          },
+          "accountNumber": {
+            "type": "string"
+          },
+          "participantName": {
+            "type": "string"
+          },
+          "participantNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AssetWebDto": {
+        "type": "object",
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetIdentifierWebDto"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "assetSequenceNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/CurrencyWebDto"
+          },
+          "settlingLocation": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "longShort": {
+            "type": "string"
+          },
+          "assetErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatefulPropertyValueWebDto"
+            }
+          }
+        }
+      },
+      "AnonymousStatusDto": {
+        "type": "object",
+        "properties": {
+          "publicStatus": {
+            "type": "string",
+            "enum": [
+              "New",
+              "SentToDeliveringFirm",
+              "ResponseReceived",
+              "Approved",
+              "Complete",
+              "Rejected",
+              "Error"
+            ]
+          },
+          "nsccStatus": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "REQUEST",
+              "REQUEST_ADJUST",
+              "REQUEST_ADJUST_PAST",
+              "REQUEST_PAST",
+              "REQUEST_REJECT",
+              "REVIEW",
+              "REVIEW_ADJUST_DELIVERER",
+              "REVIEW_ERROR",
+              "REVIEW_ACCELERATE",
+              "REVIEW_ADJUST_RECEIVER_ACCELERATE",
+              "SETTLE_PREP",
+              "SETTLE_CLOSE",
+              "CLOSE_PURGE",
+              "REQUEST_500",
+              "MEMO_PURGE_PARTIAL_TRANSFER_REQUEST_RECEIVER",
+              "REJECT",
+              "SYSTEM_PURGE",
+              "ERROR",
+              "PARTIAL_REQUEST",
+              "INITIATE_REQUEST",
+              "TRANSFER_COMPLETE"
+            ]
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expectedSettleDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "errorText": {
+            "type": "string"
+          }
+        }
+      },
+      "CaseStateDetailsWebDto": {
+        "type": "object",
+        "properties": {
+          "stateType": {
+            "type": "string"
+          },
+          "recommendation": {
+            "type": "string"
+          },
+          "override": {
+            "type": "string"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scheduledBy": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cycleDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseStateScoreDetailsWebDto"
+            }
+          }
+        }
+      },
+      "AssetIdentifierWebDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "CUSIP",
+              "SYMBOL",
+              "ISIN",
+              "CINS",
+              "INSURANCE_CONTRACT_NUMBER",
+              "MUTUAL_FUND_ACCOUNT_NUMBER",
+              "SEDOL",
+              "COMMON_NUMBER",
+              "CASH",
+              "SECURITY_ADP_NUMBER"
+            ]
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "CurrencyWebDto": {
+        "type": "object",
+        "properties": {
+          "isoCode": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "StatefulPropertyValueWebDto": {
+        "type": "object",
+        "properties": {
+          "propertyIdentifier": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stateId": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      },
+      "CaseStateScoreDetailsWebDto": {
+        "type": "object",
+        "properties": {
+          "scoreType": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "OpenAcatsSummaryDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenAcatsSummaryItemDto"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "OpenAcatsSummaryItemDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "type": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      },
+      "AcatsSearchDto": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          },
+          "accountNumber": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "branchCode": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "acatControlNumber": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdOnStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdOnEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "alpsStatus": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "INITIAL",
+                "CONTRA_PARTY",
+                "NSCC",
+                "FINISHED",
+                "REQUEST_ALPS_APPROVAL",
+                "REQUEST_MARGINS_APPROVAL",
+                "REVIEW_ERROR",
+                "SETTLING",
+                "CREATE_SWEEPING_REQUEST",
+                "INVALID",
+                "CREATE_REQUEST",
+                "REQUEST_ERROR",
+                "REVIEW_ALPS_APPROVAL",
+                "REVIEW_MARGIN_APPROVAL",
+                "REQUEST_CONTRA_PARTY_APPROVAL",
+                "ERROR",
+                "TRANSFER_COMPLETE",
+                "REGISTERING_FUNDS",
+                "PENDING_OMNI_ACTION"
+              ]
+            }
+          },
+          "processingDirection": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "UNDEFINED",
+                "LEAVING",
+                "JOINING",
+                "INTERNAL"
+              ]
+            }
+          },
+          "transferType": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "UNDEFINED",
+                "FAIL_REVERSAL_BROKER_TO_BROKER_ONLY",
+                "FULL_TRANSFER",
+                "MUTUAL_FUND_CLEANUP",
+                "PARTIAL_TRANSFER_DELIVERER",
+                "PARTIAL_TRANSFER_RECEIVER",
+                "POSITION_TRANSFER_FUND_FIRM_TO_MUTUAL_FUND_COMPANY_ONLY",
+                "RECLAIM",
+                "RESIDUAL_CREDIT"
+              ]
+            }
+          },
+          "rejectReason": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NONE",
+                "SSN_TAX_ID",
+                "ACCOUNT_TITLE",
+                "DOCUMENTATION_MISSING",
+                "ACCOUNT_FLAT",
+                "ACCOUNT_NUMBER",
+                "DUPLICATE",
+                "IN_DISTRIBUTION_OR_TRANSFER",
+                "CLIENT_RESCINDED",
+                "AUTHORIZATION_SIGNATURE_MISSING",
+                "POSITION_TRANSFER_FUND",
+                "CREDIT_POLICY_VIOLATION",
+                "RCR_REJECT",
+                "PTD_REJECT",
+                "FRV_REJECT",
+                "RCL_REJECT",
+                "MFC_REJECT",
+                "PTF_REJECT",
+                "NSCC_REJECT"
+              ]
+            }
+          },
+          "alpsActionReason": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "processingCaseId": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nsccStatus": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "UNDEFINED",
+                "REQUEST",
+                "REQUEST_ADJUST",
+                "REQUEST_ADJUST_PAST",
+                "REQUEST_PAST",
+                "REQUEST_REJECT",
+                "REVIEW",
+                "REVIEW_ADJUST_DELIVERER",
+                "REVIEW_ERROR",
+                "REVIEW_ACCELERATE",
+                "REVIEW_ADJUST_RECEIVER_ACCELERATE",
+                "SETTLE_PREP",
+                "SETTLE_CLOSE",
+                "CLOSE_PURGE",
+                "REQUEST_500",
+                "MEMO_PURGE_PARTIAL_TRANSFER_REQUEST_RECEIVER",
+                "REJECT",
+                "SYSTEM_PURGE",
+                "ERROR",
+                "PARTIAL_REQUEST",
+                "INITIATE_REQUEST",
+                "TRANSFER_COMPLETE"
+              ]
+            }
+          },
+          "customerName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contraFirmName": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contraAccountNumber": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "alpsRecommendedAction": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NONE",
+                "ACCEPT_ASSETS",
+                "ATTACH_ASSETS",
+                "REJECT",
+                "RESUBMIT",
+                "INITIATE_TRANSFER",
+                "ADD_ASSET",
+                "DELETE_ASSET",
+                "ADJUST_ASSET",
+                "PURGE",
+                "REJECT_SSN_TAX_ID_MISMATCH",
+                "REJECT_ACCOUNT_TITLE_MISMATCH",
+                "REJECT_DOCUMENTATION_NEEDED",
+                "REJECT_ACCOUNT_FLAT",
+                "REJECT_INVALID_ACCOUNT_NUMBER",
+                "REJECT_DUPLICATE",
+                "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+                "REJECT_CLIENT_RESCINDED",
+                "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+                "REJECT_CREDIT_POLICY_VIOLATION",
+                "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+                "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+                "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+                "REJECT_FAIL_REVERSAL_REJECT",
+                "REJECT_RECLAIM_REJECT",
+                "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+                "ACCEPT",
+                "ACCELERATE",
+                "WAITING_ON_CONTRA_PARTY",
+                "WAITING_ON_NSCC",
+                "SUBMIT_FR_RECORD"
+              ]
+            }
+          },
+          "userOverrideAction": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NONE",
+                "ACCEPT_ASSETS",
+                "ATTACH_ASSETS",
+                "REJECT",
+                "RESUBMIT",
+                "INITIATE_TRANSFER",
+                "ADD_ASSET",
+                "DELETE_ASSET",
+                "ADJUST_ASSET",
+                "PURGE",
+                "REJECT_SSN_TAX_ID_MISMATCH",
+                "REJECT_ACCOUNT_TITLE_MISMATCH",
+                "REJECT_DOCUMENTATION_NEEDED",
+                "REJECT_ACCOUNT_FLAT",
+                "REJECT_INVALID_ACCOUNT_NUMBER",
+                "REJECT_DUPLICATE",
+                "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+                "REJECT_CLIENT_RESCINDED",
+                "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+                "REJECT_CREDIT_POLICY_VIOLATION",
+                "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+                "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+                "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+                "REJECT_FAIL_REVERSAL_REJECT",
+                "REJECT_RECLAIM_REJECT",
+                "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+                "ACCEPT",
+                "ACCELERATE",
+                "WAITING_ON_CONTRA_PARTY",
+                "WAITING_ON_NSCC",
+                "SUBMIT_FR_RECORD"
+              ]
+            }
+          },
+          "isScheduled": {
+            "type": "boolean"
+          },
+          "isSubmitted": {
+            "type": "boolean"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "transferSummary": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PENDING_NEEDS_REVIEW",
+              "ACCEPTED",
+              "REJECTED",
+              "ERROR",
+              "UNDEFINED"
+            ]
+          },
+          "minTotalAccountValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxTotalAccountValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "alpsStatusLastUpdatedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nsccStatusLastUpdatedDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AcatsSearchResponseDto": {
+        "type": "object",
+        "properties": {
+          "acats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AcatsSearchResultItemDto"
+            }
+          },
+          "acatsSearch": {
+            "$ref": "#/components/schemas/AcatsSearchDto"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "AcatsSearchResultItemDto": {
+        "type": "object",
+        "properties": {
+          "acatKey": {
+            "type": "string"
+          },
+          "acatControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "processingCaseId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accountNumber": {
+            "type": "string"
+          },
+          "alpsStatus": {
+            "type": "string",
+            "enum": [
+              "INITIAL",
+              "CONTRA_PARTY",
+              "NSCC",
+              "FINISHED",
+              "REQUEST_ALPS_APPROVAL",
+              "REQUEST_MARGINS_APPROVAL",
+              "REVIEW_ERROR",
+              "SETTLING",
+              "CREATE_SWEEPING_REQUEST",
+              "INVALID",
+              "CREATE_REQUEST",
+              "REQUEST_ERROR",
+              "REVIEW_ALPS_APPROVAL",
+              "REVIEW_MARGIN_APPROVAL",
+              "REQUEST_CONTRA_PARTY_APPROVAL",
+              "ERROR",
+              "TRANSFER_COMPLETE",
+              "REGISTERING_FUNDS",
+              "PENDING_OMNI_ACTION"
+            ]
+          },
+          "lastAction": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "INITIATE_TRANSFER",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "FAIL_REVERSAL_BROKER_TO_BROKER_ONLY",
+              "FULL_TRANSFER",
+              "MUTUAL_FUND_CLEANUP",
+              "PARTIAL_TRANSFER_DELIVERER",
+              "PARTIAL_TRANSFER_RECEIVER",
+              "POSITION_TRANSFER_FUND_FIRM_TO_MUTUAL_FUND_COMPANY_ONLY",
+              "RECLAIM",
+              "RESIDUAL_CREDIT"
+            ]
+          },
+          "rejectReason": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "SSN_TAX_ID",
+              "ACCOUNT_TITLE",
+              "DOCUMENTATION_MISSING",
+              "ACCOUNT_FLAT",
+              "ACCOUNT_NUMBER",
+              "DUPLICATE",
+              "IN_DISTRIBUTION_OR_TRANSFER",
+              "CLIENT_RESCINDED",
+              "AUTHORIZATION_SIGNATURE_MISSING",
+              "POSITION_TRANSFER_FUND",
+              "CREDIT_POLICY_VIOLATION",
+              "RCR_REJECT",
+              "PTD_REJECT",
+              "FRV_REJECT",
+              "RCL_REJECT",
+              "MFC_REJECT",
+              "PTF_REJECT",
+              "NSCC_REJECT"
+            ]
+          },
+          "alpsActionReason": {
+            "type": "string"
+          },
+          "contraFirmName": {
+            "type": "string"
+          },
+          "contraClearingNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ageInStatus": {
+            "type": "string"
+          },
+          "age": {
+            "type": "string"
+          },
+          "contraAccountNumber": {
+            "type": "string"
+          },
+          "processingDirection": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "LEAVING",
+              "JOINING",
+              "INTERNAL"
+            ]
+          },
+          "cycle": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nsccStatus": {
+            "type": "string",
+            "enum": [
+              "UNDEFINED",
+              "REQUEST",
+              "REQUEST_ADJUST",
+              "REQUEST_ADJUST_PAST",
+              "REQUEST_PAST",
+              "REQUEST_REJECT",
+              "REVIEW",
+              "REVIEW_ADJUST_DELIVERER",
+              "REVIEW_ERROR",
+              "REVIEW_ACCELERATE",
+              "REVIEW_ADJUST_RECEIVER_ACCELERATE",
+              "SETTLE_PREP",
+              "SETTLE_CLOSE",
+              "CLOSE_PURGE",
+              "REQUEST_500",
+              "MEMO_PURGE_PARTIAL_TRANSFER_REQUEST_RECEIVER",
+              "REJECT",
+              "SYSTEM_PURGE",
+              "ERROR",
+              "PARTIAL_REQUEST",
+              "INITIATE_REQUEST",
+              "TRANSFER_COMPLETE"
+            ]
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "alpsRecommendedAction": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "INITIATE_TRANSFER",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "userOverrideAction": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "INITIATE_TRANSFER",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "isScheduled": {
+            "type": "boolean"
+          },
+          "isSubmitted": {
+            "type": "boolean"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "totalAccountValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "alpsStatusLastUpdatedDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nsccStatusLastUpdatedDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DocumentTypeDto": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "DocumentsResponseDto": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentItemModel"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "DocumentItemModel": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "downloadinfo": {
+            "$ref": "#/components/schemas/DocumentInfo"
+          },
+          "previewinfo": {
+            "$ref": "#/components/schemas/DocumentInfo"
+          },
+          "documenttype": {
+            "type": "string"
+          },
+          "documentsubtype": {
+            "type": "string"
+          }
+        }
+      },
+      "DocumentInfo": {
+        "type": "object",
+        "properties": {
+          "downloadUrl": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "filetype": {
+            "type": "string"
+          }
+        }
+      },
+      "MarginDetailsDto": {
+        "type": "object",
+        "properties": {
+          "acatsControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "accountNumber": {
+            "type": "string"
+          },
+          "maintenanceRequirement": {
+            "type": "number",
+            "format": "double"
+          },
+          "marginExcessEquity": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalEquity": {
+            "type": "number",
+            "format": "double"
+          },
+          "cashEquity": {
+            "type": "number",
+            "format": "double"
+          },
+          "marginEquity": {
+            "type": "number",
+            "format": "double"
+          },
+          "cashExcessEquity": {
+            "type": "number",
+            "format": "double"
+          },
+          "marginRequirement": {
+            "type": "number",
+            "format": "double"
+          },
+          "sma": {
+            "type": "number",
+            "format": "double"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "OmniPendingRequestsResultWebDto": {
+        "type": "object",
+        "properties": {
+          "processingCaseId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "acatsControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "omniAccountNumber": {
+            "type": "string"
+          },
+          "requestedAccountNumber": {
+            "type": "string"
+          },
+          "actionCutoffTime": {
+            "type": "string"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "OmniAssetUploadWebDto": {
+        "type": "object",
+        "properties": {
+          "acatControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "acceptTransaction": {
+            "type": "boolean"
+          },
+          "rejectCode": {
+            "type": "string",
+            "enum": [
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE"
+            ]
+          },
+          "defaultOMNIAccount": {
+            "type": "string"
+          },
+          "defaultAccountType": {
+            "type": "string",
+            "enum": [
+              "NOTUSED",
+              "CASH",
+              "MARGIN",
+              "DIVIDEND",
+              "CLIENT4",
+              "SHORT",
+              "CLIENT6",
+              "CLIENT7",
+              "CLIENT8",
+              "CODCOR"
+            ]
+          },
+          "cash": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OmniUploadCashWebDto"
+            }
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OmniUploadAssetWebDto"
+            }
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OmniUploadOptionWebDto"
+            }
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "OmniUploadCashWebDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "isoCurrencyCode": {
+            "type": "string"
+          },
+          "omniAccountNumber": {
+            "type": "string"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "NOTUSED",
+              "CASH",
+              "MARGIN",
+              "DIVIDEND",
+              "CLIENT4",
+              "SHORT",
+              "CLIENT6",
+              "CLIENT7",
+              "CLIENT8",
+              "CODCOR"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "Debit",
+              "Credit"
+            ]
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "OmniUploadAssetWebDto": {
+        "type": "object",
+        "properties": {
+          "assetType": {
+            "type": "string",
+            "enum": [
+              "CUSIP",
+              "SYMBOL",
+              "ISIN",
+              "CINS",
+              "SEDOL",
+              "CASH"
+            ]
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "omniAccountNumber": {
+            "type": "string"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "NOTUSED",
+              "CASH",
+              "MARGIN",
+              "DIVIDEND",
+              "CLIENT4",
+              "SHORT",
+              "CLIENT6",
+              "CLIENT7",
+              "CLIENT8",
+              "CODCOR"
+            ]
+          },
+          "binNumber": {
+            "type": "string"
+          },
+          "isoCurrencyCode": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "isShort": {
+            "type": "boolean"
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "OmniUploadOptionWebDto": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "omniAccountNumber": {
+            "type": "string"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "NOTUSED",
+              "CASH",
+              "MARGIN",
+              "DIVIDEND",
+              "CLIENT4",
+              "SHORT",
+              "CLIENT6",
+              "CLIENT7",
+              "CLIENT8",
+              "CODCOR"
+            ]
+          },
+          "contractDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "put": {
+            "type": "string",
+            "enum": [
+              "PUT",
+              "CALL"
+            ]
+          },
+          "strikePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "isShort": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "OmniAssetUploadResultWebDto": {
+        "type": "object",
+        "properties": {
+          "acatControlNumber": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "BlackGrayListItemDto": {
+        "type": "object",
+        "properties": {
+          "cusip": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "grayListPercentage": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "WhiteListItemDto": {
+        "type": "object",
+        "properties": {
+          "cusip": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          }
+        }
+      },
+      "AssetTypeRestrictionWebDto": {
+        "type": "object",
+        "properties": {
+          "assetType": {
+            "type": "string"
+          }
+        }
+      },
+      "SimulatorTransferInitiationWebDto": {
+        "type": "object",
+        "properties": {
+          "transferInitiation": {
+            "$ref": "#/components/schemas/TransferInitiationWebDto"
+          },
+          "simulatorConfig": {
+            "$ref": "#/components/schemas/SimulatorConfigWebDto"
+          }
+        }
+      },
+      "TransferInitiationWebDto": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "disableAutoSign": {
+            "type": "boolean"
+          },
+          "clientReferenceId": {
+            "type": "string"
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "FULL_TRANSFER",
+              "PARTIAL_TRANSFER_RECEIVER",
+              "POSITION_TRANSFER_FUND_FIRM_TO_MUTUAL_FUND_COMPANY_ONLY",
+              "MUTUAL_FUND_CLEANUP",
+              "FAIL_REVERSAL",
+              "RESIDUAL_CREDIT",
+              "PARTIAL_TRANSFER_DELIVERER",
+              "RECLAIM"
+            ]
+          },
+          "cash": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferInitiationCashWebDto"
+            }
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferInitiationAssetWebDto"
+            }
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferInitiationOptionWebDto"
+            }
+          },
+          "contraParty": {
+            "$ref": "#/components/schemas/ContraPartyWebDto"
+          },
+          "originalControlNumber": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SimulatorConfigWebDto": {
+        "type": "object",
+        "properties": {
+          "tifRejectReason": {
+            "type": "string",
+            "enum": [
+              "Undefined",
+              "SSN_MISMATCH",
+              "ACCOUNT_TITLE_MISMATCH",
+              "DOCUMENTATION_NEEDED",
+              "ACCOUNT_FLAT",
+              "INVALID_ACCOUNT_NUMBER",
+              "DUPLICATE",
+              "ACCOUNT_IN_TRANSFER",
+              "CLIENT_RESCINDED",
+              "MISSING_AUTHORIZATION_SIGNATURE"
+            ]
+          },
+          "reviewAction": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACCEPT_ASSETS",
+              "ATTACH_ASSETS",
+              "REJECT",
+              "RESUBMIT",
+              "ADD_ASSET",
+              "DELETE_ASSET",
+              "ADJUST_ASSET",
+              "PURGE",
+              "REJECT_SSN_TAX_ID_MISMATCH",
+              "REJECT_ACCOUNT_TITLE_MISMATCH",
+              "REJECT_DOCUMENTATION_NEEDED",
+              "REJECT_ACCOUNT_FLAT",
+              "REJECT_INVALID_ACCOUNT_NUMBER",
+              "REJECT_DUPLICATE",
+              "REJECT_ACCOUNT_IN_DISTRIBUTION_OR_TRANSFER",
+              "REJECT_CLIENT_RESCINDED",
+              "REJECT_MISSING_AUTHORIZATION_SIGNATURE",
+              "REJECT_CREDIT_POLICY_VIOLATION",
+              "REJECT_CREDIT_POLICY_VIOLATION_HARD",
+              "REJECT_UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "REJECT_PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "REJECT_FAIL_REVERSAL_REJECT",
+              "REJECT_RECLAIM_REJECT",
+              "REJECT_MUTUAL_FUND_CLEANUP_REJECT",
+              "ACCEPT",
+              "ACCELERATE",
+              "WAITING_ON_CONTRA_PARTY",
+              "WAITING_ON_NSCC",
+              "SUBMIT_FR_RECORD"
+            ]
+          },
+          "reviewActionReason": {
+            "type": "string",
+            "enum": [
+              "ACCOUNT_VIOLATE_CREDIT_POLICY_OF_RECIEVING_FIRM",
+              "UNRECOGNIZED_FOR_RESIDUAL_CREDIT_BALANCE",
+              "PARTIAL_TRANSFER_DELIVERER_INITIATED_REJECT",
+              "FAIL_REVERSAL_REJECT",
+              "RECLAIM_REJECT",
+              "MUTUAL_FUND_CLEANUP_REJECT",
+              "POSITION_TRANSFER_FUND_RECEIVER",
+              "NSCC_REJECT"
+            ]
+          },
+          "simulateAsDeliverer": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TransferInitiationCashWebDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "isoCurrencyCode": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEBIT",
+              "CREDIT"
+            ]
+          }
+        }
+      },
+      "TransferInitiationAssetWebDto": {
+        "type": "object",
+        "properties": {
+          "assetType": {
+            "type": "string",
+            "enum": [
+              "CUSIP",
+              "SYMBOL",
+              "ISIN",
+              "CINS",
+              "SEDOL",
+              "CASH"
+            ]
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "isoCurrencyCode": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "isShort": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TransferInitiationOptionWebDto": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "contractDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "put": {
+            "type": "string",
+            "enum": [
+              "PUT",
+              "CALL"
+            ]
+          },
+          "strikePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "isShort": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ContraPartyWebDto": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string"
+          },
+          "accountTitle": {
+            "type": "string"
+          },
+          "primarySsnOrTaxId": {
+            "type": "string"
+          },
+          "secondarySsnOrTaxId": {
+            "type": "string"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "403B",
+              "401K",
+              "529_PLAN",
+              "757_PLAN",
+              "AGENCY",
+              "BANK_CUSTODY",
+              "BENEFICIARY",
+              "BENEFICIARY_ROTH_IRA",
+              "CORPORATE",
+              "CO_TRUSTEE",
+              "CUSTODIAN_UGMA",
+              "DIRECT_ROLLOVER",
+              "COVERDELL_IRA",
+              "ESTATE",
+              "HEALTH_SAVINGS_ACCOUNT",
+              "IRA",
+              "JOINT",
+              "MEDICAL_SAVINGS_ACCOUNT",
+              "OTHER",
+              "QUALIFIED_PROFIT_SHARING_PENSION",
+              "ROTH_IRA",
+              "SIMPLE_IRA",
+              "SARSEP",
+              "SINGLE",
+              "TRUST",
+              "ROTH_SEP",
+              "Roth_Simple",
+              "ROTH_SOLO_401K",
+              "ROTH_401K",
+              "SEP_IRA",
+              "SOLO_401K"
+            ]
+          },
+          "participant": {
+            "$ref": "#/components/schemas/DtcParticipantWebDto"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "DtcParticipantWebDto": {
+        "type": "object",
+        "properties": {
+          "participantNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "TransferInitiationResultWebDto": {
+        "type": "object",
+        "properties": {
+          "tifId": {
+            "type": "string"
+          },
+          "processingCaseId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      },
+      "TransferInitiationAttachmentResultsWebDto": {
+        "type": "object",
+        "properties": {
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorWebDto"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "JWT": {
+        "type": "apiKey",
+        "description": "Valid JWT Token",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  },
+  "x-original-swagger-version": "2.0"
+}

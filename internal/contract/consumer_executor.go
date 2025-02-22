@@ -108,6 +108,10 @@ func AddMockResponse(
 		scenario.Request.ExampleContents = string(inBody)
 	}
 
+	respHeaders.Add(types.MockScenarioHeader, scenario.Name)
+	respHeaders.Add(types.MockScenarioPath, scenario.Path)
+	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
+
 	{
 		// check request assertions
 		templateParams, queryParams, postParams, reqHeaders := scenario.Request.BuildTemplateParams(
@@ -129,9 +133,6 @@ func AddMockResponse(
 			respHeaders.Add(k, val)
 		}
 	}
-	respHeaders.Add(types.MockScenarioHeader, scenario.Name)
-	respHeaders.Add(types.MockScenarioPath, scenario.Path)
-	respHeaders.Add(types.MockRequestCount, fmt.Sprintf("%d", scenario.RequestCount))
 
 	// Embedding this check to return chaos response based on group config
 	if b := CheckChaosForScenarioGroup(groupConfigRepository, scenario, respHeaders); b != nil {

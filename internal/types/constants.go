@@ -36,6 +36,9 @@ const ContentLengthHeader = "Content-Length"
 // AuthorizationHeader constant
 const AuthorizationHeader = "Authorization"
 
+// APIKeyHeader constant
+const APIKeyHeader = "x-api-key"
+
 // MockRequestCount header
 const MockRequestCount = "X-Mock-Request-Count"
 
@@ -71,5 +74,8 @@ const (
 	// OAuth2 Authentication.
 	OAuth2 AuthType = "oauth2"
 	// NTLM Authentication.
-	NTLM AuthType = "ntlm"
+	NTLM         AuthType = "ntlm"
+	JWT          AuthType = "jwt"
+	HMAC         AuthType = "hmac"
+	AWSSignature AuthType = "aws"
 )

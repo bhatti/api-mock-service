@@ -1,0 +1,107 @@
+graph TB
+    subgraph "Client Layer"
+        Client["Client Applications"]:::client
+    end
+
+    subgraph "API Layer"
+        HTTPServer["HTTP Server (8080)"]:::server
+        ProxyServer["HTTP Proxy (8081)"]:::server
+        SwaggerUI["Swagger UI"]:::ui
+        APIControllers["API Controllers"]:::controller
+        AuthHandler["Auth Handler"]:::security
+        WebContext["Web Context"]:::server
+        HTTPClient["HTTP Client"]:::client
+    end
+
+    subgraph "Core Processing"
+        ContractEngine["Contract Testing Engine"]:::testing
+        MockGenerator["Mock Response Generator"]:::core
+        RequestRecorder["Request Recorder"]:::core
+        TemplateEngine["Template Engine"]:::core
+        DataFactory["Data Factory"]:::core
+        TypeHelpers["Type Helpers"]:::util
+        VarManager["Variable Manager"]:::core
+    end
+
+    subgraph "Storage Layer"
+        FileRepo["File Repository"]:::storage
+        FixtureStore["Fixture Storage"]:::storage
+        OAPIStore["OpenAPI Specs"]:::storage
+        OAPIParser["OpenAPI Parser"]:::util
+    end
+
+    subgraph "System Services"
+        Config["Configuration"]:::config
+        Metrics["Metrics Collector"]:::monitoring
+    end
+
+    %% Relationships
+    Client --> HTTPServer
+    Client --> ProxyServer
+    
+    ProxyServer --> RequestRecorder
+    RequestRecorder --> FileRepo
+    
+    HTTPServer --> APIControllers
+    HTTPServer --> AuthHandler
+    HTTPServer --> WebContext
+    
+    APIControllers --> MockGenerator
+    APIControllers --> ContractEngine
+    
+    MockGenerator --> TemplateEngine
+    TemplateEngine --> DataFactory
+    TemplateEngine --> TypeHelpers
+    TemplateEngine --> VarManager
+    
+    ContractEngine --> OAPIParser
+    OAPIParser --> OAPIStore
+    
+    HTTPClient --> WebContext
+    
+    SwaggerUI --> OAPIStore
+    
+    %% Storage connections
+    FileRepo --> FixtureStore
+    FileRepo --> OAPIStore
+    
+    %% System service connections
+    Config --> HTTPServer
+    Config --> ProxyServer
+    Metrics --> HTTPServer
+    Metrics --> ProxyServer
+
+    %% Click events for component mapping
+    click HTTPServer "https://github.com/bhatti/api-mock-service/blob/main/internal/web/web_server.go"
+    click ProxyServer "https://github.com/bhatti/api-mock-service/blob/main/internal/proxy/proxy_handler.go"
+    click SwaggerUI "https://github.com/bhatti/api-mock-service/tree/main/swagger-ui/"
+    click ContractEngine "https://github.com/bhatti/api-mock-service/tree/main/internal/contract/"
+    click MockGenerator "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/generator.go"
+    click RequestRecorder "https://github.com/bhatti/api-mock-service/blob/main/internal/proxy/recorder.go"
+    click FileRepo "https://github.com/bhatti/api-mock-service/tree/main/internal/repository/"
+    click FixtureStore "https://github.com/bhatti/api-mock-service/tree/main/fixtures/"
+    click OAPIStore "https://github.com/bhatti/api-mock-service/tree/main/fixtures/oapi/"
+    click TemplateEngine "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/template_helper.go"
+    click APIControllers "https://github.com/bhatti/api-mock-service/tree/main/internal/controller/"
+    click Config "https://github.com/bhatti/api-mock-service/blob/main/cmd/config.go"
+    click Metrics "https://github.com/bhatti/api-mock-service/blob/main/internal/metrics/metrics.go"
+    click OAPIParser "https://github.com/bhatti/api-mock-service/blob/main/internal/oapi/parser.go"
+    click AuthHandler "https://github.com/bhatti/api-mock-service/blob/main/internal/web/auth_adapter.go"
+    click WebContext "https://github.com/bhatti/api-mock-service/blob/main/internal/web/web_context.go"
+    click HTTPClient "https://github.com/bhatti/api-mock-service/blob/main/internal/web/http_client.go"
+    click DataFactory "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/data_factory.go"
+    click VarManager "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/variable_lookup.go"
+    click TypeHelpers "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/types_helper.go"
+
+    %% Styling
+    classDef client fill:#E9967A
+    classDef server fill:#4682B4
+    classDef ui fill:#DDA0DD
+    classDef controller fill:#20B2AA
+    classDef security fill:#FF6347
+    classDef testing fill:#9370DB
+    classDef core fill:#4169E1
+    classDef util fill:#778899
+    classDef storage fill:#3CB371
+    classDef config fill:#DAA520
+    classDef monitoring fill:#CD853F

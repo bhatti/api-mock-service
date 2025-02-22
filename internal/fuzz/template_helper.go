@@ -111,8 +111,23 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"UUID": func() string {
 			return UUID()
 		},
+		"ULID": func() string {
+			return ULID()
+		},
 		"SeededUUID": func(seed any) string {
 			return SeededUUID(toInt64(seed))
+		},
+		"RandAirport": func() string {
+			return RandAirport()
+		},
+		"SeededAirport": func(seed any) string {
+			return SeededAirport(toInt64(seed))
+		},
+		"RandFlightNumber": func() string {
+			return RandFlightNumber()
+		},
+		"SeededFlightNumber": func(seed any) string {
+			return SeededFlightNumber(toInt64(seed))
 		},
 		"RandCity": func() string {
 			return RandCity()

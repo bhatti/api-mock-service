@@ -19,6 +19,7 @@ import (
 
 // OAPIController structure
 type OAPIController struct {
+	config             *types.Configuration
 	internalOAPI       embed.FS
 	scenarioRepository repository.APIScenarioRepository
 	oapiRepository     repository.OAPIRepository
@@ -26,11 +27,13 @@ type OAPIController struct {
 
 // NewOAPIController instantiates controller for updating api-scenarios based on OpenAPI v3
 func NewOAPIController(
+	config *types.Configuration,
 	internalOAPI embed.FS,
 	scenarioRepository repository.APIScenarioRepository,
 	oapiRepository repository.OAPIRepository,
 	webserver web.Server) *OAPIController {
 	ctrl := &OAPIController{
+		config:             config,
 		internalOAPI:       internalOAPI,
 		scenarioRepository: scenarioRepository,
 		oapiRepository:     oapiRepository,
@@ -162,7 +165,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 		return err
 	}
 	dataTempl := fuzz.NewDataTemplateRequest(true, 1, 1)
-	specs, err := oapi.Parse(context.Background(), data, dataTempl)
+	specs, updated, err := oapi.Parse(context.Background(), moc.config, data, dataTempl)
 	if err != nil {
 		return err
 	}
@@ -179,7 +182,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 		apiKeyData = append(apiKeyData, scenario.ToKeyData())
 	}
 	if len(specs) > 0 {
-		err = moc.oapiRepository.SaveRaw(specs[0].Title, data)
+		err = moc.oapiRepository.SaveRaw(specs[0].Title, updated) //data)
 		if err != nil {
 			return err
 		}

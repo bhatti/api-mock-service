@@ -19,4 +19,9 @@ out
 .idea
 swagger-ui/TODO
 *py
+beta*
+stage*
+bak*
+.DS_Store
+*/.DS_Store
 TODO

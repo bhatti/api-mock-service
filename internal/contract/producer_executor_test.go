@@ -406,7 +406,8 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 	contractReq := types.NewProducerContractRequest(baseURL, 5)
-	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
+	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
+
 	require.NoError(t, err)
 
 	// AND save specs
@@ -449,7 +450,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest(baseURL, 5)
-	specs, err := oapi.Parse(context.Background(), b, dataTemplate)
+	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
 	require.NoError(t, err)
 
 	for i, spec := range specs {

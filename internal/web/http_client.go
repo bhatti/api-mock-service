@@ -75,7 +75,8 @@ func (w *DefaultHTTPClient) Handle(
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return 500, "", nil, make(map[string][]string), err
+		return 500, "", nil, make(map[string][]string),
+			fmt.Errorf("failed to request %s due to %s", url, err)
 	}
 	req.ContentLength = int64(len(bodyB))
 	statusCode, httpVersion, respBody, respHeader, err = w.execute(req, headers, params)
@@ -141,6 +142,7 @@ func (w *DefaultHTTPClient) execute(
 			"AWSError":    awsErr,
 			"Error":       err,
 		}).Warnf("failed to invoke http client")
+		return 500, "", nil, make(map[string][]string), fmt.Errorf("failed to invoke %s due to %s", req.URL, err)
 	} else {
 		log.WithFields(log.Fields{
 			"Component":   "DefaultHTTPClient",
@@ -157,9 +159,6 @@ func (w *DefaultHTTPClient) execute(
 		}).Infof("invoked http client")
 	}
 
-	if err != nil {
-		return 500, "", nil, make(map[string][]string), err
-	}
 	return resp.StatusCode, resp.Proto, resp.Body, resp.Header, nil
 }
 
