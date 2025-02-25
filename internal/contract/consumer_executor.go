@@ -38,15 +38,24 @@ func NewConsumerExecutor(
 	}
 }
 
+func handleError(c web.APIContext, err error) error {
+	var validationErr *types.ValidationError
+	var notFoundErr *types.NotFoundError
+	if errors.As(err, &validationErr) {
+		return c.String(400, err.Error())
+	} else if errors.As(err, &notFoundErr) {
+		return c.String(404, err.Error())
+	}
+	return err
+}
+
 // Execute request and replays stubbed response
 func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 	started := time.Now()
-	key, err := web.BuildMockScenarioKeyData(c.Request())
-	if err != nil {
-		return err
-	}
-
 	overrides := make(map[string]any)
+	for k, v := range c.Request().Header {
+		overrides[k] = v[0]
+	}
 	for k, v := range c.QueryParams() {
 		overrides[k] = v[0]
 	}
@@ -55,19 +64,49 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 			overrides[k] = v[0]
 		}
 	}
-	matchedScenario, matchErr := cx.scenarioRepository.Lookup(key, overrides)
-	if matchErr != nil {
-		var validationErr *types.ValidationError
-		var notFoundErr *types.NotFoundError
-		if errors.As(matchErr, &validationErr) {
-			return c.String(400, matchErr.Error())
-		} else if errors.As(matchErr, &notFoundErr) {
-			return c.String(404, matchErr.Error())
-		}
-		return matchErr
+
+	key, err := web.BuildMockScenarioKeyData(c.Request())
+	if err != nil {
+		return handleError(c, err)
 	}
 
-	respBody, err := AddMockResponse(
+	matchedScenario, err := cx.scenarioRepository.Lookup(key, overrides)
+	if err != nil {
+		return handleError(c, err)
+	}
+	if matchedScenario.NextRequest != "" && len(matchedScenario.Response.AddSharedVariables) > 0 {
+		nextScenario, err := cx.scenarioRepository.LookupByName(matchedScenario.NextRequest, overrides)
+		if err != nil {
+			return handleError(c, fmt.Errorf("next request key: %s not found: %s", key.Name, err))
+		}
+		_, sharedVariables, err := cx.execute(c, nextScenario, started)
+		if err != nil {
+			return handleError(c, err)
+		}
+		for k, v := range sharedVariables {
+			if strVal, ok := v.(string); ok && matchedScenario.Request.Variables[k] == "" {
+				matchedScenario.Request.Variables[k] = strVal
+				c.Request().Header.Set(k, strVal)
+			}
+		}
+	}
+	if err != nil {
+		return handleError(c, err)
+	}
+
+	respBody, _, err := cx.execute(c, matchedScenario, started)
+	if err != nil {
+		return handleError(c, err)
+	}
+	return c.Blob(
+		matchedScenario.Response.StatusCode,
+		matchedScenario.Response.ContentType(""),
+		respBody)
+}
+
+func (cx *ConsumerExecutor) execute(c web.APIContext, matchedScenario *types.APIScenario,
+	started time.Time) ([]byte, map[string]any, error) {
+	return AddMockResponse(
 		c.Request(),
 		c.Request().Header,
 		c.Response().Header(),
@@ -79,13 +118,6 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		cx.fixtureRepository,
 		cx.groupConfigRepository,
 	)
-	if err != nil {
-		return err
-	}
-	return c.Blob(
-		matchedScenario.Response.StatusCode,
-		matchedScenario.Response.ContentType(""),
-		respBody)
 }
 
 // AddMockResponse method is shared so it cannot be instance method
@@ -100,13 +132,14 @@ func AddMockResponse(
 	scenarioRepository repository.APIScenarioRepository,
 	fixtureRepository repository.APIFixtureRepository,
 	groupConfigRepository repository.GroupConfigRepository,
-) (respBody []byte, err error) {
+) (respBody []byte, sharedVariables map[string]any, err error) {
 	var inBody []byte
 	inBody, req.Body, err = utils.ReadAll(req.Body)
 	if err == nil && len(inBody) > 0 {
 		scenario.Request.Contents = string(inBody)
 		scenario.Request.ExampleContents = string(inBody)
 	}
+	sharedVariables = make(map[string]any)
 
 	respHeaders.Add(types.MockScenarioHeader, scenario.Name)
 	respHeaders.Add(types.MockScenarioPath, scenario.Path)
@@ -121,10 +154,10 @@ func AddMockResponse(
 			make(map[string]any))
 		reqContents, err := fuzz.UnmarshalArrayOrObject(inBody)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", scenario.Name, err)
+			return nil, nil, fmt.Errorf("failed to unmarshal request body for (%s) due to %w", scenario.Name, err)
 		}
 		if err = scenario.Request.Assert(queryParams, postParams, reqHeaders, reqContents, templateParams); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -136,7 +169,7 @@ func AddMockResponse(
 
 	// Embedding this check to return chaos response based on group config
 	if b := CheckChaosForScenarioGroup(groupConfigRepository, scenario, respHeaders); b != nil {
-		return b, nil
+		return b, sharedVariables, nil
 	}
 
 	if config.RecordOnly || req.Header.Get(types.MockRecordMode) == types.MockRecordModeEnabled {
@@ -150,13 +183,14 @@ func AddMockResponse(
 			"Group":            scenario.Group,
 			//"Headers":          req.Header,
 		}).Infof("proxy server skipped local lookup due to record-mode")
-		return nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
+		return nil, nil, types.NewNotFoundError("proxy server skipping local lookup due to record-mode")
 	}
 
 	// Override wait time from request header
 	if reqHeaders.Get(types.MockWaitBeforeReply) != "" {
 		scenario.WaitBeforeReply, _ = time.ParseDuration(reqHeaders.Get(types.MockWaitBeforeReply))
 	}
+
 	if scenario.WaitBeforeReply > 0 {
 		log.WithFields(log.Fields{
 			"Component": "ConsumerExecutor-AddMockResponse",
@@ -173,6 +207,7 @@ func AddMockResponse(
 	if scenario.Response.StatusCode == 0 {
 		scenario.Response.StatusCode = 200
 	}
+
 	// Build output from contents-file or contents property
 	respBody = []byte(scenario.Response.Contents)
 	if scenario.Response.ContentsFile != "" {
@@ -182,6 +217,9 @@ func AddMockResponse(
 			scenario.Path)
 	}
 	respHeaders.Set(types.ContentLengthHeader, fmt.Sprintf("%d", len(respBody)))
+
+	_ = handleSharedVariables(scenario, respBody, map[string]any{},
+		groupConfigRepository.Variables(scenario.Group), sharedVariables, respHeaders)
 
 	if err == nil {
 		scenario.Response.Contents = string(respBody)

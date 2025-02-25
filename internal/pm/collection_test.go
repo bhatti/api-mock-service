@@ -3,10 +3,13 @@ package pm
 import (
 	"bytes"
 	"fmt"
+	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/stretchr/testify/require"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -66,7 +69,7 @@ func Test_ShouldParseCollection(t *testing.T) {
 	}{
 		{
 			"v2.1.0 collection",
-			"../../../fixtures/postman.json",
+			"../../fixtures/postman.json",
 			buildV210Collection(),
 			nil,
 		},
@@ -92,7 +95,7 @@ func Test_ShouldWriteCollection(t *testing.T) {
 		{
 			"v2.1.0 collection",
 			buildV210Collection(),
-			"../../../fixtures/postman.json",
+			"../../fixtures/postman.json",
 			nil,
 		},
 	}
@@ -360,5 +363,71 @@ func buildV210Collection() *PostmanCollection {
 				Value: "a-global-value",
 			},
 		},
+	}
+}
+
+func Test_ShouldPreventCircularReferences(t *testing.T) {
+	config := types.BuildTestConfig()
+	file, err := os.Open("../../fixtures/postman_basic.json")
+	require.NoError(t, err)
+
+	// Parse collection
+	c, err := ParseCollection(file)
+	require.NoError(t, err)
+
+	// Convert to scenarios
+	scenarios, vars := ConvertPostmanToScenarios(config, c, time.Now(), time.Now())
+
+	require.Len(t, scenarios, 5)
+	require.Len(t, vars.Variables, 6)
+	// GIVEN scenario repository
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+
+	// Find auth scenario
+	var authScenario *types.APIScenario
+	for _, s := range scenarios {
+		if strings.Contains(s.Name, "Get JWT Token") {
+			authScenario = s
+			break
+		}
+	}
+	require.NotNil(t, authScenario)
+
+	// 1. Verify auth scenario does not have a predicate that references itself
+	if authScenario.Predicate != "" {
+		require.False(t,
+			strings.Contains(authScenario.Predicate, authScenario.Name),
+			"Auth scenario has predicate that references itself: %s", authScenario.Predicate)
+	}
+
+	// 2. If auth scenario sets access_token in response, verify it's not in request variables
+	setsAccessToken := false
+	for _, v := range authScenario.Response.AddSharedVariables {
+		if v == "access_token" {
+			setsAccessToken = true
+			break
+		}
+	}
+
+	if setsAccessToken {
+		_, hasToken := authScenario.Request.Variables["access_token"]
+		require.False(t, hasToken,
+			"Auth scenario sets access_token in response but also references it in request variables")
+	}
+
+	// 3. Verify no scenario has a predicate that references itself
+	for _, scenario := range scenarios {
+		if scenario.Predicate != "" {
+			require.False(t,
+				strings.Contains(scenario.Predicate, scenario.Name),
+				"Scenario %s has predicate that references itself: %s", scenario.Name, scenario.Predicate)
+		}
+	}
+
+	// Save all scenarios for inspection if needed
+	for _, scenario := range scenarios {
+		err = scenarioRepository.Save(scenario)
+		require.NoError(t, err)
 	}
 }

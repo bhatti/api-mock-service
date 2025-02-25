@@ -64,6 +64,16 @@ func (c *PostmanCollection) Write(w io.Writer) (err error) {
 	return
 }
 
+func (c *PostmanCollection) Vars() map[string]string {
+	vars := make(map[string]string)
+	for _, v := range c.Variables {
+		if !v.Disabled {
+			vars[v.KeyName()] = v.Value
+		}
+	}
+	return vars
+}
+
 // ParseCollection parses the content of the provided data stream into a PostmanCollection object.
 func ParseCollection(r io.Reader) (c *PostmanCollection, err error) {
 	err = json.NewDecoder(r).Decode(&c)

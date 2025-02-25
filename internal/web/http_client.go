@@ -35,10 +35,10 @@ type HTTPClient interface {
 		ctx context.Context,
 		url string,
 		method string,
-		headers map[string][]string,
+		headers http.Header,
 		params map[string]string,
 		body io.ReadCloser,
-	) (int, string, io.ReadCloser, map[string][]string, error)
+	) (int, string, io.ReadCloser, http.Header, error)
 }
 
 // DefaultHTTPClient implements HTTPClient
@@ -60,10 +60,10 @@ func (w *DefaultHTTPClient) Handle(
 	ctx context.Context,
 	url string,
 	method string,
-	headers map[string][]string,
+	headers http.Header,
 	params map[string]string,
 	body io.ReadCloser,
-) (statusCode int, httpVersion string, respBody io.ReadCloser, respHeader map[string][]string, err error) {
+) (statusCode int, httpVersion string, respBody io.ReadCloser, respHeader http.Header, err error) {
 	started := time.Now()
 	log.WithFields(log.Fields{
 		"Component": "DefaultHTTPClient",
@@ -75,7 +75,7 @@ func (w *DefaultHTTPClient) Handle(
 
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return 500, "", nil, make(map[string][]string),
+		return 500, "", nil, make(http.Header),
 			fmt.Errorf("failed to request %s due to %s", url, err)
 	}
 	req.ContentLength = int64(len(bodyB))
@@ -95,10 +95,10 @@ func (w *DefaultHTTPClient) Handle(
 // ////////////////////////////////// PRIVATE METHODS ///////////////////////////////////////////
 func (w *DefaultHTTPClient) execute(
 	req *http.Request,
-	headers map[string][]string,
-	params map[string]string) (int, string, io.ReadCloser, map[string][]string, error) {
+	headers http.Header,
+	params map[string]string) (int, string, io.ReadCloser, http.Header, error) {
 	if req == nil {
-		return 500, "", nil, make(map[string][]string), fmt.Errorf("request not specified")
+		return 500, "", nil, make(http.Header), fmt.Errorf("request not specified")
 	}
 	internalKeyMap := make(map[string]string)
 	if w.config.UserAgent != "" {
@@ -142,7 +142,7 @@ func (w *DefaultHTTPClient) execute(
 			"AWSError":    awsErr,
 			"Error":       err,
 		}).Warnf("failed to invoke http client")
-		return 500, "", nil, make(map[string][]string), fmt.Errorf("failed to invoke %s due to %s", req.URL, err)
+		return 500, "", nil, make(http.Header), fmt.Errorf("failed to invoke %s due to %s", req.URL, err)
 	} else {
 		log.WithFields(log.Fields{
 			"Component":   "DefaultHTTPClient",
@@ -250,9 +250,9 @@ func httpClient(config *types.Configuration) *http.Client {
 
 	log.WithFields(log.Fields{
 		"Component": "DefaultHTTPClient",
-		"LocalIP":   getLocalIPAddresses(),
-		"EnvProxy":  getProxyEnv(),
-		"Proxy":     proxyURL}).Info("Http client using proxy")
+		//"LocalIP":   getLocalIPAddresses(),
+		"EnvProxy": getProxyEnv(),
+		"Proxy":    proxyURL}).Info("Http client using proxy")
 	return &http.Client{
 		Transport: transport,
 	}

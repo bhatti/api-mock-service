@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/bhatti/api-mock-service/internal/types/archive"
-	"github.com/bhatti/api-mock-service/internal/types/pm"
+	"github.com/bhatti/api-mock-service/internal/archive"
+	"github.com/bhatti/api-mock-service/internal/pm"
 	"io"
 	"net/http"
 	"net/url"
@@ -218,5 +218,5 @@ func Test_ShouldSavePostmanContents(t *testing.T) {
 	err = ctrl.postExecHistoryPostman(ctx)
 
 	// THEN it should return saved scenario
-	require.NoError(t, err)
+	require.NoError(t, err, "%s %s %s", scenario.Name, scenario.BaseURL, scenario.Path)
 }

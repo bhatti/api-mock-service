@@ -101,7 +101,7 @@ func Test_ShouldHandleProxyRequest(t *testing.T) {
 		Method: "POST",
 		Header: http.Header{
 			"X1":                    []string{"val1"},
-			"ETag":                  []string{"123"},
+			types.ETagHeader:        []string{"123"},
 			types.ContentTypeHeader: []string{"application/json"}},
 	}
 	handler := NewProxyHandler(config,

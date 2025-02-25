@@ -1,10 +1,8 @@
 package types
 
-import "fmt"
-
 // ProducerContractResponse for returning summary of producer based test results
 type ProducerContractResponse struct {
-	Results   map[string]string  `yaml:"results" json:"results"`
+	Results   map[string]any     `yaml:"results" json:"results"`
 	Errors    map[string]string  `yaml:"errors" json:"errors"`
 	Metrics   map[string]float64 `yaml:"metrics" json:"metrics"`
 	URLs      map[string]int     `yaml:"urls" json:"urls"`
@@ -16,7 +14,7 @@ type ProducerContractResponse struct {
 func NewProducerContractResponse() *ProducerContractResponse {
 	return &ProducerContractResponse{
 		Errors:    make(map[string]string),
-		Results:   make(map[string]string),
+		Results:   make(map[string]any),
 		Metrics:   make(map[string]float64),
 		URLs:      make(map[string]int),
 		Succeeded: 0,
@@ -31,7 +29,7 @@ func (cr *ProducerContractResponse) Add(key string, res any, err error) {
 		cr.Failed++
 	} else {
 		if res != nil {
-			cr.Results[key] = fmt.Sprintf("%v", res)
+			cr.Results[key] = res // TODO fmt.Sprintf("%v", res)
 		}
 		cr.Succeeded++
 	}

@@ -380,36 +380,3 @@ func Test_ShouldNormalizeGroup(t *testing.T) {
 	require.Equal(t, "path1_path2", NormalizeGroup("", "/path1/path2"))
 	require.Equal(t, "root", NormalizeGroup("", "/"))
 }
-
-func buildScenario() *APIScenario {
-	scenario := &APIScenario{
-		Method:         Post,
-		Name:           "scenario",
-		Path:           "/path1/\\\\//test1//abc////",
-		Description:    "",
-		Group:          "test-group",
-		Tags:           []string{"tag1", "tag2"},
-		Authentication: make(map[string]APIAuthorization),
-		Request: APIRequest{
-			Headers: make(map[string]string),
-			AssertQueryParamsPattern: map[string]string{
-				"a": "1",
-				"b": "2",
-			},
-			AssertHeadersPattern: map[string]string{
-				"CTag": "981",
-			},
-			Variables: make(map[string]string),
-		},
-		Response: APIResponse{
-			Headers: map[string][]string{
-				"ETag":            {"123"},
-				ContentTypeHeader: {"application/json"},
-			},
-			Contents:   "test body",
-			StatusCode: 200,
-		},
-		WaitBeforeReply: time.Duration(1) * time.Second,
-	}
-	return scenario
-}

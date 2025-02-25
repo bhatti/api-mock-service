@@ -1,0 +1,31 @@
+{
+  "id": "test-environment",
+  "name": "Test Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://api.example.com",
+      "enabled": true
+    },
+    {
+      "key": "api_key",
+      "value": "your-api-key",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "client_name",
+      "value": "test-client",
+      "enabled": true
+    },
+    {
+      "key": "org_id",
+      "value": "test-org",
+      "enabled": true
+    }
+  ]
+}

@@ -2,10 +2,10 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/bhatti/api-mock-service/internal/archive"
+	"github.com/bhatti/api-mock-service/internal/pm"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
-	"github.com/bhatti/api-mock-service/internal/types/archive"
-	"github.com/bhatti/api-mock-service/internal/types/pm"
 	"github.com/bhatti/api-mock-service/internal/web"
 	"net/http"
 	"strconv"
@@ -128,16 +128,19 @@ func (ehc *APIHistoryController) postExecHistoryPostman(c web.APIContext) (err e
 	if err != nil {
 		return err
 	}
-	scenarios := pm.ConvertPostmanToScenarios(ehc.config, collection, time.Time{}, time.Time{})
+	scenarios, vars := pm.ConvertPostmanToScenarios(ehc.config, collection, time.Time{}, time.Time{})
 	for _, scenario := range scenarios {
-		u, err := scenario.GetURL("")
-		if err != nil {
-			return err
-		}
 		if err = ehc.scenarioRepository.Save(scenario); err != nil {
 			return err
 		}
-		if err = ehc.scenarioRepository.SaveHistory(scenario, u.String(), scenario.StartTime, scenario.EndTime); err != nil {
+		if u, err := scenario.GetURL(""); err == nil {
+			if err = ehc.scenarioRepository.SaveHistory(scenario, u.String(), scenario.StartTime, scenario.EndTime); err != nil {
+				return err
+			}
+		}
+	}
+	if len(vars.Variables) > 0 {
+		if err = ehc.scenarioRepository.SaveVariables(vars); err != nil {
 			return err
 		}
 	}

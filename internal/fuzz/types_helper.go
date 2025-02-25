@@ -46,6 +46,9 @@ func UnmarshalArrayOrObjectAndExtractTypes(str string, dataTemplate DataTemplate
 
 // ReMarshalArrayOrObjectWithIndent helper method to unmarshal and marshal with indent
 func ReMarshalArrayOrObjectWithIndent(b []byte) string {
+	if len(b) == 0 {
+		return ""
+	}
 	res, err := UnmarshalArrayOrObject(b)
 	if err != nil {
 		return string(b)

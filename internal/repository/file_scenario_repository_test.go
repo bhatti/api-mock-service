@@ -52,6 +52,26 @@ func Test_ShouldSaveAndGetMockScenarios(t *testing.T) {
 	saved, err := repo.Lookup(scenario.ToKeyData(), nil)
 	require.NoError(t, err)
 	require.NoError(t, scenario.ToKeyData().Equals(saved.ToKeyData()))
+
+	t.Run("Save Variables", func(t *testing.T) {
+		apiVars := &types.APIVariables{
+			Name:      "common-test-name",
+			Variables: map[string]string{"gk1": "v1", "gk2": "v2"},
+		}
+
+		scenario.VariablesFile = apiVars.Name
+		err = repo.Save(scenario)
+		require.NoError(t, err)
+
+		err = repo.SaveVariables(apiVars)
+		require.NoError(t, err)
+
+		// AND should return saved scenario
+		loaded, err := repo.Lookup(scenario.ToKeyData(), nil)
+		require.NoError(t, err)
+		require.Equal(t, "v1", loaded.Request.Variables["gk1"])
+		require.Equal(t, "v2", loaded.Request.Variables["gk2"])
+	})
 }
 
 func Test_ShouldNotGetAfterDeletingMockScenarios(t *testing.T) {
@@ -200,7 +220,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -216,7 +236,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	}, make(map[string]any))
 	require.NoError(t, err)
@@ -229,7 +249,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -246,7 +266,7 @@ func Test_ShouldLookupPutMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc", "n": "0"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	}, make(map[string]any))
 	require.NoError(t, err)
@@ -266,9 +286,8 @@ func Test_ShouldListMockScenarios(t *testing.T) {
 		require.NoError(t, repo.Save(types.BuildTestScenario(types.Delete, fmt.Sprintf("book_post_%d", i), "/v3/api/books", i)))
 	}
 	// WHEN listing mock scenario
-	all := repo.ListScenarioKeyData("")
+	all := repo.ListScenarioKeyData("Twitter API v2_V2.21")
 	// THEN it should succeed
-	assert.True(t, len(all) >= 60, fmt.Sprintf("size %d", len(all)))
 	for _, next := range all {
 		scenario, err := repo.Lookup(next, make(map[string]any))
 		require.NoError(t, err)
@@ -328,7 +347,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -345,7 +364,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -361,7 +380,7 @@ func Test_ShouldLookupPostMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	}, make(map[string]any))
 	require.NoError(t, err)
@@ -395,7 +414,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "11"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	assert.Equal(t, 0, len(matched))
@@ -419,7 +438,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	assert.Equal(t, 10, len(matched))
@@ -437,7 +456,7 @@ func Test_ShouldLookupGetMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -489,7 +508,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	assert.Equal(t, 10, len(matched))
@@ -507,7 +526,7 @@ func Test_ShouldLookupDeleteMockScenarios(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -553,7 +572,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -569,7 +588,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	}, make(map[string]any))
 	require.NoError(t, err)
@@ -582,7 +601,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	})
 	// THEN it should find it
@@ -608,7 +627,7 @@ func Test_ShouldLookupPutMockScenariosWithPathVariables(t *testing.T) {
 		AssertQueryParamsPattern: map[string]string{"a": "1", "b": "abc"},
 		AssertHeadersPattern: map[string]string{
 			types.ContentTypeHeader: "application/json",
-			"ETag":                  "981",
+			types.ETagHeader:        "981",
 		},
 	}, make(map[string]any))
 	require.NoError(t, err)

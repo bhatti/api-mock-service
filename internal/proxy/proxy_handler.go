@@ -178,7 +178,7 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 		return req, nil, matchErr
 	}
 	respHeader := make(http.Header)
-	respBody, err := contract.AddMockResponse(
+	respBody, sharedVariables, err := contract.AddMockResponse(
 		req,
 		req.Header,
 		respHeader,
@@ -197,11 +197,17 @@ func (h *Handler) doHandleRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*ht
 	req.Header[types.MockPlayback] = []string{fmt.Sprintf("%v", matchedScenario != nil)}
 	req.Header[types.MockRecordMode] = []string{types.MockRecordModeDisabled}
 
+	for k, v := range sharedVariables {
+		if strV, ok := v.(string); ok {
+			respHeader.Set(k, strV)
+		}
+	}
 	resp := &http.Response{}
 	resp.Request = req
 	resp.TransferEncoding = req.TransferEncoding
 	resp.Header = respHeader
-	resp.Header.Add(types.ContentTypeHeader, matchedScenario.Response.ContentType(""))
+	resp.Header.Set(types.ContentTypeHeader, matchedScenario.Response.ContentType(""))
+
 	resp.StatusCode = matchedScenario.Response.StatusCode
 	resp.Status = http.StatusText(matchedScenario.Response.StatusCode)
 	buf := bytes.NewBuffer(respBody)

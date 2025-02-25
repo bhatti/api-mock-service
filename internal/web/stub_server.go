@@ -33,7 +33,7 @@ func (c *stubContext) SetLogger(_ echo.Logger) {
 func NewStubContext(req *http.Request) *stubContext { //nolint
 	return &stubContext{
 		request:  req,
-		response: echo.NewResponse(&StubResponseWriter{}, nil),
+		response: echo.NewResponse(&StubResponseWriter{status: 200}, nil),
 		Params:   make(map[string]string),
 		Context:  make(map[string]any),
 	}
@@ -245,6 +245,7 @@ func (c *stubContext) HTML(code int, t string) (err error) {
 
 func (c *stubContext) HTMLBlob(code int, b []byte) (err error) {
 	c.Result = b
+	c.response.Status = code
 	if code >= 300 {
 		return fmt.Errorf("%d - %d", code, len(b))
 	}

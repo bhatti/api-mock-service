@@ -17,7 +17,7 @@ response:
             - application/json
     contents_file: ""
     status_code: 200
-    set_variables:
+    add_shared_variables:
       - Username
     assert_headers_pattern: {}
     contents: '{"User": {"Directory": "{{.Directory}}", "Username": "{{.Username}}", "DesiredDeliveryMediums": ["EMAIL"]}}'

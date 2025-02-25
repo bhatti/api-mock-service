@@ -378,7 +378,7 @@ func buildScenario(method types.MethodType, name string, path string, n int) *ty
 		},
 		Response: types.APIResponse{
 			Headers: map[string][]string{
-				"ETag":                  {strconv.Itoa(n)},
+				types.ETagHeader:        {strconv.Itoa(n)},
 				types.ContentTypeHeader: {"application/json"},
 			},
 			Contents:   "test body",

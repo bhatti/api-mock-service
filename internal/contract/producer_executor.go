@@ -226,12 +226,11 @@ func (px *ProducerExecutor) execute(
 	if !strings.HasPrefix(url, "http") {
 		return nil, fmt.Errorf("http URL is not valid %s, scenario url %s", url, scenario.BaseURL)
 	}
+
 	started := time.Now().UnixMilli()
 	templateParams, queryParams, postParams, reqHeaders := scenario.Request.BuildTemplateParams(
-		req,
-		scenario.ToKeyData().MatchGroups(scenario.Path),
-		contractReq.Headers,
-		contractReq.Params)
+		req, scenario.ToKeyData().MatchGroups(scenario.Path),
+		contractReq.Headers, contractReq.Params)
 	if fuzz.RandIntMinMax(1, 100) < 20 {
 		dataTemplate = dataTemplate.WithMaxMultiplier(fuzz.RandIntMinMax(2, 5))
 	}
@@ -249,7 +248,8 @@ func (px *ProducerExecutor) execute(
 		}
 
 		if err = scenario.Request.Assert(queryParams, postParams, reqHeaders, reqContents, templateParams); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("request assertion for scenario %s (%s) [headers: %v] failed: %s",
+				scenario.Name, scenario.Description, req.Header, err)
 		}
 	}
 
@@ -320,33 +320,44 @@ func (px *ProducerExecutor) execute(
 		if contractReq.Params == nil {
 			contractReq.Params = map[string]any{}
 		}
-		setVariables := map[string]any{}
-		for k, v := range px.groupConfigRepository.Variables(scenario.Group) {
-			setVariables[k] = v
-		}
-
-		for _, propName := range scenario.Response.SetVariables {
-			val := fuzz.FindVariable(propName, resContents)
-			if val != nil {
-				n := strings.Index(propName, ".")
-				propName = propName[n+1:]
-				contractReq.Params[propName] = val
-				setVariables[propName] = val
-			} else {
-				vals := resHeaders[propName]
-				if len(vals) > 0 {
-					contractReq.Params[propName] = vals[0]
-					setVariables[propName] = vals[0]
-				}
-			}
-		}
-		for _, propName := range scenario.Response.UnsetVariables {
-			delete(contractReq.Params, propName)
-			delete(setVariables, propName)
-		}
-		resContents = setVariables
+		sharedVariables := make(map[string]any)
+		// TODO should we return filtered response from shared variables
+		_ = handleSharedVariables(scenario, resContents, contractReq.Params,
+			px.groupConfigRepository.Variables(scenario.Group), sharedVariables, resHeaders)
 	}
 	return resContents, nil
+}
+
+func handleSharedVariables(scenario *types.APIScenario, resContents any,
+	params map[string]any, groupVariables map[string]string,
+	sharedVariables map[string]any, resHeaders http.Header) any {
+	if resContents == nil {
+		return nil
+	}
+	for k, v := range groupVariables {
+		sharedVariables[k] = v
+	}
+
+	for _, propName := range scenario.Response.AddSharedVariables {
+		val := fuzz.FindVariable(propName, resContents)
+		if val != nil {
+			n := strings.Index(propName, ".")
+			propName = propName[n+1:]
+			params[propName] = val
+			sharedVariables[propName] = val
+		} else {
+			vals := resHeaders[propName]
+			if len(vals) > 0 {
+				params[propName] = vals[0]
+				sharedVariables[propName] = vals[0]
+			}
+		}
+	}
+	for _, propName := range scenario.Response.DeleteSharedVariables {
+		delete(params, propName)
+		delete(sharedVariables, propName)
+	}
+	return sharedVariables
 }
 
 func buildRequestBody(

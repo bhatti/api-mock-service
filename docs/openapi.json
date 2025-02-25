@@ -1525,13 +1525,13 @@
             "description": "HTTPVersion version of http",
             "x-go-name": "HTTPVersion"
           },
-          "set_variables": {
+          "add_shared_variables": {
             "type": "array",
-            "description": "SetVariables to set shared variables from response",
+            "description": "AddSharedVariables to set shared variables from response",
             "items": {
               "type": "string"
             },
-            "x-go-name": "SetVariables"
+            "x-go-name": "AddSharedVariables"
           },
           "status_code": {
             "type": "integer",
@@ -1539,13 +1539,13 @@
             "format": "int64",
             "x-go-name": "StatusCode"
           },
-          "unset_variables": {
+          "delete_shared_variables": {
             "type": "array",
-            "description": "UnsetVariables to reset shared variables",
+            "description": "DeleteSharedVariables to reset shared variables",
             "items": {
               "type": "string"
             },
-            "x-go-name": "UnsetVariables"
+            "x-go-name": "DeleteSharedVariables"
           }
         },
         "description": "APIResponse defines mock response for APIs",

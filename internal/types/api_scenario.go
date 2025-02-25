@@ -11,7 +11,6 @@ import (
 	"os"
 	"regexp"
 	"runtime/debug"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -34,8 +33,10 @@ type APIRequest struct {
 	QueryParams map[string]string `yaml:"query_params" json:"query_params"`
 	// PostParams for the API
 	PostParams map[string]string `yaml:"post_params" json:"post_params"`
-	// Headers for mock response
+	// Headers for mock request
 	Headers map[string]string `yaml:"headers" json:"headers"`
+	// Description for response optionally
+	Description string `yaml:"description" json:"description"`
 	// Contents for request optionally
 	Contents string `yaml:"contents" json:"contents"`
 	// ExampleContents sample for request optionally
@@ -98,13 +99,13 @@ func SanitizeRegexValue(val string) string {
 func (r APIRequest) BuildTemplateParams(
 	req *http.Request,
 	pathGroups map[string]string,
-	inHeaders map[string][]string,
+	inHeaders http.Header,
 	overrides map[string]any,
-) (templateParams map[string]any, queryParams map[string]string, postParams map[string]string, reqHeaders map[string][]string) {
+) (templateParams map[string]any, queryParams map[string]string, postParams map[string]string, reqHeaders http.Header) {
 	templateParams = make(map[string]any)
 	queryParams = make(map[string]string)
 	postParams = make(map[string]string)
-	reqHeaders = make(map[string][]string)
+	reqHeaders = make(http.Header)
 	//for _, env := range os.Environ() {
 	//	parts := strings.Split(env, "=")
 	//	if len(parts) == 2 {
@@ -137,11 +138,11 @@ func (r APIRequest) BuildTemplateParams(
 	}
 	for k, v := range r.AssertHeadersPattern {
 		templateParams[k] = SanitizeRegexValue(v)
-		reqHeaders[k] = []string{SanitizeRegexValue(v)}
+		reqHeaders.Set(k, SanitizeRegexValue(v))
 	}
 	for k, v := range r.Headers {
 		templateParams[k] = fuzz.StripTypeTags(v)
-		reqHeaders[k] = []string{fuzz.StripTypeTags(v)}
+		reqHeaders.Set(k, fuzz.StripTypeTags(v))
 	}
 	if req.URL != nil {
 		for k, v := range req.URL.Query() {
@@ -155,7 +156,7 @@ func (r APIRequest) BuildTemplateParams(
 	}
 	for k, v := range req.Header {
 		templateParams[k] = fuzz.StripTypeTags(v[0])
-		reqHeaders[k] = []string{fuzz.StripTypeTags(v[0])}
+		reqHeaders.Set(k, fuzz.StripTypeTags(v[0]))
 	}
 	// Find any params for query params and path variables
 	for k, v := range pathGroups {
@@ -165,8 +166,8 @@ func (r APIRequest) BuildTemplateParams(
 		templateParams[k] = v
 		queryParams[k] = fmt.Sprintf("%v", v)
 	}
-	for k, v := range inHeaders {
-		reqHeaders[k] = v
+	for k := range inHeaders {
+		reqHeaders.Set(k, inHeaders.Get(k))
 	}
 
 	return
@@ -186,7 +187,7 @@ func (r APIRequest) TargetHeader() string {
 func (r APIRequest) Assert(
 	queryParams map[string]string,
 	postParams map[string]string,
-	reqHeaders map[string][]string,
+	reqHeaders http.Header,
 	reqContents any,
 	templateParams map[string]any) error {
 	if reqContents != nil {
@@ -226,18 +227,23 @@ func (r APIRequest) Assert(
 	}
 
 	for k, v := range r.AssertHeadersPattern {
-		actual := reqHeaders[k]
-		if len(actual) == 0 {
-			return fmt.Errorf("failed to find required request header '%s' with regex '%s'", k, v)
+		actual := reqHeaders.Get(k)
+		if actual == v {
+			continue
 		}
-		match, err := regexp.MatchString(v, actual[0])
+		if actual == "" {
+			debug.PrintStack()
+			return fmt.Errorf("scenario-request %s failed to find required header '%s' with regex '%s' [headers: %v]",
+				r.Description, k, v, reqHeaders)
+		}
+		match, err := regexp.MatchString(v, actual)
 		if err != nil {
-			return fmt.Errorf("failed to fuzz required request header '%s' with regex '%s' and actual value '%s' due to '%w'",
-				k, v, actual[0], err)
+			return fmt.Errorf("scenario-request %s failed to fuzz required header '%s' with regex '%s' and actual value '%s' due to '%w'",
+				r.Description, k, v, actual, err)
 		}
 		if !match {
-			return fmt.Errorf("didn't match required request header '%s' with regex '%s' and actual value '%s'",
-				k, v, actual[0])
+			return fmt.Errorf("scenario-request %s didn't match required request header '%s' with regex '%s' and actual value '%s' [headers: %v]",
+				r.Description, k, v, actual, reqHeaders)
 		}
 	}
 
@@ -282,21 +288,23 @@ func (r APIRequest) AssertContentsPatternOrContent() string {
 // APIResponse defines mock response for APIs
 type APIResponse struct {
 	// Headers for mock response
-	Headers map[string][]string `yaml:"headers" json:"headers"`
+	Headers http.Header `yaml:"headers" json:"headers"`
 	// Contents for request
 	Contents string `yaml:"contents" json:"contents"`
 	// ContentsFile for request
 	ContentsFile string `yaml:"contents_file" json:"contents_file"`
+	// Description for response optionally
+	Description string `yaml:"description" json:"description"`
 	// ExampleContents sample for response optionally
 	ExampleContents string `yaml:"example_contents" json:"example_contents"`
 	// StatusCode for response
 	StatusCode int `yaml:"status_code" json:"status_code"`
 	// HTTPVersion version of http
 	HTTPVersion string `yaml:"http_version" json:"http_version"`
-	// SetVariables to set shared variables from response
-	SetVariables []string `yaml:"set_variables" json:"set_variables"`
-	// UnsetVariables to reset shared variables
-	UnsetVariables []string `yaml:"unset_variables" json:"unset_variables"`
+	// AddSharedVariables to set shared variables from response
+	AddSharedVariables []string `yaml:"add_shared_variables" json:"add_shared_variables"`
+	// DeleteSharedVariables to reset shared variables
+	DeleteSharedVariables []string `yaml:"delete_shared_variables" json:"delete_shared_variables"`
 	// AssertHeadersPattern for mock response
 	AssertHeadersPattern map[string]string `yaml:"assert_headers_pattern" json:"assert_headers_pattern"`
 	// AssertContentsPattern for request optionally
@@ -317,7 +325,7 @@ func (r APIResponse) ContentType(defContentType string) string {
 
 // Assert asserts response
 func (r APIResponse) Assert(
-	resHeaders map[string][]string,
+	resHeaders http.Header,
 	resContents any,
 	templateParams map[string]any) error {
 	if resContents != nil {
@@ -378,6 +386,22 @@ func (r APIResponse) AssertContentsPatternOrContent() string {
 	return r.Contents
 }
 
+// APIVariables defines shared variables for APIs
+type APIVariables struct {
+	// Name of variable collection
+	Name string `yaml:"name" json:"name"`
+	// Variables to set for templates
+	Variables map[string]string `yaml:"variables" json:"variables"`
+}
+
+func (v *APIVariables) Validate() error {
+	if v.Name == "" {
+		debug.PrintStack()
+		return fmt.Errorf("api variables name is not specified")
+	}
+	return nil
+}
+
 // APIScenario defines mock scenario for APIs
 type APIScenario struct {
 	// Method for HTTP API
@@ -390,14 +414,18 @@ type APIScenario struct {
 	BaseURL string `yaml:"base_url" json:"base_url"`
 	// Description of scenario
 	Description string `yaml:"description" json:"description"`
+	// Load next request before executing current scenario
+	NextRequest string `yaml:"next_request" json:"next_request"`
 	// Order of scenario
 	Order int `yaml:"order" json:"order"`
 	// Group of scenario
 	Group string `yaml:"group" json:"group"`
 	// Tags of scenario
 	Tags []string `yaml:"tags" json:"tags"`
-	// Predicate for the request
+	// Predicate for the  scenario
 	Predicate string `yaml:"predicate" json:"predicate"`
+	// Variables File for the scenario
+	VariablesFile string `yaml:"variables_file" json:"variables_file"`
 	// Authentication for the API
 	Authentication map[string]APIAuthorization `yaml:"authentication" json:"authentication"`
 	// Request for the API
@@ -447,9 +475,9 @@ func BuildScenarioFromHTTP(
 	resBody []byte,
 	queryParams map[string][]string,
 	postParams map[string][]string,
-	reqHeaders map[string][]string,
+	reqHeaders http.Header,
 	reqContentType string,
-	resHeaders map[string][]string,
+	resHeaders http.Header,
 	resContentType string,
 	resStatus int,
 	started time.Time,
@@ -458,18 +486,20 @@ func BuildScenarioFromHTTP(
 	if u == nil {
 		return nil, fmt.Errorf("url is not specified for building api scenario")
 	}
+	// Initialize headers if nil
+	if reqHeaders == nil {
+		reqHeaders = make(http.Header)
+	}
+	if resHeaders == nil {
+		resHeaders = make(http.Header)
+	}
 	if queryParams == nil {
 		queryParams = make(map[string][]string)
 	}
 	if postParams == nil {
 		postParams = make(map[string][]string)
 	}
-	if reqHeaders == nil {
-		reqHeaders = make(map[string][]string)
-	}
-	if resHeaders == nil {
-		resHeaders = make(map[string][]string)
-	}
+
 	reqContentType = headerValue(reqHeaders, ContentTypeHeader, reqContentType)
 	resContentType = headerValue(resHeaders, ContentTypeHeader, resContentType)
 
@@ -492,10 +522,7 @@ func BuildScenarioFromHTTP(
 	}
 
 	reqAssertions := make([]string, 0)
-	resAssertions := []string{
-		`ResponseTimeMillisLE 5000`,
-		fmt.Sprintf(`ResponseStatusMatches %d`, resStatus),
-	}
+	resAssertions := make([]string, 0)
 	reqHeaderAssertions := make(map[string]string)
 	if reqContentType != "" {
 		reqAssertions = AddAssertion(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
@@ -516,7 +543,6 @@ func BuildScenarioFromHTTP(
 		Method:         MethodType(method),
 		Name:           headerValue(reqHeaders, MockScenarioHeader, ""),
 		Path:           path,
-		BaseURL:        u.Scheme + "://" + u.Host,
 		Group:          group,
 		Authentication: make(map[string]APIAuthorization),
 		Request: APIRequest{
@@ -541,8 +567,11 @@ func BuildScenarioFromHTTP(
 			AssertHeadersPattern:  respHeaderAssertions,
 			AssertContentsPattern: matchResContents,
 			Assertions:            resAssertions,
-			SetVariables:          fuzz.ExtractTopPrimitiveAttributes(resBody, 5),
+			AddSharedVariables:    fuzz.ExtractTopPrimitiveAttributes(resBody, 5),
 		},
+	}
+	if u.Scheme != "" && u.Host != "" {
+		scenario.BaseURL = u.Scheme + "://" + u.Host
 	}
 	if scenario.Group == "" {
 		scenario.Group = NormalizeGroup("", u.Path)
@@ -602,6 +631,12 @@ func BuildScenarioFromHTTP(
 	scenario.StartTime = started.UTC()
 	scenario.EndTime = ended.UTC()
 	return scenario, nil
+}
+
+func (api *APIScenario) LoadFileVariables(apiVariables *APIVariables) {
+	for k, v := range apiVariables.Variables {
+		api.Request.Variables[k] = v
+	}
 }
 
 func (api *APIScenario) addAuthHeaders() {
@@ -681,7 +716,8 @@ func (api *APIScenario) GetURL(defBase string) (u *url.URL, err error) {
 		u, err = url.Parse(defBase)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse base '%s' due to %s", defBase, err)
+		return nil, fmt.Errorf("scenario %s [%s] failed to parse base '%s' due to %s",
+			api.Name, api.Request.Description, defBase, err)
 	}
 	params := url.Values{}
 	for k, v := range api.Request.QueryParams {
@@ -864,7 +900,7 @@ func normalizeAssertion(assertion string) string {
 	return assertion
 }
 
-func toFlatMap(headers map[string][]string) map[string]string {
+func toFlatMap(headers http.Header) map[string]string {
 	flatHeaders := make(map[string]string)
 	for k, v := range headers {
 		flatHeaders[k] = v[0]
@@ -890,38 +926,6 @@ func SanitizeNonAlphabet(name string, rep string) string {
 		name = re.ReplaceAllString(name, "")
 	}
 	return name
-}
-
-// BuildTestScenario helper method
-func BuildTestScenario(method MethodType, name string, path string, n int) *APIScenario {
-	return &APIScenario{
-		Method:      method,
-		Name:        name,
-		Path:        path,
-		Group:       path,
-		Description: name,
-		Request: APIRequest{
-			HTTPVersion:              "1.1",
-			QueryParams:              make(map[string]string),
-			PostParams:               make(map[string]string),
-			Headers:                  make(map[string]string),
-			AssertQueryParamsPattern: map[string]string{"a": `\d+`, "b": "abc"},
-			AssertHeadersPattern: map[string]string{
-				ContentTypeHeader: "application/json",
-				"ETag":            `\d{3}`,
-			},
-		},
-		Response: APIResponse{
-			HTTPVersion: "1.1",
-			Headers: map[string][]string{
-				"ETag":            {strconv.Itoa(n)},
-				ContentTypeHeader: {"application/json"},
-			},
-			Contents:   "test body",
-			StatusCode: 200,
-		},
-		WaitBeforeReply: time.Duration(1) * time.Second,
-	}
 }
 
 // NormalizeGroup normalizes group name
@@ -951,10 +955,10 @@ func NormalizeGroup(title string, path string) string {
 	return group
 }
 
-func headerValue(headers map[string][]string, name string, defVal string) string {
-	vals := headers[name]
-	if len(vals) == 0 {
+func headerValue(headers http.Header, name string, defVal string) string {
+	vals := headers.Get(name)
+	if vals == "" {
 		return defVal
 	}
-	return vals[0]
+	return vals
 }

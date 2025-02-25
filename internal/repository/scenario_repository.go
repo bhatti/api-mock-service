@@ -11,6 +11,9 @@ type APIScenarioRepository interface {
 	// HistoryNames returns list of api scenarios names
 	HistoryNames(group string) []string
 
+	// SaveVariables saves common variables
+	SaveVariables(vars *types.APIVariables) (err error)
+
 	// SaveHistory saves history APIScenario
 	SaveHistory(
 		scenario *types.APIScenario,
@@ -50,6 +53,8 @@ type APIScenarioRepository interface {
 
 	// LookupAll finds matching scenarios
 	LookupAll(key *types.APIKeyData) ([]*types.APIKeyData, int, int, error)
+
+	LookupByName(name string, inData map[string]any) (scenario *types.APIScenario, err error)
 
 	// LookupAllByGroup finds matching scenarios by group
 	LookupAllByGroup(group string) []*types.APIKeyData

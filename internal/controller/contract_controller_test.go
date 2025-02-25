@@ -352,7 +352,7 @@ func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 		URL:    u,
 		Header: map[string][]string{
 			"Mock-Url":  {"https://jsonplaceholder.typicode.com/todos/10"},
-			"x-api-key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
+			"X-Api-Key": {fuzz.RandRegex(`[\x20-\x7F]{1,32}`)},
 		},
 		Form: map[string][]string{
 			"id": {"10"},

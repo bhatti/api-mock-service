@@ -30,4 +30,5 @@ func Test_ShouldSaveAndGetOAPI(t *testing.T) {
 	// AND should return saved scenario
 	_, err = oapiRepository.LoadRaw("test1")
 	require.NoError(t, err)
+
 }

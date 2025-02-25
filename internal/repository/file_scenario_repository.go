@@ -28,6 +28,7 @@ type FileAPIScenarioRepository struct {
 	config           *types.Configuration
 	contractDir      string
 	historyDir       string
+	varsDir          string
 	maxHistory       int
 	debug            bool
 }
@@ -36,12 +37,19 @@ type FileAPIScenarioRepository struct {
 func NewFileAPIScenarioRepository(
 	config *types.Configuration,
 ) (repo *FileAPIScenarioRepository, err error) {
+	if config.DataDir == "" {
+		return nil, fmt.Errorf("no data directory specified")
+	}
 	contractDir := buildContractsDir(config)
 	historyDir := filepath.Join(config.DataDir, "history")
+	varsDir := filepath.Join(config.DataDir, "shared_vars")
 	if err = mkdir(contractDir); err != nil {
 		return nil, err
 	}
 	if err = mkdir(historyDir); err != nil {
+		return nil, err
+	}
+	if err = mkdir(varsDir); err != nil {
 		return nil, err
 	}
 	repo = &FileAPIScenarioRepository{
@@ -49,6 +57,7 @@ func NewFileAPIScenarioRepository(
 		contractDir:      contractDir,
 		historyDir:       historyDir,
 		maxHistory:       config.MaxHistory,
+		varsDir:          varsDir,
 		debug:            config.Debug,
 		keysByMethodPath: make(map[string]map[string]*types.APIKeyData),
 	}
@@ -93,8 +102,7 @@ func (sr *FileAPIScenarioRepository) GetGroups() (res []string) {
 
 // GetScenariosNames returns api scenarios for given Method and Path
 func (sr *FileAPIScenarioRepository) GetScenariosNames(
-	method types.MethodType,
-	path string) (scenarioNames []string, err error) {
+	method types.MethodType, path string) (scenarioNames []string, err error) {
 	scenarioNames = make([]string, 0)
 	var files []fs.DirEntry
 	dir := sr.buildDir(method, path)
@@ -114,17 +122,44 @@ func (sr *FileAPIScenarioRepository) GetScenariosNames(
 	return
 }
 
+// SaveVariables saves variables
+func (sr *FileAPIScenarioRepository) SaveVariables(vars *types.APIVariables) (err error) {
+	if err = vars.Validate(); err != nil {
+		return err
+	}
+	varsDir := sr.varsDir
+	if err = mkdir(varsDir); err != nil {
+		return err
+	}
+	data, err := yaml.Marshal(vars)
+	if err != nil {
+		return err
+	}
+	filePath := filepath.Join(varsDir, vars.Name+".yaml")
+
+	// Create the file
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Write to file
+	_, err = file.Write(data)
+	return err
+}
+
 // Save APIScenario
-func (sr *FileAPIScenarioRepository) Save(
-	scenario *types.APIScenario) (err error) {
+func (sr *FileAPIScenarioRepository) Save(scenario *types.APIScenario) (err error) {
 	if err = scenario.Validate(); err != nil {
 		return err
 	}
+	keyData := scenario.ToKeyData()
 	var b []byte
 	if b, err = yaml.Marshal(scenario); err != nil {
 		return err
 	}
-	return sr.SaveYaml(scenario.ToKeyData(), b)
+	return sr.SaveYaml(keyData, b)
 }
 
 // SaveRaw saves raw data assuming to be yaml format
@@ -154,19 +189,14 @@ func (sr *FileAPIScenarioRepository) SaveYaml(keyData *types.APIKeyData, payload
 
 // LoadRaw loads matching scenario
 func (sr *FileAPIScenarioRepository) LoadRaw(
-	method types.MethodType,
-	name string,
-	path string,
-) (b []byte, err error) {
+	method types.MethodType, name string, path string) (b []byte, err error) {
 	fileName := sr.buildFileName(method, name, path)
 	return os.ReadFile(fileName)
 }
 
 // Delete removes a job
 func (sr *FileAPIScenarioRepository) Delete(
-	method types.MethodType,
-	scenarioName string,
-	path string) error {
+	method types.MethodType, scenarioName string, path string) error {
 	fileName := sr.buildFileName(method, scenarioName, path)
 	return os.Remove(fileName)
 }
@@ -218,8 +248,7 @@ func (sr *FileAPIScenarioRepository) LookupAllByPath(path string) []*types.APIKe
 }
 
 // LookupAllByGroup finds matching scenarios by group
-func (sr *FileAPIScenarioRepository) LookupAllByGroup(
-	group string) []*types.APIKeyData {
+func (sr *FileAPIScenarioRepository) LookupAllByGroup(group string) []*types.APIKeyData {
 	sr.mutex.RLock()
 	defer func() {
 		sr.mutex.RUnlock()
@@ -237,8 +266,7 @@ func (sr *FileAPIScenarioRepository) LookupAllByGroup(
 }
 
 // LookupAll finds matching scenarios
-func (sr *FileAPIScenarioRepository) LookupAll(
-	other *types.APIKeyData,
+func (sr *FileAPIScenarioRepository) LookupAll(other *types.APIKeyData,
 ) (res []*types.APIKeyData, paramMismatchErrors int, keyDataLen int, lastErr error) {
 	sr.mutex.RLock()
 	defer func() {
@@ -275,10 +303,27 @@ func (sr *FileAPIScenarioRepository) LookupAll(
 	return filterScenariosByPredicate(res, other), paramMismatchErrors, len(keyDataMap), lastErr
 }
 
+// LookupByName finds top matching scenario
+func (sr *FileAPIScenarioRepository) LookupByName(
+	name string, inData map[string]any) (scenario *types.APIScenario, err error) {
+	matched := 0
+	for _, keyDataMap := range sr.keysByMethodPath {
+		for _, keyData := range keyDataMap {
+			if keyData.Name == name {
+				matched++
+				scenario, err = sr.Lookup(keyData, inData)
+				if err == nil {
+					return scenario, nil
+				}
+			}
+		}
+	}
+	return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup by name '%s'", name))
+}
+
 // Lookup finds top matching scenario
 func (sr *FileAPIScenarioRepository) Lookup(
-	other *types.APIKeyData,
-	inData map[string]any) (scenario *types.APIScenario, err error) {
+	other *types.APIKeyData, inData map[string]any) (scenario *types.APIScenario, err error) {
 	matched, paramMismatchErrors, keyDataLen, lastErr := sr.LookupAll(other)
 	if len(matched) == 0 {
 		if paramMismatchErrors > 0 {
@@ -286,7 +331,8 @@ func (sr *FileAPIScenarioRepository) Lookup(
 				other.String(), lastErr))
 		}
 		fileName := sr.buildFileName(other.Method, other.Name, other.Path)
-		return nil, types.NewNotFoundError(fmt.Sprintf("could not lookup matching API '%s' [File '%s'], partial matched: %d (%s)",
+		return nil, types.NewNotFoundError(fmt.Sprintf(
+			"could not lookup matching API '%s' [File '%s'], partial matched: %d (%s)",
 			other.String(), fileName, keyDataLen, lastErr))
 	}
 	matched[0].LastUsageTime = time.Now().Unix()
@@ -323,9 +369,10 @@ func (sr *FileAPIScenarioRepository) Lookup(
 	addQueryParams(other.AssertQueryParamsPattern, data)
 	data[fuzz.RequestCount] = fmt.Sprintf("%d", reqCount)
 
-	scenario, err = unmarshalMockScenario(b, dir, data)
+	scenario, err = unmarshalMockScenario(b, dir, sr.varsDir, data)
 	if err != nil {
-		return nil, fmt.Errorf("lookup failed to parse scenario '%s' due to %w", fileName, err)
+		return nil, fmt.Errorf("lookup failed to parse scenario '%s' due to %w [data: %v]",
+			fileName, err, data)
 	}
 	scenario.RequestCount = reqCount
 	return
@@ -360,7 +407,8 @@ func (sr *FileAPIScenarioRepository) SaveHistory(
 	scenario.Description = fmt.Sprintf("executed started at %s, ended at %s, duration %d millis, target url %s",
 		started.UTC().Format(time.RFC3339), ended.UTC().Format(time.RFC3339), ended.UnixMilli()-started.UnixMilli(), url)
 	name := types.SanitizeNonAlphabet(scenario.Group, "_") + "_" + scenario.BuildName(string(scenario.Method))
-	if err = sr.saveHistory(scenario, name); err != nil {
+	fileName, err := sr.saveHistory(scenario, name)
+	if err != nil {
 		return err
 	}
 
@@ -369,26 +417,25 @@ func (sr *FileAPIScenarioRepository) SaveHistory(
 		"Component": "FileScenarioRepository",
 		"MaxLimit":  sr.maxHistory,
 		"Dir":       sr.historyDir,
-		"File":      name,
+		"Name":      name,
+		"File":      fileName,
 		"Error":     err,
 	}).Debugf("saving history scenario")
 	return
 }
 
-func (sr *FileAPIScenarioRepository) saveHistory(scenario *types.APIScenario, name string) error {
+func (sr *FileAPIScenarioRepository) saveHistory(scenario *types.APIScenario, name string) (string, error) {
 	b, err := yaml.Marshal(scenario)
 	if err != nil {
-		return err
+		return "", err
 	}
 	fileName := filepath.Join(sr.historyDir, name+types.ScenarioExt)
-	return os.WriteFile(fileName, b, 0644)
+
+	return fileName, os.WriteFile(fileName, b, 0644)
 }
 
 // LoadHistory loads scenario
-func (sr *FileAPIScenarioRepository) LoadHistory(
-	name string,
-	group string,
-	page int,
+func (sr *FileAPIScenarioRepository) LoadHistory(name string, group string, page int,
 	limit int) (scenarios []*types.APIScenario, err error) {
 	if name != "" {
 		scenario, err := sr.loadHistoryByName(name)
@@ -430,6 +477,8 @@ func (sr *FileAPIScenarioRepository) loadHistoryByName(name string) (*types.APIS
 	if err != nil {
 		err = fmt.Errorf("failed to unmarshal scenario from %s due to %w", fileName, err)
 	}
+	scenario.Description += fmt.Sprintf(" [Loaded History: %s]", fileName)
+
 	return scenario, err
 }
 
@@ -480,12 +529,9 @@ func (sr *FileAPIScenarioRepository) historyFiles(dir string) (infos []fs.FileIn
 	return
 }
 
-func unmarshalMockScenario(
-	b []byte,
-	dir string,
-	params any) (scenario *types.APIScenario, err error) {
+func unmarshalMockScenario(b []byte, dataDir string, varsDir string, params any) (scenario *types.APIScenario, err error) {
 	// parse template
-	b, err = fuzz.ParseTemplate(dir, b, params)
+	b, err = fuzz.ParseTemplate(dataDir, b, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse template due to %w", err)
 	}
@@ -495,12 +541,23 @@ func unmarshalMockScenario(
 	if err = yaml.Unmarshal(b, scenario); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal due to %w", err)
 	}
+	if scenario.VariablesFile != "" {
+		b, err := os.ReadFile(filepath.Join(varsDir, scenario.VariablesFile+".yaml"))
+		if err != nil {
+			return nil, err
+		}
+		apiVariables := &types.APIVariables{}
+		err = yaml.Unmarshal(b, apiVariables)
+		if err != nil {
+			return nil, err
+		}
+		scenario.LoadFileVariables(apiVariables)
+	}
 	return scenario, nil
 }
 
 // visit all scenarios matching properties
-func (sr *FileAPIScenarioRepository) visit(
-	callback func(keyData *types.APIKeyData) bool) error {
+func (sr *FileAPIScenarioRepository) visit(callback func(keyData *types.APIKeyData) bool) error {
 	var errStop = errors.New("stop")
 	var walkFunc = func(path string, info os.FileInfo, err error) (_ error) {
 		// handle walking error if any
@@ -569,30 +626,20 @@ func (sr *FileAPIScenarioRepository) addKeyData(keyData *types.APIKeyData) {
 }
 
 func (sr *FileAPIScenarioRepository) buildFileName(
-	method types.MethodType,
-	scenarioName string,
-	path string) string {
+	method types.MethodType, scenarioName string, path string) string {
 	return buildFileName(sr.contractDir, method, scenarioName, path) + types.ScenarioExt
 }
 
-func (sr *FileAPIScenarioRepository) buildDir(
-	method types.MethodType,
-	path string) string {
+func (sr *FileAPIScenarioRepository) buildDir(method types.MethodType, path string) string {
 	return buildDir(sr.contractDir, method, path)
 }
 
-func buildFileName(
-	dir string,
-	method types.MethodType,
-	scenarioName string,
-	path string) string {
+func buildFileName(dir string, method types.MethodType,
+	scenarioName string, path string) string {
 	return filepath.Join(buildDir(dir, method, path), scenarioName)
 }
 
-func buildDir(
-	dir string,
-	method types.MethodType,
-	path string) string {
+func buildDir(dir string, method types.MethodType, path string) string {
 	return filepath.Join(dir, types.NormalizeDirPath(path), string(method))
 }
 

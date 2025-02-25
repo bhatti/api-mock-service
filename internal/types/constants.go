@@ -27,6 +27,9 @@ const MockScenarioPath = "X-Mock-Path"
 // MockChaosEnabled header
 const MockChaosEnabled = "X-Mock-Chaos-Enabled"
 
+// ETagHeader canonical name
+const ETagHeader = "Etag"
+
 // ContentTypeHeader header
 const ContentTypeHeader = "Content-Type"
 

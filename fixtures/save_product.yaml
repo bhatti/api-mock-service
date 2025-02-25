@@ -28,7 +28,7 @@ response:
     status_code: 200
     assert_headers_pattern: {}
     assert_contents_pattern: '{"category":"(__string__(BOOKS|MUSIC|TOYS))","id":"(__string__\\w+)","inventory":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","name":"(__string__\\w+)","price.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","price.currency":"(USD|CAD)"}'
-    set_variables: 
+    add_shared_variables: 
       - id
       - name
     assertions:

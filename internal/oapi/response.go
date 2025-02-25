@@ -47,10 +47,7 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 	if err != nil {
 		return
 	}
-	assertions := []string{
-		`ResponseTimeMillisLE 5000`,
-		fmt.Sprintf(`ResponseStatusMatches %d`, res.StatusCode),
-	}
+	assertions := make([]string, 0)
 	respHeaderAssertions := make(map[string]string)
 	if res.ContentType != "" {
 		assertions = types.AddAssertion(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`, res.ContentType))
@@ -65,6 +62,6 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 		AssertContentsPattern: matchContents,
 		Assertions:            assertions,
 		HTTPVersion:           "",
-		SetVariables:          fuzz.ExtractTopPrimitiveAttributes(exampleContents, 5),
+		AddSharedVariables:    fuzz.ExtractTopPrimitiveAttributes(exampleContents, 5),
 	}, nil
 }

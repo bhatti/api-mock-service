@@ -41,7 +41,7 @@ response:
     status_code: 200
     assert_headers_pattern: {}
     assert_contents_pattern: '{"address.city":"(__string__\\w+)","address.countryCode":"(__string__(US|CA))","address.id":"(__string__\\w+)","address.streetAddress":"(__string__\\w+)","address.zipCode":"(__string__\\d{5}.?\\d{0,4})","creditCard.balance.amount":"(__number__[+-]?(([0-9]{1,10}(\\.[0-9]{1,5})?)|(\\.[0-9]{1,10})))","creditCard.balance.currency":"(__string__\\w+)","creditCard.cardNumber":"(__string__[\\d-]{10,20})","creditCard.customerId":"(__string__\\w+)","creditCard.expiration":"(__string__\\d{2}.\\d{4})","creditCard.id":"(__string__\\w+)","creditCard.type":"(__string__(VISA|MASTERCARD|AMEX))","email":"(__string__.+@.+\\..+)","firstName":"(__string__\\w+)","id":"(__string__\\w+)","lastName":"(__string__\\w+)","phone":"(__string__[\\d]{9,15})"}'
-    set_variables: 
+    add_shared_variables: 
       - id
       - email
     assertions: 

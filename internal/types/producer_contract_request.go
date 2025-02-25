@@ -1,5 +1,7 @@
 package types
 
+import "net/http"
+
 // ProducerContractRequest for generating fuzz-data requests to an API implementation for producer based contract testing
 type ProducerContractRequest struct {
 	// BaseURL of remote server
@@ -9,7 +11,7 @@ type ProducerContractRequest struct {
 	// Verbose setting
 	Verbose bool `yaml:"verbose" json:"verbose"`
 	// Headers overrides
-	Headers map[string][]string `yaml:"-" json:"-"`
+	Headers http.Header `yaml:"-" json:"-"`
 	// Params local overrides
 	Params map[string]any `yaml:"-" json:"-"`
 }

@@ -5,6 +5,7 @@ group: user_group
 order: 0
 predicate: ""
 request:
+    description: create-user-request
     assert_query_params_pattern: {}
     path_params: {}
     headers:
@@ -18,7 +19,7 @@ response:
             - application/json
     contents_file: ""
     status_code: 200
-    set_variables:
+    add_shared_variables:
       - User.Username
       - User.Directory
     assert_headers_pattern: {}

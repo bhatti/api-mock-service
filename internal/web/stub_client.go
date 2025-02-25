@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"runtime/debug"
 	"time"
@@ -18,21 +19,28 @@ type StubHTTPResponse struct {
 	Filename      string
 	Bytes         []byte
 	Status        int
-	Headers       map[string][]string
+	Headers       http.Header
 	Error         error
 	sleepDuration time.Duration
 }
 
 // NewStubHTTPResponseError creates stubbed response with error
-func NewStubHTTPResponseError(status int, sleep time.Duration, err error) *StubHTTPResponse {
-	return &StubHTTPResponse{Status: status, sleepDuration: sleep, Error: err,
-		Headers: map[string][]string{"Content-Type": {"application/json"}}}
+func NewStubHTTPResponseError(status int, sleep time.Duration, err error, headers ...string) *StubHTTPResponse {
+	return &StubHTTPResponse{Status: status, sleepDuration: sleep, Error: err, Headers: toHeaders(headers...)}
+}
+
+func toHeaders(nv ...string) http.Header {
+	headers := make(http.Header)
+	headers.Set("Content-Type", "application/json")
+	for i := 0; i < len(nv)-1; i++ {
+		headers.Set(nv[i], nv[i+1])
+	}
+	return headers
 }
 
 // NewStubHTTPResponse creates stubbed response
-func NewStubHTTPResponse(status int, unk any) *StubHTTPResponse {
-	res := &StubHTTPResponse{Status: status,
-		Headers: map[string][]string{"Content-Type": {"application/json"}}}
+func NewStubHTTPResponse(status int, unk any, headers ...string) *StubHTTPResponse {
+	res := &StubHTTPResponse{Status: status, Headers: toHeaders(headers...)}
 	if unk == nil {
 		return res
 	}
@@ -89,9 +97,9 @@ func (w *StubHTTPClient) Handle(
 	_ context.Context,
 	url string,
 	method string,
-	_ map[string][]string,
+	_ http.Header,
 	_ map[string]string,
-	_ io.ReadCloser) (int, string, io.ReadCloser, map[string][]string, error) {
+	_ io.ReadCloser) (int, string, io.ReadCloser, http.Header, error) {
 	if url == "" {
 		return 500, "", nil, nil, fmt.Errorf("url is not specified")
 	}
@@ -114,9 +122,15 @@ func (w *StubHTTPClient) Handle(
 	if resp.Error != nil {
 		return resp.Status, "", nil, resp.Headers, resp.Error
 	}
+	if resp.Filename == "" {
+		if method == http.MethodDelete {
+			return resp.Status, "", io.NopCloser(bytes.NewReader([]byte{})), resp.Headers, resp.Error
+		}
+		return 404, "", nil, resp.Headers, fmt.Errorf("resp file not specified for url %v", url)
+	}
 	b, err := os.ReadFile(resp.Filename)
 	if err != nil {
-		return 404, "", nil, resp.Headers, fmt.Errorf("error reading file %v for url %v due to %w", resp.Filename, url, err)
+		return 404, "", nil, resp.Headers, fmt.Errorf("error reading file [%v] for url %v due to %w", resp.Filename, url, err)
 	}
 	return resp.Status, "", io.NopCloser(bytes.NewReader(b)), resp.Headers, resp.Error
 }

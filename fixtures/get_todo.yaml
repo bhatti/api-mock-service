@@ -27,7 +27,7 @@ response:
         		"completed": true
         	  }
     assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-    set_variables: 
+    add_shared_variables: 
       - id
       - userId
     status_code: 200

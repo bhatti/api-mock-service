@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -22,16 +23,26 @@ type PostmanHeaderList struct {
 
 func buildHeaders(kv map[string]string) (res []*PostmanHeader) {
 	for k, v := range kv {
-		res = append(res, &PostmanHeader{Key: k, Value: v})
+		res = append(res, &PostmanHeader{
+			Key:   k,
+			Value: v,
+		})
 	}
 	return
 }
 
-func buildHeadersArray(kv map[string][]string) (res []*PostmanHeader) {
-	for k, v := range kv {
-		res = append(res, &PostmanHeader{Key: k, Value: v[0]})
+// buildHeadersArray converts header map to Postman header array
+func buildHeadersArray(headers http.Header) []*PostmanHeader {
+	var result []*PostmanHeader
+	for key, values := range headers {
+		if len(values) > 0 {
+			result = append(result, &PostmanHeader{
+				Key:   key,
+				Value: headers.Get(key),
+			})
+		}
 	}
-	return
+	return result
 }
 
 // MarshalJSON returns the JSON encoding of a PostmanHeaderList.

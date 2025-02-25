@@ -340,6 +340,9 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 			}
 			return VariableNumber("elapsed", data) <= ToFloat64(val)
 		},
+		"ISODatetime": func() string {
+			return time.Now().Format(time.RFC3339)
+		},
 		"Date": func() string {
 			return time.Now().Format("2006-01-02")
 		},

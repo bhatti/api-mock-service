@@ -930,13 +930,13 @@
             "description": "MatchHeaders for mock response",
             "x-go-name": "MatchHeaders"
           },
-          "set_variables": {
+          "add_shared_variables": {
             "type": "array",
-            "description": "PipeProperties to extract properties from response",
+            "description": "AddSharedVariables to extract properties from response",
             "items": {
               "type": "string"
             },
-            "x-go-name": "PipeProperties"
+            "x-go-name": "AddSharedVariables"
           },
           "status_code": {
             "type": "integer",

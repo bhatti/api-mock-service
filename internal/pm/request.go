@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/types"
+	"net/http"
 	"net/url"
+	"strings"
 )
 
 // A PostmanRequest represents an HTTP request.
@@ -49,11 +51,15 @@ func (r *PostmanRequest) contentType() string {
 	return ""
 }
 
-func (r *PostmanRequest) headersMap() (res map[string][]string) {
-	res = make(map[string][]string)
+// headersMap converts Postman header array to map
+func (r *PostmanRequest) headersMap() (res http.Header) {
+	res = make(http.Header)
 	for _, header := range r.Header {
-		if !header.Disabled {
+		if !header.Disabled && header.Key != "" {
 			res[header.Key] = res[header.Value]
+			// Convert header to canonical form and store as array
+			key := strings.ToLower(header.Key)
+			res.Add(key, header.Value)
 		}
 	}
 	return

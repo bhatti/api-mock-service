@@ -1377,7 +1377,7 @@ response:
   status_code: 201
   assert_headers_pattern: { }
   assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
-  set_variables: [ ]
+  add_shared_variables: [ ]
   assertions: [ ]
 wait_before_reply: 0s
 ```
@@ -1529,7 +1529,7 @@ response:
     }
   status_code: 200
   assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})","{ \"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": false }":"(__string__[a-z]{1,10})"}'
-  set_variables:
+  add_shared_variables:
     - id
     - title
   assertions:
@@ -1569,7 +1569,7 @@ response:
                     "completed": true
               }
   assert_contents_pattern: '{"completed":"(__boolean__(false|true))","id":"(__number__[+-]?[0-9]{1,10})","title":"(__string__\\w+)","userId":"(__number__[+-]?[0-9]{1,10})"}'
-  set_variables:
+  add_shared_variables:
     - id
     - userId
   status_code: 200
@@ -1600,7 +1600,7 @@ using `curl -k -v -X POST http://localhost:8080/_contracts/todos -d '{"base_url"
 }
 ```
 
-The output will show the attributes that were captured based on the `set_variables` configuration.
+The output will show the attributes that were captured based on the `add_shared_variables` configuration.
 
 ## HTTP Proxy via Browser
 

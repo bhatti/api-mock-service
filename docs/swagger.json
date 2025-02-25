@@ -268,13 +268,13 @@
           "type": "string",
           "x-go-name": "HTTPVersion"
         },
-        "set_variables": {
-          "description": "SetVariables to set shared variables from response",
+        "add_shared_variables": {
+          "description": "AddSharedVariables to set shared variables from response",
           "items": {
             "type": "string"
           },
           "type": "array",
-          "x-go-name": "SetVariables"
+          "x-go-name": "AddSharedVariables"
         },
         "status_code": {
           "description": "StatusCode for response",
@@ -282,13 +282,13 @@
           "type": "integer",
           "x-go-name": "StatusCode"
         },
-        "unset_variables": {
-          "description": "UnsetVariables to reset shared variables",
+        "delete_shared_variables": {
+          "description": "DeleteSharedVariables to reset shared variables",
           "items": {
             "type": "string"
           },
           "type": "array",
-          "x-go-name": "UnsetVariables"
+          "x-go-name": "DeleteSharedVariables"
         }
       },
       "type": "object",
