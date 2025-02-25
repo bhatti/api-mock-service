@@ -1,0 +1,26 @@
+sequenceDiagram
+    title Producer-Driven Contract Testing
+    participant Producer
+    participant ContractRepo
+    participant ActualService
+    participant Consumer
+    
+    note over Producer,ContractRepo: Setup Phase
+    Producer ->> ContractRepo: Define contracts (request/response pairs)
+    Producer ->> ContractRepo: Store expected behavior scenarios
+    Producer ->> ContractRepo: Define validation rules
+    
+    note over Producer,ActualService: Implementation Verification
+    ContractRepo ->> ActualService: Execute contract tests
+    ActualService ->> ActualService: Process requests
+    ActualService -->> ContractRepo: Return actual responses
+    ContractRepo ->> ContractRepo: Compare with expected responses
+    ContractRepo -->> Producer: Report contract verification results
+    
+    note over Producer,Consumer: Compatibility Assurance
+    alt All Contracts Pass
+        Producer ->> Consumer: Release API with backward compatibility guaranteed
+    else Contract Failures
+        Producer ->> Producer: Fix implementation issues
+        Producer ->> ContractRepo: Rerun verification
+    end

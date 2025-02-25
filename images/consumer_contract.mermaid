@@ -1,0 +1,24 @@
+sequenceDiagram
+    title Consumer-Driven Contract Testing
+    participant Consumer
+    participant MockAPI
+    participant OpenAPISpec
+    
+    note over Consumer,OpenAPISpec: Setup Phase
+    OpenAPISpec ->> MockAPI: Generate mock service
+    MockAPI -->> OpenAPISpec: Mock service created
+    
+    note over Consumer,MockAPI: Test Execution Phase
+    Consumer ->> MockAPI: Send request (based on contract)
+    MockAPI ->> MockAPI: Validate against OpenAPI spec
+    alt Valid Request
+        MockAPI -->> Consumer: Return mock response
+        Consumer ->> Consumer: Assert response matches expectations
+    else Invalid Request
+        MockAPI -->> Consumer: Return validation error
+        Consumer ->> Consumer: Assert error handling
+    end
+    
+    note over Consumer,MockAPI: Test Reporting
+    Consumer ->> Consumer: Record test results
+    Consumer ->> Consumer: Validate consumer's implementation
