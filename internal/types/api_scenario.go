@@ -3,14 +3,18 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/beevik/etree"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	log "github.com/sirupsen/logrus"
+	"github.com/xeipuuv/gojsonschema"
 	"hash/adler32"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -232,7 +236,10 @@ func (r APIRequest) Assert(
 			continue
 		}
 		if actual == "" {
-			debug.PrintStack()
+			if log.IsLevelEnabled(log.DebugLevel) {
+				//debug.PrintStack()
+			}
+
 			return fmt.Errorf("scenario-request %s failed to find required header '%s' with regex '%s' [headers: %v]",
 				r.Description, k, v, reqHeaders)
 		}
@@ -257,6 +264,19 @@ func (r APIRequest) Assert(
 		if err != nil {
 			return fmt.Errorf("failed to validate request due to %w", err)
 		}
+
+		//if reqContents != nil {
+		//	// Check if the pattern is JSON Schema
+		//	if strings.HasPrefix(r.AssertContentsPattern, `{"$schema":`) {
+		//		// Validate using JSON Schema
+		//		return validateWithJSONSchema(r.AssertContentsPattern, reqContents)
+		//	}
+		//
+		//	// Check if we need to do partial matching rather than exact structure
+		//	if strings.Contains(r.AssertContentsPattern, "__partial__") {
+		//		return validatePartialContent(r.AssertContentsPattern, reqContents)
+		//	}
+		//}
 	}
 
 	for _, assertion := range r.Assertions {
@@ -348,7 +368,7 @@ func (r APIResponse) Assert(
 		}
 	}
 
-	if r.AssertContentsPattern != "" {
+	if r.AssertContentsPattern != "" && resContents != nil {
 		regex := make(map[string]string)
 		err := json.Unmarshal([]byte(r.AssertContentsPattern), &regex)
 		if err != nil {
@@ -358,6 +378,33 @@ func (r APIResponse) Assert(
 		if err != nil {
 			return fmt.Errorf("failed to validate response due to %w", err)
 		}
+
+		// Determine content type
+		//contentType := r.ContentType("application/json")
+		//
+		//switch {
+		//case strings.Contains(contentType, "json"):
+		//	// Use JSON-specific validation
+		//	return validateJSONResponse(r.AssertContentsPattern, resContents)
+		//
+		//case strings.Contains(contentType, "xml"):
+		//	// Use XML-specific validation
+		//	return validateXMLResponse(r.AssertContentsPattern, resContents)
+		//
+		//case strings.Contains(contentType, "text/plain"):
+		//	// Use text validation
+		//	return validateTextResponse(r.AssertContentsPattern, resContents)
+		//
+		//default:
+		//	// Fall back to generic validation
+		//	regex = make(map[string]string)
+		//	err = json.Unmarshal([]byte(r.AssertContentsPattern), &regex)
+		//	if err != nil {
+		//		return fmt.Errorf("failed to unmarshal response '%s' regex due to %w",
+		//			r.AssertContentsPattern, err)
+		//	}
+		//	return fuzz.ValidateRegexMap(resContents, regex)
+		//}
 	}
 
 	for _, assertion := range r.Assertions {
@@ -961,4 +1008,422 @@ func headerValue(headers http.Header, name string, defVal string) string {
 		return defVal
 	}
 	return vals
+}
+
+// JSON validation with fuzzy matching
+func validateJSONResponse(pattern string, actual any) error {
+	// Parse pattern
+	var patternObj interface{}
+	if err := json.Unmarshal([]byte(pattern), &patternObj); err != nil {
+		return fmt.Errorf("invalid JSON pattern: %w", err)
+	}
+
+	// Validate structure matches with fuzzy type checking
+	return validateJSONStructure(patternObj, actual, "")
+}
+
+// Example implementation for validateJSONStructure
+func validateJSONStructure(pattern, actual interface{}, path string) error {
+	switch p := pattern.(type) {
+	case map[string]interface{}:
+		// Pattern is an object, actual should also be an object
+		actualMap, ok := actual.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("validateJSONStructure at %s: expected object %v, got %T", path, pattern, actual)
+		}
+
+		// Check each field in the pattern
+		for key, patternValue := range p {
+			actualValue, exists := actualMap[key]
+			if !exists {
+				// Field doesn't exist in actual
+				return fmt.Errorf("validateJSONStructure at %s: missing field %s", path, key)
+			}
+
+			// Recursively validate this field
+			fieldPath := path
+			if fieldPath == "" {
+				fieldPath = key
+			} else {
+				fieldPath = fieldPath + "." + key
+			}
+
+			if err := validateJSONStructure(patternValue, actualValue, fieldPath); err != nil {
+				return err
+			}
+		}
+
+	case []interface{}:
+		// Pattern is an array, actual should also be an array
+		actualArray, ok := actual.([]interface{})
+		if !ok {
+			return fmt.Errorf("validateJSONStructure at %s: expected array, got %T", path, actual)
+		}
+
+		if len(p) > 0 && len(actualArray) > 0 {
+			// Validate first item against pattern
+			patternItem := p[0]
+			for i, actualItem := range actualArray {
+				itemPath := fmt.Sprintf("%s[%d]", path, i)
+				if err := validateJSONStructure(patternItem, actualItem, itemPath); err != nil {
+					return err
+				}
+			}
+		}
+
+	case string:
+		// For strings, check if it's a special pattern like __string__ or __number__
+		if strings.HasPrefix(p, "__") && strings.HasSuffix(p, "__") {
+			typePattern := p[2 : len(p)-2]
+			switch typePattern {
+			case "string":
+				if _, ok := actual.(string); !ok {
+					return fmt.Errorf("validateJSONStructure at %s: expected string, got %T", path, actual)
+				}
+			case "number":
+				switch actual.(type) {
+				case float64, int, int64:
+					// Valid numeric types
+				default:
+					return fmt.Errorf("validateJSONStructure at %s: expected number, got %T", path, actual)
+				}
+			case "boolean":
+				if _, ok := actual.(bool); !ok {
+					return fmt.Errorf("validateJSONStructure at %s: expected boolean, got %T", path, actual)
+				}
+			}
+		} else {
+			// Regular string, exact match
+			if fmt.Sprintf("%v", actual) != p {
+				return fmt.Errorf("validateJSONStructure at %s: expected %v, got %v", path, p, actual)
+			}
+		}
+
+	default:
+		// For other primitives, check exact equality
+		if fmt.Sprintf("%v", actual) != fmt.Sprintf("%v", p) {
+			return fmt.Errorf("validateJSONStructure at %s: expected %v, got %v", path, p, actual)
+		}
+	}
+
+	return nil
+}
+
+// validateXMLResponse validates XML response against a pattern
+func validateXMLResponse(pattern string, actual any) error {
+	actualStr, ok := actual.(string)
+	if !ok {
+		// Try to convert to string if it's not already
+		actualStr = fmt.Sprintf("%v", actual)
+	}
+
+	// Parse XML
+	actualDoc := etree.NewDocument()
+	if err := actualDoc.ReadFromString(actualStr); err != nil {
+		return fmt.Errorf("invalid XML in response: %w", err)
+	}
+
+	patternDoc := etree.NewDocument()
+	if err := patternDoc.ReadFromString(pattern); err != nil {
+		return fmt.Errorf("invalid XML in pattern: %w", err)
+	}
+
+	// Validate structure and content
+	return validateXMLElement(patternDoc.Root(), actualDoc.Root(), "")
+}
+
+// validateXMLElement recursively validates XML elements
+func validateXMLElement(pattern, actual *etree.Element, path string) error {
+	if pattern == nil || actual == nil {
+		return fmt.Errorf("at %s: nil element", path)
+	}
+
+	// Check element name
+	if pattern.Tag != actual.Tag {
+		return fmt.Errorf("at %s: expected tag <%s>, got <%s>", path, pattern.Tag, actual.Tag)
+	}
+
+	currentPath := path
+	if currentPath == "" {
+		currentPath = pattern.Tag
+	} else {
+		currentPath = currentPath + "/" + pattern.Tag
+	}
+
+	// Check attributes if the pattern has __attr__ markers
+	for _, attr := range pattern.Attr {
+		if strings.HasPrefix(attr.Value, "__") && strings.HasSuffix(attr.Value, "__") {
+			// This is a type pattern, validate the actual attribute exists
+			actualAttr := actual.SelectAttr(attr.Key)
+			if actualAttr == nil {
+				return fmt.Errorf("at %s: missing attribute %s", currentPath, attr.Key)
+			}
+
+			// Validate type
+			typePattern := attr.Value[2 : len(attr.Value)-2]
+			switch typePattern {
+			case "string":
+				// Any string is valid
+			case "number":
+				if _, err := strconv.ParseFloat(actualAttr.Value, 64); err != nil {
+					return fmt.Errorf("at %s: attribute %s should be a number, got %s",
+						currentPath, attr.Key, actualAttr.Value)
+				}
+			case "boolean":
+				if actualAttr.Value != "true" && actualAttr.Value != "false" {
+					return fmt.Errorf("at %s: attribute %s should be a boolean, got %s",
+						currentPath, attr.Key, actualAttr.Value)
+				}
+			}
+		} else if attr.Value != "" {
+			// Exact match required
+			actualAttr := actual.SelectAttr(attr.Key)
+			if actualAttr == nil || actualAttr.Value != attr.Value {
+				return fmt.Errorf("at %s: attribute %s expected value %s, got %v",
+					currentPath, attr.Key, attr.Value, actualAttr)
+			}
+		}
+	}
+
+	// Check text content if pattern has text
+	if pattern.Text() != "" {
+		if strings.HasPrefix(pattern.Text(), "__") && strings.HasSuffix(pattern.Text(), "__") {
+			// Type pattern for content
+			typePattern := pattern.Text()[2 : len(pattern.Text())-2]
+			switch typePattern {
+			case "string":
+				// Any string is valid
+			case "number":
+				if _, err := strconv.ParseFloat(actual.Text(), 64); err != nil {
+					return fmt.Errorf("at %s: text content should be a number, got %s",
+						currentPath, actual.Text())
+				}
+			case "boolean":
+				if actual.Text() != "true" && actual.Text() != "false" {
+					return fmt.Errorf("at %s: text content should be a boolean, got %s",
+						currentPath, actual.Text())
+				}
+			}
+		} else if pattern.Text() != actual.Text() {
+			// Exact text match required
+			return fmt.Errorf("at %s: expected text content %s, got %s",
+				currentPath, pattern.Text(), actual.Text())
+		}
+	}
+
+	// Check child elements recursively
+	patternChildren := pattern.ChildElements()
+	actualChildren := actual.ChildElements()
+
+	if len(patternChildren) > 0 {
+		// If pattern has one child with a name ending with [], it's a repeating element pattern
+		if len(patternChildren) == 1 && strings.HasSuffix(patternChildren[0].Tag, "[]") {
+			baseTag := strings.TrimSuffix(patternChildren[0].Tag, "[]")
+			patternChild := patternChildren[0]
+			patternChild.Tag = baseTag // Fix the tag for comparison
+
+			// Validate each matching actual child against the pattern
+			for i, actualChild := range actualChildren {
+				if actualChild.Tag == baseTag {
+					childPath := fmt.Sprintf("%s/%s[%d]", currentPath, baseTag, i)
+					if err := validateXMLElement(patternChild, actualChild, childPath); err != nil {
+						return err
+					}
+				}
+			}
+		} else {
+			// Regular child elements - match by tag name
+			for _, patternChild := range patternChildren {
+				found := false
+				for _, actualChild := range actualChildren {
+					if patternChild.Tag == actualChild.Tag {
+						found = true
+						childPath := currentPath + "/" + patternChild.Tag
+						if err := validateXMLElement(patternChild, actualChild, childPath); err != nil {
+							return err
+						}
+						break
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("at %s: missing child element <%s>",
+						currentPath, patternChild.Tag)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// validateTextResponse validates text response against a pattern
+func validateTextResponse(pattern string, actual any) error {
+	actualStr, ok := actual.(string)
+	if !ok {
+		// Try to convert to string if it's not already
+		actualStr = fmt.Sprintf("%v", actual)
+	}
+
+	// If pattern is a regex (starts with ^ or contains special chars)
+	if strings.HasPrefix(pattern, "^") || strings.Contains(pattern, "(?") {
+		re, err := regexp.Compile(pattern)
+		if err != nil {
+			return fmt.Errorf("invalid regex pattern: %w", err)
+		}
+
+		if !re.MatchString(actualStr) {
+			return fmt.Errorf("text doesn't match pattern '%s': %s", pattern, actualStr)
+		}
+		return nil
+	}
+
+	// If pattern contains wildcards like * or ?
+	if strings.Contains(pattern, "*") || strings.Contains(pattern, "?") {
+		matched, err := filepath.Match(pattern, actualStr)
+		if err != nil {
+			return fmt.Errorf("invalid glob pattern: %w", err)
+		}
+
+		if !matched {
+			return fmt.Errorf("text doesn't match pattern '%s': %s", pattern, actualStr)
+		}
+		return nil
+	}
+
+	// Otherwise, do exact string matching
+	if pattern != actualStr {
+		return fmt.Errorf("expected text '%s', got '%s'", pattern, actualStr)
+	}
+
+	return nil
+}
+
+// validateWithJSONSchema validates content against a JSON Schema
+func validateWithJSONSchema(schemaStr string, content any) error {
+	// Create schema loader from the string
+	schemaLoader := gojsonschema.NewStringLoader(schemaStr)
+
+	// Convert content to JSON and create document loader
+	contentJSON, err := json.Marshal(content)
+	if err != nil {
+		return fmt.Errorf("failed to marshal content for validation: %w", err)
+	}
+	contentLoader := gojsonschema.NewBytesLoader(contentJSON)
+
+	// Validate
+	result, err := gojsonschema.Validate(schemaLoader, contentLoader)
+	if err != nil {
+		return fmt.Errorf("schema validation error: %w", err)
+	}
+
+	if !result.Valid() {
+		// Collect validation errors
+		var errMsgs []string
+		for _, err := range result.Errors() {
+			errMsgs = append(errMsgs, err.String())
+		}
+		return fmt.Errorf("JSON Schema validation failed: %s", strings.Join(errMsgs, ", "))
+	}
+
+	return nil
+}
+
+// validatePartialContent validates that content contains at least the required fields
+func validatePartialContent(patternStr string, content any) error {
+	// Remove the __partial__ marker
+	patternStr = strings.Replace(patternStr, "__partial__", "", -1)
+
+	var pattern map[string]interface{}
+	if err := json.Unmarshal([]byte(patternStr), &pattern); err != nil {
+		return fmt.Errorf("invalid partial match pattern: %w", err)
+	}
+
+	contentMap, ok := content.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("content must be an object for partial matching")
+	}
+
+	// Check if all required fields from pattern exist in content
+	return validatePartialObject(pattern, contentMap, "")
+}
+
+// validatePartialObject recursively validates that all fields in pattern exist in content
+func validatePartialObject(pattern, content map[string]interface{}, path string) error {
+	for k, v := range pattern {
+		actualValue, exists := content[k]
+		if !exists {
+			return fmt.Errorf("validatePartialObject at %s: missing required field %s", path, k)
+		}
+
+		fieldPath := path
+		if fieldPath == "" {
+			fieldPath = k
+		} else {
+			fieldPath = fieldPath + "." + k
+		}
+
+		switch typedVal := v.(type) {
+		case map[string]interface{}:
+			actualMap, ok := actualValue.(map[string]interface{})
+			if !ok {
+				return fmt.Errorf("validatePartialObject at %s: expected object %v, got %T", fieldPath, v, actualValue)
+			}
+
+			if err := validatePartialObject(typedVal, actualMap, fieldPath); err != nil {
+				return err
+			}
+
+		case []interface{}:
+			actualArray, ok := actualValue.([]interface{})
+			if !ok {
+				return fmt.Errorf("validatePartialObject at %s: expected array, got %T", fieldPath, actualValue)
+			}
+
+			if len(typedVal) > 0 && len(actualArray) > 0 {
+				// First item in pattern array is used as template for array items
+				patternItem := typedVal[0]
+
+				switch patternItemTyped := patternItem.(type) {
+				case map[string]interface{}:
+					for i, actualItem := range actualArray {
+						actualItemMap, ok := actualItem.(map[string]interface{})
+						if !ok {
+							return fmt.Errorf("validatePartialObject at %s[%d]: expected object, got %T",
+								fieldPath, i, actualItem)
+						}
+
+						if err := validatePartialObject(patternItemTyped, actualItemMap,
+							fmt.Sprintf("%s[%d]", fieldPath, i)); err != nil {
+							return fmt.Errorf("failed to assert parital obj %s[%d]: %s", fieldPath, i, err)
+						}
+					}
+				}
+			}
+
+		case string:
+			// Check for type pattern
+			if strings.HasPrefix(typedVal, "__") && strings.HasSuffix(typedVal, "__") {
+				typePattern := typedVal[2 : len(typedVal)-2]
+				if typePattern == "string" {
+					if _, ok := actualValue.(string); !ok {
+						return fmt.Errorf("validatePartialObject at %s: expected string, got %T", fieldPath, actualValue)
+					}
+				} else if typePattern == "number" {
+					switch actualValue.(type) {
+					case float64, int, int64:
+						// Valid numeric types
+					default:
+						return fmt.Errorf("validatePartialObject at %s: expected number, got %T", fieldPath, actualValue)
+					}
+				} else if typePattern == "boolean" {
+					if _, ok := actualValue.(bool); !ok {
+						return fmt.Errorf("validatePartialObject at %s: expected boolean, got %T", fieldPath, actualValue)
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }

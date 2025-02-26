@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	mrand "math/rand"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -3432,4 +3433,23 @@ func replaceNumTag(str, tag string) string {
 		start = strings.Index(str, tag)
 	}
 	return str
+}
+
+// VariableJsonPath Enhance VariableMatches to support nested objects with JSON path
+func VariableJsonPath(varPath string, expected string, data any) bool {
+	// Extract the value using JSON path
+	value := extractJsonPath(varPath, data)
+	if value == nil {
+		return false
+	}
+
+	// Support regex matching
+	if strings.HasPrefix(expected, "/") && strings.HasSuffix(expected, "/") {
+		pattern := expected[1 : len(expected)-1]
+		match, err := regexp.MatchString(pattern, fmt.Sprintf("%v", value))
+		return err == nil && match
+	}
+
+	// Basic equality for different types
+	return fmt.Sprintf("%v", value) == expected
 }

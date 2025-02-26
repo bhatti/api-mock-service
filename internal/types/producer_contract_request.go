@@ -8,6 +8,10 @@ type ProducerContractRequest struct {
 	BaseURL string `yaml:"base_url" json:"base_url"`
 	// ExecutionTimes for contract testing
 	ExecutionTimes int `yaml:"execution_times" json:"execution_times"`
+	// Track coverage
+	TrackCoverage bool `yaml:"track_coverage" json:"track_coverage"`
+	// RecordResults determines if contract validation results should be stored
+	RecordResults bool `yaml:"record_results" json:"record_results"`
 	// Verbose setting
 	Verbose bool `yaml:"verbose" json:"verbose"`
 	// Headers overrides
@@ -23,6 +27,8 @@ func NewProducerContractRequest(baseURL string, execTimes int) *ProducerContract
 		ExecutionTimes: execTimes,
 		Headers:        make(map[string][]string),
 		Params:         make(map[string]any),
+		RecordResults:  false,
+		TrackCoverage:  false,
 	}
 }
 

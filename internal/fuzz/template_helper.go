@@ -505,3 +505,25 @@ func validFileName(name string) bool {
 	}
 	return false
 }
+
+// Enhanced template functions for response validation with content type awareness
+func addContentTypeAwareFunctions() template.FuncMap {
+	return template.FuncMap{
+		"JsonHasProperty": func(jsonPath string) bool {
+			// Implementation
+			return false
+		},
+		"XmlHasElement": func(xpath string) bool {
+			// Implementation
+			return false
+		},
+		"ResponseTimeUnder": func(threshold float64) bool {
+			// Implementation
+			return false
+		},
+		"StatusInRange": func(min, max int) bool {
+			// Implementation
+			return false
+		},
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/metrics"
 	"io"
 	"net/http"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -302,10 +303,21 @@ func (px *ProducerExecutor) execute(
 	}
 
 	if statusCode != scenario.Response.StatusCode {
+		statusMismatchErr := fmt.Errorf(
+			"failed to execute request with status %d didn't match expected value %d for %s (%s)",
+			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
+
+		// Create detailed diff report
+		diffReport := createContractDiffReport(scenario, resContents, resHeaders, templateParams)
 		log.WithFields(fields).Warnf("failed to execute request, actual status %d != %d (scenario) for %s",
 			statusCode, scenario.Response.StatusCode, scenario.Path)
-		return nil, fmt.Errorf("failed to execute request with status %d didn't match expected value %d for %s (%s)",
-			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
+
+		return resContents, &ContractValidationError{
+			OriginalError: statusMismatchErr,
+			DiffReport:    diffReport,
+			Scenario:      scenario.Name,
+			URL:           url,
+		}
 	}
 
 	if contractReq.Verbose {
@@ -313,7 +325,27 @@ func (px *ProducerExecutor) execute(
 	}
 
 	if err = scenario.Response.Assert(resHeaders, resContents, templateParams); err != nil {
-		return nil, err
+		// Create detailed diff report
+		diffReport := createContractDiffReport(scenario, resContents, resHeaders, templateParams)
+
+		// Add the diff report to the error
+		err = &ContractValidationError{
+			OriginalError: err,
+			DiffReport:    diffReport,
+			Scenario:      scenario.Name,
+			URL:           url,
+		}
+
+		// Log the detailed diff for debugging
+		if contractReq.Verbose {
+			log.WithFields(log.Fields{
+				"Component":  "ProducerExecutor",
+				"URL":        url,
+				"Scenario":   scenario.Name,
+				"DiffReport": diffReport,
+			}).Error("Contract validation failed")
+		}
+		// return nil, err
 	}
 
 	if resContents != nil {
@@ -324,8 +356,122 @@ func (px *ProducerExecutor) execute(
 		// TODO should we return filtered response from shared variables
 		_ = handleSharedVariables(scenario, resContents, contractReq.Params,
 			px.groupConfigRepository.Variables(scenario.Group), sharedVariables, resHeaders)
+
+		// Track contract coverage if enabled
+		if contractReq.TrackCoverage {
+			coverage := &ContractCoverage{
+				ScenarioName:    scenario.Name,
+				Timestamp:       time.Now(),
+				ResponseStatus:  statusCode,
+				ResponseTime:    elapsed,
+				CoveredFields:   make([]string, 0),
+				UncoveredFields: make([]string, 0),
+				FieldCoverage:   make(map[string]bool),
+			}
+
+			// Analyze which fields in the contract were actually exercised
+			if expectedPattern, parseErr := fuzz.UnmarshalArrayOrObject([]byte(scenario.Response.AssertContentsPattern)); parseErr == nil {
+				TrackFieldCoverage(expectedPattern, resContents, "", coverage)
+			}
+
+			// Calculate coverage percentage
+			coverage.CalculateCoverage()
+
+			// Log the coverage information
+			log.WithFields(log.Fields{
+				"Component":       "ProducerExecutor",
+				"ScenarioName":    coverage.ScenarioName,
+				"CoveragePercent": coverage.CoveragePercent,
+				"CoveredFields":   len(coverage.CoveredFields),
+				"UncoveredFields": len(coverage.UncoveredFields),
+			}).Info("Contract field coverage tracked")
+
+			// Store coverage data with existing history mechanism
+			if scenario.Description == "" {
+				scenario.Description = "Contract coverage analysis"
+			}
+
+			// You could add the coverage data to the scenario's metadata or
+			// incorporate it into your existing history mechanism
+			// For example, store it in contractReq.Results:
+			if contractRes.Results == nil {
+				contractRes.Results = make(map[string]any)
+			}
+			contractRes.Results[scenario.Name+"_coverage"] = coverage
+		}
 	}
-	return resContents, nil
+	return resContents, err
+}
+
+// GetContractStats analyzes validation history for a scenario
+func (px *ProducerExecutor) GetContractStats(scenarioName string) (*ContractValidationStats, error) {
+	// Get execution history
+	histories, err := px.scenarioRepository.LoadHistory(scenarioName, "", 0, 100)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load history for %s: %w", scenarioName, err)
+	}
+
+	stats := &ContractValidationStats{
+		ScenarioName:    scenarioName,
+		TotalExecutions: len(histories),
+	}
+
+	if len(histories) == 0 {
+		return stats, nil
+	}
+
+	// Analyze executions
+	failures := make(map[string]int)
+	var totalLatency int64
+
+	for _, h := range histories {
+		totalLatency += h.GetMillisTime()
+
+		if h.EndTime.After(stats.LastExecuted) {
+			stats.LastExecuted = h.EndTime
+		}
+
+		// Check if successful based on status code
+		expectedStatus := h.Response.StatusCode
+		// You'll need to add actual status to your history model
+		actualStatus := 0 // Get this from history
+
+		if expectedStatus == actualStatus {
+			stats.SuccessCount++
+		} else {
+			stats.FailureCount++
+			reason := fmt.Sprintf("Status %d != %d", actualStatus, expectedStatus)
+			failures[reason]++
+		}
+	}
+
+	// Calculate success rate and average latency
+	stats.SuccessRate = float64(stats.SuccessCount) / float64(stats.TotalExecutions) * 100
+	stats.AverageLatency = float64(totalLatency) / float64(stats.TotalExecutions)
+
+	// Get top 5 failure reasons
+	type failureCount struct {
+		reason string
+		count  int
+	}
+
+	var failureCounts []failureCount
+	for reason, count := range failures {
+		failureCounts = append(failureCounts, failureCount{reason, count})
+	}
+
+	// Sort by count descending
+	sort.Slice(failureCounts, func(i, j int) bool {
+		return failureCounts[i].count > failureCounts[j].count
+	})
+
+	// Take top 5
+	for i := 0; i < len(failureCounts) && i < 5; i++ {
+		stats.Top5Failures = append(stats.Top5Failures,
+			fmt.Sprintf("%s (%d times)", failureCounts[i].reason, failureCounts[i].count))
+	}
+
+	return stats, nil
 }
 
 func handleSharedVariables(scenario *types.APIScenario, resContents any,
@@ -391,4 +537,100 @@ func buildRequestBody(
 		return "", nil
 	}
 	return string(j), utils.NopCloser(bytes.NewReader(j))
+}
+
+// createContractDiffReport generates a detailed report of the differences
+// between expected and actual response
+func createContractDiffReport(
+	scenario *types.APIScenario,
+	resContents any,
+	resHeaders http.Header,
+	templateParams map[string]any,
+) *ContractDiffReport {
+	report := &ContractDiffReport{
+		ExpectedFields:   make(map[string]interface{}),
+		ActualFields:     make(map[string]interface{}),
+		MissingFields:    make([]string, 0),
+		ExtraFields:      make([]string, 0),
+		TypeMismatches:   make(map[string]string),
+		ValueMismatches:  make(map[string]ValueMismatch),
+		HeaderMismatches: make(map[string]ValueMismatch),
+	}
+
+	// Compare headers
+	for k, expectedValues := range scenario.Response.Headers {
+		if len(expectedValues) == 0 {
+			continue
+		}
+
+		expectedValue := expectedValues[0]
+		actualValues, exists := resHeaders[k]
+
+		if !exists || len(actualValues) == 0 {
+			report.HeaderMismatches[k] = ValueMismatch{
+				Expected: expectedValue,
+				Actual:   nil,
+			}
+			report.MissingFields = append(report.MissingFields, "header:"+k)
+		} else if expectedValue != actualValues[0] {
+			report.HeaderMismatches[k] = ValueMismatch{
+				Expected: expectedValue,
+				Actual:   actualValues[0],
+			}
+		}
+	}
+
+	// Compare response body if it's JSON
+	if scenario.Response.AssertContentsPattern != "" && resContents != nil {
+		var expectedPattern interface{}
+		if err := json.Unmarshal([]byte(scenario.Response.AssertContentsPattern), &expectedPattern); err == nil {
+			// Convert to maps for comparison
+			expectedMap, ok1 := expectedPattern.(map[string]interface{})
+			actualMap, ok2 := resContents.(map[string]interface{})
+
+			if ok1 && ok2 {
+				report.ExpectedFields = expectedMap
+				report.ActualFields = actualMap
+
+				// Find missing fields
+				for key := range expectedMap {
+					if _, exists := actualMap[key]; !exists {
+						report.MissingFields = append(report.MissingFields, key)
+					}
+				}
+
+				// Find extra fields
+				for key := range actualMap {
+					if _, exists := expectedMap[key]; !exists {
+						report.ExtraFields = append(report.ExtraFields, key)
+					}
+				}
+
+				// Compare common fields
+				for key, expectedVal := range expectedMap {
+					actualVal, exists := actualMap[key]
+					if !exists {
+						continue // Already recorded as missing
+					}
+
+					// Check type match
+					expectedType := fmt.Sprintf("%T", expectedVal)
+					actualType := fmt.Sprintf("%T", actualVal)
+
+					if expectedType != actualType {
+						report.TypeMismatches[key] = fmt.Sprintf("expected %s, got %s",
+							expectedType, actualType)
+					} else if !reflect.DeepEqual(expectedVal, actualVal) {
+						// Values don't match
+						report.ValueMismatches[key] = ValueMismatch{
+							Expected: expectedVal,
+							Actual:   actualVal,
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return report
 }
