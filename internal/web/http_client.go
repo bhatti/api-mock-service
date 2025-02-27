@@ -143,7 +143,7 @@ func (w *DefaultHTTPClient) execute(
 			"Error":     err,
 		}).Warnf("failed to invoke http client")
 		return 500, "", nil, make(http.Header), fmt.Errorf("failed to invoke %s due to %s", req.URL, err)
-	} else {
+	} else if authErr != nil {
 		log.WithFields(log.Fields{
 			"Component":  "DefaultHTTPClient",
 			"URL":        req.URL,
@@ -155,8 +155,7 @@ func (w *DefaultHTTPClient) execute(
 			"Auth":       authd,
 			"AuthInfo":   info,
 			"AWSError":   authErr,
-			"Error":      err,
-		}).Infof("invoked http client")
+		}).Warnf("failed to invoke due to auth")
 	}
 
 	return resp.StatusCode, resp.Proto, resp.Body, resp.Header, nil

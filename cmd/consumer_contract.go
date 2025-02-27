@@ -57,7 +57,7 @@ var consumerContractCmd = &cobra.Command{
 			"RequestBody":     requestBody != "",
 			"RequestBodyFile": requestBodyFile != "",
 			"QueryParams":     queryParams,
-		}).Infof("executing consumer contract...")
+		}).Debugf("executing consumer contract...")
 
 		// If URL is provided, send a real HTTP request
 		if targetUrl != "" {
@@ -113,7 +113,7 @@ func executeRealRequest() {
 			os.Exit(2)
 		}
 
-		keyData := &types.APIKeyData{}
+		keyData := &types.APIScenario{}
 		if err = yaml.Unmarshal(data, keyData); err != nil {
 			log.Errorf("failed to parse scenario file: %s", err)
 			os.Exit(3)
@@ -126,11 +126,13 @@ func executeRealRequest() {
 		if path == "" && keyData.Path != "" {
 			pathToUse = keyData.Path
 		}
-
-		// If scenario file has content pattern, use it as body if no body specified
-		if len(bodyContent) == 0 && keyData.AssertContentsPattern != "" {
-			bodyContent = []byte(keyData.AssertContentsPattern)
+		if requestBody == "" && requestBodyFile == "" && keyData.Request.Contents != "" {
+			requestBody = keyData.Request.Contents
 		}
+		// If scenario file has content pattern, use it as body if no body specified
+		//if len(bodyContent) == 0 && keyData.Request.AssertContentsPattern != "" {
+		//	bodyContent = []byte(keyData.Request.AssertContentsPattern)
+		//}
 	}
 
 	if methodToUse == "" {
@@ -345,7 +347,7 @@ func createMockRequest(body []byte) (*http.Request, error) {
 			return nil, fmt.Errorf("failed to read scenario file: %w", err)
 		}
 
-		keyData := &types.APIKeyData{}
+		keyData := &types.APIScenario{}
 		if err = yaml.Unmarshal(data, keyData); err != nil {
 			return nil, fmt.Errorf("failed to parse scenario file: %w", err)
 		}
@@ -356,6 +358,9 @@ func createMockRequest(body []byte) (*http.Request, error) {
 
 		if path == "" && keyData.Path != "" {
 			pathToUse = keyData.Path
+		}
+		if requestBody == "" && requestBodyFile == "" {
+			requestBody = keyData.Request.Contents
 		}
 	}
 
@@ -417,11 +422,14 @@ func createKeyData() (keyData *types.APIKeyData, err error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to read scenario file: %w", err)
 		}
-		keyData = &types.APIKeyData{}
-		err = yaml.Unmarshal(data, keyData)
+		scenario := &types.APIScenario{}
+		err = yaml.Unmarshal(data, scenario)
 
 		// If command line parameters are provided, they override the file
 		if err == nil {
+			keyData = &types.APIKeyData{}
+		} else {
+			keyData = scenario.ToKeyData()
 			if method != "" {
 				httpMethod, err := types.ToMethod(method)
 				if err != nil {
@@ -456,6 +464,8 @@ func createKeyData() (keyData *types.APIKeyData, err error) {
 				if err == nil && len(body) > 0 {
 					keyData.AssertContentsPattern = string(body)
 				}
+			} else {
+				requestBody = scenario.Request.Contents
 			}
 
 			// Add query parameters

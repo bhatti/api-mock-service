@@ -1,7 +1,6 @@
 package contract
 
 import (
-	"errors"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -38,17 +37,6 @@ func NewConsumerExecutor(
 	}
 }
 
-func handleError(c web.APIContext, err error) error {
-	var validationErr *types.ValidationError
-	var notFoundErr *types.NotFoundError
-	if errors.As(err, &validationErr) {
-		return c.String(400, err.Error())
-	} else if errors.As(err, &notFoundErr) {
-		return c.String(404, err.Error())
-	}
-	return err
-}
-
 // Execute request and replays stubbed response
 func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 	overrides := make(map[string]any)
@@ -66,11 +54,11 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 
 	key, err := web.BuildMockScenarioKeyData(c.Request())
 	if err != nil {
-		return handleError(c, err)
+		return web.HandleError(c, err)
 	}
 	matchedScenario, respBody, _, err := cx.ExecuteWithKey(c.Request(), c.Response().Header(), key, overrides)
 	if err != nil {
-		return handleError(c, err)
+		return web.HandleError(c, err)
 	}
 	return c.Blob(
 		matchedScenario.Response.StatusCode,

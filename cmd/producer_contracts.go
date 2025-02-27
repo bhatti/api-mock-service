@@ -40,7 +40,7 @@ var producerContractCmd = &cobra.Command{
 			"ExecTimes":    executionTimes,
 			"Verbose":      verbose,
 			"ScenarioFile": scenarioFile,
-		}).Infof("executing producer contracts...")
+		}).Debugf("executing producer contracts...")
 
 		serverConfig, err := types.NewConfiguration(
 			httpPort,
