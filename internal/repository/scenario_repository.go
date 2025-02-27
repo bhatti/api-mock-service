@@ -23,7 +23,7 @@ type APIScenarioRepository interface {
 	) (err error)
 
 	// LoadHistory loads HAR file for the executed history
-	LoadHistory(name string, group string, page int, limit int) ([]*types.APIScenario, error)
+	LoadHistory(name string, group string, responseCode int, page int, limit int) ([]*types.APIScenario, error)
 
 	// GetGroups returns api scenarios groups
 	GetGroups() []string

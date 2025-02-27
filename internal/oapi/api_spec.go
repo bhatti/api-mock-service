@@ -263,7 +263,7 @@ func schemaToProperty(
 		Children:     make([]Property, 0),
 		matchRequest: matchRequest,
 	}
-	if property.Type == "integer" || property.Type == "float" {
+	if property.Type == "integer" || property.Type == "number" || property.Type == "float" {
 		property.Min = fuzz.ToFloat64(schema.Min)
 		property.Max = fuzz.ToFloat64(schema.Max)
 	} else if property.Type == "string" {

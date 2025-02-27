@@ -1,0 +1,1999 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Simplified Alps API",
+    "description": "A streamlined version of the Alps API that preserves complex data structures with minimal endpoints",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "security": [
+    {
+      "JWT": []
+    }
+  ],
+  "paths": {
+    "/v1/auth/token": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Get authentication token",
+        "description": "Returns a JWT token for API authentication",
+        "operationId": "getAuthToken",
+        "security": [],
+        "requestBody": {
+          "description": "Authentication credentials",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/transfers": {
+      "get": {
+        "tags": ["Transfers"],
+        "summary": "List all transfers",
+        "description": "Returns a paginated list of all transfers with filtering options",
+        "operationId": "listTransfers",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by transfer status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "IN_PROGRESS",
+                "COMPLETED",
+                "REJECTED",
+                "ERROR"
+              ]
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Filter by transfer direction",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INBOUND",
+                "OUTBOUND"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": ["Transfers"],
+        "summary": "Create a new transfer",
+        "description": "Initiates a new asset transfer",
+        "operationId": "createTransfer",
+        "requestBody": {
+          "description": "Transfer details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/v1/transfers/{transferId}": {
+      "get": {
+        "tags": ["Transfers"],
+        "summary": "Get transfer details",
+        "description": "Returns detailed information about a specific transfer",
+        "operationId": "getTransfer",
+        "parameters": [
+          {
+            "name": "transferId",
+            "in": "path",
+            "description": "Transfer ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferDetailsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transfer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      },
+      "put": {
+        "tags": ["Transfers"],
+        "summary": "Update transfer",
+        "description": "Updates an existing transfer, including approval/rejection with appropriate action in the request body",
+        "operationId": "updateTransfer",
+        "parameters": [
+          {
+            "name": "transferId",
+            "in": "path",
+            "description": "Transfer ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Updated transfer details, including approval or rejection data if applicable",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transfer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Transfers"],
+        "summary": "Cancel transfer",
+        "description": "Cancels a pending transfer",
+        "operationId": "cancelTransfer",
+        "parameters": [
+          {
+            "name": "transferId",
+            "in": "path",
+            "description": "Transfer ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Transfer cancelled successfully",
+            "content": {}
+          },
+          "400": {
+            "description": "Transfer cannot be cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transfer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/v1/assets": {
+      "get": {
+        "tags": ["Assets"],
+        "summary": "List assets",
+        "description": "Returns a paginated list of assets with filtering options",
+        "operationId": "listAssets",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "query",
+            "description": "Filter by account ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetType",
+            "in": "query",
+            "description": "Filter by asset type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EQUITY",
+                "BOND",
+                "OPTION",
+                "MUTUAL_FUND",
+                "ETF",
+                "CASH"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      }
+    },
+    "/v1/restrictions": {
+      "get": {
+        "tags": ["Restrictions"],
+        "summary": "Get restrictions",
+        "description": "Returns all restrictions with filtering by account, asset type, etc.",
+        "operationId": "getRestrictions",
+        "parameters": [
+          {
+            "name": "accountId",
+            "in": "query",
+            "description": "Filter by account ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "restrictionType",
+            "in": "query",
+            "description": "Filter by restriction type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BLACKLIST",
+                "GRAYLIST",
+                "WHITELIST",
+                "ASSET_TYPE"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestrictionListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      },
+      "post": {
+        "tags": ["Restrictions"],
+        "summary": "Create restrictions",
+        "description": "Creates new restrictions",
+        "operationId": "createRestrictions",
+        "requestBody": {
+          "description": "Restriction details",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestrictionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Restrictions created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestrictionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - JWT token is missing or invalid",
+            "content": {}
+          },
+          "403": {
+            "description": "Forbidden - Insufficient permissions",
+            "content": {}
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TransferListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferSummary"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "TransferSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "controlNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "REJECTED",
+              "ERROR"
+            ]
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "INBOUND",
+              "OUTBOUND"
+            ]
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL"
+            ]
+          },
+          "sourceAccount": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "number": {
+                "type": "string"
+              },
+              "institutionName": {
+                "type": "string"
+              }
+            }
+          },
+          "destinationAccount": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "number": {
+                "type": "string"
+              },
+              "institutionName": {
+                "type": "string"
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estimatedCompletionDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "TransferDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "controlNumber": {
+            "type": "string"
+          },
+          "clientReferenceId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "REJECTED",
+              "ERROR"
+            ]
+          },
+          "statusDetails": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "recommendedAction": {
+                "type": "string"
+              }
+            }
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "INBOUND",
+              "OUTBOUND"
+            ]
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL"
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/AccountDetails"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/AccountDetails"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetDetails"
+            }
+          },
+          "cashPositions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashPosition"
+            }
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimelineEvent"
+            }
+          },
+          "restrictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Restriction"
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Document"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estimatedCompletionDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "AccountDetails": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "INDIVIDUAL",
+              "JOINT",
+              "IRA",
+              "ROTH_IRA",
+              "TRUST",
+              "CORPORATE",
+              "CUSTODIAL"
+            ]
+          },
+          "registrationType": {
+            "type": "string"
+          },
+          "institution": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "dtcNumber": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            }
+          },
+          "accountHolders": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "PRIMARY",
+                    "SECONDARY",
+                    "BENEFICIARY",
+                    "AUTHORIZED"
+                  ]
+                },
+                "firstName": {
+                  "type": "string"
+                },
+                "lastName": {
+                  "type": "string"
+                },
+                "taxId": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "marginEligible": {
+            "type": "boolean"
+          },
+          "optionEligible": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AssetDetails": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "assetType": {
+            "type": "string",
+            "enum": [
+              "EQUITY",
+              "BOND",
+              "OPTION",
+              "MUTUAL_FUND",
+              "ETF",
+              "CASH"
+            ]
+          },
+          "identifiers": {
+            "type": "object",
+            "properties": {
+              "cusip": {
+                "type": "string"
+              },
+              "symbol": {
+                "type": "string"
+              },
+              "isin": {
+                "type": "string"
+              },
+              "sedol": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "marketValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "positionType": {
+            "type": "string",
+            "enum": [
+              "LONG",
+              "SHORT"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "TRANSFERRED",
+              "REJECTED",
+              "BLOCKED"
+            ]
+          },
+          "statusReason": {
+            "type": "string"
+          },
+          "optionDetails": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "CALL",
+                  "PUT"
+                ]
+              },
+              "strikePrice": {
+                "type": "number",
+                "format": "double"
+              },
+              "expirationDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "underlyingSymbol": {
+                "type": "string"
+              }
+            }
+          },
+          "restrictions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetRestriction"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "CashPosition": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "MARGIN"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "TRANSFERRED",
+              "REJECTED"
+            ]
+          }
+        }
+      },
+      "TimelineEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "SYSTEM",
+                  "USER",
+                  "THIRD_PARTY"
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "Restriction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ASSET_TYPE",
+              "SPECIFIC_ASSET",
+              "VALUE_LIMIT",
+              "REGULATORY"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "WARNING",
+              "ERROR",
+              "CRITICAL"
+            ]
+          },
+          "resolutionSteps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "TRANSFER_FORM",
+              "IDENTIFICATION",
+              "STATEMENT",
+              "AGREEMENT",
+              "OTHER"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uploadedBy": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "AssetRestriction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BLACKLIST",
+              "GRAYLIST",
+              "REGULATORY",
+              "CONCENTRATION_LIMIT",
+              "VALUE_LIMIT"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "WARNING",
+              "ERROR",
+              "CRITICAL"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "appliedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "appliedBy": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "totalItems": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          },
+          "currentPage": {
+            "type": "integer"
+          },
+          "itemsPerPage": {
+            "type": "integer"
+          },
+          "nextPage": {
+            "type": "integer"
+          },
+          "prevPage": {
+            "type": "integer"
+          }
+        }
+      },
+      "Meta": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processingTime": {
+            "type": "number"
+          },
+          "version": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "TransferRequest": {
+        "type": "object",
+        "required": [
+          "sourceAccount",
+          "destinationAccount",
+          "transferType"
+        ],
+        "properties": {
+          "sourceAccount": {
+            "type": "object",
+            "required": [
+              "number",
+              "institutionId"
+            ],
+            "properties": {
+              "number": {
+                "type": "string"
+              },
+              "institutionId": {
+                "type": "string"
+              },
+              "accountHolder": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "taxId": {
+                    "type": "string"
+                  }
+                }
+              },
+              "accountType": {
+                "type": "string",
+                "enum": [
+                  "INDIVIDUAL",
+                  "JOINT",
+                  "IRA",
+                  "ROTH_IRA",
+                  "TRUST",
+                  "CORPORATE",
+                  "CUSTODIAL"
+                ]
+              }
+            }
+          },
+          "destinationAccount": {
+            "type": "object",
+            "required": [
+              "number"
+            ],
+            "properties": {
+              "number": {
+                "type": "string"
+              }
+            }
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL"
+            ]
+          },
+          "clientReferenceId": {
+            "type": "string"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "assetType": {
+                  "type": "string",
+                  "enum": [
+                    "EQUITY",
+                    "BOND",
+                    "OPTION",
+                    "MUTUAL_FUND",
+                    "ETF",
+                    "CASH"
+                  ]
+                },
+                "identifiers": {
+                  "type": "object",
+                  "properties": {
+                    "cusip": {
+                      "type": "string"
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "isin": {
+                      "type": "string"
+                    },
+                    "sedol": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "quantity": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "positionType": {
+                  "type": "string",
+                  "enum": [
+                    "LONG",
+                    "SHORT"
+                  ]
+                },
+                "optionDetails": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "CALL",
+                        "PUT"
+                      ]
+                    },
+                    "strikePrice": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "expirationDate": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "underlyingSymbol": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "cashPositions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "CASH",
+                    "MARGIN"
+                  ]
+                },
+                "amount": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "currency": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "scheduleDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TransferUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "UPDATE",
+              "APPROVE",
+              "REJECT",
+              "CANCEL"
+            ],
+            "description": "The action to perform on the transfer"
+          },
+          "assets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "action"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "ADD",
+                    "REMOVE",
+                    "UPDATE"
+                  ]
+                },
+                "quantity": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          },
+          "cashPositions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "action"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "ADD",
+                    "REMOVE",
+                    "UPDATE"
+                  ]
+                },
+                "amount": {
+                  "type": "number",
+                  "format": "double"
+                }
+              }
+            }
+          },
+          "approvalDetails": {
+            "type": "object",
+            "description": "Required when action is APPROVE",
+            "properties": {
+              "approvalLevel": {
+                "type": "string",
+                "enum": [
+                  "STANDARD",
+                  "OVERRIDE",
+                  "EMERGENCY"
+                ]
+              },
+              "comment": {
+                "type": "string"
+              },
+              "overrideReasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "approvedAssets": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "rejectionDetails": {
+            "type": "object",
+            "description": "Required when action is REJECT",
+            "properties": {
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "CUSTOMER_REQUEST",
+                  "DOCUMENTATION_MISSING",
+                  "ACCOUNT_MISMATCH",
+                  "ASSET_RESTRICTIONS",
+                  "REGULATORY_ISSUE",
+                  "OTHER"
+                ]
+              },
+              "comment": {
+                "type": "string"
+              },
+              "rejectedAssets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "scheduleDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TransferResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "controlNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "COMPLETED",
+              "REJECTED",
+              "ERROR"
+            ]
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string"
+              },
+              "accountNumber": {
+                "type": "string"
+              },
+              "institutionName": {
+                "type": "string"
+              }
+            }
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string"
+              },
+              "accountNumber": {
+                "type": "string"
+              }
+            }
+          },
+          "transferType": {
+            "type": "string",
+            "enum": [
+              "FULL",
+              "PARTIAL"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "estimatedCompletionDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PASSED",
+                    "FAILED",
+                    "WARNING"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "nextActions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssetListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetDetails"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "RestrictionListResponse": {
+        "type": "object",
+        "properties": {
+          "restrictions": {
+            "type": "object",
+            "properties": {
+              "blacklist": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "cusip": {
+                      "type": "string"
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "graylist": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "cusip": {
+                      "type": "string"
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "limitPercentage": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "whitelist": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "cusip": {
+                      "type": "string"
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "assetTypes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "assetType": {
+                      "type": "string"
+                    },
+                    "restricted": {
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "accountId": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdBy": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        }
+      },
+      "RestrictionRequest": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "description": "Account ID to apply restrictions to. If not provided, restrictions apply globally."
+          },
+          "blacklist": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "identifier"
+              ],
+              "properties": {
+                "identifier": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "CUSIP",
+                        "SYMBOL"
+                      ]
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "graylist": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "identifier",
+                "limitPercentage"
+              ],
+              "properties": {
+                "identifier": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "CUSIP",
+                        "SYMBOL"
+                      ]
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "limitPercentage": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "whitelist": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "identifier"
+              ],
+              "properties": {
+                "identifier": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "CUSIP",
+                        "SYMBOL"
+                      ]
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "assetTypes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "assetType",
+                "restricted"
+              ],
+              "properties": {
+                "assetType": {
+                  "type": "string"
+                },
+                "restricted": {
+                  "type": "boolean"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RestrictionResponse": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string"
+          },
+          "appliedRestrictions": {
+            "type": "object",
+            "properties": {
+              "blacklist": {
+                "type": "integer"
+              },
+              "graylist": {
+                "type": "integer"
+              },
+              "whitelist": {
+                "type": "integer"
+              },
+              "assetTypes": {
+                "type": "integer"
+              }
+            }
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "field": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdBy": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthRequest": {
+        "type": "object",
+        "required": [
+          "clientId",
+          "clientSecret"
+        ],
+        "properties": {
+          "clientId": {
+            "type": "string"
+          },
+          "clientSecret": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "documentation": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "JWT": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Authorization header using the Bearer scheme. Example: 'Authorization: Bearer {token}'"
+      }
+    }
+  }
+}

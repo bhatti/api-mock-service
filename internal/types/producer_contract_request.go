@@ -8,6 +8,8 @@ type ProducerContractRequest struct {
 	BaseURL string `yaml:"base_url" json:"base_url"`
 	// ExecutionTimes for contract testing
 	ExecutionTimes int `yaml:"execution_times" json:"execution_times"`
+	// MatchResponseCode for contract testing
+	MatchResponseCode int `yaml:"match_response_code" json:"match_response_code"`
 	// Track coverage
 	TrackCoverage bool `yaml:"track_coverage" json:"track_coverage"`
 	// RecordResults determines if contract validation results should be stored
@@ -21,14 +23,15 @@ type ProducerContractRequest struct {
 }
 
 // NewProducerContractRequest constructor
-func NewProducerContractRequest(baseURL string, execTimes int) *ProducerContractRequest {
+func NewProducerContractRequest(baseURL string, execTimes int, matchStatusCode int) *ProducerContractRequest {
 	return &ProducerContractRequest{
-		BaseURL:        baseURL,
-		ExecutionTimes: execTimes,
-		Headers:        make(map[string][]string),
-		Params:         make(map[string]any),
-		RecordResults:  false,
-		TrackCoverage:  false,
+		BaseURL:           baseURL,
+		ExecutionTimes:    execTimes,
+		MatchResponseCode: matchStatusCode,
+		Headers:           make(map[string][]string),
+		Params:            make(map[string]any),
+		RecordResults:     false,
+		TrackCoverage:     false,
 	}
 }
 

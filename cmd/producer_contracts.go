@@ -19,18 +19,18 @@ var baseURL string
 var executionTimes int
 var verbose bool
 
-// contractCmd represents the contract command
-var contractCmd = &cobra.Command{
-	Use:   "contract",
-	Short: "Executes contract client",
-	Long:  "Executes contract client",
+// producerContractCmd represents the contract command
+var producerContractCmd = &cobra.Command{
+	Use:   "producer-contract",
+	Short: "Executes producer contracts",
+	Long:  "Executes producer contracts",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.WithFields(log.Fields{
 			"DataDir":   dataDir,
 			"BaseURL":   baseURL,
 			"ExecTimes": executionTimes,
 			"Verbose":   verbose}).
-			Infof("executing contracts...")
+			Infof("executing producer contracts...")
 		if group == "" {
 			log.Errorf("group is not specified")
 			os.Exit(1)
@@ -51,9 +51,13 @@ var contractCmd = &cobra.Command{
 		}
 
 		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
-		contractReq := types.NewProducerContractRequest(baseURL, executionTimes)
+		contractReq := types.NewProducerContractRequest(baseURL, executionTimes, 0)
 		contractReq.Verbose = verbose
-		executor := contract.NewProducerExecutor(scenarioRepo, groupConfigRepo, web.NewHTTPClient(serverConfig, web.NewAuthAdapter(serverConfig)))
+		executor := contract.NewProducerExecutor(
+			scenarioRepo,
+			groupConfigRepo,
+			web.NewHTTPClient(serverConfig, web.NewAuthAdapter(serverConfig)),
+		)
 		contractRes := executor.ExecuteByGroup(context.Background(), &http.Request{}, group, dataTemplate, contractReq)
 		log.WithFields(log.Fields{
 			"Errors":    contractRes.Errors,
@@ -64,12 +68,12 @@ var contractCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(contractCmd)
+	rootCmd.AddCommand(producerContractCmd)
 
-	contractCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
-	contractCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store api test scenarios")
-	contractCmd.Flags().StringVar(&group, "group", "", "group of service APIs")
-	contractCmd.Flags().StringVar(&baseURL, "base_url", "", "base-url for remote service")
-	contractCmd.Flags().IntVar(&executionTimes, "times", 10, "execution times")
-	contractCmd.Flags().BoolVar(&verbose, "verbose", false, "verbose logging")
+	producerContractCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file")
+	producerContractCmd.Flags().StringVar(&dataDir, "dataDir", "", "data dir to store api test scenarios")
+	producerContractCmd.Flags().StringVar(&group, "group", "", "group of service APIs")
+	producerContractCmd.Flags().StringVar(&baseURL, "base_url", "", "base-url for remote service")
+	producerContractCmd.Flags().IntVar(&executionTimes, "times", 10, "execution times")
+	producerContractCmd.Flags().BoolVar(&verbose, "verbose", false, "verbose logging")
 }

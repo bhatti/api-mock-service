@@ -45,8 +45,14 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 	if prop.Type == "number" || prop.Type == "integer" {
 		if dataTemplate.IncludeType {
 			if prop.Pattern == "" {
-				return map[string]string{
-					prop.Name: fuzz.NumberPrefixRegex,
+				if prop.SubType == "number" {
+					return map[string]string{
+						prop.Name: fuzz.NumberPrefixRegex,
+					}
+				} else {
+					return map[string]string{
+						prop.Name: fuzz.IntPrefixRegex,
+					}
 				}
 			}
 			return map[string]string{
@@ -80,8 +86,28 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 					return `1-\d{3}-\d{4}-\d{4}`
 				} else if prop.Format == "uuid" {
 					return `[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`
+				} else if prop.Format == "ulid" {
+					return `[0-9A-HJKMNP-TV-Z]{26}`
+				} else if prop.Format == "airport" {
+					return `^[A-Z]{3}$`
+				} else if prop.Format == "locale" {
+					return `^[a-z]{2,3}(-[A-Z]{2,3})?$`
+				} else if prop.Format == "country" {
+					return `^[A-Z]{2}$`
+				} else if prop.Format == "zip" {
+					return `^\d{5}(-\d{4})?$`
+				} else if prop.Format == "ip" {
+					return `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+				} else if strings.Contains(prop.Format, "credit") {
+					return `^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})$`
+				} else if prop.Format == "isbn10" {
+					return `^(?:[0-9]{9}X|[0-9]{10})$`
+				} else if prop.Format == "isbn13" {
+					return `^(?:[0-9]{13})$`
+				} else if prop.Format == "ssn" {
+					return `^(?!000|666|9\d{2})(\d{3})-(?!00)(\d{2})-(?!0000)(\d{4})$`
 				} else {
-					return `\w+`
+					return `\w+` // TODO default string
 				}
 			} else if prop.Pattern != "" {
 				return map[string]string{
@@ -103,7 +129,7 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 				}
 			}
 			return map[string]string{
-				prop.Name: fuzz.PrefixTypeString + `\w+`,
+				prop.Name: fuzz.PrefixTypeString + `\w+`, // TODO default string
 			}
 		}
 		return map[string]string{
@@ -114,7 +140,7 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 	} else if prop.In == "header" {
 		if dataTemplate.IncludeType {
 			return map[string]string{
-				prop.Name: fuzz.PrefixTypeString + asciiPattern,
+				prop.Name: fuzz.PrefixTypeString + asciiPattern, // TODO default string
 			}
 		}
 		return map[string]string{
@@ -234,6 +260,26 @@ func (prop *Property) stringValue() string {
 			return "{{RandURL}}"
 		} else if prop.Format == "uuid" {
 			return "{{UUID}}"
+		} else if prop.Format == "ulid" {
+			return "{{ULID}}"
+		} else if prop.Format == "airport" {
+			return "{{RandAirport}}"
+		} else if prop.Format == "locale" {
+			return "{{RandLocale}}"
+		} else if prop.Format == "country" {
+			return "{{RandCountryCode}}"
+		} else if prop.Format == "zip" {
+			return "{{RandZip}}"
+		} else if prop.Format == "ip" {
+			return "{{RandIP}}"
+		} else if strings.Contains(prop.Format, "credit") {
+			return "{{RandCreditCard}}"
+		} else if prop.Format == "ssn" {
+			return "{{RandSSN}}"
+		} else if prop.Format == "isbn10" {
+			return "{{RandRegex `^(?:[0-9]{9}X|[0-9]{10})$`}}"
+		} else if prop.Format == "isbn13" {
+			return "{{RandRegex `^(?:[0-9]{13})$`}}"
 		} else {
 			return "{{RandString 20}}"
 		}
@@ -268,7 +314,11 @@ func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 		for i := 0; i < len(childArr); i++ {
 			if prop.SubType == "number" || prop.SubType == "integer" {
 				if dataTemplate.IncludeType {
-					childArr[i] = fuzz.NumberPrefixRegex
+					if prop.SubType == "number" {
+						childArr[i] = fuzz.NumberPrefixRegex
+					} else {
+						childArr[i] = fuzz.IntPrefixRegex
+					}
 				} else {
 					childArr[i] = "{{RandIntMinMax 0 0}}"
 				}
@@ -280,7 +330,7 @@ func (prop *Property) arrayValue(dataTemplate fuzz.DataTemplateRequest) any {
 				}
 			} else if prop.SubType == "string" {
 				if dataTemplate.IncludeType {
-					childArr[i] = fuzz.PrefixTypeString + `\w+`
+					childArr[i] = fuzz.PrefixTypeString + `\w+` // TODO default string
 				} else {
 					childArr[i] = "{{RandStringMinMax 0 0}}"
 				}

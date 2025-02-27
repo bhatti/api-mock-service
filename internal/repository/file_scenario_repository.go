@@ -168,7 +168,7 @@ func (sr *FileAPIScenarioRepository) SaveRaw(input io.ReadCloser) (err error) {
 	if err != nil {
 		return err
 	}
-	keyData, err := unmarshalScenarioKeyData(data)
+	keyData, err := unmarshalScenarioKeyData("reader", data)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,8 @@ func (sr *FileAPIScenarioRepository) ListScenarioKeyData(group string) []*types.
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if group == "" || group == keyData.Group {
-				res = append(res, keyData)
+				copyKeyData := *keyData
+				res = append(res, &copyKeyData)
 			}
 		}
 	}
@@ -239,7 +240,8 @@ func (sr *FileAPIScenarioRepository) LookupAllByPath(path string) []*types.APIKe
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if path == keyData.Path {
-				res = append(res, keyData)
+				copyKeyData := *keyData
+				res = append(res, &copyKeyData)
 			}
 		}
 	}
@@ -257,7 +259,8 @@ func (sr *FileAPIScenarioRepository) LookupAllByGroup(group string) []*types.API
 	for _, keyDataMap := range sr.keysByMethodPath {
 		for _, keyData := range keyDataMap {
 			if group == keyData.Group {
-				res = append(res, keyData)
+				copyKeyData := *keyData
+				res = append(res, &copyKeyData)
 			}
 		}
 	}
@@ -276,7 +279,8 @@ func (sr *FileAPIScenarioRepository) LookupAll(other *types.APIKeyData,
 	keyDataMap := sr.keysByMethodPath[other.PartialMethodPathKey()]
 	for _, keyData := range keyDataMap {
 		if err := keyData.Equals(other); err == nil {
-			res = append(res, keyData)
+			copyKeyData := *keyData
+			res = append(res, &copyKeyData)
 		} else {
 			var validationError *types.ValidationError
 			if errors.As(err, &validationError) && sr.debug {
@@ -331,6 +335,9 @@ func (sr *FileAPIScenarioRepository) Lookup(
 				other.String(), lastErr))
 		}
 		fileName := sr.buildFileName(other.Method, other.Name, other.Path)
+		if lastErr == nil {
+			lastErr = fmt.Errorf("no-matching-error")
+		}
 		return nil, types.NewNotFoundError(fmt.Sprintf(
 			"could not lookup matching API '%s' [File '%s'], partial matched: %d (%s)",
 			other.String(), fileName, keyDataLen, lastErr))
@@ -435,7 +442,7 @@ func (sr *FileAPIScenarioRepository) saveHistory(scenario *types.APIScenario, na
 }
 
 // LoadHistory loads scenario
-func (sr *FileAPIScenarioRepository) LoadHistory(name string, group string, page int,
+func (sr *FileAPIScenarioRepository) LoadHistory(name string, group string, responseCode int, page int,
 	limit int) (scenarios []*types.APIScenario, err error) {
 	if name != "" {
 		scenario, err := sr.loadHistoryByName(name)
@@ -453,6 +460,9 @@ func (sr *FileAPIScenarioRepository) LoadHistory(name string, group string, page
 			continue
 		}
 		if scenario, err := sr.loadHistoryByName(name); err == nil {
+			if responseCode > 0 && scenario.Response.StatusCode != responseCode {
+				continue
+			}
 			scenarios = append(scenarios, scenario)
 		} else {
 			return nil, err
@@ -575,7 +585,7 @@ func (sr *FileAPIScenarioRepository) visit(callback func(keyData *types.APIKeyDa
 			return err
 		}
 
-		keyData, err := unmarshalScenarioKeyData(content)
+		keyData, err := unmarshalScenarioKeyData(path, content)
 		if err != nil {
 			return fmt.Errorf("visit failed to load '%s' due to %w", path, err)
 		}
@@ -649,12 +659,12 @@ func addQueryParams(queryParams map[string]string, data map[string]any) {
 	}
 }
 
-func unmarshalScenarioKeyData(data []byte) (keyData *types.APIKeyData, err error) {
+func unmarshalScenarioKeyData(path string, data []byte) (keyData *types.APIKeyData, err error) {
 	rawYaml := string(data)
-	ndx := strings.Index(rawYaml, "response:")
-	if ndx != -1 {
-		rawYaml = rawYaml[0:ndx]
-	}
+	//ndx := strings.Index(rawYaml, "response:")
+	//if ndx != -1 {
+	//	rawYaml = rawYaml[0:ndx]
+	//}
 	scenario := &types.APIScenario{}
 	err = yaml.Unmarshal([]byte(rawYaml), scenario)
 	if err != nil {

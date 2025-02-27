@@ -501,6 +501,7 @@ func (api *APIScenario) ToKeyData() *APIKeyData {
 		Path:                     rawPath,
 		Group:                    api.Group,
 		Tags:                     api.Tags,
+		Response:                 APIResponseKey{StatusCode: api.Response.StatusCode},
 		Order:                    api.Order,
 		Predicate:                api.Predicate,
 		AssertQueryParamsPattern: api.Request.AssertQueryParamsPattern,
@@ -779,7 +780,7 @@ func (api *APIScenario) GetURL(defBase string) (u *url.URL, err error) {
 
 // String
 func (api *APIScenario) String() string {
-	return string(api.Method) + api.Name + api.Group + api.Path
+	return fmt.Sprintf("%s-%s-%s-%d", api.Method, api.Path, api.Name, api.Response.StatusCode)
 }
 
 // SafeName strips invalid characters

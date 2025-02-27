@@ -101,7 +101,7 @@ func (moc *OAPIController) getOpenAPISpecsByHistory(c web.APIContext) (err error
 	if name == "" {
 		return fmt.Errorf("history name not specified in %s", c.Request().URL)
 	}
-	scenarios, err := moc.scenarioRepository.LoadHistory(name, "", 0, 100)
+	scenarios, err := moc.scenarioRepository.LoadHistory(name, "", 0, 0, 100)
 	if err != nil {
 		return err
 	}

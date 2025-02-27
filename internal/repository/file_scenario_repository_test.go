@@ -664,7 +664,7 @@ func Test_ShouldLoadSaveScenariosHistory(t *testing.T) {
 	names = repo.HistoryNames(groups[1])
 	require.Equal(t, 100, len(names))
 	for _, name := range names {
-		scenarios, err := repo.LoadHistory(name, "", 0, 100)
+		scenarios, err := repo.LoadHistory(name, "", 0, 0, 100)
 		require.NoError(t, err)
 		for _, scenario := range scenarios {
 			require.Contains(t, name, scenario.Group)
@@ -674,7 +674,7 @@ func Test_ShouldLoadSaveScenariosHistory(t *testing.T) {
 		}
 	}
 	for i := 0; i < 6; i++ {
-		scenarios, err := repo.LoadHistory("", groups[0], i, 20)
+		scenarios, err := repo.LoadHistory("", groups[0], 0, i, 20)
 		require.NoError(t, err)
 		if i == 5 {
 			require.Equal(t, 0, len(scenarios))
@@ -715,11 +715,11 @@ func Test_ShouldLoadSaveScenariosHistoryWithLimit(t *testing.T) {
 	require.Equal(t, 5, len(names))
 	names = repo.HistoryNames(groups[1])
 	require.Equal(t, 5, len(names))
-	scenarios, err := repo.LoadHistory("", "", 0, 100)
+	scenarios, err := repo.LoadHistory("", "", 0, 0, 100)
 	require.NoError(t, err)
 	require.Equal(t, 10, len(scenarios)) // max 10
 	for i := 0; i < 2; i++ {
-		scenarios, err := repo.LoadHistory("", groups[0], i, 20)
+		scenarios, err := repo.LoadHistory("", groups[0], 0, i, 20)
 		require.NoError(t, err)
 		if i == 1 {
 			require.Equal(t, 0, len(scenarios))

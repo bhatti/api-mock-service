@@ -222,7 +222,7 @@ func Test_ShouldMatchGroupsInMockScenarioKeyData(t *testing.T) {
 	require.Equal(t, 2, len(groups))
 	require.Equal(t, "history", groups["cat"])
 	require.Equal(t, "101", groups["id"])
-	require.Equal(t, "POSTabc*/v1/category/{cat}/books/{id}", scenario.String())
+	require.Equal(t, "POST-/v1/category/{cat}/books/{id}-abc*-0", scenario.String())
 	require.Equal(t, "post__v1_category_cat_books_id", scenario.MethodPath())
 	require.Equal(t, "abc", scenario.SafeName())
 }
@@ -237,7 +237,7 @@ func Test_ShouldMatchGroupsInMockScenarioKeyDataWithColon(t *testing.T) {
 	require.Equal(t, 2, len(groups))
 	require.Equal(t, "history", groups["cat"])
 	require.Equal(t, "101", groups["id"])
-	require.Equal(t, "/v1/category/:cat/books/:id", scenario.String())
+	require.Equal(t, "-/v1/category/:cat/books/:id--0", scenario.String())
 }
 
 func Test_ShouldMatchRegex(t *testing.T) {

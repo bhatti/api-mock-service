@@ -436,6 +436,9 @@ func matchRegexMap(val any, regex map[string]string, key string) error {
 		return err
 	}
 	if !match {
+		if str, ok := val.(string); ok && str == ".+" {
+			return nil // TODO add more robust for default string
+		}
 		return fmt.Errorf("key '%s' - value '%v' didn't match regex '%s'", key, val, re)
 	}
 	return nil

@@ -183,7 +183,7 @@ func Test_ShouldPostContractScenarioWithoutGroup(t *testing.T) {
 	webServer := web.NewStubWebServer()
 	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewProducerContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1, 0)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -233,7 +233,7 @@ func Test_ShouldPostContractScenarioByHistory(t *testing.T) {
 	webServer := web.NewStubWebServer()
 	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewProducerContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1, 0)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -285,7 +285,7 @@ func Test_ShouldPostContractScenarioWithGroup(t *testing.T) {
 	webServer := web.NewStubWebServer()
 	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewProducerContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1, 0)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
@@ -340,7 +340,7 @@ func Test_ShouldPostContractScenarioWithMethodNamePath(t *testing.T) {
 	webServer := web.NewStubWebServer()
 	ctrl := NewProducerContractController(executor, webServer)
 
-	contractReq := types.NewProducerContractRequest("https://localhost", 1)
+	contractReq := types.NewProducerContractRequest("https://localhost", 1, 0)
 	data, err := json.Marshal(contractReq)
 	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))

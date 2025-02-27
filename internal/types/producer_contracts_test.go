@@ -7,7 +7,7 @@ import (
 )
 
 func Test_ShouldCreateContractRequest(t *testing.T) {
-	require.Equal(t, 1, NewProducerContractRequest("", 1).ExecutionTimes)
+	require.Equal(t, 1, NewProducerContractRequest("", 1, 0).ExecutionTimes)
 }
 
 func Test_ShouldCreateContractResponse(t *testing.T) {
@@ -26,7 +26,7 @@ func Test_ShouldAddContractResponse(t *testing.T) {
 }
 
 func Test_ShouldAddContractRequest(t *testing.T) {
-	req := NewProducerContractRequest("url", 5)
+	req := NewProducerContractRequest("url", 5, 0)
 	req.Headers["h"] = []string{"val"}
 	req.Params["p"] = "val"
 	require.Equal(t, 2, len(req.Overrides()))

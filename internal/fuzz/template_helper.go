@@ -141,6 +141,33 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"SeededBool": func(seed any) bool {
 			return SeededBool(toInt64(seed))
 		},
+		"RandLocale": func() string {
+			return RandRegex(`^[a-z]{2,3}(-[A-Z]{2,3})?$`)
+		},
+		"RandZip": func() string {
+			return RandRegex(`^\d{5}(-\d{4})?$`)
+		},
+		"RandIP": func() string {
+			return RandRegex(`^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`)
+		},
+		"RandSSN": func() string {
+			return RandSSN()
+		},
+		"SeededSSN": func(seed any) string {
+			return SeededSSN(toInt64(seed))
+		},
+		"RandCreditCard": func() string {
+			return RandCreditCard()
+		},
+		"SeededCreditCard": func(seed any) string {
+			return SeededCreditCard(toInt64(seed))
+		},
+		"RandISBN10": func() string {
+			return RandRegex(`^(?:[0-9]{9}X|[0-9]{10})$`)
+		},
+		"RandISBN13": func() string {
+			return RandRegex(`^(?:[0-9]{13})$`)
+		},
 		"RandCountry": func() string {
 			return RandCountry()
 		},

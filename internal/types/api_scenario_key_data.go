@@ -20,6 +20,8 @@ type APIKeyData struct {
 	Path string `yaml:"path" json:"path"`
 	// Order of scenario
 	Order int `yaml:"order" json:"order"`
+	// Response for the API
+	Response APIResponseKey `yaml:"response" json:"response"`
 	// Group of scenario
 	Group string `yaml:"group" json:"group"`
 	// Tags of scenario
@@ -40,6 +42,11 @@ type APIKeyData struct {
 	RequestCount uint64
 }
 
+type APIResponseKey struct {
+	// StatusCode for response
+	StatusCode int `yaml:"status_code" json:"status_code"`
+}
+
 // Equals compares path and query path
 func (kd *APIKeyData) Equals(other *APIKeyData) error {
 	if kd.Method != other.Method {
@@ -47,6 +54,9 @@ func (kd *APIKeyData) Equals(other *APIKeyData) error {
 	}
 	if kd.Group != "" && other.Group != "" && kd.Group != other.Group {
 		return NewNotFoundError(fmt.Sprintf("group '%s' didn't match '%s'", kd.Group, other.Group))
+	}
+	if other.Response.StatusCode > 0 && kd.Response.StatusCode > 0 && other.Response.StatusCode != kd.Response.StatusCode {
+		return NewNotFoundError(fmt.Sprintf("response status '%d' didn't match '%d'", kd.Response.StatusCode, other.Response.StatusCode))
 	}
 	otherPath := filterURLQueryParams(other.Path)
 	rePath := rePath(kd.Path)
@@ -211,7 +221,7 @@ func (kd *APIKeyData) Validate() error {
 
 // String
 func (kd *APIKeyData) String() string {
-	return string(kd.Method) + "|" + kd.Path + "|" + kd.Name
+	return fmt.Sprintf("%s|%s|%s|%d", kd.Method, kd.Path, kd.Name, kd.Response.StatusCode)
 }
 
 // MethodPath helper method

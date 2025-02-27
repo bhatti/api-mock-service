@@ -2,12 +2,13 @@ package types
 
 // ProducerContractResponse for returning summary of producer based test results
 type ProducerContractResponse struct {
-	Results   map[string]any     `yaml:"results" json:"results"`
-	Errors    map[string]string  `yaml:"errors" json:"errors"`
-	Metrics   map[string]float64 `yaml:"metrics" json:"metrics"`
-	URLs      map[string]int     `yaml:"urls" json:"urls"`
-	Succeeded int                `yaml:"succeeded" json:"succeeded"`
-	Failed    int                `yaml:"failed" json:"failed"`
+	Results    map[string]any     `yaml:"results" json:"results"`
+	Errors     map[string]string  `yaml:"errors" json:"errors"`
+	Metrics    map[string]float64 `yaml:"metrics" json:"metrics"`
+	URLs       map[string]int     `yaml:"urls" json:"urls"`
+	Succeeded  int                `yaml:"succeeded" json:"succeeded"`
+	Mismatched int                `yaml:"mismatched" json:"mismatched"`
+	Failed     int                `yaml:"failed" json:"failed"`
 }
 
 // NewProducerContractResponse constructor

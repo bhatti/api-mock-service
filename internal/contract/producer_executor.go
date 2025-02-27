@@ -52,6 +52,10 @@ func (px *ProducerExecutor) Execute(
 	started := time.Now()
 	sli := metrics.NewMetrics()
 	sli.RegisterHistogram(scenarioKey.SafeName())
+	if contractReq.MatchResponseCode > 0 {
+		scenarioKey.Response = types.APIResponseKey{StatusCode: contractReq.MatchResponseCode}
+	}
+
 	contractResponse := types.NewProducerContractResponse()
 	if contractReq.Verbose {
 		log.WithFields(log.Fields{
@@ -64,9 +68,17 @@ func (px *ProducerExecutor) Execute(
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		scenario, err := px.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 		if err != nil {
-			contractResponse.Add(scenarioKey.Name, nil, err)
-			contractResponse.Metrics = sli.Summary()
-			return contractResponse
+			log.WithFields(log.Fields{
+				"Component":               "ProducerExecutor",
+				"ProducerContractRequest": contractReq.String(),
+				"ScenarioKey":             scenarioKey.String(),
+				"Error":                   err,
+			}).Warnf("failed to lookup")
+			contractResponse.Mismatched++
+			continue
+			//contractResponse.Add(scenarioKey.Name, nil, err)
+			//contractResponse.Metrics = sli.Summary()
+			//return contractResponse
 		}
 		url := scenario.BuildURL(contractReq.BaseURL)
 		resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
@@ -112,7 +124,8 @@ func (px *ProducerExecutor) ExecuteByHistory(
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioName := range execHistory {
-			scenarios, err := px.scenarioRepository.LoadHistory(scenarioName, "", 0, 100)
+			scenarios, err := px.scenarioRepository.LoadHistory(scenarioName, "",
+				contractReq.MatchResponseCode, 0, 100)
 			if err != nil {
 				contractResponse.Add(fmt.Sprintf("%s_%d", scenarioName, i), nil, err)
 				contractResponse.Metrics = sli.Summary()
@@ -171,11 +184,24 @@ func (px *ProducerExecutor) ExecuteByGroup(
 
 	for i := 0; i < contractReq.ExecutionTimes; i++ {
 		for _, scenarioKey := range scenarioKeys {
+			if contractReq.MatchResponseCode > 0 {
+				scenarioKey.Response = types.APIResponseKey{StatusCode: contractReq.MatchResponseCode}
+			}
 			scenario, err := px.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 			if err != nil {
-				contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil, err)
-				contractResponse.Metrics = sli.Summary()
-				return contractResponse
+				log.WithFields(log.Fields{
+					"Component":               "ProducerExecutor",
+					"Group":                   group,
+					"ProducerContractRequest": contractReq.String(),
+					"ScenarioKey":             scenarioKey.String(),
+					"Error":                   err,
+				}).Warnf("failed to lookup")
+				contractResponse.Mismatched++
+				continue
+				//contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), nil,
+				//	fmt.Errorf("scenario %s failed: %s", scenarioKey.String(), err))
+				//contractResponse.Metrics = sli.Summary()
+				//return contractResponse
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
 			resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
@@ -304,13 +330,13 @@ func (px *ProducerExecutor) execute(
 
 	if statusCode != scenario.Response.StatusCode {
 		statusMismatchErr := fmt.Errorf(
-			"failed to execute request with status %d didn't match expected value %d for %s (%s)",
-			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
+			"failed to execute request with status %d didn't match expected value %d (scenario: %s)",
+			statusCode, scenario.Response.StatusCode, scenario.String())
 
 		// Create detailed diff report
 		diffReport := createContractDiffReport(scenario, resContents, resHeaders, templateParams)
-		log.WithFields(fields).Warnf("failed to execute request, actual status %d != %d (scenario) for %s",
-			statusCode, scenario.Response.StatusCode, scenario.Path)
+		log.WithFields(fields).Warnf("failed to execute request, actual status %d != expected %d (scenario: %s) for path %s",
+			statusCode, scenario.Response.StatusCode, scenario.Name, scenario.Path)
 
 		return resContents, &ContractValidationError{
 			OriginalError: statusMismatchErr,
@@ -406,7 +432,7 @@ func (px *ProducerExecutor) execute(
 // GetContractStats analyzes validation history for a scenario
 func (px *ProducerExecutor) GetContractStats(scenarioName string) (*ContractValidationStats, error) {
 	// Get execution history
-	histories, err := px.scenarioRepository.LoadHistory(scenarioName, "", 0, 100)
+	histories, err := px.scenarioRepository.LoadHistory(scenarioName, "", 0, 0, 100)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load history for %s: %w", scenarioName, err)
 	}

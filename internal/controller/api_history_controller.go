@@ -51,7 +51,7 @@ func (ehc *APIHistoryController) getExecHistory(c web.APIContext) error {
 	name := c.QueryParam("name")
 	group := c.QueryParam("group")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
-	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, page, pageSize)
+	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, 0, page, pageSize)
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (ehc *APIHistoryController) getExecHistoryHar(c web.APIContext) error {
 	name := c.QueryParam("name")
 	group := c.QueryParam("group")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
-	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, page, pageSize)
+	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, 0, page, pageSize)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (ehc *APIHistoryController) getExecHistoryPostman(c web.APIContext) error {
 	name := c.QueryParam("name")
 	group := c.QueryParam("group")
 	page, _ := strconv.Atoi(c.QueryParam("page"))
-	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, page, pageSize)
+	scenarios, err := ehc.scenarioRepository.LoadHistory(name, group, 0, page, pageSize)
 	if err != nil {
 		return err
 	}

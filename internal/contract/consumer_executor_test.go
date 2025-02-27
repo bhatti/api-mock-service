@@ -952,11 +952,659 @@ func Test_ShouldExecutePostmanAPISuite(t *testing.T) {
 	})
 }
 
-// Helper function to replace variables in strings
+// replaceVariables helper for test
 func replaceVariables(input string, vars map[string]string) string {
 	result := input
 	for k, v := range vars {
 		result = strings.Replace(result, "{{"+k+"}}", v, -1)
 	}
 	return result
+}
+
+func Test_ShouldExecuteTransferAPISuite(t *testing.T) {
+	// GIVEN configuration and repositories
+	config := types.BuildTestConfig()
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	fixtureRepository, err := repository.NewFileFixtureRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+
+	transferId := "transfer-123"
+
+	// Create test scenarios based on our OpenAPI
+	baseURL := "https://api.example.com"
+
+	data, err := os.ReadFile("../../fixtures/oapi/transfer.json")
+	require.NoError(t, err)
+	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
+	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
+	scenarios := make([]*types.APIScenario, len(specs))
+	// Save all scenarios
+	for i, spec := range specs {
+		scenarios[i], err = spec.BuildMockScenario(dataTempl)
+		require.NoError(t, err)
+		_, err = yaml.Marshal(scenarios[i])
+		require.NoError(t, err)
+		require.NoError(t, scenarioRepository.Save(scenarios[i]))
+	}
+
+	// Create executor
+	player := NewConsumerExecutor(config, scenarioRepository, fixtureRepository, groupConfigRepository)
+
+	// --- Step 1: Get Auth Token ---
+	t.Run("Get Auth Token", func(t *testing.T) {
+		// Find auth scenario
+		var authScenario *types.APIScenario
+		for _, s := range scenarios {
+			if s.Path == "/v1/auth/token" {
+				authScenario = s
+				break
+			}
+		}
+		require.NotNil(t, authScenario, "Auth scenario not found")
+
+		// Create mock auth request
+		authUrl, err := url.Parse(baseURL + authScenario.Path)
+		require.NoError(t, err)
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(authScenario.Method),
+			URL:    authUrl,
+			Header: http.Header{
+				"Content-Type": []string{"application/json"},
+			},
+			Body: io.NopCloser(strings.NewReader(`{
+				"clientId": "test-client",
+				"clientSecret": "test-secret",
+				"scope": "transfers:read transfers:write"
+			}`)),
+		})
+
+		// Execute auth request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Parse response to get token
+		var authResponse map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &authResponse)
+		require.NoError(t, err)
+		require.NotEmpty(t, authResponse["accessToken"])
+		require.NotEmpty(t, authResponse["tokenType"])
+	})
+
+	// --- Step 2: List Transfers ---
+	t.Run("List Transfers", func(t *testing.T) {
+		// Find list transfers scenario
+		var listScenario *types.APIScenario
+		for _, s := range scenarios {
+			if s.Path == "/v1/transfers" && s.Method == "GET" {
+				listScenario = s
+				break
+			}
+		}
+		require.NotNil(t, listScenario, "List transfers scenario not found")
+
+		// Create request URL with query parameters
+		reqUrl, err := url.Parse(baseURL + listScenario.Path + "?status=PENDING&direction=INBOUND&page=1&limit=10")
+		require.NoError(t, err)
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(listScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Authorization": []string{"Bearer test-token"},
+			},
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		data, ok := response["data"].([]interface{})
+		require.True(t, ok)
+		require.GreaterOrEqual(t, len(data), 1)
+
+		firstTransfer := data[0].(map[string]interface{})
+		require.Contains(t, firstTransfer, "id")
+		require.Contains(t, firstTransfer, "status")
+	})
+
+	// --- Step 3: Create Transfer ---
+	t.Run("Create Transfer", func(t *testing.T) {
+		// Find create transfer scenario
+		var createScenario *types.APIScenario
+		for _, s := range scenarios {
+			if s.Path == "/v1/transfers" && s.Method == "POST" {
+				createScenario = s
+				break
+			}
+		}
+		require.NotNil(t, createScenario, "Create transfer scenario not found")
+
+		// Create request URL
+		reqUrl, err := url.Parse(baseURL + createScenario.Path)
+		require.NoError(t, err)
+
+		// Create request body
+		requestBody := `{
+			"sourceAccount": {
+				"number": "12345678",
+				"institutionId": "FID123",
+				"accountHolder": {
+					"firstName": "John",
+					"lastName": "Smith",
+					"taxId": "123-45-6789"
+				},
+				"accountType": "INDIVIDUAL"
+			},
+			"destinationAccount": {
+				"number": "87654321"
+			},
+			"transferType": "PARTIAL",
+			"clientReferenceId": "client-ref-abc123",
+			"assets": [
+				{
+					"assetType": "EQUITY",
+					"identifiers": {
+						"cusip": "037833100",
+						"symbol": "AAPL"
+					},
+					"quantity": 50,
+					"positionType": "LONG"
+				}
+			]
+		}`
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(createScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Content-Type":  []string{"application/json"},
+				"Authorization": []string{"Bearer test-token"},
+			},
+			Body: io.NopCloser(strings.NewReader(requestBody)),
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		require.Contains(t, response, "id")
+		require.Contains(t, "PENDING|IN_PROGRESS|COMPLETED|REJECTED|ERROR", response["status"])
+	})
+
+	// --- Step 4: Get Transfer Details ---
+	t.Run("Get Transfer Details", func(t *testing.T) {
+		// Find get transfer scenario
+		var getScenario *types.APIScenario
+		for _, s := range scenarios {
+			if strings.Contains(s.Path, "/v1/transfers/") && s.Method == "GET" {
+				getScenario = s
+				break
+			}
+		}
+		require.NotNil(t, getScenario, "Get transfer scenario not found")
+
+		// Replace path variables
+		path := strings.Replace(getScenario.Path, "{transferId}", transferId, -1)
+
+		// Create request URL
+		reqUrl, err := url.Parse(baseURL + path)
+		require.NoError(t, err)
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(getScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Authorization": []string{"Bearer test-token"},
+			},
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, response["id"])
+		require.Contains(t, response, "assets")
+		require.Contains(t, response, "source")
+		require.Contains(t, response, "destination")
+	})
+
+	// --- Step 5: Update Transfer (Approve) ---
+	t.Run("Update Transfer (Approve)", func(t *testing.T) {
+		// Find update transfer scenario
+		var updateScenario *types.APIScenario
+		for _, s := range scenarios {
+			if strings.Contains(s.Path, "/v1/transfers/") && s.Method == "PUT" {
+				updateScenario = s
+				break
+			}
+		}
+		require.NotNil(t, updateScenario, "Update transfer scenario not found")
+
+		// Replace path variables
+		path := strings.Replace(updateScenario.Path, "{transferId}", transferId, -1)
+
+		// Create request URL
+		reqUrl, err := url.Parse(baseURL + path)
+		require.NoError(t, err)
+
+		// Create request body
+		requestBody := `{
+			"action": "APPROVE",
+			"approvalDetails": {
+				"approvalLevel": "STANDARD",
+				"comment": "All assets verified and approved"
+			}
+		}`
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(updateScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Content-Type":  []string{"application/json"},
+				"Authorization": []string{"Bearer test-token"},
+			},
+			Body: io.NopCloser(strings.NewReader(requestBody)),
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, response["id"])
+		require.Contains(t, "PENDING|IN_PROGRESS|COMPLETED|REJECTED|ERROR", response["status"])
+	})
+
+	// --- Step 6: Cancel Transfer ---
+	t.Run("Cancel Transfer", func(t *testing.T) {
+		// Find cancel transfer scenario
+		var cancelScenario *types.APIScenario
+		for _, s := range scenarios {
+			if strings.Contains(s.Path, "/v1/transfers/") && s.Method == "DELETE" {
+				cancelScenario = s
+				break
+			}
+		}
+		require.NotNil(t, cancelScenario, "Cancel transfer scenario not found")
+
+		// Replace path variables
+		path := strings.Replace(cancelScenario.Path, "{transferId}", transferId, -1)
+
+		// Create request URL
+		reqUrl, err := url.Parse(baseURL + path)
+		require.NoError(t, err)
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(cancelScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Authorization": []string{"Bearer test-token"},
+			},
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// For DELETE with 204, the body should be empty
+		require.Equal(t, 0, len(ctx.Result.([]byte)))
+	})
+
+	// --- Step 7: List Assets ---
+	t.Run("List Assets", func(t *testing.T) {
+		// Find list assets scenario
+		var listAssetsScenario *types.APIScenario
+		for _, s := range scenarios {
+			if s.Path == "/v1/assets" {
+				listAssetsScenario = s
+				break
+			}
+		}
+		require.NotNil(t, listAssetsScenario, "List assets scenario not found")
+
+		// Create request URL with query parameters
+		reqUrl, err := url.Parse(baseURL + listAssetsScenario.Path + "?accountId=dest-acc-002&assetType=EQUITY")
+		require.NoError(t, err)
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(listAssetsScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Authorization": []string{"Bearer test-token"},
+			},
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		data, ok := response["data"].([]interface{})
+		require.True(t, ok)
+		require.GreaterOrEqual(t, len(data), 1)
+	})
+
+	// --- Step 8: Full API Flow ---
+	t.Run("Full API Flow", func(t *testing.T) {
+		// Step 1: Get Auth Token
+		var authToken string
+		{
+			var authScenario *types.APIScenario
+			for _, s := range scenarios {
+				if s.Path == "/v1/auth/token" {
+					authScenario = s
+					break
+				}
+			}
+			require.NotNil(t, authScenario)
+
+			authUrl, _ := url.Parse(baseURL + authScenario.Path)
+			authCtx := web.NewStubContext(&http.Request{
+				Method: string(authScenario.Method),
+				URL:    authUrl,
+				Header: http.Header{
+					"Content-Type": []string{"application/json"},
+				},
+				Body: io.NopCloser(strings.NewReader(`{
+					"clientId": "test-client",
+					"clientSecret": "test-secret",
+					"scope": "transfers:read transfers:write"
+				}`)),
+			})
+
+			err = player.Execute(authCtx)
+			require.NoError(t, err)
+
+			var authResponse map[string]interface{}
+			require.NoError(t, json.Unmarshal(authCtx.Result.([]byte), &authResponse))
+			authToken = authResponse["accessToken"].(string)
+			require.NotEmpty(t, authToken)
+		}
+
+		// Step 2: Create Transfer
+		var newTransferId string
+		{
+			var createScenario *types.APIScenario
+			for _, s := range scenarios {
+				if s.Path == "/v1/transfers" && s.Method == "POST" {
+					createScenario = s
+					break
+				}
+			}
+			require.NotNil(t, createScenario)
+
+			createUrl, _ := url.Parse(baseURL + createScenario.Path)
+			createCtx := web.NewStubContext(&http.Request{
+				Method: string(createScenario.Method),
+				URL:    createUrl,
+				Header: http.Header{
+					"Content-Type":  []string{"application/json"},
+					"Authorization": []string{"Bearer " + authToken},
+				},
+				Body: io.NopCloser(strings.NewReader(`{
+					"sourceAccount": {
+						"number": "12345678",
+						"institutionId": "FID123",
+						"accountType": "INDIVIDUAL"
+					},
+					"destinationAccount": {
+						"number": "87654321"
+					},
+					"transferType": "PARTIAL",
+					"assets": [
+						{
+							"assetType": "EQUITY",
+							"identifiers": {
+								"cusip": "037833100",
+								"symbol": "AAPL"
+							},
+							"quantity": 50
+						}
+					]
+				}`)),
+			})
+
+			err = player.Execute(createCtx)
+			require.NoError(t, err)
+
+			var createResponse map[string]interface{}
+			require.NoError(t, json.Unmarshal(createCtx.Result.([]byte), &createResponse))
+			newTransferId = createResponse["id"].(string)
+			require.NotEmpty(t, newTransferId)
+		}
+
+		// Step 3: Get Transfer Details
+		{
+			var getScenario *types.APIScenario
+			for _, s := range scenarios {
+				if strings.Contains(s.Path, "/v1/transfers/") && s.Method == "GET" {
+					getScenario = s
+					break
+				}
+			}
+			require.NotNil(t, getScenario)
+
+			path := strings.Replace(getScenario.Path, "{transferId}", newTransferId, -1)
+			getUrl, _ := url.Parse(baseURL + path)
+			getCtx := web.NewStubContext(&http.Request{
+				Method: string(getScenario.Method),
+				URL:    getUrl,
+				Header: http.Header{
+					"Authorization": []string{"Bearer " + authToken},
+				},
+			})
+
+			err = player.Execute(getCtx)
+			require.NoError(t, err)
+
+			var getResponse map[string]interface{}
+			require.NoError(t, json.Unmarshal(getCtx.Result.([]byte), &getResponse))
+			require.NotEmpty(t, getResponse["id"])
+			require.Contains(t, "PENDING|IN_PROGRESS|COMPLETED|REJECTED|ERROR", getResponse["status"])
+		}
+
+		// Step 4: Approve Transfer
+		{
+			var updateScenario *types.APIScenario
+			for _, s := range scenarios {
+				if strings.Contains(s.Path, "/v1/transfers/") && s.Method == "PUT" {
+					updateScenario = s
+					break
+				}
+			}
+			require.NotNil(t, updateScenario)
+
+			path := strings.Replace(updateScenario.Path, "{transferId}", newTransferId, -1)
+			updateUrl, _ := url.Parse(baseURL + path)
+			updateCtx := web.NewStubContext(&http.Request{
+				Method: string(updateScenario.Method),
+				URL:    updateUrl,
+				Header: http.Header{
+					"Content-Type":  []string{"application/json"},
+					"Authorization": []string{"Bearer " + authToken},
+				},
+				Body: io.NopCloser(strings.NewReader(`{
+					"action": "APPROVE",
+					"approvalDetails": {
+						"approvalLevel": "STANDARD",
+						"comment": "Approved for testing"
+					}
+				}`)),
+			})
+
+			err = player.Execute(updateCtx)
+			require.NoError(t, err)
+
+			var updateResponse map[string]interface{}
+			require.NoError(t, json.Unmarshal(updateCtx.Result.([]byte), &updateResponse))
+			require.Contains(t, "PENDING|IN_PROGRESS|COMPLETED|REJECTED|ERROR", updateResponse["status"])
+		}
+
+		// Step 5: Cancel Transfer
+		{
+			var cancelScenario *types.APIScenario
+			for _, s := range scenarios {
+				if strings.Contains(s.Path, "/v1/transfers/") && s.Method == "DELETE" {
+					cancelScenario = s
+					break
+				}
+			}
+			require.NotNil(t, cancelScenario)
+
+			path := strings.Replace(cancelScenario.Path, "{transferId}", newTransferId, -1)
+			cancelUrl, _ := url.Parse(baseURL + path)
+			cancelCtx := web.NewStubContext(&http.Request{
+				Method: string(cancelScenario.Method),
+				URL:    cancelUrl,
+				Header: http.Header{
+					"Authorization": []string{"Bearer " + authToken},
+				},
+			})
+
+			err = player.Execute(cancelCtx)
+			require.NoError(t, err)
+		}
+	})
+
+	// --- Step 9: Get Restrictions ---
+	t.Run("Get Restrictions", func(t *testing.T) {
+		// Find get restrictions scenario
+		var getRestrictionsScenario *types.APIScenario
+		for _, s := range scenarios {
+			if s.Path == "/v1/restrictions" && s.Method == "GET" {
+				getRestrictionsScenario = s
+				break
+			}
+		}
+		require.NotNil(t, getRestrictionsScenario, "Get restrictions scenario not found")
+
+		// Create request URL with query parameters
+		reqUrl, err := url.Parse(baseURL + getRestrictionsScenario.Path + "?accountId=dest-acc-002&restrictionType=BLACKLIST")
+		require.NoError(t, err)
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(getRestrictionsScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Authorization": []string{"Bearer test-token"},
+			},
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		restrictions, ok := response["restrictions"].(map[string]interface{})
+		require.True(t, ok)
+		require.Contains(t, restrictions, "blacklist")
+	})
+
+	// --- Step 10: Create Restrictions ---
+	t.Run("Create Restrictions", func(t *testing.T) {
+		// Find create restrictions scenario
+		var createRestrictionsScenario *types.APIScenario
+		for _, s := range scenarios {
+			if s.Path == "/v1/restrictions" && s.Method == "POST" {
+				createRestrictionsScenario = s
+				break
+			}
+		}
+		require.NotNil(t, createRestrictionsScenario, "Create restrictions scenario not found")
+
+		// Create request URL
+		reqUrl, err := url.Parse(baseURL + createRestrictionsScenario.Path)
+		require.NoError(t, err)
+
+		// Create request body
+		requestBody := `{
+			"accountId": "dest-acc-002",
+			"blacklist": [
+				{
+					"identifier": {
+						"type": "CUSIP",
+						"value": "46625H100"
+					},
+					"description": "JPMorgan Chase & Co.",
+					"reason": "Client-requested restriction"
+				}
+			],
+			"graylist": [
+				{
+					"identifier": {
+						"type": "SYMBOL",
+						"value": "MSFT"
+					},
+					"limitPercentage": 15.0,
+					"description": "Microsoft Corporation",
+					"reason": "Portfolio concentration limit"
+				}
+			]
+		}`
+
+		// Create request context
+		ctx := web.NewStubContext(&http.Request{
+			Method: string(createRestrictionsScenario.Method),
+			URL:    reqUrl,
+			Header: http.Header{
+				"Content-Type":  []string{"application/json"},
+				"Authorization": []string{"Bearer test-token"},
+			},
+			Body: io.NopCloser(strings.NewReader(requestBody)),
+		})
+
+		// Execute request
+		err = player.Execute(ctx)
+		require.NoError(t, err)
+
+		// Verify response
+		var response map[string]interface{}
+		err = json.Unmarshal(ctx.Result.([]byte), &response)
+		require.NoError(t, err)
+
+		require.NotEmpty(t, response["accountId"])
+		appliedRestrictions, ok := response["appliedRestrictions"].(map[string]interface{})
+		require.True(t, ok)
+		require.Contains(t, appliedRestrictions, "blacklist")
+		require.Contains(t, appliedRestrictions, "graylist")
+	})
 }

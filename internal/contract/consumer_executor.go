@@ -51,7 +51,6 @@ func handleError(c web.APIContext, err error) error {
 
 // Execute request and replays stubbed response
 func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
-	started := time.Now()
 	overrides := make(map[string]any)
 	for k, v := range c.Request().Header {
 		overrides[k] = v[0]
@@ -69,32 +68,7 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 	if err != nil {
 		return handleError(c, err)
 	}
-
-	matchedScenario, err := cx.scenarioRepository.Lookup(key, overrides)
-	if err != nil {
-		return handleError(c, err)
-	}
-	if matchedScenario.NextRequest != "" && len(matchedScenario.Response.AddSharedVariables) > 0 {
-		nextScenario, err := cx.scenarioRepository.LookupByName(matchedScenario.NextRequest, overrides)
-		if err != nil {
-			return handleError(c, fmt.Errorf("next request key: %s not found: %s", key.Name, err))
-		}
-		_, sharedVariables, err := cx.execute(c, nextScenario, started)
-		if err != nil {
-			return handleError(c, err)
-		}
-		for k, v := range sharedVariables {
-			if strVal, ok := v.(string); ok && matchedScenario.Request.Variables[k] == "" {
-				matchedScenario.Request.Variables[k] = strVal
-				c.Request().Header.Set(k, strVal)
-			}
-		}
-	}
-	if err != nil {
-		return handleError(c, err)
-	}
-
-	respBody, _, err := cx.execute(c, matchedScenario, started)
+	matchedScenario, respBody, _, err := cx.ExecuteWithKey(c.Request(), c.Response().Header(), key, overrides)
 	if err != nil {
 		return handleError(c, err)
 	}
@@ -102,14 +76,56 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		matchedScenario.Response.StatusCode,
 		matchedScenario.Response.ContentType(""),
 		respBody)
+	return err
 }
 
-func (cx *ConsumerExecutor) execute(c web.APIContext, matchedScenario *types.APIScenario,
+// ExecuteWithKey request and replays stubbed response
+func (cx *ConsumerExecutor) ExecuteWithKey(
+	req *http.Request,
+	respHeaders http.Header,
+	key *types.APIKeyData,
+	overrides map[string]any) (matchedScenario *types.APIScenario, respBytes []byte,
+	sharedVariables map[string]any, err error) {
+	started := time.Now()
+
+	matchedScenario, err = cx.scenarioRepository.Lookup(key, overrides)
+	if err != nil {
+		return
+	}
+	if matchedScenario.NextRequest != "" && len(matchedScenario.Response.AddSharedVariables) > 0 {
+		nextScenario, err := cx.scenarioRepository.LookupByName(matchedScenario.NextRequest, overrides)
+		if err != nil {
+			return nil, nil, nil,
+				fmt.Errorf("next request key: %s not found: %s", key.Name, err)
+		}
+		_, sharedVariables, err = cx.execute(req, respHeaders, nextScenario, started)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		for k, v := range sharedVariables {
+			if strVal, ok := v.(string); ok && matchedScenario.Request.Variables[k] == "" {
+				matchedScenario.Request.Variables[k] = strVal
+				req.Header.Set(k, strVal)
+			}
+		}
+	}
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	respBytes, sharedVariables, err = cx.execute(req, respHeaders, matchedScenario, started)
+	return
+}
+
+func (cx *ConsumerExecutor) execute(
+	req *http.Request,
+	respHeaders http.Header,
+	matchedScenario *types.APIScenario,
 	started time.Time) ([]byte, map[string]any, error) {
 	return AddMockResponse(
-		c.Request(),
-		c.Request().Header,
-		c.Response().Header(),
+		req,
+		req.Header,
+		respHeaders,
 		matchedScenario,
 		started,
 		time.Now(),
@@ -202,11 +218,14 @@ func AddMockResponse(
 	}
 	// Override response status from request header
 	if reqHeaders.Get(types.MockResponseStatus) != "" {
-		scenario.Response.StatusCode, _ = strconv.Atoi(reqHeaders.Get(types.MockResponseStatus))
+		if code, err := strconv.Atoi(reqHeaders.Get(types.MockResponseStatus)); err == nil {
+			scenario.Response.StatusCode = code
+		}
 	}
-	if scenario.Response.StatusCode == 0 {
-		scenario.Response.StatusCode = 200
-	}
+
+	//if scenario.Response.StatusCode == 0 {
+	//	scenario.Response.StatusCode = 200
+	//}
 
 	// Build output from contents-file or contents property
 	respBody = []byte(scenario.Response.Contents)
