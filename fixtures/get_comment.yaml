@@ -45,6 +45,6 @@ response:
     assert_headers_pattern: {}
     assert_contents_pattern: '{"body":"(__string__\\w+)","email":"(__string__\\w+@\\w+.?\\w+)","id":"(__number__[+-]?[0-9]{1,10})","name":"(__string__\\w+)","postId":"(__number__[+-]?[0-9]{1,10})"}'
     assertions:
-        - VariableContains contents.id 1
-        - VariableContains contents.body est
+        - PropertyContains contents.id 1
+        - PropertyContains contents.body est
 wait_before_reply: 0s

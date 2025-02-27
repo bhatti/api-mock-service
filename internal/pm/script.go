@@ -270,12 +270,12 @@ func (c *ScriptConverter) ConvertTestScript(script string, scenario *types.APISc
 	contentTypeMatches := c.contentTypePattern.FindStringSubmatch(script)
 	if len(contentTypeMatches) >= 2 {
 		contentType := contentTypeMatches[1]
-		// Add VariableMatches assertion for Content-Type
-		assertion := "VariableMatches headers.Content-Type " + contentType
+		// Add PropertyMatches assertion for Content-Type
+		assertion := "PropertyMatches headers.Content-Type " + contentType
 		scenario.Response.Assertions = updateOrAppendAssertion(
 			scenario.Response.Assertions,
 			assertion,
-			"VariableMatches headers.Content-Type .*",
+			"PropertyMatches headers.Content-Type .*",
 		)
 
 		// Also add to assert headers pattern
@@ -395,7 +395,7 @@ func processTemplateWithFunctions(input string) string {
 	})
 
 	// Handle nested variables inside complex expressions
-	// Find variables inside functions like {{VariableMatches x {{var}}}}
+	// Find variables inside functions like {{PropertyMatches x {{var}}}}
 	nestedVarPattern := regexp.MustCompile(`{{([^{}]+){{([^.{}][^{}]*)}}([^{}]*)}}`)
 	for nestedVarPattern.MatchString(result) {
 		result = nestedVarPattern.ReplaceAllStringFunc(result, func(match string) string {
@@ -436,7 +436,7 @@ func isTemplateKeywordOrFunction(content string) bool {
 		"NthRequest",
 		"RequestByName",
 		"ISODatetime",
-		"VariableMatches",
+		"PropertyMatches",
 	}
 
 	for _, funcName := range knownFunctions {
@@ -465,7 +465,7 @@ func containsTemplateFunction(input string) bool {
 		"{{NthRequest",
 		"{{RequestByName",
 		"{{ISODatetime",
-		"{{VariableMatches",
+		"{{PropertyMatches",
 	}
 
 	for _, pattern := range functionPatterns {

@@ -753,9 +753,9 @@ func Test_ShouldParseExpression(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func Test_ShouldParseArrayVariableSizeEQTrue(t *testing.T) {
+func Test_ShouldParseArrayPropertyLenEQTrue(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeEQ "contents.arr" 4}}`)
+	b := []byte(`{{PropertyLenEQ "contents.arr" 4}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true, "arr": []int{1, 2, 3, 4}}
 	// WHEN parsing string
@@ -765,9 +765,9 @@ func Test_ShouldParseArrayVariableSizeEQTrue(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseStringArrayVariableSizeEQTrue(t *testing.T) {
+func Test_ShouldParseStringArrayPropertyLenEQTrue(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeEQ "contents.arr" 2}}`)
+	b := []byte(`{{PropertyLenEQ "contents.arr" 2}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true, "arr": []string{"one", "two"}}
 	// WHEN parsing string
@@ -777,9 +777,9 @@ func Test_ShouldParseStringArrayVariableSizeEQTrue(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseArrayVariableSizeEQFalse(t *testing.T) {
+func Test_ShouldParseArrayPropertyLenEQFalse(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeEQ "contents.arr" 5}}`)
+	b := []byte(`{{PropertyLenEQ "contents.arr" 5}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true, "arr": []float64{1, 2, 3, 4}}
 	// WHEN parsing string
@@ -789,9 +789,9 @@ func Test_ShouldParseArrayVariableSizeEQFalse(t *testing.T) {
 	require.Equal(t, "false", string(b))
 }
 
-func Test_ShouldParseVariableSizeEQTrue(t *testing.T) {
+func Test_ShouldParsePropertyLenEQTrue(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeEQ "contents" 4}}`)
+	b := []byte(`{{PropertyLenEQ "contents" 4}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -801,9 +801,9 @@ func Test_ShouldParseVariableSizeEQTrue(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseVariableSizeEQFalse(t *testing.T) {
+func Test_ShouldParsePropertyLenEQFalse(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeEQ "contents" 5}}`)
+	b := []byte(`{{PropertyLenEQ "contents" 5}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -813,9 +813,9 @@ func Test_ShouldParseVariableSizeEQFalse(t *testing.T) {
 	require.Equal(t, "false", string(b))
 }
 
-func Test_ShouldParseVariableSizeLE(t *testing.T) {
+func Test_ShouldParsePropertyLenLE(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeLE "contents" 4}}`)
+	b := []byte(`{{PropertyLenLE "contents" 4}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -825,9 +825,9 @@ func Test_ShouldParseVariableSizeLE(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseVariableSizeGE(t *testing.T) {
+func Test_ShouldParsePropertyLenGE(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableSizeGE "contents" 1}}`)
+	b := []byte(`{{PropertyLenGE "contents" 1}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -837,9 +837,9 @@ func Test_ShouldParseVariableSizeGE(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseVariableEquals(t *testing.T) {
+func Test_ShouldParsePropertyEquals(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableEquals "contents.id" "10"}}`)
+	b := []byte(`{{PropertyEquals "contents.id" "10"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -851,7 +851,7 @@ func Test_ShouldParseVariableEquals(t *testing.T) {
 
 func Test_ShouldParseVariableNotEquals(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableEquals "contents.id" "10"}}`)
+	b := []byte(`{{PropertyEquals "contents.id" "10"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 101, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -861,9 +861,9 @@ func Test_ShouldParseVariableNotEquals(t *testing.T) {
 	require.Equal(t, "false", string(b))
 }
 
-func Test_ShouldParseVariableContains(t *testing.T) {
+func Test_ShouldParsePropertyContains(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableContains "contents.id" "10"}}`)
+	b := []byte(`{{PropertyContains "contents.id" "10"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -873,9 +873,9 @@ func Test_ShouldParseVariableContains(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseVariableMatches(t *testing.T) {
+func Test_ShouldParsePropertyMatches(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableMatches "contents.key" "\\d abc \\w"}}`)
+	b := []byte(`{{PropertyMatches "contents.key" "\\d abc \\w"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "key": "123 abc ijk", "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -929,9 +929,9 @@ func Test_ShouldParseStatusMatches(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldParseVariableMatchesRegex(t *testing.T) {
+func Test_ShouldParsePropertyMatchesRegex(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)
+	b := []byte(`{{PropertyMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "key": "123 abc ijk", "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -941,9 +941,9 @@ func Test_ShouldParseVariableMatchesRegex(t *testing.T) {
 	require.Equal(t, "true", string(b))
 }
 
-func Test_ShouldNotParseVariableMatches(t *testing.T) {
+func Test_ShouldNotParsePropertyMatches(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)
+	b := []byte(`{{PropertyMatches "contents.key" "\\d\\sabc\\s[i-k]+"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "key": "123 abc mno", "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -955,7 +955,7 @@ func Test_ShouldNotParseVariableMatches(t *testing.T) {
 
 func Test_ShouldParseVariableNotContains(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableContains "contents.id" "20"}}`)
+	b := []byte(`{{PropertyContains "contents.id" "20"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 10, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -967,7 +967,7 @@ func Test_ShouldParseVariableNotContains(t *testing.T) {
 
 func Test_ShouldParseVariableNotPartialContains(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableContains "contents.id" "10"}}`)
+	b := []byte(`{{PropertyContains "contents.id" "10"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 201, "title": "hello world", "completed": true}
 	// WHEN parsing string
@@ -979,7 +979,7 @@ func Test_ShouldParseVariableNotPartialContains(t *testing.T) {
 
 func Test_ShouldParseVariablePartialContains(t *testing.T) {
 	// GIVEN a template string
-	b := []byte(`{{VariableContains "contents.id" "10"}}`)
+	b := []byte(`{{PropertyContains "contents.id" "10"}}`)
 	// AND contents
 	contents := map[string]any{"userId": 1, "id": 101, "title": "hello world", "completed": true}
 	// WHEN parsing string

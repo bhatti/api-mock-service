@@ -37,6 +37,6 @@ response:
     status_code: 200
     assert_headers_pattern: {}
     assertions:
-        - VariableContains contents.id 1
-        - VariableContains contents.body est
+        - PropertyContains contents.id 1
+        - PropertyContains contents.body est
 wait_before_reply: 0s

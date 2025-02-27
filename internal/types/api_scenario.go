@@ -573,13 +573,13 @@ func BuildScenarioFromHTTP(
 	resAssertions := make([]string, 0)
 	reqHeaderAssertions := make(map[string]string)
 	if reqContentType != "" {
-		reqAssertions = AddAssertion(reqAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		reqAssertions = AddAssertion(reqAssertions, fmt.Sprintf(`PropertyMatches headers.Content-Type %s`,
 			reqContentType))
 		reqHeaderAssertions[ContentTypeHeader] = reqContentType
 	}
 	respHeaderAssertions := make(map[string]string)
 	if resContentType != "" {
-		resAssertions = AddAssertion(resAssertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`,
+		resAssertions = AddAssertion(resAssertions, fmt.Sprintf(`PropertyMatches headers.Content-Type %s`,
 			resContentType))
 		respHeaderAssertions[ContentTypeHeader] = resContentType
 	}

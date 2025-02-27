@@ -96,8 +96,8 @@ func VariableSize(name string, data any) int {
 	}
 }
 
-// VariableContains checks if variable contains value
-func VariableContains(name string, targets []any, data any) bool {
+// PropertyContains checks if variable contains value
+func PropertyContains(name string, targets []any, data any) bool {
 	val := FindVariable(name, data)
 	if val == nil {
 		return false
@@ -131,8 +131,8 @@ func VariableNumber(name string, data any) float64 {
 	return 0
 }
 
-// VariableEquals checks if variable is equal to the value
-func VariableEquals(name string, data any, target any) bool {
+// PropertyEquals checks if variable is equal to the value
+func PropertyEquals(name string, data any, target any) bool {
 	val := FindVariable(name, data)
 	if val == nil {
 		return false

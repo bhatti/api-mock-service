@@ -135,7 +135,7 @@ func Test_ShouldProcessPostmanCollection(t *testing.T) {
 		if len(scenario.Request.Assertions) > 0 {
 			matched := false
 			for _, assertion := range scenario.Request.Assertions {
-				if strings.HasPrefix(assertion, "VariableMatches") { // PreRequest
+				if strings.HasPrefix(assertion, "PropertyMatches") { // PreRequest
 					matched = true
 				}
 			}
@@ -421,7 +421,7 @@ pm.test('Status code is 200', function() {
 	// Verify content type assertion was added
 	contentTypeFound := false
 	for _, assertion := range scenario.Response.Assertions {
-		if assertion == "VariableMatches headers.Content-Type application/json" {
+		if assertion == "PropertyMatches headers.Content-Type application/json" {
 			contentTypeFound = true
 			break
 		}
@@ -592,8 +592,8 @@ func Test_VariableSyntaxConversion(t *testing.T) {
 		},
 		{
 			name:     "Function with variables",
-			input:    "{{VariableMatches headers.Authorization {{access_token}}}}",
-			expected: "{{VariableMatches headers.Authorization {{.access_token}}}}",
+			input:    "{{PropertyMatches headers.Authorization {{access_token}}}}",
+			expected: "{{PropertyMatches headers.Authorization {{.access_token}}}}",
 		},
 	}
 

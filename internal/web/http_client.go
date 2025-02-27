@@ -125,37 +125,37 @@ func (w *DefaultHTTPClient) execute(
 		}
 	}
 
-	awsAuthSig4, awsInfo, awsErr := w.authAdapter.HandleAuth(req)
+	authd, info, authErr := w.authAdapter.HandleAuth(req)
 	headers = req.Header
 	client := httpClient(w.config)
 	resp, err := client.Do(req)
 
 	if err != nil {
 		log.WithFields(log.Fields{
-			"Component":   "DefaultHTTPClient",
-			"URL":         req.URL,
-			"Method":      req.Method,
-			"Headers":     req.Header,
-			"Params":      params,
-			"AWSAuthSig4": awsAuthSig4,
-			"AWSInfo":     awsInfo,
-			"AWSError":    awsErr,
-			"Error":       err,
+			"Component": "DefaultHTTPClient",
+			"URL":       req.URL,
+			"Method":    req.Method,
+			"Headers":   req.Header,
+			"Params":    params,
+			"Auth":      authd,
+			"AuthInfo":  info,
+			"AWSError":  authErr,
+			"Error":     err,
 		}).Warnf("failed to invoke http client")
 		return 500, "", nil, make(http.Header), fmt.Errorf("failed to invoke %s due to %s", req.URL, err)
 	} else {
 		log.WithFields(log.Fields{
-			"Component":   "DefaultHTTPClient",
-			"URL":         req.URL,
-			"Method":      req.Method,
-			"StatusCode":  resp.StatusCode,
-			"Status":      resp.Status,
-			"Headers":     req.Header,
-			"Params":      params,
-			"AWSAuthSig4": awsAuthSig4,
-			"AWSInfo":     awsInfo,
-			"AWSError":    awsErr,
-			"Error":       err,
+			"Component":  "DefaultHTTPClient",
+			"URL":        req.URL,
+			"Method":     req.Method,
+			"StatusCode": resp.StatusCode,
+			"Status":     resp.Status,
+			"Headers":    req.Header,
+			"Params":     params,
+			"Auth":       authd,
+			"AuthInfo":   info,
+			"AWSError":   authErr,
+			"Error":      err,
 		}).Infof("invoked http client")
 	}
 

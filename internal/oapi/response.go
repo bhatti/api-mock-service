@@ -50,8 +50,15 @@ func (res *Response) buildMockHTTPResponse(dataTemplate fuzz.DataTemplateRequest
 	assertions := make([]string, 0)
 	respHeaderAssertions := make(map[string]string)
 	if res.ContentType != "" {
-		assertions = types.AddAssertion(assertions, fmt.Sprintf(`VariableMatches headers.Content-Type %s`, res.ContentType))
+		assertions = types.AddAssertion(assertions, fmt.Sprintf(`PropertyMatches headers.Content-Type %s`, res.ContentType))
 		respHeaderAssertions[types.ContentTypeHeader] = res.ContentType
+	}
+	for _, bp := range res.Body {
+		assertionsMap := make(map[string]bool)
+		addPropertyAssertions("contents", bp, assertionsMap, 0)
+		for k := range assertionsMap {
+			assertions = types.AddAssertion(assertions, k)
+		}
 	}
 	return types.APIResponse{
 		StatusCode:            res.StatusCode,

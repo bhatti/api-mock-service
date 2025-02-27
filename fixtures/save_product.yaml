@@ -32,6 +32,6 @@ response:
       - id
       - name
     assertions:
-        - VariableGE contents.inventory 5
-        - VariableContains contents.category S
+        - NumPropertyGE contents.inventory 5
+        - PropertyContains contents.category S
 wait_before_reply: 0s

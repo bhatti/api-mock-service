@@ -26,11 +26,11 @@ func Test_ShouldFindVariableArray(t *testing.T) {
 }
 
 func Test_ShouldCompareVariable(t *testing.T) {
-	require.False(t, VariableEquals("k", nil, 1))
-	require.False(t, VariableEquals("k", "", 1))
-	require.True(t, VariableEquals("k", map[string]string{"k": "1"}, "1"))
-	require.False(t, VariableEquals("k", map[string]string{"x": "1"}, "1"))
-	require.True(t, VariableEquals("k.a", map[string]any{"k": map[string]string{"a": "b"}}, "b"))
+	require.False(t, PropertyEquals("k", nil, 1))
+	require.False(t, PropertyEquals("k", "", 1))
+	require.True(t, PropertyEquals("k", map[string]string{"k": "1"}, "1"))
+	require.False(t, PropertyEquals("k", map[string]string{"x": "1"}, "1"))
+	require.True(t, PropertyEquals("k.a", map[string]any{"k": map[string]string{"a": "b"}}, "b"))
 }
 
 func Test_ShouldCompareVariableNumber(t *testing.T) {
@@ -41,12 +41,12 @@ func Test_ShouldCompareVariableNumber(t *testing.T) {
 }
 
 func Test_ShouldContainsVariable(t *testing.T) {
-	require.False(t, VariableContains("k", nil, 1))
-	require.False(t, VariableContains("k", []any{""}, 1))
-	require.True(t, VariableContains("k", []any{"1"}, map[string]string{"k": "1"}))
-	require.False(t, VariableContains("k", []any{"1"}, map[string]string{"x": "1"}))
-	require.True(t, VariableContains("k.a", []any{"b"}, map[string]any{"k": map[string]string{"a": "abc"}}))
-	require.False(t, VariableContains("k.a", []any{"abcd"}, map[string]any{"k": map[string]string{"a": "abc"}}))
+	require.False(t, PropertyContains("k", nil, 1))
+	require.False(t, PropertyContains("k", []any{""}, 1))
+	require.True(t, PropertyContains("k", []any{"1"}, map[string]string{"k": "1"}))
+	require.False(t, PropertyContains("k", []any{"1"}, map[string]string{"x": "1"}))
+	require.True(t, PropertyContains("k.a", []any{"b"}, map[string]any{"k": map[string]string{"a": "abc"}}))
+	require.False(t, PropertyContains("k.a", []any{"abcd"}, map[string]any{"k": map[string]string{"a": "abc"}}))
 }
 
 func Test_ShouldFindVariableInMap(t *testing.T) {

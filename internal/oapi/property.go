@@ -28,6 +28,13 @@ type Property struct {
 	matchRequest bool
 }
 
+func (prop *Property) GetName() string {
+	if strings.HasPrefix(prop.Name, ".") {
+		return prop.Name[1:]
+	}
+	return prop.Name
+}
+
 func (prop *Property) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("%s/%s/%s/%d->[",

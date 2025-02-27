@@ -48,8 +48,8 @@ response:
       - id
       - email
     assertions: 
-      - VariableContains contents.email @
-      - VariableContains contents.creditCard.type A
-      - VariableContains headers.Content-Type application/json
-      - VariableEQ status 200
+      - PropertyContains contents.email @
+      - PropertyContains contents.creditCard.type A
+      - PropertyContains headers.Content-Type application/json
+      - NumPropertyEQ status 200
 wait_before_reply: 0s

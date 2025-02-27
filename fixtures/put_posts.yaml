@@ -15,7 +15,7 @@ request:
         User-Agent: curl/7.65.2
     contents: ' { "userId": 1, "id": 1, "title": "sunt aut", "body": "quia et rem eveniet architecto" }'
     assertions:
-        - VariableContains headers.Content-Type x-www
+        - PropertyContains headers.Content-Type x-www
 response:
     headers:
         Access-Control-Allow-Credentials:
@@ -43,6 +43,6 @@ response:
     assert_headers_pattern: {}
     assert_contents_pattern: '{"id":"(__number__[+-]?[0-9]{1,10})"}'
     assertions:
-        - VariableContains headers.Pragma no-cache
-        - VariableContains contents.id 1
+        - PropertyContains headers.Pragma no-cache
+        - PropertyContains contents.id 1
 wait_before_reply: 0s

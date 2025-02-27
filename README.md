@@ -362,9 +362,9 @@ Similarly, `assertions` defines a set of predicates to test against response fro
 
 ```yaml
     assertions:
-      - VariableGE contents.id 10
-      - VariableContains contents.title illo
-      - VariableMatches headers.Pragma no-cache 
+      - NumPropertyGE contents.id 10
+      - PropertyContains contents.title illo
+      - PropertyMatches headers.Pragma no-cache 
 ```
 
 Above example will check API response and verify that `id` property contains `10`, `title` contains `illo` and result
@@ -462,8 +462,8 @@ response:
   assert_headers_pattern: { }
   assert_contents_pattern: '{"customer":"(__string__\\w+_\\w+)","livemode":"(__boolean__(false|true))","object":"(__string__\\w+_\\w+)","settings.reconciliation_mode":"(__string__\\w+)"}'
   assertions:
-    - VariableContains contents.livemode false
-    - VariableMatches headers.Pragma no-cache
+    - PropertyContains contents.livemode false
+    - PropertyMatches headers.Pragma no-cache
 wait_before_reply: 1s
 ```
 
@@ -763,15 +763,15 @@ You can use conditional syntax to simulate different error status or customize r
 ```yaml
      {{if ResponseTimeMillisLE 300}}
      {{if ResponseStatusMatches "(200|201)"}}
-     {{if VariableMatches "contents" "regex"}}
-     {{if VariableContains "contents" "blah"}}
-     {{if VariableEquals "contents" "blah"}}
-     {{if VariableSizeEQ "contents" "blah"}}
-     {{if VariableSizeGE "contents" "blah"}}
-     {{if VariableSizeLE "contents" "blah"}}
-     {{if VariableEQ "contents.num" 20}}
-     {{if VariableGE "contents.num" 10}}
-     {{if VariableLE "contents.num" 5}}
+     {{if PropertyMatches "contents" "regex"}}
+     {{if PropertyContains "contents" "blah"}}
+     {{if PropertyEquals "contents" "blah"}}
+     {{if PropertyLenEQ "contents" "blah"}}
+     {{if PropertyLenGE "contents" "blah"}}
+     {{if PropertyLenLE "contents" "blah"}}
+     {{if NumPropertyEQ "contents.num" 20}}
+     {{if NumPropertyGE "contents.num" 10}}
+     {{if NumPropertyLE "contents.num" 5}}
 ```
 
 ### Test fixtures
@@ -1533,7 +1533,7 @@ response:
     - id
     - title
   assertions:
-    - VariableGE contents.id 0
+    - NumPropertyGE contents.id 0
 wait_before_reply: 1s
 ```
 
@@ -1574,8 +1574,8 @@ response:
     - userId
   status_code: 200
   assertions:
-    - VariableGE contents.userId 0
-    - VariableContains contents.title illo
+    - NumPropertyGE contents.userId 0
+    - PropertyContains contents.title illo
 wait_before_reply: 1s
 ```
 

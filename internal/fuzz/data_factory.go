@@ -3435,7 +3435,7 @@ func replaceNumTag(str, tag string) string {
 	return str
 }
 
-// VariableJsonPath Enhance VariableMatches to support nested objects with JSON path
+// VariableJsonPath Enhance PropertyMatches to support nested objects with JSON path
 func VariableJsonPath(varPath string, expected string, data any) bool {
 	// Extract the value using JSON path
 	value := extractJsonPath(varPath, data)

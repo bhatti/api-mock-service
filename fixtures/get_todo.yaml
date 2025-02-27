@@ -32,6 +32,6 @@ response:
       - userId
     status_code: 200
     assertions:
-        - VariableGE contents.userId 0
-        - VariableContains contents.title illo
+        - NumPropertyGE contents.userId 0
+        - PropertyContains contents.title illo
 wait_before_reply: 1s

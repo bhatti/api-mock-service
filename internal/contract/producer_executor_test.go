@@ -127,7 +127,7 @@ func Test_ShouldExecuteGetTodo(t *testing.T) {
 	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", scenarioRepository)
 	require.NoError(t, err)
 	scenario.Path = "/todos/10"
-	scenario.Response.Assertions = []string{"VariableContains contents.id 10", "VariableContains contents.title illo"}
+	scenario.Response.Assertions = []string{"PropertyContains contents.id 10", "PropertyContains contents.title illo"}
 	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
@@ -184,7 +184,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 	// AND a bad assertion
 	scenario.Request.Headers[types.AuthorizationHeader] = "AWS4-HMAC-SHA256"
 	scenario.Response.Assertions = types.AddAssertion(
-		scenario.Response.Assertions, "VariableContains headers.Content-Type application/xjson")
+		scenario.Response.Assertions, "PropertyContains headers.Content-Type application/xjson")
 	err = scenarioRepository.Save(scenario)
 	require.NoError(t, err)
 
@@ -200,7 +200,7 @@ func Test_ShouldNotExecutePutPostsWithBadHeaderAssertions(t *testing.T) {
 		t.Log(k, err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors["put_posts"], `failed to assert response '{{VariableContains "headers.Content-Type"`)
+	require.Contains(t, res.Errors["put_posts"], `failed to assert response '{{PropertyContains "headers.Content-Type"`)
 }
 
 func Test_ShouldNotExecutePutPostsWithBadHeaders(t *testing.T) {
@@ -362,7 +362,7 @@ func Test_ShouldExecuteGetTodoWithBadAssertions(t *testing.T) {
 		t.Log(k, err)
 	}
 	require.Equal(t, 1, len(res.Errors))
-	require.Contains(t, res.Errors["get_comment"], `failed to assert response '{{VariableContains "contents.id" "1"}}`)
+	require.Contains(t, res.Errors["get_comment"], `failed to assert response '{{PropertyContains "contents.id" "1"}}`)
 }
 
 func Test_ShouldExecuteGetTodoWithBadStatus(t *testing.T) {

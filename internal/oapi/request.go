@@ -43,6 +43,13 @@ func (req *Request) buildMockHTTPRequest(dataTemplate fuzz.DataTemplateRequest) 
 			assertions = types.AddAssertion(assertions, val)
 		}
 	}
+	for _, bp := range req.Body {
+		assertionsMap := make(map[string]bool)
+		addPropertyAssertions("contents", bp, assertionsMap, 0)
+		for k := range assertionsMap {
+			assertions = types.AddAssertion(assertions, k)
+		}
+	}
 
 	return types.APIRequest{
 		Headers:                  propsToMap(req.Headers, asciiPattern, dataTemplate.WithInclude(false)),
@@ -63,9 +70,24 @@ func checkRequestHeader(name string, pattern string) string {
 	validHeaders := map[string]bool{types.AuthorizationHeader: true, types.ContentTypeHeader: true}
 	if validHeaders[name] {
 		if pattern == "" {
-			return fmt.Sprintf(`VariableSizeGE headers.%s 5`, name)
+			return fmt.Sprintf(`PropertyLenGE headers.%s 5`, name)
 		}
-		return fmt.Sprintf(`VariableMatches headers.%s %s`, name, pattern)
+		return fmt.Sprintf(`PropertyMatches headers.%s %s`, name, pattern)
 	}
 	return ""
+}
+
+func addPropertyAssertions(parent string, property Property, assertions map[string]bool, depth int) {
+	if depth > 1 {
+		return
+	}
+	if property.GetName() != "" && parent != "" && property.Required {
+		assertions[fmt.Sprintf(`HasProperty %s.%s`, parent, property.GetName())] = true
+	}
+	for _, child := range property.Children {
+		if property.GetName() != "" {
+			parent = parent + "." + property.GetName()
+		}
+		addPropertyAssertions(parent, child, assertions, depth+1)
+	}
 }

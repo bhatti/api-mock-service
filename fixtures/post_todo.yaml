@@ -28,5 +28,5 @@ response:
       - id
       - title
     assertions:
-      - VariableGE contents.id 0
+      - NumPropertyGE contents.id 0
 wait_before_reply: 1s

@@ -330,35 +330,38 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"SeededFileLine": func(fileName string, seed any) template.HTML {
 			return randFileLine(dir, fileName+FixtureDataExt, toInt64(seed))
 		},
-		"VariableEquals": func(varName string, target any) bool {
-			return VariableEquals(varName, data, target)
+		"PropertyEquals": func(varName string, target any) bool {
+			return PropertyEquals(varName, data, target)
 		},
-		"VariableContains": func(varName string, target ...any) bool {
-			return VariableContains(varName, target, data)
+		"PropertyContains": func(varName string, target ...any) bool {
+			return PropertyContains(varName, target, data)
 		},
-		"VariableMatches": func(varName string, target ...any) bool {
-			return VariableContains(varName, target, data)
+		"PropertyMatches": func(varName string, target ...any) bool {
+			return PropertyContains(varName, target, data)
 		},
-		"VariableEQ": func(varName string, size any) bool {
+		"NumPropertyEQ": func(varName string, size any) bool {
 			return VariableNumber(varName, data) == ToFloat64(size)
 		},
-		"VariableLE": func(varName string, size any) bool {
+		"NumPropertyLE": func(varName string, size any) bool {
 			return VariableNumber(varName, data) <= ToFloat64(size)
 		},
-		"VariableGE": func(varName string, size any) bool {
+		"NumPropertyGE": func(varName string, size any) bool {
 			return VariableNumber(varName, data) >= ToFloat64(size)
 		},
-		"VariableSizeEQ": func(varName string, size any) bool {
+		"PropertyLenEQ": func(varName string, size any) bool {
 			return VariableSize(varName, data) == toInt(size)
 		},
-		"VariableSizeLE": func(varName string, size any) bool {
+		"PropertyLenLE": func(varName string, size any) bool {
 			return VariableSize(varName, data) <= toInt(size)
 		},
-		"VariableSizeGE": func(varName string, size any) bool {
+		"PropertyLenGE": func(varName string, size any) bool {
 			return VariableSize(varName, data) >= toInt(size)
 		},
+		"HasProperty": func(varName string) bool {
+			return VariableSize(varName, data) >= 0
+		},
 		"ResponseStatusMatches": func(val ...any) bool {
-			return VariableContains("status", val, data)
+			return PropertyContains("status", val, data)
 		},
 		"ResponseTimeMillisLE": func(val any) bool {
 			actual := FindVariable("elapsed", data)
