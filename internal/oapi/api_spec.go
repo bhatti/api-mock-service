@@ -300,12 +300,39 @@ func ptrUint64(p *uint64) uint64 {
 	return *p
 }
 
+// maxSchemaDepth is the maximum recursion depth for schema traversal. Real-world schemas
+// are rarely deeper than 10 levels; 20 is a safe ceiling that stops infinite recursion
+// caused by circular $ref schemas regardless of whether kin-openapi reuses schema pointers.
+const maxSchemaDepth = 20
+
 func schemaToProperty(
 	name string,
 	matchRequest bool,
 	in string,
 	schema *openapi3.Schema,
 	dataTemplate fuzz.DataTemplateRequest) Property {
+	return schemaToPropertyV(name, matchRequest, in, schema, dataTemplate, make(map[*openapi3.Schema]bool), 0)
+}
+
+// schemaToPropertyV is the cycle-safe implementation.
+// visited tracks schema pointers already on the current call stack (pointer identity).
+// depth is an independent depth counter that stops recursion regardless of pointer reuse.
+// Both guards together handle all circular $ref patterns in OpenAPI 3.0 and 3.1 specs.
+func schemaToPropertyV(
+	name string,
+	matchRequest bool,
+	in string,
+	schema *openapi3.Schema,
+	dataTemplate fuzz.DataTemplateRequest,
+	visited map[*openapi3.Schema]bool,
+	depth int) Property {
+	if depth > maxSchemaDepth || visited[schema] {
+		// Circular reference or max depth — return a stub to break the cycle.
+		return Property{Name: name, Type: schema.Type, In: in, matchRequest: matchRequest, Children: make([]Property, 0)}
+	}
+	visited[schema] = true
+	defer func() { delete(visited, schema) }()
+
 	property := Property{
 		Name:         name,
 		Title:        schema.Title,
@@ -352,24 +379,24 @@ func schemaToProperty(
 			if next.Value == nil {
 				continue
 			}
-			childProperty := schemaToProperty(name, matchRequest, in, next.Value, dataTemplate)
+			childProperty := schemaToPropertyV(name, matchRequest, in, next.Value, dataTemplate, visited, depth+1)
 			property.Children = append(property.Children, childProperty)
 		}
-		addAllAnySchemaToProperty(schema.Items.Value, &property, matchRequest, in, dataTemplate)
+		addAllAnySchemaToPropertyV(schema.Items.Value, &property, matchRequest, in, dataTemplate, visited, depth+1)
 	}
-	addAllAnySchemaToProperty(schema, &property, matchRequest, in, dataTemplate)
+	addAllAnySchemaToPropertyV(schema, &property, matchRequest, in, dataTemplate, visited, depth+1)
 	for name, prop := range schema.Properties {
 		if prop.Value == nil {
 			continue
 		}
-		property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
+		property.Children = append(property.Children, schemaToPropertyV(name, matchRequest, in, prop.Value, dataTemplate, visited, depth+1))
 	}
 	if schema.AdditionalProperties != nil && schema.AdditionalProperties.Value != nil {
 		for name, prop := range schema.AdditionalProperties.Value.Properties {
 			if prop.Value == nil {
 				continue
 			}
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
+			property.Children = append(property.Children, schemaToPropertyV(name, matchRequest, in, prop.Value, dataTemplate, visited, depth+1))
 		}
 	}
 	if property.In == "body" {
@@ -392,6 +419,17 @@ func addAllAnySchemaToProperty(
 	matchRequest bool, in string,
 	dataTemplate fuzz.DataTemplateRequest,
 ) {
+	addAllAnySchemaToPropertyV(schema, property, matchRequest, in, dataTemplate, make(map[*openapi3.Schema]bool), 0)
+}
+
+func addAllAnySchemaToPropertyV(
+	schema *openapi3.Schema,
+	property *Property,
+	matchRequest bool, in string,
+	dataTemplate fuzz.DataTemplateRequest,
+	visited map[*openapi3.Schema]bool,
+	depth int,
+) {
 	// allOf: merge all sub-schemas (intersection type — all properties required)
 	for _, next := range schema.AllOf {
 		if next.Value == nil {
@@ -404,7 +442,7 @@ func addAllAnySchemaToProperty(
 			if prop.Value == nil {
 				continue
 			}
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
+			property.Children = append(property.Children, schemaToPropertyV(name, matchRequest, in, prop.Value, dataTemplate, visited, depth+1))
 		}
 	}
 	// oneOf: use first branch as representative mock schema (mutually exclusive variants)
@@ -419,7 +457,7 @@ func addAllAnySchemaToProperty(
 			if prop.Value == nil {
 				continue
 			}
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
+			property.Children = append(property.Children, schemaToPropertyV(name, matchRequest, in, prop.Value, dataTemplate, visited, depth+1))
 		}
 		break // only first oneOf branch needed for mock generation
 	}
@@ -435,7 +473,7 @@ func addAllAnySchemaToProperty(
 			if prop.Value == nil {
 				continue
 			}
-			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
+			property.Children = append(property.Children, schemaToPropertyV(name, matchRequest, in, prop.Value, dataTemplate, visited, depth+1))
 		}
 		break // only first anyOf branch needed for mock generation
 	}

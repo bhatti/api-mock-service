@@ -1708,3 +1708,237 @@ func Test_OAPIInteg_PropertyStringMethod(t *testing.T) {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Circular $ref (stack overflow) regression tests
+// ---------------------------------------------------------------------------
+
+// circularDirectYAML: A → children → A (direct self-reference via $ref)
+const circularDirectYAML = `
+openapi: "3.0.0"
+info:
+  title: CircularDirect
+  version: "1.0"
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Node'
+paths:
+  /nodes:
+    get:
+      operationId: listNodes
+      tags: [nodes]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+`
+
+// circularMutualYAML: A → B → A (mutual / indirect circular reference)
+const circularMutualYAML = `
+openapi: "3.0.0"
+info:
+  title: CircularMutual
+  version: "1.0"
+components:
+  schemas:
+    Parent:
+      type: object
+      properties:
+        id:
+          type: integer
+        child:
+          $ref: '#/components/schemas/Child'
+    Child:
+      type: object
+      properties:
+        id:
+          type: integer
+        parent:
+          $ref: '#/components/schemas/Parent'
+paths:
+  /parents:
+    get:
+      operationId: listParents
+      tags: [parents]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parent'
+`
+
+// circularAllOfYAML: circular reference inside allOf composition
+const circularAllOfYAML = `
+openapi: "3.0.0"
+info:
+  title: CircularAllOf
+  version: "1.0"
+components:
+  schemas:
+    Base:
+      type: object
+      properties:
+        id:
+          type: integer
+    Extended:
+      allOf:
+        - $ref: '#/components/schemas/Base'
+        - type: object
+          properties:
+            nested:
+              $ref: '#/components/schemas/Extended'
+paths:
+  /extended:
+    get:
+      operationId: getExtended
+      tags: [extended]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Extended'
+`
+
+// circularRequestBodyYAML: circular schema in POST request body — the most common
+// real-world pattern that caused the reported stack overflow.
+const circularRequestBodyYAML = `
+openapi: "3.0.0"
+info:
+  title: CircularRequestBody
+  version: "1.0"
+components:
+  schemas:
+    TreeNode:
+      type: object
+      properties:
+        value:
+          type: string
+        left:
+          $ref: '#/components/schemas/TreeNode'
+        right:
+          $ref: '#/components/schemas/TreeNode'
+paths:
+  /tree:
+    post:
+      operationId: createTree
+      tags: [tree]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeNode'
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+`
+
+// Test_OAPIInteg_CircularDirectRefNoStackOverflow is the primary regression test for the
+// reported fatal stack overflow. A schema that references itself (Node.children → Node)
+// must parse without crashing.
+func Test_OAPIInteg_CircularDirectRefNoStackOverflow(t *testing.T) {
+	// Must not panic / stack overflow
+	specs, scenarios := parseYAML(t, circularDirectYAML)
+	require.NotEmpty(t, specs)
+	require.NotEmpty(t, scenarios)
+
+	dt := fuzz.NewDataTemplateRequest(false, 1, 1)
+	for _, sp := range specs {
+		s, err := sp.BuildMockScenario(dt)
+		require.NoError(t, err)
+		require.NotEmpty(t, s.Name)
+	}
+}
+
+// Test_OAPIInteg_CircularMutualRefNoStackOverflow verifies that A→B→A mutual circular
+// references also terminate correctly.
+func Test_OAPIInteg_CircularMutualRefNoStackOverflow(t *testing.T) {
+	specs, scenarios := parseYAML(t, circularMutualYAML)
+	require.NotEmpty(t, specs)
+	require.NotEmpty(t, scenarios)
+
+	dt := fuzz.NewDataTemplateRequest(false, 1, 1)
+	for _, sp := range specs {
+		_, err := sp.BuildMockScenario(dt)
+		require.NoError(t, err)
+	}
+}
+
+// Test_OAPIInteg_CircularAllOfNoStackOverflow verifies circular refs inside allOf.
+func Test_OAPIInteg_CircularAllOfNoStackOverflow(t *testing.T) {
+	specs, scenarios := parseYAML(t, circularAllOfYAML)
+	require.NotEmpty(t, specs)
+	require.NotEmpty(t, scenarios)
+
+	dt := fuzz.NewDataTemplateRequest(false, 1, 1)
+	for _, sp := range specs {
+		_, err := sp.BuildMockScenario(dt)
+		require.NoError(t, err)
+	}
+}
+
+// Test_OAPIInteg_CircularRequestBodyNoStackOverflow verifies that the POST request body
+// with a self-referencing TreeNode schema (the exact pattern in the reported crash)
+// produces a valid scenario without stack overflow.
+func Test_OAPIInteg_CircularRequestBodyNoStackOverflow(t *testing.T) {
+	specs, scenarios := parseYAML(t, circularRequestBodyYAML)
+	require.NotEmpty(t, specs)
+	require.NotEmpty(t, scenarios)
+
+	var postScenario *types.APIScenario
+	for _, s := range scenarios {
+		if strings.Contains(string(s.Method), "POST") {
+			postScenario = s
+			break
+		}
+	}
+	require.NotNil(t, postScenario, "POST /tree scenario must be found")
+	require.Equal(t, 201, postScenario.Response.StatusCode)
+}
+
+// Test_OAPIInteg_CircularRefPreservesNonCircularChildren verifies that cycle detection
+// doesn't strip legitimate non-circular children — only the back-edge is stubbed.
+func Test_OAPIInteg_CircularRefPreservesNonCircularChildren(t *testing.T) {
+	specs, _ := parseYAML(t, circularDirectYAML)
+	require.NotEmpty(t, specs)
+
+	// The Node schema has id (integer) and name (string) as direct properties.
+	// Both should be present even though the children array creates a cycle.
+	sp := specs[0]
+	require.NotEmpty(t, sp.Response.Body, "response body must be populated")
+	body := sp.Response.Body[0]
+
+	hasID := false
+	hasName := false
+	for _, child := range body.Children {
+		if child.Name == "id" {
+			hasID = true
+		}
+		if child.Name == "name" {
+			hasName = true
+		}
+	}
+	require.True(t, hasID, "non-circular property 'id' must be preserved")
+	require.True(t, hasName, "non-circular property 'name' must be preserved")
+}
+

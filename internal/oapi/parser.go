@@ -79,7 +79,10 @@ func Parse(ctx context.Context, config *types.Configuration, data []byte,
 			spec.SecuritySchemes = doc.Components.SecuritySchemes
 		}
 	}
-	updated, err = yaml.Marshal(doc)
+	// Use kin-openapi's own marshaler so circular $ref schemas are serialized back
+	// as "$ref" strings rather than as infinite Go pointer traversals, which would
+	// cause yaml.Marshal (and encoding/json.Marshal) to loop forever.
+	updated, err = doc.MarshalJSON()
 	return
 }
 
