@@ -17,10 +17,14 @@ func Parse(ctx context.Context, config *types.Configuration, data []byte,
 	dataTemplate fuzz.DataTemplateRequest) (specs []*APISpec, updated []byte, err error) {
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
-	doc, err := loader.LoadFromData(data)
+	// Normalize OpenAPI 3.1 features (e.g. type arrays) before passing to the
+	// kin-openapi 3.0 loader, which cannot handle them natively.
+	normalized := normalizeOpenAPI31(data)
+
+	doc, err := loader.LoadFromData(normalized)
 	if err != nil {
 		doc = &openapi3.T{}
-		if err = json.Unmarshal(data, doc); err != nil {
+		if err = json.Unmarshal(normalized, doc); err != nil {
 			return nil, nil, fmt.Errorf("failed to parse open-api with size %d due to %w", len(data), err)
 		}
 		if err := loader.ResolveRefsIn(doc, nil); err != nil {
@@ -119,4 +123,100 @@ func processExistingServers(servers openapi3.Servers, envServers map[string]stri
 		}
 	}
 	return mockServerFound
+}
+
+// normalizeOpenAPI31 converts OpenAPI 3.1 constructs that kin-openapi v0.106 (OpenAPI 3.0 only)
+// cannot parse into their 3.0-equivalent forms:
+//
+//   - type arrays ["string","null"] → type:"string", nullable:true
+//   - openapi version "3.1.x" → "3.0.3"
+//
+// The input may be JSON or YAML; output is always JSON so the loader can handle it uniformly.
+func normalizeOpenAPI31(data []byte) []byte {
+	var doc map[string]interface{}
+
+	// Try JSON first, then YAML.
+	if err := json.Unmarshal(data, &doc); err != nil {
+		var yamlDoc interface{}
+		if err2 := yaml.Unmarshal(data, &yamlDoc); err2 != nil {
+			return data
+		}
+		// yaml.v2 may produce map[interface{}]interface{}; convert to map[string]interface{}.
+		converted := deepConvertYAMLMap(yamlDoc)
+		var ok bool
+		doc, ok = converted.(map[string]interface{})
+		if !ok {
+			return data
+		}
+	}
+
+	// Downgrade 3.1.x → 3.0.3 so the loader validates correctly.
+	if v, ok := doc["openapi"].(string); ok && strings.HasPrefix(v, "3.1") {
+		doc["openapi"] = "3.0.3"
+	}
+
+	normalizeTypeArrays(doc)
+
+	out, err := json.Marshal(doc)
+	if err != nil {
+		return data
+	}
+	return out
+}
+
+// normalizeTypeArrays recursively walks a parsed JSON/YAML document and converts
+// any schema "type" that is a JSON array (OpenAPI 3.1 / JSON Schema style) into
+// a single string type with nullable:true when "null" is one of the variants.
+func normalizeTypeArrays(v interface{}) {
+	switch val := v.(type) {
+	case map[string]interface{}:
+		if typeField, ok := val["type"]; ok {
+			if arr, ok := typeField.([]interface{}); ok {
+				nonNull := ""
+				hasNull := false
+				for _, item := range arr {
+					if s, ok := item.(string); ok {
+						if s == "null" {
+							hasNull = true
+						} else if nonNull == "" {
+							nonNull = s
+						}
+					}
+				}
+				if nonNull != "" {
+					val["type"] = nonNull
+					if hasNull {
+						val["nullable"] = true
+					}
+				} else {
+					delete(val, "type")
+				}
+			}
+		}
+		for _, child := range val {
+			normalizeTypeArrays(child)
+		}
+	case []interface{}:
+		for _, item := range val {
+			normalizeTypeArrays(item)
+		}
+	}
+}
+
+// deepConvertYAMLMap converts map[interface{}]interface{} (produced by yaml.v2) into
+// map[string]interface{} so it can be handled uniformly with JSON-decoded documents.
+func deepConvertYAMLMap(v interface{}) interface{} {
+	switch val := v.(type) {
+	case map[interface{}]interface{}:
+		out := make(map[string]interface{}, len(val))
+		for k, child := range val {
+			out[fmt.Sprintf("%v", k)] = deepConvertYAMLMap(child)
+		}
+		return out
+	case []interface{}:
+		for i, item := range val {
+			val[i] = deepConvertYAMLMap(item)
+		}
+	}
+	return v
 }
