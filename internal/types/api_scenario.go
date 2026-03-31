@@ -21,12 +21,14 @@ import (
 
 // APIAuthorization defines mock auth parameters
 type APIAuthorization struct {
-	Type   string `json:"type,omitempty" yaml:"type,omitempty"`
-	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
-	In     string `json:"in,omitempty" yaml:"in,omitempty"`
-	Format string `json:"format,omitempty" yaml:"format,omitempty"`
-	Scheme string `json:"scheme,omitempty" yaml:"scheme,omitempty"`
-	URL    string `json:"url,omitempty" yaml:"url,omitempty"`
+	Type        string            `json:"type,omitempty" yaml:"type,omitempty"`
+	Name        string            `json:"name,omitempty" yaml:"name,omitempty"`
+	In          string            `json:"in,omitempty" yaml:"in,omitempty"`
+	Format      string            `json:"format,omitempty" yaml:"format,omitempty"`
+	Scheme      string            `json:"scheme,omitempty" yaml:"scheme,omitempty"`
+	URL         string            `json:"url,omitempty" yaml:"url,omitempty"`
+	Description string            `json:"description,omitempty" yaml:"description,omitempty"`
+	Scopes      map[string]string `json:"scopes,omitempty" yaml:"scopes,omitempty"`
 }
 
 // APIRequest defines mock request for APIs

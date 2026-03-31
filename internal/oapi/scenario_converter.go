@@ -81,6 +81,7 @@ func ScenarioToOpenAPI(title string, version string, scenarios ...*types.APIScen
 					Scheme:           auth.Scheme,
 					BearerFormat:     auth.Format,
 					OpenIdConnectUrl: auth.URL,
+					Description:      auth.Description,
 				},
 			}
 		}
@@ -226,7 +227,8 @@ func updateScenarioResponse(scenario *types.APIScenario, op *openapi3.Operation)
 	body := anyToSchema(res)
 	ref := removeStatusHashFromScenarioName(scenario.Name) + "Response"
 
-	if body != nil && len(body.Properties) > 0 && scenario.Response.StatusCode == 200 {
+	if body != nil && len(body.Properties) > 0 &&
+		scenario.Response.StatusCode >= 200 && scenario.Response.StatusCode < 300 {
 		resp.Value.Content[scenario.Response.ContentType("application/json")] = &openapi3.MediaType{
 			Schema: &openapi3.SchemaRef{
 				Ref: "#/components/schemas/" + ref,
@@ -246,12 +248,12 @@ func sanitizeRegexValue(val any) (string, any) {
 	strVal := fmt.Sprintf("%v", val)
 	if reflect.TypeOf(val).String() == "string" {
 		if strings.Contains(strVal, fuzz.PrefixTypeNumber) || strings.Contains(strVal, "RandInt") {
-			strVal = ""
 			if strings.Contains(strVal, ".") {
 				val = 0.0
 			} else {
 				val = 0
 			}
+			strVal = ""
 		} else if strings.Contains(strVal, fuzz.PrefixTypeBoolean) {
 			strVal = ""
 			val = false
@@ -259,7 +261,6 @@ func sanitizeRegexValue(val any) (string, any) {
 			strVal = ""
 			val = make(map[string]string)
 		} else if strings.Contains(strVal, fuzz.PrefixTypeArray) {
-			strVal = ""
 			if strings.Contains(strVal, fuzz.PrefixTypeBoolean) {
 				val = make([]bool, 0)
 			} else if strings.Contains(strVal, fuzz.PrefixTypeNumber) {
@@ -267,6 +268,7 @@ func sanitizeRegexValue(val any) (string, any) {
 			} else {
 				val = make([]string, 0)
 			}
+			strVal = ""
 		} else if strings.Contains(strVal, "{{") {
 			strVal = ""
 			val = false
@@ -346,9 +348,8 @@ func anyToSchema(val any) *openapi3.Schema {
 				prop.Items.Value.Example = v
 				prop.Items.Value.Description = "" //fmt.Sprintf("array-child %v", grandChild)
 				// TODO add ref to object
-				if grandChild.Type == "integer" || grandChild.Type == "float" ||
-					grandChild.Type == "number" || grandChild.Type == "string" ||
-					grandChild.Type == "boolean" || grandChild.Type == "bool" {
+				if grandChild.Type == "integer" || grandChild.Type == "number" ||
+					grandChild.Type == "string" || grandChild.Type == "boolean" {
 					prop.Items.Value.Pattern = grandChild.Pattern
 				}
 				prop.Items.Value.Type = grandChild.Type
@@ -360,7 +361,7 @@ func anyToSchema(val any) *openapi3.Schema {
 		return prop
 	case bool:
 		return &openapi3.Schema{
-			Type:        "bool",
+			Type:        "boolean",
 			Description: strVal,
 		}
 	case int:
@@ -415,12 +416,14 @@ func anyToSchema(val any) *openapi3.Schema {
 		}
 	case float32:
 		return &openapi3.Schema{
-			Type:        "float",
+			Type:        "number",
+			Format:      "float",
 			Description: strVal,
 		}
 	case float64:
 		return &openapi3.Schema{
-			Type:        "float",
+			Type:        "number",
+			Format:      "double",
 			Description: strVal,
 		}
 	case string:

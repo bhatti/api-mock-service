@@ -70,7 +70,7 @@ func Parse(ctx context.Context, config *types.Configuration, data []byte,
 			if ref.Value.In == "header" {
 				spec.Request.Headers = append(spec.Request.Headers, prop)
 			} else if ref.Value.In == "query" {
-				spec.Request.QueryParams = append(spec.Request.Headers, prop)
+				spec.Request.QueryParams = append(spec.Request.QueryParams, prop)
 			}
 			spec.SecuritySchemes = doc.Components.SecuritySchemes
 		}

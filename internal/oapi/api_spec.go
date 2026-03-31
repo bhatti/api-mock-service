@@ -14,14 +14,19 @@ import (
 
 // APISpec structure
 type APISpec struct {
-	Title           string
-	ID              string
-	Description     string
-	Path            string
-	Method          types.MethodType
-	SecuritySchemes openapi3.SecuritySchemes
-	Request         Request
-	Response        Response
+	Title               string
+	ID                  string
+	Summary             string
+	Description         string
+	Path                string
+	Method              types.MethodType
+	Tags                []string
+	Deprecated          bool
+	ExternalDocsURL     string
+	RequestBodyRequired bool
+	SecuritySchemes     openapi3.SecuritySchemes
+	Request             Request
+	Response            Response
 }
 
 // ParseAPISpec converts open-api operation to API specs
@@ -172,25 +177,39 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 		return nil, fmt.Errorf("failed to build response for api scenario due to %w", err)
 	}
 
+	tags := api.Tags
+	if len(tags) == 0 {
+		tags = []string{types.NormalizeGroup(api.Title, api.Path)}
+	}
 	spec := &types.APIScenario{
 		Description:     api.Description,
 		Method:          api.Method,
 		Path:            api.Path,
 		Group:           types.NormalizeGroup(api.Title, api.Path),
+		Tags:            tags,
 		Request:         req,
 		Response:        res,
 		WaitBeforeReply: 0,
 		Authentication:  make(map[string]types.APIAuthorization),
 	}
 	for name, scheme := range api.SecuritySchemes {
-		spec.Authentication[name] = types.APIAuthorization{
-			Type:   scheme.Value.Type,
-			Name:   scheme.Value.Name,
-			In:     scheme.Value.In,
-			Format: scheme.Value.BearerFormat,
-			Scheme: scheme.Value.Scheme,
-			URL:    scheme.Value.OpenIdConnectUrl,
+		auth := types.APIAuthorization{
+			Type:        scheme.Value.Type,
+			Name:        scheme.Value.Name,
+			In:          scheme.Value.In,
+			Format:      scheme.Value.BearerFormat,
+			Scheme:      scheme.Value.Scheme,
+			URL:         scheme.Value.OpenIdConnectUrl,
+			Description: scheme.Value.Description,
 		}
+		if scheme.Value.Flows != nil {
+			auth.Scopes = extractOAuthScopes(scheme.Value.Flows)
+		}
+		spec.Authentication[name] = auth
+	}
+	// If the request body is required, assert it is non-empty
+	if api.RequestBodyRequired {
+		spec.Request.Assertions = types.AddAssertion(spec.Request.Assertions, "PropertyLenGE contents 2")
 	}
 	if res.StatusCode >= 300 {
 		spec.Predicate = "{{NthRequest 2}}"
@@ -247,6 +266,40 @@ func propertyValue(params []Property, dataTemplate fuzz.DataTemplateRequest) (re
 	return
 }
 
+// schemaValueToString converts an OpenAPI schema value (interface{}) to a string for storage
+func schemaValueToString(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	switch t := v.(type) {
+	case string:
+		return t
+	case bool:
+		if t {
+			return "true"
+		}
+		return "false"
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+// constFromSchema extracts a single const value: OpenAPI encodes const as a single-element enum
+func constFromSchema(schema *openapi3.Schema) string {
+	if len(schema.Enum) == 1 {
+		return fmt.Sprintf("%v", schema.Enum[0])
+	}
+	return ""
+}
+
+// ptrUint64 safely dereferences a *uint64
+func ptrUint64(p *uint64) uint64 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}
+
 func schemaToProperty(
 	name string,
 	matchRequest bool,
@@ -255,6 +308,7 @@ func schemaToProperty(
 	dataTemplate fuzz.DataTemplateRequest) Property {
 	property := Property{
 		Name:         name,
+		Title:        schema.Title,
 		Description:  schema.Description,
 		Type:         schema.Type,
 		Format:       schema.Format,
@@ -262,6 +316,19 @@ func schemaToProperty(
 		In:           in,
 		Children:     make([]Property, 0),
 		matchRequest: matchRequest,
+		Nullable:     schema.Nullable,
+		ReadOnly:     schema.ReadOnly,
+		WriteOnly:    schema.WriteOnly,
+		Deprecated:   schema.Deprecated,
+		Const:        constFromSchema(schema),
+		Default:      schemaValueToString(schema.Default),
+		Example:      schemaValueToString(schema.Example),
+		UniqueItems:  schema.UniqueItems,
+		ExclusiveMin: schema.ExclusiveMin,
+		ExclusiveMax: schema.ExclusiveMax,
+		MultipleOf:   fuzz.ToFloat64(schema.MultipleOf),
+		MinProps:     schema.MinProps,
+		MaxProps:     ptrUint64(schema.MaxProps),
 	}
 	if property.Type == "integer" || property.Type == "number" || property.Type == "float" {
 		property.Min = fuzz.ToFloat64(schema.Min)
@@ -282,6 +349,9 @@ func schemaToProperty(
 	if schema.Items != nil && schema.Items.Value != nil {
 		property.SubType = schema.Items.Value.Type
 		for name, next := range schema.Items.Value.Properties {
+			if next.Value == nil {
+				continue
+			}
 			childProperty := schemaToProperty(name, matchRequest, in, next.Value, dataTemplate)
 			property.Children = append(property.Children, childProperty)
 		}
@@ -289,10 +359,16 @@ func schemaToProperty(
 	}
 	addAllAnySchemaToProperty(schema, &property, matchRequest, in, dataTemplate)
 	for name, prop := range schema.Properties {
+		if prop.Value == nil {
+			continue
+		}
 		property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 	}
-	if schema.AdditionalProperties != nil {
+	if schema.AdditionalProperties != nil && schema.AdditionalProperties.Value != nil {
 		for name, prop := range schema.AdditionalProperties.Value.Properties {
+			if prop.Value == nil {
+				continue
+			}
 			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
 	}
@@ -316,24 +392,52 @@ func addAllAnySchemaToProperty(
 	matchRequest bool, in string,
 	dataTemplate fuzz.DataTemplateRequest,
 ) {
+	// allOf: merge all sub-schemas (intersection type — all properties required)
 	for _, next := range schema.AllOf {
-		property.SubType = next.Value.Type
+		if next.Value == nil {
+			continue
+		}
+		if property.SubType == "" {
+			property.SubType = next.Value.Type
+		}
 		for name, prop := range next.Value.Properties {
+			if prop.Value == nil {
+				continue
+			}
 			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
 	}
-	// TODO add support for any-of/one-of at the property
-	for _, next := range schema.AllOf {
-		property.SubType = next.Value.Type
+	// oneOf: use first branch as representative mock schema (mutually exclusive variants)
+	for _, next := range schema.OneOf {
+		if next.Value == nil {
+			continue
+		}
+		if property.SubType == "" {
+			property.SubType = next.Value.Type
+		}
 		for name, prop := range next.Value.Properties {
+			if prop.Value == nil {
+				continue
+			}
 			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
+		break // only first oneOf branch needed for mock generation
 	}
-	for _, next := range schema.AllOf {
-		property.SubType = next.Value.Type
+	// anyOf: use first branch as representative mock schema (one or more valid variants)
+	for _, next := range schema.AnyOf {
+		if next.Value == nil {
+			continue
+		}
+		if property.SubType == "" {
+			property.SubType = next.Value.Type
+		}
 		for name, prop := range next.Value.Properties {
+			if prop.Value == nil {
+				continue
+			}
 			property.Children = append(property.Children, schemaToProperty(name, matchRequest, in, prop.Value, dataTemplate))
 		}
+		break // only first anyOf branch needed for mock generation
 	}
 }
 
@@ -348,7 +452,11 @@ func extractHeaders(
 		if header.Value.Name == "" {
 			header.Value.Name = k
 		}
-		property := schemaToProperty(header.Value.Name, false, header.Value.In, header.Value.Schema.Value, dataTemplate)
+		inValue := header.Value.In
+		if inValue == "" {
+			inValue = "header"
+		}
+		property := schemaToProperty(header.Value.Name, false, inValue, header.Value.Schema.Value, dataTemplate)
 		res = append(res, property)
 	}
 	return
@@ -363,12 +471,25 @@ func parseResponseStatus(status string) int {
 }
 
 func createBaseSpec(op *openapi3.Operation, title string, method types.MethodType, path string, status string) *APISpec {
+	externalDocsURL := ""
+	if op.ExternalDocs != nil {
+		externalDocsURL = op.ExternalDocs.URL
+	}
+	requestBodyRequired := false
+	if op.RequestBody != nil && op.RequestBody.Value != nil {
+		requestBodyRequired = op.RequestBody.Value.Required
+	}
 	return &APISpec{
-		ID:          op.OperationID,
-		Description: op.Description,
-		Method:      method,
-		Path:        path,
-		Title:       title,
+		ID:                  op.OperationID,
+		Summary:             op.Summary,
+		Description:         op.Description,
+		Method:              method,
+		Path:                path,
+		Title:               title,
+		Tags:                op.Tags,
+		Deprecated:          op.Deprecated,
+		ExternalDocsURL:     externalDocsURL,
+		RequestBodyRequired: requestBodyRequired,
 	}
 }
 
@@ -388,6 +509,13 @@ func extractParameters(params openapi3.Parameters, dataTemplate fuzz.DataTemplat
 
 		property := schemaToProperty(param.Value.Name, true, param.Value.In, param.Value.Schema.Value, dataTemplate)
 		property.Required = param.Value.Required
+		property.Deprecated = param.Value.Deprecated
+		if param.Value.Style != "" {
+			property.Style = param.Value.Style
+		}
+		if param.Value.Explode != nil {
+			property.Explode = *param.Value.Explode
+		}
 
 		switch param.Value.In {
 		case "path":
@@ -400,4 +528,30 @@ func extractParameters(params openapi3.Parameters, dataTemplate fuzz.DataTemplat
 	}
 
 	return reqHeaders, queryParams, pathParams
+}
+
+// extractOAuthScopes collects scope name→description from all OAuth2 flows
+func extractOAuthScopes(flows *openapi3.OAuthFlows) map[string]string {
+	scopes := make(map[string]string)
+	if flows == nil {
+		return scopes
+	}
+	merge := func(s map[string]string) {
+		for k, v := range s {
+			scopes[k] = v
+		}
+	}
+	if flows.Implicit != nil {
+		merge(flows.Implicit.Scopes)
+	}
+	if flows.Password != nil {
+		merge(flows.Password.Scopes)
+	}
+	if flows.ClientCredentials != nil {
+		merge(flows.ClientCredentials.Scopes)
+	}
+	if flows.AuthorizationCode != nil {
+		merge(flows.AuthorizationCode.Scopes)
+	}
+	return scopes
 }

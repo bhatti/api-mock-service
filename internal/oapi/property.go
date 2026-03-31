@@ -14,16 +14,32 @@ var asciiPattern = `[\x20-\x7F]{1,128}`
 // Property structure
 type Property struct {
 	Name         string
+	Title        string   // schema title
 	Description  string
 	Type         string
 	SubType      string
 	Enum         []string
+	Const        string  // single allowed value (highest priority in Value())
+	Default      string  // default value used when no other value is generated
+	Example      string  // example value from OpenAPI spec
 	Min          float64
 	Max          float64
+	ExclusiveMin bool    // minimum bound is exclusive (OAI 3.0)
+	ExclusiveMax bool    // maximum bound is exclusive (OAI 3.0)
+	MultipleOf   float64 // value must be a multiple of this (0 = no constraint)
+	UniqueItems  bool    // array items must be unique
+	MinProps     uint64  // minimum number of object properties
+	MaxProps     uint64  // maximum number of object properties (0 = no limit)
 	In           string
 	Pattern      string
 	Format       string
 	Required     bool
+	Deprecated   bool
+	Nullable     bool
+	ReadOnly     bool
+	WriteOnly    bool
+	Style        string // parameter serialization style (form, simple, matrix, etc.)
+	Explode      bool   // expand array/object parameters into individual values
 	Children     []Property
 	matchRequest bool
 }
@@ -49,6 +65,23 @@ func (prop *Property) String() string {
 
 // Value of the property
 func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
+	// Const: single allowed value — highest priority for both mock and validation
+	if prop.Const != "" {
+		if dataTemplate.IncludeType {
+			escaped := strings.ReplaceAll(prop.Const, ".", `\.`)
+			return map[string]string{prop.Name: escaped}
+		}
+		return map[string]string{prop.Name: prop.Const}
+	}
+	// For mock response generation (not pattern matching), prefer Example then Default
+	if !prop.matchRequest && !dataTemplate.IncludeType {
+		if prop.Example != "" && (prop.Type == "string" || prop.Type == "integer" || prop.Type == "number" || prop.Type == "boolean") {
+			return map[string]string{prop.Name: prop.Example}
+		}
+		if prop.Default != "" && (prop.Type == "string" || prop.Type == "integer" || prop.Type == "number" || prop.Type == "boolean") {
+			return map[string]string{prop.Name: prop.Default}
+		}
+	}
 	if prop.Type == "number" || prop.Type == "integer" {
 		if dataTemplate.IncludeType {
 			if prop.Pattern == "" {
@@ -82,39 +115,49 @@ func (prop *Property) Value(dataTemplate fuzz.DataTemplateRequest) any {
 		if dataTemplate.IncludeType {
 			if prop.Format != "" {
 				if strings.Contains(prop.Format, "date") || strings.Contains(prop.Format, "time") {
-					return `(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))`
+					return map[string]string{prop.Name: `(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))`}
 				} else if prop.Format == "uri" {
-					return `http[s]?://(?:[a-zA-Z]|\d|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
-				} else if prop.Format == "host" {
-					return `(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?`
+					return map[string]string{prop.Name: `http[s]?://(?:[a-zA-Z]|\d|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`}
+				} else if prop.Format == "host" || prop.Format == "hostname" {
+					return map[string]string{prop.Name: `(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?`}
 				} else if prop.Format == "email" {
-					return "[a-z]{5,15}@[a-z]{5,15}.com"
+					return map[string]string{prop.Name: `[a-z]{5,15}@[a-z]{5,15}.com`}
 				} else if prop.Format == "phone" {
-					return `1-\d{3}-\d{4}-\d{4}`
+					return map[string]string{prop.Name: `1-\d{3}-\d{4}-\d{4}`}
 				} else if prop.Format == "uuid" {
-					return `[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`
+					return map[string]string{prop.Name: `[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}`}
 				} else if prop.Format == "ulid" {
-					return `[0-9A-HJKMNP-TV-Z]{26}`
+					return map[string]string{prop.Name: `[0-9A-HJKMNP-TV-Z]{26}`}
 				} else if prop.Format == "airport" {
-					return `^[A-Z]{3}$`
+					return map[string]string{prop.Name: `^[A-Z]{3}$`}
 				} else if prop.Format == "locale" {
-					return `^[a-z]{2,3}(-[A-Z]{2,3})?$`
+					return map[string]string{prop.Name: `^[a-z]{2,3}(-[A-Z]{2,3})?$`}
 				} else if prop.Format == "country" {
-					return `^[A-Z]{2}$`
+					return map[string]string{prop.Name: `^[A-Z]{2}$`}
 				} else if prop.Format == "zip" {
-					return `^\d{5}(-\d{4})?$`
-				} else if prop.Format == "ip" {
-					return `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`
+					return map[string]string{prop.Name: `^\d{5}(-\d{4})?$`}
+				} else if prop.Format == "ip" || prop.Format == "ipv4" {
+					return map[string]string{prop.Name: `^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`}
+				} else if prop.Format == "ipv6" {
+					return map[string]string{prop.Name: `([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}`}
 				} else if strings.Contains(prop.Format, "credit") {
-					return `^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})$`
+					return map[string]string{prop.Name: `^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})$`}
 				} else if prop.Format == "isbn10" {
-					return `^(?:[0-9]{9}X|[0-9]{10})$`
+					return map[string]string{prop.Name: `^(?:[0-9]{9}X|[0-9]{10})$`}
 				} else if prop.Format == "isbn13" {
-					return `^(?:[0-9]{13})$`
+					return map[string]string{prop.Name: `^(?:[0-9]{13})$`}
 				} else if prop.Format == "ssn" {
-					return `^(?!000|666|9\d{2})(\d{3})-(?!00)(\d{2})-(?!0000)(\d{4})$`
+					return map[string]string{prop.Name: `^(?!000|666|9\d{2})(\d{3})-(?!00)(\d{2})-(?!0000)(\d{4})$`}
+				} else if prop.Format == "password" {
+					return map[string]string{prop.Name: fuzz.PrefixTypeString + `.{8,32}`}
+				} else if prop.Format == "byte" || prop.Format == "binary" {
+					return map[string]string{prop.Name: fuzz.PrefixTypeString + `[A-Za-z0-9+/]+=*`}
+				} else if prop.Format == "int32" || prop.Format == "int64" {
+					return map[string]string{prop.Name: fuzz.IntPrefixRegex}
+				} else if prop.Format == "float" || prop.Format == "double" {
+					return map[string]string{prop.Name: fuzz.NumberPrefixRegex}
 				} else {
-					return `\w+` // TODO default string
+					return map[string]string{prop.Name: fuzz.PrefixTypeString + `\w+`}
 				}
 			} else if prop.Pattern != "" {
 				return map[string]string{
@@ -235,7 +278,19 @@ func (prop *Property) numericValue() string {
 		return `[\d\.]+`
 	}
 
-	return fmt.Sprintf("{{RandIntMinMax %d %d}}", int(prop.Min), int(prop.Max))
+	min := int(prop.Min)
+	max := int(prop.Max)
+	// Adjust for exclusive bounds
+	if prop.ExclusiveMin && min > 0 {
+		min++
+	}
+	if prop.ExclusiveMax && max > 0 {
+		max--
+	}
+	if prop.Type == "number" || prop.SubType == "number" {
+		return fmt.Sprintf("{{RandFloatMinMax %d %d}}", min, max)
+	}
+	return fmt.Sprintf("{{RandIntMinMax %d %d}}", min, max)
 }
 
 func (prop *Property) boolValue() string {
@@ -287,6 +342,28 @@ func (prop *Property) stringValue() string {
 			return "{{RandRegex `^(?:[0-9]{9}X|[0-9]{10})$`}}"
 		} else if prop.Format == "isbn13" {
 			return "{{RandRegex `^(?:[0-9]{13})$`}}"
+		} else if prop.Format == "password" {
+			min := int(prop.Min)
+			if min < 8 {
+				min = 8
+			}
+			max := int(prop.Max)
+			if max < min {
+				max = 32
+			}
+			return fmt.Sprintf("{{RandStringMinMax %d %d}}", min, max)
+		} else if prop.Format == "byte" || prop.Format == "binary" {
+			return fmt.Sprintf("{{RandStringMinMax %d %d}}", int(prop.Min), int(prop.Max))
+		} else if prop.Format == "ipv4" {
+			return "{{RandIP}}"
+		} else if prop.Format == "ipv6" {
+			return "{{RandRegex `([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}`}}"
+		} else if prop.Format == "hostname" {
+			return "{{RandHost}}"
+		} else if prop.Format == "int32" || prop.Format == "int64" {
+			return fmt.Sprintf("{{RandIntMinMax %d %d}}", int(prop.Min), int(prop.Max))
+		} else if prop.Format == "float" || prop.Format == "double" {
+			return fmt.Sprintf("{{RandFloatMinMax %d %d}}", int(prop.Min), int(prop.Max))
 		} else {
 			return "{{RandString 20}}"
 		}

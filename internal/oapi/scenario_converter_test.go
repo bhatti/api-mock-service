@@ -105,3 +105,60 @@ func Test_ShouldParseJobsOpenAPI(t *testing.T) {
 	_, err = MarshalScenarioToOpenAPI("t-api", "t-version", scenarios...)
 	require.NoError(t, err)
 }
+
+func Test_ShouldUseCorrectOpenAPITypeNames(t *testing.T) {
+	// bool → "boolean"
+	schema := anyToSchema(true)
+	require.NotNil(t, schema)
+	require.Equal(t, "boolean", schema.Type, "bool values should map to OpenAPI type 'boolean'")
+
+	// float64 → "number"
+	schema = anyToSchema(3.14)
+	require.NotNil(t, schema)
+	require.Equal(t, "number", schema.Type, "float64 values should map to OpenAPI type 'number'")
+	require.Equal(t, "double", schema.Format)
+
+	// int → "integer"
+	schema = anyToSchema(42)
+	require.NotNil(t, schema)
+	require.Equal(t, "integer", schema.Type)
+
+	// string → "string"
+	schema = anyToSchema("hello")
+	require.NotNil(t, schema)
+	require.Equal(t, "string", schema.Type)
+}
+
+func Test_ShouldExportResponseBodyFor201(t *testing.T) {
+	scenario := &types.APIScenario{
+		Method: types.Post,
+		Name:   "create-item-201-abc",
+		Path:   "/items",
+		Group:  "items",
+		Request: types.APIRequest{
+			Headers:                  map[string]string{},
+			QueryParams:              map[string]string{},
+			PathParams:               map[string]string{},
+			AssertQueryParamsPattern: map[string]string{},
+			AssertHeadersPattern:     map[string]string{},
+			Variables:                map[string]string{},
+		},
+		Response: types.APIResponse{
+			StatusCode:      201,
+			AssertContentsPattern: `{"id": "\\w+", "name": "\\w+"}`,
+			ExampleContents:       `{"id": "abc123", "name": "widget"}`,
+			Headers:               map[string][]string{"Content-Type": {"application/json"}},
+		},
+		Authentication: map[string]types.APIAuthorization{},
+	}
+
+	doc := ScenarioToOpenAPI("TestAPI", "1.0", scenario)
+	require.NotNil(t, doc)
+
+	pathItem, ok := doc.Paths["/items"]
+	require.True(t, ok)
+	require.NotNil(t, pathItem.Post)
+	resp, ok := pathItem.Post.Responses["201"]
+	require.True(t, ok, "response for status 201 should be exported")
+	require.NotNil(t, resp.Value)
+}
