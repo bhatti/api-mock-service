@@ -1,0 +1,47 @@
+flowchart TD
+    subgraph Recording["Recording (Port 8081)"]
+        R1["Client Request\n(via proxy)"]:::client
+        R2["Proxy Recorder"]:::proxy
+        R3["Forward to\nReal API"]:::external
+        R4["Save YAML Scenario\n+ auto-generate assertions"]:::storage
+        R1 --> R2 --> R3
+        R3 -->|"real response"| R2 --> R4
+    end
+
+    subgraph Playback["Playback (Port 8080)"]
+        P1["Client Request"]:::client
+        P2{"Scenario\nMatch?"}:::decision
+        P3["Render Template\n(60+ functions)"]:::core
+        P4["Inject Body Fields\ninto Template Params\n{{.fieldName}}"]:::core
+        P5["Apply Chaos Settings\n(latency / errors)"]:::chaos
+        P6["Return Response\n+ X-Mock-* headers"]:::server
+        P7["404 Not Found\n(no match)"]:::error
+
+        P1 --> P2
+        P2 -->|"✓ matched"| P3
+        P3 --> P4 --> P5 --> P6
+        P2 -->|"✗ no match"| P7
+    end
+
+    subgraph Upload["Upload / Configure"]
+        U1["Upload YAML Scenario\nPOST /_scenarios"]:::server
+        U2["Upload OpenAPI Spec\nPOST /_oapi"]:::server
+        U3["Upload Fixture Files\nPOST /_fixtures/:name"]:::storage
+        U4["Group Config\n(chaos / variables)\nPUT /_groups/:group/config"]:::server
+    end
+
+    R4 -.->|"stored"| P2
+    U1 -.->|"stored"| P2
+    U2 -.->|"generates scenarios"| P2
+    U3 -.->|"available in templates"| P3
+    U4 -.->|"configures"| P5
+
+    classDef client fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef proxy fill:#F39C12,color:#FFFFFF,stroke:#B7770D
+    classDef external fill:#7F8C8D,color:#FFFFFF,stroke:#566573
+    classDef storage fill:#E74C3C,color:#FFFFFF,stroke:#A93226
+    classDef decision fill:#8E44AD,color:#FFFFFF,stroke:#6C3483
+    classDef core fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef chaos fill:#E74C3C,color:#FFFFFF,stroke:#A93226
+    classDef server fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef error fill:#E74C3C,color:#FFFFFF,stroke:#A93226

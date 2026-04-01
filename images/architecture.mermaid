@@ -1,107 +1,75 @@
 graph TB
     subgraph "Client Layer"
-        Client["Client Applications"]:::client
+        Client["HTTP Clients\n(curl / browser / SDK)"]:::client
+        ProxyClient["Proxy Clients\n(curl / browser / Postman)"]:::client
     end
 
-    subgraph "API Layer"
-        HTTPServer["HTTP Server (8080)"]:::server
-        ProxyServer["HTTP Proxy (8081)"]:::server
-        SwaggerUI["Swagger UI"]:::ui
-        APIControllers["API Controllers"]:::controller
-        AuthHandler["Auth Handler"]:::security
-        WebContext["Web Context"]:::server
-        HTTPClient["HTTP Client"]:::client
+    subgraph "API Mock Service"
+        direction TB
+        HTTPServer["HTTP Server\nPort 8080"]:::server
+        ProxyServer["Proxy Recorder\nPort 8081"]:::proxy
+
+        subgraph "Mock & Playback"
+            ScenarioCtrl["Scenario Controller"]:::controller
+            TemplateEngine["Template Engine\n(60+ functions)"]:::core
+            DataFactory["Data Factory\n(fuzz generation)"]:::core
+        end
+
+        subgraph "Contract Testing"
+            ContractCtrl["Contract Controller"]:::controller
+            ProducerExec["Producer Executor"]:::testing
+            MutationEngine["Mutation Engine\n(null/boundary/security)"]:::testing
+            CoverageTracker["Coverage Tracker"]:::testing
+            OpenAPIValidator["OpenAPI Schema Validator"]:::testing
+        end
+
+        subgraph "OpenAPI Support"
+            OAPICtrl["OpenAPI Controller"]:::controller
+            OAPIParser["OpenAPI Parser\n(discriminator support)"]:::util
+        end
     end
 
-    subgraph "Core Processing"
-        ContractEngine["Contract Testing Engine"]:::testing
-        MockGenerator["Mock Response Generator"]:::core
-        RequestRecorder["Request Recorder"]:::core
-        TemplateEngine["Template Engine"]:::core
-        DataFactory["Data Factory"]:::core
-        TypeHelpers["Type Helpers"]:::util
-        VarManager["Variable Manager"]:::core
+    subgraph "Storage"
+        ScenarioRepo["Scenario Repository\n(YAML files)"]:::storage
+        FixtureStore["Fixture Store\n(files / images)"]:::storage
+        HistoryStore["History Store\n(execution logs)"]:::storage
     end
 
-    subgraph "Storage Layer"
-        FileRepo["File Repository"]:::storage
-        FixtureStore["Fixture Storage"]:::storage
-        OAPIStore["OpenAPI Specs"]:::storage
-        OAPIParser["OpenAPI Parser"]:::util
+    subgraph "Upstream Services"
+        RealAPI["Real API\n(recorded target)"]:::external
     end
 
-    subgraph "System Services"
-        Config["Configuration"]:::config
-        Metrics["Metrics Collector"]:::monitoring
-    end
+    Client -->|"mock / contract / oapi"| HTTPServer
+    ProxyClient -->|"record traffic"| ProxyServer
+    ProxyServer -->|"forward & record"| RealAPI
 
-    %% Relationships
-    Client --> HTTPServer
-    Client --> ProxyServer
-    
-    ProxyServer --> RequestRecorder
-    RequestRecorder --> FileRepo
-    
-    HTTPServer --> APIControllers
-    HTTPServer --> AuthHandler
-    HTTPServer --> WebContext
-    
-    APIControllers --> MockGenerator
-    APIControllers --> ContractEngine
-    
-    MockGenerator --> TemplateEngine
+    HTTPServer --> ScenarioCtrl
+    HTTPServer --> ContractCtrl
+    HTTPServer --> OAPICtrl
+
+    ScenarioCtrl --> TemplateEngine
     TemplateEngine --> DataFactory
-    TemplateEngine --> TypeHelpers
-    TemplateEngine --> VarManager
-    
-    ContractEngine --> OAPIParser
-    OAPIParser --> OAPIStore
-    
-    HTTPClient --> WebContext
-    
-    SwaggerUI --> OAPIStore
-    
-    %% Storage connections
-    FileRepo --> FixtureStore
-    FileRepo --> OAPIStore
-    
-    %% System service connections
-    Config --> HTTPServer
-    Config --> ProxyServer
-    Metrics --> HTTPServer
-    Metrics --> ProxyServer
+    ScenarioCtrl --> ScenarioRepo
+    ScenarioCtrl --> FixtureStore
 
-    %% Click events for component mapping
-    click HTTPServer "https://github.com/bhatti/api-mock-service/blob/main/internal/web/web_server.go"
-    click ProxyServer "https://github.com/bhatti/api-mock-service/blob/main/internal/proxy/proxy_handler.go"
-    click SwaggerUI "https://github.com/bhatti/api-mock-service/tree/main/swagger-ui/"
-    click ContractEngine "https://github.com/bhatti/api-mock-service/tree/main/internal/contract/"
-    click MockGenerator "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/generator.go"
-    click RequestRecorder "https://github.com/bhatti/api-mock-service/blob/main/internal/proxy/recorder.go"
-    click FileRepo "https://github.com/bhatti/api-mock-service/tree/main/internal/repository/"
-    click FixtureStore "https://github.com/bhatti/api-mock-service/tree/main/fixtures/"
-    click OAPIStore "https://github.com/bhatti/api-mock-service/tree/main/fixtures/oapi/"
-    click TemplateEngine "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/template_helper.go"
-    click APIControllers "https://github.com/bhatti/api-mock-service/tree/main/internal/controller/"
-    click Config "https://github.com/bhatti/api-mock-service/blob/main/cmd/config.go"
-    click Metrics "https://github.com/bhatti/api-mock-service/blob/main/internal/metrics/metrics.go"
-    click OAPIParser "https://github.com/bhatti/api-mock-service/blob/main/internal/oapi/parser.go"
-    click AuthHandler "https://github.com/bhatti/api-mock-service/blob/main/internal/web/auth_adapter.go"
-    click WebContext "https://github.com/bhatti/api-mock-service/blob/main/internal/web/web_context.go"
-    click HTTPClient "https://github.com/bhatti/api-mock-service/blob/main/internal/web/http_client.go"
-    click DataFactory "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/data_factory.go"
-    click VarManager "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/variable_lookup.go"
-    click TypeHelpers "https://github.com/bhatti/api-mock-service/blob/main/internal/fuzz/types_helper.go"
+    ContractCtrl --> ProducerExec
+    ProducerExec --> MutationEngine
+    ProducerExec --> CoverageTracker
+    ProducerExec --> OpenAPIValidator
+    ProducerExec --> ScenarioRepo
+    ProducerExec --> HistoryStore
 
-    %% Styling
-    classDef client fill:#E9967A
-    classDef server fill:#4682B4
-    classDef ui fill:#DDA0DD
-    classDef controller fill:#20B2AA
-    classDef security fill:#FF6347
-    classDef testing fill:#9370DB
-    classDef core fill:#4169E1
-    classDef util fill:#778899
-    classDef storage fill:#3CB371
-    classDef config fill:#DAA520
-    classDef monitoring fill:#CD853F
+    OAPICtrl --> OAPIParser
+    OAPIParser --> ScenarioRepo
+
+    ProxyServer --> ScenarioRepo
+
+    classDef client fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef server fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef proxy fill:#F39C12,color:#FFFFFF,stroke:#B7770D
+    classDef controller fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef core fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef testing fill:#8E44AD,color:#FFFFFF,stroke:#6C3483
+    classDef util fill:#7F8C8D,color:#FFFFFF,stroke:#566573
+    classDef storage fill:#E74C3C,color:#FFFFFF,stroke:#A93226
+    classDef external fill:#7F8C8D,color:#FFFFFF,stroke:#566573

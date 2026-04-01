@@ -1,0 +1,47 @@
+flowchart TD
+    subgraph Input["Test Input Sources"]
+        I1["OpenAPI Spec\n(YAML/JSON)"]:::input
+        I2["Recorded Scenario\n(YAML)"]:::input
+        I3["Manual Scenario\n(YAML)"]:::input
+    end
+
+    subgraph Generator["Data Generator"]
+        G1["DataTemplateRequest\n(min/max/random counts)"]:::core
+        G2["Fuzz Data Engine\n(RandRegex, RandEmail, UUID...)"]:::core
+        G3["N Variants Generated"]:::core
+        I1 & I2 & I3 --> G1 --> G2 --> G3
+    end
+
+    subgraph PropertyExec["Property-Based Execution"]
+        E1["Execute N Variants\nagainst Real API"]:::exec
+        E2["Assert Response Patterns\n(__string__, __number__, __bool__,\nregex, JSONPath: $.order.id)"]:::assert
+        E3["Collect Results\n(Succeeded / Failed / Mismatched)"]:::result
+        G3 --> E1 --> E2 --> E3
+    end
+
+    subgraph MutationExec["Mutation Testing (Plan A)"]
+        M1["Mutation Strategies"]:::mutation
+        M2["Null Field Mutations\n(one per field → expect 422)"]:::mutation
+        M3["Combinatorial Mutations\n(pairs, capped at 10)"]:::mutation
+        M4["Format Boundary Mutations\n(date / uuid / email / uri)"]:::mutation
+        M5["Boundary Value Mutations\n(MinInt32 + MaxInt32,\nempty string + 255-char)"]:::mutation
+        M6["Security Injection\n(SQLi / Path Traversal / LDAP /\nCmd Injection / SSRF / XXE)"]:::security
+        M1 --> M2 & M3 & M4 & M5 & M6
+    end
+
+    subgraph MutationResult["Mutation Results"]
+        R1["Execute Each Variant\nagainst Real API"]:::exec
+        R2["Diff Report\n(MissingFields, ValueMismatches,\nSchemaViolations)"]:::result
+        R3["Field-Level Diagnostics\n(error_details in response)"]:::result
+        M2 & M3 & M4 & M5 & M6 --> R1 --> R2 --> R3
+    end
+
+    I2 -.->|"also feeds"| M1
+
+    classDef input fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef core fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef exec fill:#F39C12,color:#FFFFFF,stroke:#B7770D
+    classDef assert fill:#8E44AD,color:#FFFFFF,stroke:#6C3483
+    classDef result fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef mutation fill:#F39C12,color:#FFFFFF,stroke:#B7770D
+    classDef security fill:#E74C3C,color:#FFFFFF,stroke:#A93226

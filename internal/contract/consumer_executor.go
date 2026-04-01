@@ -52,6 +52,15 @@ func (cx *ConsumerExecutor) Execute(c web.APIContext) (err error) {
 		}
 	}
 
+	// Read the request body early so top-level JSON fields are available as
+	// template params ({{.fieldName}}) in response templates — zero config injection.
+	// utils.ReadAll replaces req.Body with a fresh reader, so downstream reads still work.
+	if c.Request().Body != nil {
+		var bodyBytes []byte
+		bodyBytes, c.Request().Body, _ = utils.ReadAll(c.Request().Body)
+		types.InjectBodyFieldsAsTemplateParams(overrides, bodyBytes)
+	}
+
 	key, err := web.BuildMockScenarioKeyData(c.Request())
 	if err != nil {
 		return web.HandleError(c, err)

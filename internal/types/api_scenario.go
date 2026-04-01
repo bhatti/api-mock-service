@@ -179,6 +179,31 @@ func (r APIRequest) BuildTemplateParams(
 	return
 }
 
+// InjectBodyFieldsAsTemplateParams injects top-level JSON body fields into templateParams
+// so {{.fieldName}} works in response templates without manual variable configuration.
+// Existing keys (path/query/header params) take precedence over body fields.
+func InjectBodyFieldsAsTemplateParams(templateParams map[string]any, bodyBytes []byte) {
+	if len(bodyBytes) == 0 {
+		return
+	}
+	bodyMap := fuzz.ExtractTopLevelJSONFields(bodyBytes)
+	if len(bodyMap) == 0 {
+		return
+	}
+	injected := make([]string, 0, len(bodyMap))
+	for k, v := range bodyMap {
+		if _, exists := templateParams[k]; !exists {
+			templateParams[k] = v
+			injected = append(injected, k)
+		}
+	}
+	if len(injected) > 0 {
+		log.WithFields(log.Fields{
+			"Fields": injected,
+		}).Debugf("injected request body fields as template params — use {{.fieldName}} in response")
+	}
+}
+
 // TargetHeader find header matching target
 func (r APIRequest) TargetHeader() string {
 	for k, v := range r.Headers {

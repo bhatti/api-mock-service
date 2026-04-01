@@ -1,24 +1,28 @@
 sequenceDiagram
     title Consumer-Driven Contract Testing
-    participant Consumer
-    participant MockAPI
-    participant OpenAPISpec
-    
-    note over Consumer,OpenAPISpec: Setup Phase
-    OpenAPISpec ->> MockAPI: Generate mock service
-    MockAPI -->> OpenAPISpec: Mock service created
-    
+
+    participant Consumer as Consumer Service
+    participant MockAPI as api-mock-service
+    participant Spec as OpenAPI Spec / YAML Scenarios
+
+    note over Consumer,Spec: Setup Phase
+    Spec ->> MockAPI: Upload spec or YAML scenarios
+    MockAPI -->> Spec: Scenarios generated (one per variant)
+
     note over Consumer,MockAPI: Test Execution Phase
-    Consumer ->> MockAPI: Send request (based on contract)
-    MockAPI ->> MockAPI: Validate against OpenAPI spec
-    alt Valid Request
+    Consumer ->> MockAPI: Send request with test data
+    MockAPI ->> MockAPI: Match scenario (path + headers + body)
+    MockAPI ->> MockAPI: Render template response\n(body fields → {{.fieldName}} auto-injected)
+
+    alt Request matches scenario
         MockAPI -->> Consumer: Return mock response
-        Consumer ->> Consumer: Assert response matches expectations
-    else Invalid Request
-        MockAPI -->> Consumer: Return validation error
+        Consumer ->> Consumer: Assert response shape\n(JSONPath assertions: $.user.email)
+        Consumer ->> Consumer: Validate contract expectations
+    else No matching scenario
+        MockAPI -->> Consumer: 404 / fallback response
         Consumer ->> Consumer: Assert error handling
     end
-    
-    note over Consumer,MockAPI: Test Reporting
-    Consumer ->> Consumer: Record test results
-    Consumer ->> Consumer: Validate consumer's implementation
+
+    note over Consumer,MockAPI: Results
+    Consumer ->> Consumer: Record test pass/fail
+    Consumer ->> Consumer: Consumer contract verified

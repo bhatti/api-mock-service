@@ -29,9 +29,30 @@ func FlatRegexMap(val any) map[string]string {
 	return regex
 }
 
-// ValidateRegexMap validate data against regex map
+// ValidateRegexMap validate data against regex map.
+// Keys starting with "$." or containing "[…]" are treated as JSONPath expressions
+// and extracted from val before matching. All other keys use the existing flat-key logic.
 func ValidateRegexMap(val any, regex map[string]string) error {
-	return validateRegexMap(val, regex, "")
+	// Partition JSONPath keys and validate them separately so flat-key logic is unchanged.
+	flatRegex := make(map[string]string, len(regex))
+	for key, pattern := range regex {
+		if !IsJSONPathExpression(key) {
+			flatRegex[key] = pattern
+			continue
+		}
+		// JSONPath key — extract the value and regex-match it directly.
+		actual := ExtractJSONPath(key, val)
+		strVal := fmt.Sprintf("%v", actual)
+		re := StripTypeTags(pattern)
+		match, err := regexp.Match(re, []byte(strVal))
+		if err != nil {
+			return err
+		}
+		if !match {
+			return fmt.Errorf("JSONPath key '%s' - value '%v' didn't match regex '%s'", key, actual, re)
+		}
+	}
+	return validateRegexMap(val, flatRegex, "")
 }
 
 // UnmarshalArrayOrObjectAndExtractTypes helper method to unmarshal, add types and marshal again

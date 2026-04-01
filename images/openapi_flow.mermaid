@@ -1,0 +1,49 @@
+flowchart TD
+    subgraph Upload["1. Upload OpenAPI Spec"]
+        U1["POST /_oapi\nwith YAML/JSON spec"]:::input
+        U2["OpenAPI Parser\n(kin-openapi v0.106)"]:::core
+        U3["Discriminator Expansion\n(oneOf/anyOf → one scenario per variant)"]:::core
+        U4["Generate N Scenarios\n(one per path × method × status code × variant)"]:::core
+        U1 --> U2 --> U3 --> U4
+    end
+
+    subgraph Store["2. Store Scenarios"]
+        S1["YAML Scenario Files\n(with regex assertions auto-generated)"]:::storage
+        S2["Template Responses\n(RandRegex, RandURL, Time...)"]:::storage
+        U4 --> S1 & S2
+    end
+
+    subgraph Playback["3. Mock Playback"]
+        P1["GET/POST /:path"]:::server
+        P2["Match Scenario by\nmethod + path + params"]:::core
+        P3["Render Template Response\n(dynamic data per spec schema)"]:::core
+        S1 --> P2
+        P1 --> P2 --> P3
+    end
+
+    subgraph Contract["4. Contract Validation (Plan A)"]
+        C1["POST /_contracts/:group\nor CLI: --spec flag"]:::server
+        C2["Attach OpenAPI Spec\nto Executor"]:::core
+        C3["Execute Scenarios\nagainst Real API"]:::exec
+        C4["Validate Response\nagainst OpenAPI Schema\n(openapi3filter)"]:::validate
+        C5["Schema Violations\n(missing required fields,\nwrong types)"]:::result
+        C6["Coverage Report\n(% paths covered,\nuncovered endpoints)"]:::result
+
+        C1 --> C2 --> C3 --> C4
+        C4 --> C5
+        C4 --> C6
+    end
+
+    subgraph UI["5. Swagger UI"]
+        UI1["GET /_ui\nBrowser-based API playground"]:::ui
+        S1 -.->|"spec available"| UI1
+    end
+
+    classDef input fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef core fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef storage fill:#E74C3C,color:#FFFFFF,stroke:#A93226
+    classDef server fill:#27AE60,color:#FFFFFF,stroke:#1A7A42
+    classDef exec fill:#F39C12,color:#FFFFFF,stroke:#B7770D
+    classDef validate fill:#8E44AD,color:#FFFFFF,stroke:#6C3483
+    classDef result fill:#4A90D9,color:#FFFFFF,stroke:#2C5F8A
+    classDef ui fill:#7F8C8D,color:#FFFFFF,stroke:#566573

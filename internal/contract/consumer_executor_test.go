@@ -101,7 +101,7 @@ func Test_ShouldExecuteDescribeAPI(t *testing.T) {
 	data, err := os.ReadFile("../../fixtures/oapi/describe-job.json")
 	require.NoError(t, err)
 	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
-	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
+	specs, _, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
 
 	require.NoError(t, err)
 	require.Len(t, specs, 6)
@@ -979,7 +979,7 @@ func Test_ShouldExecuteTransferAPISuite(t *testing.T) {
 	data, err := os.ReadFile("../../fixtures/oapi/transfer.json")
 	require.NoError(t, err)
 	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
-	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
+	specs, _, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
 	scenarios := make([]*types.APIScenario, len(specs))
 	// Save all scenarios
 	for i, spec := range specs {

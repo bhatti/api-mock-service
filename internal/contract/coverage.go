@@ -52,6 +52,13 @@ type ContractValidationStats struct {
 	SuccessRate     float64
 }
 
+// OpenAPISchemaViolation represents a single schema violation found during response validation.
+type OpenAPISchemaViolation struct {
+	Field   string      `json:"field"`
+	Message string      `json:"message"`
+	Value   interface{} `json:"value,omitempty"`
+}
+
 // ContractDiffReport diff reporting structure and helper functions
 type ContractDiffReport struct {
 	ExpectedFields   map[string]interface{}   `json:"expectedFields"`
@@ -61,6 +68,7 @@ type ContractDiffReport struct {
 	TypeMismatches   map[string]string        `json:"typeMismatches"`
 	ValueMismatches  map[string]ValueMismatch `json:"valueMismatches"`
 	HeaderMismatches map[string]ValueMismatch `json:"headerMismatches"`
+	SchemaViolations []OpenAPISchemaViolation `json:"schemaViolations,omitempty"`
 }
 
 type ValueMismatch struct {

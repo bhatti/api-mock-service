@@ -9,6 +9,7 @@ import (
 
 	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
+	"github.com/bhatti/api-mock-service/internal/oapi"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
 
@@ -20,6 +21,9 @@ var group string
 var baseURL string
 var executionTimes int
 var verbose bool
+var specFile string
+var trackCoverage bool
+var runMutations bool
 
 // producerContractCmd represents the contract command
 var producerContractCmd = &cobra.Command{
@@ -40,6 +44,9 @@ var producerContractCmd = &cobra.Command{
 			"ExecTimes":    executionTimes,
 			"Verbose":      verbose,
 			"ScenarioFile": scenarioFile,
+			"SpecFile":     specFile,
+			"Mutations":    runMutations,
+			"Coverage":     trackCoverage,
 		}).Debugf("executing producer contracts...")
 
 		serverConfig, err := types.NewConfiguration(
@@ -61,6 +68,7 @@ var producerContractCmd = &cobra.Command{
 		dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 		contractReq := types.NewProducerContractRequest(baseURL, executionTimes, 0)
 		contractReq.Verbose = verbose
+		contractReq.TrackCoverage = trackCoverage
 
 		executor := contract.NewProducerExecutor(
 			scenarioRepo,
@@ -68,9 +76,37 @@ var producerContractCmd = &cobra.Command{
 			web.NewHTTPClient(serverConfig, web.NewAuthAdapter(serverConfig)),
 		)
 
+		// If an OpenAPI spec is provided, wire it up for response schema validation.
+		if specFile != "" {
+			specData, err := os.ReadFile(specFile)
+			if err != nil {
+				log.Errorf("failed to read spec file %s: %s", specFile, err)
+				os.Exit(4)
+			}
+			_, _, doc, err := oapi.Parse(context.Background(), serverConfig, specData, dataTemplate)
+			if err != nil {
+				log.Errorf("failed to parse spec file %s: %s", specFile, err)
+				os.Exit(5)
+			}
+			router, err := oapi.BuildRouter(doc)
+			if err != nil {
+				log.Errorf("failed to build router from spec file %s: %s", specFile, err)
+				os.Exit(6)
+			}
+			executor = executor.WithOpenAPISpec(doc, router)
+			log.Infof("OpenAPI spec loaded from %s — responses will be validated against the schema", specFile)
+		}
+
 		var contractRes *types.ProducerContractResponse
 
-		if scenarioFile != "" {
+		if runMutations {
+			// Run mutation testing for the group
+			if group == "" {
+				log.Errorf("--group is required when using --mutations")
+				os.Exit(7)
+			}
+			contractRes = executor.ExecuteMutationsByGroup(context.Background(), &http.Request{}, group, dataTemplate, contractReq)
+		} else if scenarioFile != "" {
 			// Load scenario file and create key data
 			keyData, err := loadScenarioKeyData(scenarioFile)
 			if err != nil {
@@ -85,42 +121,9 @@ var producerContractCmd = &cobra.Command{
 			contractRes = executor.ExecuteByGroup(context.Background(), &http.Request{}, group, dataTemplate, contractReq)
 		}
 
-		// Print execution summary
-		fmt.Printf("\nExecution Summary:\n")
-		fmt.Printf("Total Executions: %d (Succeeded: %d, Failed: %d, Mismatched: %d)\n",
-			contractRes.Succeeded+contractRes.Failed+contractRes.Mismatched,
-			contractRes.Succeeded, contractRes.Failed, contractRes.Mismatched)
-
-		// Print URLs accessed
-		if len(contractRes.URLs) > 0 {
-			fmt.Printf("\nURLs Accessed:\n")
-			for url, count := range contractRes.URLs {
-				fmt.Printf("  %s: %d executions\n", url, count)
-			}
-		}
-
-		// Print metrics
-		if len(contractRes.Metrics) > 0 {
-			fmt.Printf("\nPerformance Metrics:\n")
-			for metric, value := range contractRes.Metrics {
-				fmt.Printf("  %s: %.2f\n", metric, value)
-			}
-		}
-
-		// Print errors if any
-		if len(contractRes.Errors) > 0 {
-			fmt.Printf("\nErrors (%d):\n", len(contractRes.Errors))
-			for scenario, errMsg := range contractRes.Errors {
-				fmt.Printf("  %s: %s\n", scenario, errMsg)
-			}
-		}
-
-		// Print results if verbose
-		if verbose && len(contractRes.Results) > 0 {
-			fmt.Printf("\nDetailed Results:\n")
-			for key, result := range contractRes.Results {
-				fmt.Printf("  %s: %v\n", key, result)
-			}
+		printContractResultsTable(contractRes)
+		if contractRes.Coverage != nil {
+			printCoverageReport(contractRes.Coverage)
 		}
 
 		log.WithFields(log.Fields{
@@ -142,6 +145,133 @@ func init() {
 	producerContractCmd.Flags().IntVar(&executionTimes, "times", 10, "execution times")
 	producerContractCmd.Flags().BoolVar(&verbose, "verbose", false, "verbose logging")
 	producerContractCmd.Flags().StringVar(&scenarioFile, "scenario", "", "path to scenario file (YAML)")
+	producerContractCmd.Flags().StringVar(&specFile, "spec", "", "path to OpenAPI spec file (YAML/JSON) for response schema validation")
+	producerContractCmd.Flags().BoolVar(&trackCoverage, "track-coverage", false, "include OpenAPI coverage report in output (requires --spec)")
+	producerContractCmd.Flags().BoolVar(&runMutations, "mutations", false, "run mutation testing instead of normal contract execution")
+}
+
+// isTTY returns true when stdout is a terminal (ANSI colors are safe to use).
+func isTTY() bool {
+	info, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+	return (info.Mode() & os.ModeCharDevice) != 0
+}
+
+const (
+	ansiReset  = "\033[0m"
+	ansiRed    = "\033[31m"
+	ansiGreen  = "\033[32m"
+	ansiYellow = "\033[33m"
+	ansiCyan   = "\033[36m"
+	ansiBold   = "\033[1m"
+)
+
+func colorize(s, color string) string {
+	if !isTTY() {
+		return s
+	}
+	return color + s + ansiReset
+}
+
+// printContractResultsTable prints a human-friendly table of contract execution results.
+func printContractResultsTable(res *types.ProducerContractResponse) {
+	sep := "──────────────────────────────────────────────────────────────"
+	fmt.Printf("\n%s\n", colorize(sep, ansiBold))
+	fmt.Printf("%-40s %-10s %s\n",
+		colorize("SCENARIO", ansiBold),
+		colorize("STATUS", ansiBold),
+		colorize("LATENCY", ansiBold))
+	fmt.Println(colorize(sep, ansiBold))
+
+	// Print successes
+	for name := range res.Results {
+		if _, failed := res.Errors[name]; !failed {
+			fmt.Printf("%-40s %s\n", truncate(name, 40), colorize("✓ PASS", ansiGreen))
+		}
+	}
+	// Print failures with detail
+	for name, errMsg := range res.Errors {
+		fmt.Printf("%-40s %s\n", truncate(name, 40), colorize("✗ FAIL", ansiRed))
+		if detail, ok := res.ErrorDetails[name]; ok {
+			if len(detail.MissingFields) > 0 {
+				fmt.Printf("  %s %v\n", colorize("Missing:", ansiYellow), detail.MissingFields)
+			}
+			if len(detail.ValueMismatches) > 0 {
+				for k, v := range detail.ValueMismatches {
+					fmt.Printf("  %s %s (expected %v, got %v)\n",
+						colorize("Mismatch:", ansiYellow), k, v.Expected, v.Actual)
+				}
+			}
+			if len(detail.SchemaViolations) > 0 {
+				for _, sv := range detail.SchemaViolations {
+					fmt.Printf("  %s %s\n", colorize("Schema:", ansiRed), sv.Message)
+				}
+			}
+		} else {
+			fmt.Printf("  %s\n", colorize(truncate(errMsg, 100), ansiRed))
+		}
+	}
+
+	fmt.Println(colorize(sep, ansiBold))
+	total := res.Succeeded + res.Failed + res.Mismatched
+	summary := fmt.Sprintf("TOTAL %d  Passed: %d  Failed: %d  Mismatched: %d",
+		total, res.Succeeded, res.Failed, res.Mismatched)
+	if res.Failed > 0 {
+		summary = colorize(summary, ansiRed)
+	} else {
+		summary = colorize(summary, ansiGreen)
+	}
+	fmt.Println(summary)
+
+	if len(res.URLs) > 0 && verbose {
+		fmt.Printf("\nURLs: ")
+		for u, n := range res.URLs {
+			fmt.Printf("%s (%dx)  ", u, n)
+		}
+		fmt.Println()
+	}
+}
+
+// printCoverageReport prints the coverage summary.
+func printCoverageReport(c *types.CoverageSummary) {
+	sep := "──────────────────────────────────────────────────────────────"
+	fmt.Printf("\n%s\n", colorize("COVERAGE REPORT", ansiBold))
+	fmt.Println(colorize(sep, ansiBold))
+	coverageStr := fmt.Sprintf("Overall: %.1f%%  (%d/%d paths)",
+		c.Coverage, c.CoveredPaths, c.TotalPaths)
+	if c.Coverage < 80 {
+		fmt.Println(colorize(coverageStr, ansiYellow))
+	} else {
+		fmt.Println(colorize(coverageStr, ansiGreen))
+	}
+	if len(c.UncoveredPaths) > 0 {
+		fmt.Printf("\n%s\n", colorize("Uncovered paths:", ansiYellow))
+		for _, p := range c.UncoveredPaths {
+			fmt.Printf("  ✗ %s\n", p)
+		}
+	}
+	if len(c.MethodCoverage) > 0 {
+		fmt.Printf("\n%s\n", colorize("Method coverage:", ansiBold))
+		for method, pct := range c.MethodCoverage {
+			bar := colorize(fmt.Sprintf("%-6s %.1f%%", method, pct), ansiCyan)
+			fmt.Printf("  %s\n", bar)
+		}
+	}
+	if len(c.FieldCoverageByScenario) > 0 && verbose {
+		fmt.Printf("\n%s\n", colorize("Field coverage by scenario:", ansiBold))
+		for scenario, pct := range c.FieldCoverageByScenario {
+			fmt.Printf("  %-40s %.1f%%\n", truncate(scenario, 40), pct)
+		}
+	}
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n-1] + "…"
 }
 
 // loadScenarioKeyData loads a scenario file and creates an APIKeyData object

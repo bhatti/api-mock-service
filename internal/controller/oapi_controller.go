@@ -165,7 +165,7 @@ func (moc *OAPIController) postMockOAPIScenario(c web.APIContext) (err error) {
 		return err
 	}
 	dataTempl := fuzz.NewDataTemplateRequest(true, 1, 1)
-	specs, updated, err := oapi.Parse(context.Background(), moc.config, data, dataTempl)
+	specs, updated, _, err := oapi.Parse(context.Background(), moc.config, data, dataTempl)
 	if err != nil {
 		return err
 	}

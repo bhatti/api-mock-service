@@ -7,6 +7,20 @@ import (
 	"strings"
 )
 
+// ExtractJSONPath extracts a value at path from data.
+// Supports: "user.id", "items[0].name", "$.user.id" (leading "$." is stripped).
+func ExtractJSONPath(path string, data any) any {
+	// Strip leading "$." root anchor
+	path = strings.TrimPrefix(path, "$.")
+	return extractJsonPath(path, data)
+}
+
+// IsJSONPathExpression returns true when key starts with "$." or contains "[" followed by "]".
+// Used to route assertion keys to JSONPath extraction instead of flat-key matching.
+func IsJSONPathExpression(key string) bool {
+	return strings.HasPrefix(key, "$.") || (strings.Contains(key, "[") && strings.Contains(key, "]"))
+}
+
 // extractJsonPath extracts a value using a JSON path expression
 func extractJsonPath(path string, data any) any {
 	if data == nil {

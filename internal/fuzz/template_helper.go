@@ -391,6 +391,32 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 	}
 }
 
+// ExtractTopLevelJSONFields returns a flat map of top-level scalar (string/number/bool)
+// fields from a JSON object body. Nested objects and arrays are included as-is.
+// Used to inject request body fields as template parameters so {{.fieldName}} works
+// in response templates without manual variable configuration.
+func ExtractTopLevelJSONFields(body []byte) map[string]any {
+	if len(body) == 0 {
+		return nil
+	}
+	res, err := UnmarshalArrayOrObject(body)
+	if err != nil {
+		return nil
+	}
+	m, ok := res.(map[string]any)
+	if !ok {
+		return nil
+	}
+	if len(m) == 0 {
+		return nil
+	}
+	out := make(map[string]any, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
+}
+
 // PRIVATE FUNCTIONS
 
 func parseRequestCount(data any) int {

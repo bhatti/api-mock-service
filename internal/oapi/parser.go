@@ -8,27 +8,30 @@ import (
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/routers"
+	"github.com/getkin/kin-openapi/routers/legacy"
 	"gopkg.in/yaml.v2"
 	"strings"
 )
 
-// Parse parses Open-API and generates api scenarios
+// Parse parses Open-API and generates api scenarios.
+// Returns specs, the re-serialized spec bytes, the parsed openapi3.T document, and any error.
 func Parse(ctx context.Context, config *types.Configuration, data []byte,
-	dataTemplate fuzz.DataTemplateRequest) (specs []*APISpec, updated []byte, err error) {
+	dataTemplate fuzz.DataTemplateRequest) (specs []*APISpec, updated []byte, doc *openapi3.T, err error) {
 	loader := &openapi3.Loader{Context: ctx, IsExternalRefsAllowed: true}
 
 	// Normalize OpenAPI 3.1 features (e.g. type arrays) before passing to the
 	// kin-openapi 3.0 loader, which cannot handle them natively.
 	normalized := normalizeOpenAPI31(data)
 
-	doc, err := loader.LoadFromData(normalized)
+	doc, err = loader.LoadFromData(normalized)
 	if err != nil {
 		doc = &openapi3.T{}
 		if err = json.Unmarshal(normalized, doc); err != nil {
-			return nil, nil, fmt.Errorf("failed to parse open-api with size %d due to %w", len(data), err)
+			return nil, nil, nil, fmt.Errorf("failed to parse open-api with size %d due to %w", len(data), err)
 		}
 		if err := loader.ResolveRefsIn(doc, nil); err != nil {
-			return nil, nil, fmt.Errorf("failed to resolve refs in open-api with size %d due to %w", len(data), err)
+			return nil, nil, nil, fmt.Errorf("failed to resolve refs in open-api with size %d due to %w", len(data), err)
 		}
 	}
 
@@ -46,19 +49,19 @@ func Parse(ctx context.Context, config *types.Configuration, data []byte,
 	}
 
 	for k, v := range doc.Paths {
-		for _, spec := range ParseAPISpec(title, types.Delete, k, v.Delete, dataTemplate) {
+		for _, spec := range ParseAPISpecWithDiscriminatorVariants(title, types.Delete, k, v.Delete, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(title, types.Get, k, v.Get, dataTemplate) {
+		for _, spec := range ParseAPISpecWithDiscriminatorVariants(title, types.Get, k, v.Get, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(title, types.Post, k, v.Post, dataTemplate) {
+		for _, spec := range ParseAPISpecWithDiscriminatorVariants(title, types.Post, k, v.Post, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(title, types.Put, k, v.Put, dataTemplate) {
+		for _, spec := range ParseAPISpecWithDiscriminatorVariants(title, types.Put, k, v.Put, dataTemplate) {
 			specs = append(specs, spec)
 		}
-		for _, spec := range ParseAPISpec(title, types.Patch, k, v.Patch, dataTemplate) {
+		for _, spec := range ParseAPISpecWithDiscriminatorVariants(title, types.Patch, k, v.Patch, dataTemplate) {
 			specs = append(specs, spec)
 		}
 	}
@@ -84,6 +87,12 @@ func Parse(ctx context.Context, config *types.Configuration, data []byte,
 	// cause yaml.Marshal (and encoding/json.Marshal) to loop forever.
 	updated, err = doc.MarshalJSON()
 	return
+}
+
+// BuildRouter builds a legacy kin-openapi router from a parsed OpenAPI document.
+// The router is used with openapi3filter.FindRoute for response schema validation.
+func BuildRouter(doc *openapi3.T) (routers.Router, error) {
+	return legacy.NewRouter(doc)
 }
 
 func addServers(config *types.Configuration, doc *openapi3.T) {

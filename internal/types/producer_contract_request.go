@@ -10,12 +10,17 @@ type ProducerContractRequest struct {
 	ExecutionTimes int `yaml:"execution_times" json:"execution_times"`
 	// MatchResponseCode for contract testing
 	MatchResponseCode int `yaml:"match_response_code" json:"match_response_code"`
-	// Track coverage
+	// Track coverage — requires an OpenAPI spec to be provided
 	TrackCoverage bool `yaml:"track_coverage" json:"track_coverage"`
+	// RunMutations generates and executes mutation variants to test robustness
+	RunMutations bool `yaml:"run_mutations" json:"run_mutations"`
 	// RecordResults determines if contract validation results should be stored
 	RecordResults bool `yaml:"record_results" json:"record_results"`
 	// Verbose setting
 	Verbose bool `yaml:"verbose" json:"verbose"`
+	// SpecContent optional OpenAPI spec (YAML or JSON) used for response schema validation.
+	// When set, responses are validated against the spec in addition to scenario assertions.
+	SpecContent string `yaml:"spec_content" json:"spec_content,omitempty"`
 	// Headers overrides
 	Headers http.Header `yaml:"-" json:"-"`
 	// Params local overrides

@@ -61,7 +61,7 @@ var importOpenAPICmd = &cobra.Command{
 		dataTemplate := fuzz.NewDataTemplateRequest(true, 1, 1)
 
 		// Parse the OpenAPI specs and create scenarios
-		specs, updated, err := oapi.Parse(context.Background(), serverConfig, data, dataTemplate)
+		specs, updated, _, err := oapi.Parse(context.Background(), serverConfig, data, dataTemplate)
 		if err != nil {
 			log.Errorf("failed to parse OpenAPI specs: %s", err)
 			os.Exit(5)

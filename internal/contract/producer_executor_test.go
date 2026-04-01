@@ -409,7 +409,7 @@ func Test_ShouldExecuteJobsOpenAPIWithInvalidStatus(t *testing.T) {
 
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 	contractReq := types.NewProducerContractRequest(baseURL, 5, 0)
-	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
+	specs, _, _, err := oapi.Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
 
 	require.NoError(t, err)
 
@@ -453,7 +453,7 @@ func Test_ShouldExecuteJobsOpenAPI(t *testing.T) {
 	// AND valid template for random data
 	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
 	contractReq := types.NewProducerContractRequest(baseURL, 5, 0)
-	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
+	specs, _, _, err := oapi.Parse(context.Background(), &types.Configuration{}, b, dataTemplate)
 	require.NoError(t, err)
 
 	for i, spec := range specs {
@@ -944,7 +944,7 @@ func Test_ShouldExecuteTransferAPISuiteAsProducer(t *testing.T) {
 	data, err := os.ReadFile("../../fixtures/oapi/transfer.json")
 	require.NoError(t, err)
 	dataTempl := fuzz.NewDataTemplateRequest(false, 1, 1)
-	specs, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
+	specs, _, _, err := oapi.Parse(context.Background(), &types.Configuration{}, data, dataTempl)
 	scenarios := make([]*types.APIScenario, len(specs))
 	// Save all scenarios
 	// Create test variables for substitution in URL paths and request bodies

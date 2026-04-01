@@ -27,29 +27,43 @@ func (m *ContractMutator) GenerateMutations() []*types.APIScenario {
 	// Create a copy with missing optional fields
 	m.createMissingFieldsMutation()
 
-	// Create a copy with boundary values
+	// Create a copy with boundary values (both min and max)
 	m.createBoundaryValuesMutation()
 
 	// Create a copy with malformed data
 	m.createMalformedDataMutation()
 
+	// Null each field individually
+	m.createNullFieldMutations()
+
+	// Combinatorial: boundary+null pairs
+	m.createCombinatorialMutations()
+
+	// Format-specific boundary values (date, uuid, email, uri)
+	m.createFormatSpecificBoundaryMutations()
+
+	// Security injection payloads
+	m.createSecurityInjectionMutations()
+
 	return m.mutations
 }
 
-// Implementation example: create a mutation with boundary values
+// Implementation example: create mutations with boundary values (both min and max)
 func (m *ContractMutator) createBoundaryValuesMutation() {
-	scenario := *m.scenario
-	scenario.Name = scenario.Name + "-boundary-values"
-
-	// For each numeric field in request body, create versions with min/max values
-	if m.scenario.Request.Contents != "" {
+	if m.scenario.Request.Contents == "" {
+		return
+	}
+	for _, strategy := range []string{"min", "max"} {
 		var requestBody map[string]interface{}
-		if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err == nil {
-			applyBoundaryValues(requestBody)
-			if newBody, err := json.Marshal(requestBody); err == nil {
-				scenario.Request.Contents = string(newBody)
-				m.mutations = append(m.mutations, &scenario)
-			}
+		if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err != nil {
+			continue
+		}
+		applyBoundaryValuesEnhanced(requestBody, strategy)
+		if newBody, err := json.Marshal(requestBody); err == nil {
+			s := *m.scenario
+			s.Name = s.Name + "-boundary-" + strategy
+			s.Request.Contents = string(newBody)
+			m.mutations = append(m.mutations, &s)
 		}
 	}
 }
@@ -208,24 +222,181 @@ func addSpecialChars(data map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-// Helper function for boundary value mutation
-func applyBoundaryValues(obj map[string]interface{}) {
+// createNullFieldMutations generates one mutation per top-level field set to null.
+// APIs should reject null for required fields (expected 422).
+func (m *ContractMutator) createNullFieldMutations() {
+	if m.scenario.Request.Contents == "" {
+		return
+	}
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err != nil {
+		return
+	}
+	for field := range requestBody {
+		clone := deepCloneMap(requestBody)
+		clone[field] = nil
+		if newBody, err := json.Marshal(clone); err == nil {
+			s := *m.scenario
+			s.Name = s.Name + "-null-" + field
+			s.Request.Contents = string(newBody)
+			s.Response.StatusCode = 422
+			m.mutations = append(m.mutations, &s)
+		}
+	}
+}
+
+// createCombinatorialMutations generates pairs of (boundary, null) mutations, capped at 10.
+func (m *ContractMutator) createCombinatorialMutations() {
+	if m.scenario.Request.Contents == "" {
+		return
+	}
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err != nil {
+		return
+	}
+	fields := make([]string, 0, len(requestBody))
+	for k := range requestBody {
+		fields = append(fields, k)
+	}
+	count := 0
+	for i := 0; i < len(fields) && count < 10; i++ {
+		for j := 0; j < len(fields) && count < 10; j++ {
+			if i == j {
+				continue
+			}
+			clone := deepCloneMap(requestBody)
+			applyBoundaryValuesEnhanced(clone, "max")
+			clone[fields[j]] = nil
+			if newBody, err := json.Marshal(clone); err == nil {
+				s := *m.scenario
+				s.Name = s.Name + "-combo-" + fields[i] + "-" + fields[j]
+				s.Request.Contents = string(newBody)
+				s.Response.StatusCode = 422
+				m.mutations = append(m.mutations, &s)
+				count++
+			}
+		}
+	}
+}
+
+// createFormatSpecificBoundaryMutations generates invalid values for date/uuid/email/uri fields.
+func (m *ContractMutator) createFormatSpecificBoundaryMutations() {
+	if m.scenario.Request.Contents == "" {
+		return
+	}
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err != nil {
+		return
+	}
+	formatMutations := map[string][][2]string{
+		"date":  {{"not-a-date", "invalid-date"}, {"2024-02-30", "impossible-date"}},
+		"uuid":  {{"not-a-uuid", "invalid-uuid"}, {"00000000-0000-0000-0000-000000000000", "zero-uuid"}},
+		"email": {{"@nodomain", "invalid-email"}, {"no-at-sign", "missing-at"}},
+		"uri":   {{"://no-scheme", "invalid-uri"}, {"relative/path", "relative-uri"}},
+	}
+	for field, strVal := range requestBody {
+		fieldLower := strings.ToLower(field)
+		for formatKey, mutations := range formatMutations {
+			if !strings.Contains(fieldLower, formatKey) && !strings.HasSuffix(fieldLower, "id") {
+				continue
+			}
+			if _, ok := strVal.(string); !ok {
+				continue
+			}
+			for _, mut := range mutations {
+				clone := deepCloneMap(requestBody)
+				clone[field] = mut[0]
+				if newBody, err := json.Marshal(clone); err == nil {
+					s := *m.scenario
+					s.Name = s.Name + "-format-" + formatKey + "-" + mut[1]
+					s.Request.Contents = string(newBody)
+					s.Response.StatusCode = 400
+					m.mutations = append(m.mutations, &s)
+				}
+			}
+		}
+	}
+}
+
+// createSecurityInjectionMutations generates security-relevant payloads for each string field.
+func (m *ContractMutator) createSecurityInjectionMutations() {
+	if m.scenario.Request.Contents == "" {
+		return
+	}
+	var requestBody map[string]interface{}
+	if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err != nil {
+		return
+	}
+	payloads := []struct {
+		name    string
+		payload string
+	}{
+		{"sqli-or", "' OR 1=1; --"},
+		{"sqli-drop", "1; DROP TABLE users; --"},
+		{"path-traversal", "../../etc/passwd"},
+		{"ldap-inject", "*(|(uid=*))"},
+		{"cmd-inject", "; cat /etc/passwd"},
+		{"ssrf", "http://169.254.169.254/latest/meta-data/"},
+	}
+	for field, val := range requestBody {
+		if _, ok := val.(string); !ok {
+			continue
+		}
+		for _, p := range payloads {
+			clone := deepCloneMap(requestBody)
+			clone[field] = p.payload
+			if newBody, err := json.Marshal(clone); err == nil {
+				s := *m.scenario
+				s.Name = s.Name + "-sec-" + p.name + "-" + field
+				s.Request.Contents = string(newBody)
+				s.Response.StatusCode = 400
+				m.mutations = append(m.mutations, &s)
+			}
+		}
+	}
+}
+
+// applyBoundaryValuesEnhanced applies min or max boundary values to all numeric/string fields.
+func applyBoundaryValuesEnhanced(obj map[string]interface{}, strategy string) {
 	for key, value := range obj {
 		switch v := value.(type) {
 		case float64:
-			// Apply a boundary condition - use maximum value
-			obj[key] = math.MaxFloat64
+			if strategy == "min" {
+				obj[key] = float64(math.MinInt32)
+			} else {
+				obj[key] = float64(math.MaxInt32)
+			}
+		case string:
+			if strategy == "min" {
+				obj[key] = ""
+			} else {
+				obj[key] = strings.Repeat("X", 255)
+			}
 		case map[string]interface{}:
-			applyBoundaryValues(v)
+			applyBoundaryValuesEnhanced(v, strategy)
 		case []interface{}:
 			for i, item := range v {
 				if itemMap, ok := item.(map[string]interface{}); ok {
-					applyBoundaryValues(itemMap)
+					applyBoundaryValuesEnhanced(itemMap, strategy)
 					v[i] = itemMap
 				}
 			}
 		}
 	}
+}
+
+// deepCloneMap does a shallow clone of a map (sufficient for top-level mutations).
+func deepCloneMap(m map[string]interface{}) map[string]interface{} {
+	clone := make(map[string]interface{}, len(m))
+	for k, v := range m {
+		clone[k] = v
+	}
+	return clone
+}
+
+// Helper function for boundary value mutation (kept for backward compatibility)
+func applyBoundaryValues(obj map[string]interface{}) {
+	applyBoundaryValuesEnhanced(obj, "max")
 }
 
 // GenerateMutatedScenarios creates test variations of a scenario

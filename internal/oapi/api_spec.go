@@ -6,6 +6,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/getkin/kin-openapi/openapi3"
@@ -566,6 +567,174 @@ func extractParameters(params openapi3.Parameters, dataTemplate fuzz.DataTemplat
 	}
 
 	return reqHeaders, queryParams, pathParams
+}
+
+// DiscriminatorVariant holds a named variant schema from a oneOf/anyOf discriminator.
+type DiscriminatorVariant struct {
+	Name   string
+	Schema *openapi3.Schema
+}
+
+// DiscriminatorVariants returns named variants for a oneOf/anyOf schema.
+// Uses discriminator.mapping keys when present; otherwise derives names from $ref paths
+// or falls back to "variant0", "variant1", etc.
+// Returns nil when the schema has no oneOf/anyOf branches.
+func DiscriminatorVariants(schema *openapi3.Schema) []DiscriminatorVariant {
+	if schema == nil {
+		return nil
+	}
+	branches := schema.OneOf
+	if len(branches) == 0 {
+		branches = schema.AnyOf
+	}
+	if len(branches) == 0 {
+		return nil
+	}
+
+	// Build reverse mapping: $ref → variant name from discriminator.mapping
+	refToName := make(map[string]string)
+	if schema.Discriminator != nil {
+		for name, ref := range schema.Discriminator.Mapping {
+			refToName[ref] = name
+		}
+	}
+
+	variants := make([]DiscriminatorVariant, 0, len(branches))
+	for i, branch := range branches {
+		if branch.Value == nil {
+			continue
+		}
+		name := fmt.Sprintf("variant%d", i)
+		if branch.Ref != "" {
+			if n, ok := refToName[branch.Ref]; ok {
+				name = n
+			} else {
+				// Derive name from $ref: "#/components/schemas/Cat" → "cat"
+				parts := strings.Split(branch.Ref, "/")
+				if last := parts[len(parts)-1]; last != "" {
+					name = strings.ToLower(last)
+				}
+			}
+		}
+		variants = append(variants, DiscriminatorVariant{Name: name, Schema: branch.Value})
+	}
+	return variants
+}
+
+// hasDiscriminatorInResponses returns true if any response body schema has oneOf/anyOf variants.
+func hasDiscriminatorInResponses(op *openapi3.Operation) bool {
+	if op == nil {
+		return false
+	}
+	for _, resp := range op.Responses {
+		if resp.Value == nil {
+			continue
+		}
+		for _, media := range resp.Value.Content {
+			if media.Schema != nil && media.Schema.Value != nil {
+				if len(DiscriminatorVariants(media.Schema.Value)) > 0 {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// ParseAPISpecWithDiscriminatorVariants is like ParseAPISpec but generates one *APISpec
+// per discriminator variant when a response body schema contains oneOf/anyOf.
+// For schemas without discriminator variants, behavior is identical to ParseAPISpec.
+func ParseAPISpecWithDiscriminatorVariants(
+	title string,
+	method types.MethodType,
+	path string,
+	op *openapi3.Operation,
+	dataTemplate fuzz.DataTemplateRequest,
+) []*APISpec {
+	if op == nil {
+		return nil
+	}
+	if !hasDiscriminatorInResponses(op) {
+		return ParseAPISpec(title, method, path, op, dataTemplate)
+	}
+
+	specs := make([]*APISpec, 0)
+	reqHeaders, queryParams, pathParams := extractParameters(op.Parameters, dataTemplate)
+
+	reqContent := make(map[string]*openapi3.MediaType)
+	if op.RequestBody != nil && op.RequestBody.Value != nil {
+		reqContent = op.RequestBody.Value.Content
+	}
+
+	buildSpec := func(status string, respHeaders []Property, resContentType string, resSchema *openapi3.Schema, variantName string) {
+		addReqContent := func(headers []Property, reqMedia *openapi3.MediaType) *APISpec {
+			spec := createBaseSpec(op, title, method, path, status)
+			spec.Request = Request{
+				Headers:     headers,
+				QueryParams: queryParams,
+				PathParams:  pathParams,
+				Body:        make([]Property, 0),
+			}
+			if reqMedia != nil && op.RequestBody != nil && op.RequestBody.Value != nil {
+				spec.Request.Body = append(spec.Request.Body,
+					schemaToProperty("", true, "body", reqMedia.Schema.Value, dataTemplate))
+			}
+			if resSchema != nil {
+				spec.Response = Response{
+					Headers:     respHeaders,
+					ContentType: resContentType,
+					Body:        []Property{schemaToProperty("", false, "body", resSchema, dataTemplate)},
+					StatusCode:  parseResponseStatus(status),
+				}
+			} else {
+				spec.Response = Response{
+					Headers:    respHeaders,
+					StatusCode: parseResponseStatus(status),
+				}
+			}
+			if variantName != "" {
+				spec.ID = spec.ID + "-" + variantName
+			}
+			return spec
+		}
+
+		if len(reqContent) > 0 {
+			for reqContentType, reqMedia := range reqContent {
+				headers := append([]Property{}, reqHeaders...)
+				headers = append(headers, Property{Name: "Content-Type", Pattern: reqContentType, Type: "string", In: "header"})
+				specs = append(specs, addReqContent(headers, reqMedia))
+			}
+		} else {
+			specs = append(specs, addReqContent(reqHeaders, nil))
+		}
+	}
+
+	for status, resp := range op.Responses {
+		if resp.Value == nil {
+			continue
+		}
+		respHeaders := extractHeaders(resp.Value.Headers, dataTemplate)
+
+		if len(resp.Value.Content) == 0 {
+			buildSpec(status, respHeaders, "", nil, "")
+			continue
+		}
+
+		for resContentType, resMedia := range resp.Value.Content {
+			if resMedia.Schema == nil || resMedia.Schema.Value == nil {
+				continue
+			}
+			variants := DiscriminatorVariants(resMedia.Schema.Value)
+			if len(variants) == 0 {
+				buildSpec(status, respHeaders, resContentType, resMedia.Schema.Value, "")
+			} else {
+				for _, variant := range variants {
+					buildSpec(status, respHeaders, resContentType, variant.Schema, variant.Name)
+				}
+			}
+		}
+	}
+	return specs
 }
 
 // extractOAuthScopes collects scope name→description from all OAuth2 flows

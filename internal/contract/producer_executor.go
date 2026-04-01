@@ -6,8 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/metrics"
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"sort"
 	"strings"
@@ -27,6 +31,21 @@ type ProducerExecutor struct {
 	scenarioRepository    repository.APIScenarioRepository
 	groupConfigRepository repository.GroupConfigRepository
 	client                web.HTTPClient
+	openAPIDoc            *openapi3.T
+	openAPIRouter         routers.Router
+}
+
+// WithOpenAPISpec returns a new ProducerExecutor with the OpenAPI document and router attached
+// for response schema validation. The original executor is not modified (safe for concurrent use).
+func (px *ProducerExecutor) WithOpenAPISpec(doc *openapi3.T, router routers.Router) *ProducerExecutor {
+	clone := &ProducerExecutor{
+		scenarioRepository:    px.scenarioRepository,
+		groupConfigRepository: px.groupConfigRepository,
+		client:                px.client,
+		openAPIDoc:            doc,
+		openAPIRouter:         router,
+	}
+	return clone
 }
 
 // NewProducerExecutor executes contracts for producers
@@ -83,6 +102,9 @@ func (px *ProducerExecutor) Execute(
 		url := scenario.BuildURL(contractReq.BaseURL)
 		resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
 		contractResponse.Add(scenario.Name, resContents, err)
+		if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+			contractResponse.SetErrorDetail(scenario.Name, buildContractValidationDetail(cve))
+		}
 		time.Sleep(scenario.WaitBeforeReply)
 	}
 
@@ -137,7 +159,11 @@ func (px *ProducerExecutor) ExecuteByHistory(
 				}
 				url := scenario.BuildURL(contractReq.BaseURL)
 				resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
-				contractResponse.Add(fmt.Sprintf("%s_%d", scenario.Name, i), resContents, err)
+				key := fmt.Sprintf("%s_%d", scenario.Name, i)
+				contractResponse.Add(key, resContents, err)
+				if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+					contractResponse.SetErrorDetail(key, buildContractValidationDetail(cve))
+				}
 				time.Sleep(scenario.WaitBeforeReply)
 			}
 		}
@@ -205,9 +231,21 @@ func (px *ProducerExecutor) ExecuteByGroup(
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
 			resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
-			contractResponse.Add(fmt.Sprintf("%s_%d", scenarioKey.Name, i), resContents, err)
+			key := fmt.Sprintf("%s_%d", scenarioKey.Name, i)
+			contractResponse.Add(key, resContents, err)
+			if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+				contractResponse.SetErrorDetail(key, buildContractValidationDetail(cve))
+			}
 			time.Sleep(scenario.WaitBeforeReply)
 		}
+	}
+
+	// Surface coverage report if tracking is enabled and an OpenAPI spec is attached.
+	if contractReq.TrackCoverage && px.openAPIDoc != nil {
+		executedScenarios := collectExecutedScenarios(scenarioKeys, px.scenarioRepository, contractReq)
+		analyzer := NewOpenAPIContractCoverage(px.openAPIDoc, executedScenarios)
+		report := analyzer.Analyze()
+		contractResponse.Coverage = coverageReportToSummary(report, contractResponse.Results)
 	}
 
 	elapsed := time.Since(started).String()
@@ -266,6 +304,9 @@ func (px *ProducerExecutor) execute(
 	}
 
 	reqBodyStr, reqBody := buildRequestBody(scenario)
+
+	// Inject request body fields as template params so {{.fieldName}} works in response templates.
+	types.InjectBodyFieldsAsTemplateParams(templateParams, []byte(reqBodyStr))
 
 	{
 		// check request assertions
@@ -371,7 +412,31 @@ func (px *ProducerExecutor) execute(
 				"DiffReport": diffReport,
 			}).Error("Contract validation failed")
 		}
-		// return nil, err
+	}
+
+	// OpenAPI schema validation (runs even if assertion passed, adds violations to report)
+	if px.openAPIRouter != nil {
+		diffReport := createContractDiffReport(scenario, resContents, resHeaders, templateParams)
+		schemaErr := px.validateResponseAgainstSchema(ctx, url, string(scenario.Method), statusCode, resBytes, resHeaders, diffReport)
+		if schemaErr != nil {
+			log.WithFields(log.Fields{
+				"Component": "ProducerExecutor",
+				"URL":       url,
+				"Scenario":  scenario.Name,
+				"Error":     schemaErr,
+			}).Debugf("OpenAPI schema validation error")
+		}
+		if len(diffReport.SchemaViolations) > 0 {
+			schemaViolErr := &ContractValidationError{
+				OriginalError: fmt.Errorf("%d OpenAPI schema violation(s) for %s", len(diffReport.SchemaViolations), scenario.Name),
+				DiffReport:    diffReport,
+				Scenario:      scenario.Name,
+				URL:           url,
+			}
+			if err == nil {
+				err = schemaViolErr
+			}
+		}
 	}
 
 	if resContents != nil {
@@ -427,6 +492,70 @@ func (px *ProducerExecutor) execute(
 		}
 	}
 	return resContents, err
+}
+
+// validateResponseAgainstSchema validates the HTTP response against the OpenAPI spec.
+// Violations are appended to report.SchemaViolations. Returns nil if the route is
+// not found in the spec (graceful skip for endpoints not in the spec).
+func (px *ProducerExecutor) validateResponseAgainstSchema(
+	ctx context.Context,
+	rawURL, method string,
+	statusCode int,
+	body []byte,
+	headers http.Header,
+	report *ContractDiffReport,
+) error {
+	if px.openAPIRouter == nil || report == nil {
+		return nil
+	}
+	parsedURL, err := url.Parse(rawURL)
+	if err != nil {
+		return nil
+	}
+	// Build a synthetic HTTP request so FindRoute can match path+method.
+	httpReq, err := http.NewRequestWithContext(ctx, method, parsedURL.String(), nil)
+	if err != nil {
+		return nil
+	}
+	route, pathParams, err := px.openAPIRouter.FindRoute(httpReq)
+	if err != nil {
+		// Route not in spec — skip gracefully
+		return nil
+	}
+	reqInput := &openapi3filter.RequestValidationInput{
+		Request:    httpReq,
+		PathParams: pathParams,
+		Route:      route,
+		Options: &openapi3filter.Options{
+			ExcludeRequestBody: true, // we only validate the response
+		},
+	}
+	respInput := &openapi3filter.ResponseValidationInput{
+		RequestValidationInput: reqInput,
+		Status:                 statusCode,
+		Header:                 headers,
+		Options: &openapi3filter.Options{
+			IncludeResponseStatus: true,
+		},
+	}
+	if len(body) > 0 {
+		respInput.SetBodyBytes(body)
+	}
+	if valErr := openapi3filter.ValidateResponse(ctx, respInput); valErr != nil {
+		// Parse the structured validation error into individual violations.
+		if me, ok := valErr.(*openapi3filter.ResponseError); ok {
+			if me.Err != nil {
+				report.SchemaViolations = append(report.SchemaViolations, OpenAPISchemaViolation{
+					Message: me.Error(),
+				})
+			}
+		} else {
+			report.SchemaViolations = append(report.SchemaViolations, OpenAPISchemaViolation{
+				Message: valErr.Error(),
+			})
+		}
+	}
+	return nil
 }
 
 // GetContractStats analyzes validation history for a scenario
@@ -659,4 +788,146 @@ func createContractDiffReport(
 	}
 
 	return report
+}
+
+// buildContractValidationDetail converts a ContractValidationError into a
+// serializable ContractValidationDetail suitable for the API response.
+func buildContractValidationDetail(cve *ContractValidationError) *types.ContractValidationDetail {
+	detail := &types.ContractValidationDetail{
+		Summary:  cve.Error(),
+		Scenario: cve.Scenario,
+		URL:      cve.URL,
+	}
+	if cve.DiffReport == nil {
+		return detail
+	}
+	r := cve.DiffReport
+	detail.MissingFields = r.MissingFields
+	detail.ExtraFields = r.ExtraFields
+	detail.TypeMismatches = r.TypeMismatches
+	if len(r.ValueMismatches) > 0 {
+		detail.ValueMismatches = make(map[string]types.ValueMismatch, len(r.ValueMismatches))
+		for k, v := range r.ValueMismatches {
+			detail.ValueMismatches[k] = types.ValueMismatch{Expected: v.Expected, Actual: v.Actual}
+		}
+	}
+	if len(r.HeaderMismatches) > 0 {
+		detail.HeaderMismatches = make(map[string]types.ValueMismatch, len(r.HeaderMismatches))
+		for k, v := range r.HeaderMismatches {
+			detail.HeaderMismatches[k] = types.ValueMismatch{Expected: v.Expected, Actual: v.Actual}
+		}
+	}
+	for _, sv := range r.SchemaViolations {
+		detail.SchemaViolations = append(detail.SchemaViolations, types.SchemaViolation{
+			Field:   sv.Field,
+			Message: sv.Message,
+			Value:   sv.Value,
+		})
+	}
+	return detail
+}
+
+// collectExecutedScenarios loads the actual scenario objects for coverage analysis.
+func collectExecutedScenarios(keys []*types.APIKeyData, repo repository.APIScenarioRepository, req *types.ProducerContractRequest) []*types.APIScenario {
+	scenarios := make([]*types.APIScenario, 0, len(keys))
+	for _, key := range keys {
+		if req.MatchResponseCode > 0 {
+			key.Response = types.APIResponseKey{StatusCode: req.MatchResponseCode}
+		}
+		if s, err := repo.Lookup(key, req.Overrides()); err == nil {
+			scenarios = append(scenarios, s)
+		}
+	}
+	return scenarios
+}
+
+// coverageReportToSummary converts the internal CoverageReport into the serializable CoverageSummary.
+func coverageReportToSummary(r *CoverageReport, results map[string]any) *types.CoverageSummary {
+	if r == nil {
+		return nil
+	}
+	s := &types.CoverageSummary{
+		TotalPaths:     r.TotalPaths,
+		CoveredPaths:   r.CoveredPaths,
+		Coverage:       r.Coverage,
+		PathCoverage:   r.PathCoverage,
+		UncoveredPaths: r.UncoveredPaths,
+		StatusCodes:    r.StatusCodes,
+		MethodCoverage: r.MethodCoverage,
+		TagCoverage:    r.TagCoverage,
+	}
+	// Extract per-scenario field coverage from Results map (stored with "_coverage" suffix).
+	if len(results) > 0 {
+		s.FieldCoverageByScenario = make(map[string]float64)
+		for k, v := range results {
+			if strings.HasSuffix(k, "_coverage") {
+				if cc, ok := v.(*ContractCoverage); ok {
+					name := strings.TrimSuffix(k, "_coverage")
+					s.FieldCoverageByScenario[name] = cc.CoveragePercent
+				}
+			}
+		}
+	}
+	return s
+}
+
+// ExecuteMutationsByGroup looks up all scenarios for a group, generates mutations for each,
+// and executes them. Returns a ProducerContractResponse aggregating all mutation results.
+// Mutations test robustness: null fields, boundary values, format violations, security payloads.
+func (px *ProducerExecutor) ExecuteMutationsByGroup(
+	ctx context.Context,
+	req *http.Request,
+	group string,
+	dataTemplate fuzz.DataTemplateRequest,
+	contractReq *types.ProducerContractRequest,
+) *types.ProducerContractResponse {
+	scenarioKeys := px.scenarioRepository.LookupAllByGroup(group)
+	contractResponse := types.NewProducerContractResponse()
+	sli := metrics.NewMetrics()
+
+	log.WithFields(log.Fields{
+		"Component": "ProducerExecutor",
+		"Group":     group,
+		"Scenarios": len(scenarioKeys),
+	}).Infof("execute-mutations-by-group BEGIN")
+
+	for _, scenarioKey := range scenarioKeys {
+		scenario, err := px.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
+		if err != nil {
+			log.WithFields(log.Fields{
+				"Component":   "ProducerExecutor",
+				"ScenarioKey": scenarioKey.String(),
+				"Error":       err,
+			}).Warnf("failed to lookup scenario for mutation")
+			continue
+		}
+		sli.RegisterHistogram(scenario.SafeName())
+
+		mutator := NewContractMutator(scenario)
+		mutations := mutator.GenerateMutations()
+		log.WithFields(log.Fields{
+			"Scenario":  scenario.Name,
+			"Mutations": len(mutations),
+		}).Debugf("generated mutations")
+
+		for i, mutatedScenario := range mutations {
+			url := mutatedScenario.BuildURL(contractReq.BaseURL)
+			resContents, err := px.execute(ctx, req, url, mutatedScenario, contractReq, contractResponse, dataTemplate, sli)
+			key := fmt.Sprintf("%s_%d", mutatedScenario.Name, i)
+			contractResponse.Add(key, resContents, err)
+			if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+				contractResponse.SetErrorDetail(key, buildContractValidationDetail(cve))
+			}
+		}
+	}
+
+	contractResponse.Metrics = sli.Summary()
+	log.WithFields(log.Fields{
+		"Component": "ProducerExecutor",
+		"Group":     group,
+		"Errors":    len(contractResponse.Errors),
+		"Succeeded": contractResponse.Succeeded,
+		"Failed":    contractResponse.Failed,
+	}).Infof("execute-mutations-by-group COMPLETED")
+	return contractResponse
 }
