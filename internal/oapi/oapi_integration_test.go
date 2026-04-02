@@ -989,7 +989,7 @@ func Test_OAPIInteg_MultipleResponseCodes(t *testing.T) {
 }
 
 // Test_OAPIInteg_RequestBodyRequiredAddsAssertion verifies that RequestBodyRequired=true
-// causes a non-empty body assertion to be added to the scenario.
+// causes a HasProperty contents assertion to be added to the scenario.
 func Test_OAPIInteg_RequestBodyRequiredAddsAssertion(t *testing.T) {
 	_, scenarios := parseYAML(t, multiResponseYAML)
 
@@ -997,12 +997,12 @@ func Test_OAPIInteg_RequestBodyRequiredAddsAssertion(t *testing.T) {
 		if strings.Contains(s.Name, "submitJob") && s.Response.StatusCode == 201 {
 			found := false
 			for _, a := range s.Request.Assertions {
-				if strings.Contains(a, "PropertyLenGE") && strings.Contains(a, "contents") {
+				if strings.Contains(a, "HasProperty") && strings.Contains(a, "contents") {
 					found = true
 					break
 				}
 			}
-			require.True(t, found, "RequestBodyRequired should generate a non-empty body assertion")
+			require.True(t, found, "RequestBodyRequired should generate HasProperty contents assertion")
 		}
 	}
 }
@@ -1273,15 +1273,16 @@ func Test_OAPIInteg_ScenarioValidationAssertions(t *testing.T) {
 	}
 	require.True(t, hasContentType, "Content-Type assertion should be generated")
 
-	// RequestBodyRequired=true should add a body length assertion
+	// RequestBodyRequired=true should add HasProperty contents (not PropertyLenGE —
+	// that counts map keys, not bytes, breaking single-key bodies like {"ids":[...]})
 	bodyAsserted := false
 	for _, a := range createPet.Request.Assertions {
-		if strings.Contains(a, "PropertyLenGE") {
+		if strings.Contains(a, "HasProperty") && strings.Contains(a, "contents") {
 			bodyAsserted = true
 			break
 		}
 	}
-	require.True(t, bodyAsserted, "required request body should generate a body size assertion")
+	require.True(t, bodyAsserted, "required request body should generate HasProperty contents assertion")
 }
 
 // Test_OAPIInteg_ResponseBodyForAll2xx verifies round-trip export includes
@@ -1942,3 +1943,129 @@ func Test_OAPIInteg_CircularRefPreservesNonCircularChildren(t *testing.T) {
 	require.True(t, hasName, "non-circular property 'name' must be preserved")
 }
 
+
+// ---------------------------------------------------------------------------
+// Regression: single-key request body must not fail HasProperty assertion
+// ---------------------------------------------------------------------------
+
+// singleKeyBodyYAML exercises a POST endpoint whose required request body
+// has exactly one top-level key containing an array.  This is the shape that
+// previously caused "PropertyLenGE contents 2" to fail (VariableSize returns
+// map key-count = 1, so 1 >= 2 was false).
+var singleKeyBodyYAML = `
+openapi: "3.0.0"
+info:
+  title: "Batch API"
+  version: "1.0"
+paths:
+  /batch/items/delete:
+    post:
+      operationId: batchDeleteItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [itemIds]
+              properties:
+                itemIds:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: integer
+`
+
+// Test_OAPIInteg_SingleKeyBodyNotRejected verifies that a POST endpoint whose
+// required request body has a single top-level array key is accepted by the
+// auto-generated assertions.
+//
+// Root cause of original bug: "PropertyLenGE contents 2" was auto-generated for
+// any required request body.  VariableSize returns the number of top-level keys
+// for map bodies (not the byte length), so {"itemIds":[...]} with 1 key would
+// return 1, causing 1 >= 2 → false.
+// Fix: generate "HasProperty contents" — true for any non-nil body regardless of
+// key count.
+func Test_OAPIInteg_SingleKeyBodyNotRejected(t *testing.T) {
+	_, scenarios := parseYAML(t, singleKeyBodyYAML)
+
+	var target *types.APIScenario
+	for _, s := range scenarios {
+		if strings.Contains(s.Name, "batchDeleteItems") && s.Response.StatusCode == 200 {
+			target = s
+			break
+		}
+	}
+	require.NotNil(t, target, "batchDeleteItems scenario must be generated")
+
+	// HasProperty contents must be present; PropertyLenGE must NOT be
+	hasHasProperty := false
+	for _, a := range target.Request.Assertions {
+		require.NotContains(t, a, "PropertyLenGE",
+			"PropertyLenGE must NOT be auto-generated for required body — use HasProperty instead")
+		if strings.Contains(a, "HasProperty") && strings.Contains(a, "contents") {
+			hasHasProperty = true
+		}
+	}
+	require.True(t, hasHasProperty, "HasProperty contents must be generated for required request body")
+
+	// Simulate mock playback: Assert must accept a single-key body {itemIds:[...]}
+	reqBody := map[string]any{"itemIds": []any{"id-1", "id-2"}}
+	reqHeaders := make(map[string][]string)
+	reqHeaders["Content-Type"] = []string{"application/json"}
+	err := target.Request.Assert(
+		map[string]string{},
+		map[string]string{},
+		reqHeaders,
+		reqBody,
+		map[string]any{"itemIds": []any{"id-1", "id-2"}},
+	)
+	require.NoError(t, err, "single-key body {itemIds:[...]} must pass all auto-generated assertions")
+}
+
+// Test_OAPIInteg_PropertyLenGECountsMapKeys documents the existing (correct)
+// behavior: PropertyLenGE with a map counts top-level keys, not bytes.
+// This is intentional for assertions like PropertyLenGE someObject 3 meaning
+// "the object has at least 3 keys". The revokeTokens bug was that the
+// auto-generated assertion used threshold 2 for a body that always has 1 key.
+func Test_OAPIInteg_PropertyLenGECountsMapKeys(t *testing.T) {
+	templateParams := map[string]any{
+		"body": map[string]any{
+			"a": "1",
+			"b": "2",
+			"c": "3",
+		},
+	}
+
+	// 3 keys >= 3 → true
+	b, err := fuzz.ParseTemplate("", []byte(`{{PropertyLenGE "body" 3}}`), templateParams)
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b))
+
+	// 3 keys >= 4 → false
+	b, err = fuzz.ParseTemplate("", []byte(`{{PropertyLenGE "body" 4}}`), templateParams)
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b))
+
+	// Single-key map {"ids":[...]} has 1 key < 2 → false (the original bug)
+	singleKey := map[string]any{
+		"contents": map[string]any{"ids": []any{"abc"}},
+	}
+	b, err = fuzz.ParseTemplate("", []byte(`{{PropertyLenGE "contents" 2}}`), singleKey)
+	require.NoError(t, err)
+	require.Equal(t, "false", string(b), "PropertyLenGE contents 2 returns false for single-key body — use HasProperty instead")
+
+	// HasProperty handles it correctly
+	b, err = fuzz.ParseTemplate("", []byte(`{{HasProperty "contents"}}`), singleKey)
+	require.NoError(t, err)
+	require.Equal(t, "true", string(b), "HasProperty contents is true for any non-nil body")
+}

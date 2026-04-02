@@ -202,6 +202,7 @@ status_code: {{EnumInt 200 400}}
 | Function | Description |
 |----------|-------------|
 | `{{UUID}}` | Random UUID v4 |
+| `{{ULID}}` | Random ULID (sortable) |
 | `{{SeededUUID 42}}` | Deterministic UUID |
 | `{{RandEmail}}` | Random email address |
 | `{{RandPhone}}` | Random phone number |
@@ -211,6 +212,9 @@ status_code: {{EnumInt 200 400}}
 | `{{RandFirstName}}` | Random first name |
 | `{{RandLastName}}` | Random last name |
 | `{{SeededName 0}}` | Deterministic full name |
+| `{{RandUsername}}` | Random lowercase username (e.g. `alice3742`) |
+| `{{RandPassword}}` | Random strong password (12–16 chars) |
+| `{{RandSlug}}` | Random URL slug (e.g. `quick-brown`) |
 
 #### Location
 
@@ -224,11 +228,35 @@ status_code: {{EnumInt 200 400}}
 | `{{RandUSStateAbbr}}` | Random US state abbreviation |
 | `{{RandUSPostal}}` | Random US ZIP code |
 | `{{RandAddress}}` | Random street address |
+| `{{RandLatitude}}` | Random latitude (−90 to 90) |
+| `{{RandLongitude}}` | Random longitude (−180 to 180) |
+| `{{RandTimezone}}` | Random IANA timezone (e.g. `America/New_York`) |
+| `{{SeededTimezone 0}}` | Deterministic IANA timezone |
+
+#### Network
+
+| Function | Description |
+|----------|-------------|
+| `{{RandIP}}` | Random IPv4 address |
+| `{{RandIPv6}}` | Random IPv6 address |
+| `{{RandMACAddress}}` | Random MAC address (e.g. `02:3a:7f:c1:4b:de`) |
+| `{{RandPort}}` | Random unprivileged port (1024–65535) |
+
+#### Crypto & Hashes
+
+| Function | Description |
+|----------|-------------|
+| `{{RandSHA256}}` | Random SHA-256 hex digest (64 chars) |
+| `{{RandMD5}}` | Random MD5 hex digest (32 chars) |
+| `{{RandBase64}}` | Random base64-encoded string (16 bytes) |
 
 #### Financial
 
 | Function | Description |
 |----------|-------------|
+| `{{RandCurrencyCode}}` | Random ISO 4217 currency code (e.g. `USD`, `EUR`) |
+| `{{SeededCurrencyCode 0}}` | Deterministic currency code |
+| `{{RandCreditCard}}` | Random credit card number |
 | `{{RandItin}}` | Random ITIN |
 | `{{RandEin}}` | Random EIN |
 | `{{RandSsn}}` | Random SSN |
@@ -237,9 +265,29 @@ status_code: {{EnumInt 200 400}}
 
 | Function | Description |
 |----------|-------------|
-| `{{Time}}` | Current time (ISO 8601) |
-| `{{Date}}` | Current date |
-| `{{TimeFormat "3:04PM"}}` | Current time in custom format |
+| `{{Time}}` | Current datetime (ISO 8601) |
+| `{{Date}}` | Current date (`YYYY-MM-DD`) |
+| `{{TimeFormat "3:04PM"}}` | Current time in custom Go format |
+| `{{RandFutureDate}}` | Random ISO 8601 date 1–365 days in the future |
+| `{{RandPastDate}}` | Random ISO 8601 date 1–365 days in the past |
+| `{{RandUnixTimestamp}}` | Current Unix epoch timestamp |
+
+#### Versioning & Files
+
+| Function | Description |
+|----------|-------------|
+| `{{RandSemver}}` | Random semantic version (e.g. `2.14.73`) |
+| `{{RandMimeType}}` | Random MIME type (e.g. `application/json`) |
+| `{{RandFileExtension}}` | Random file extension without dot (e.g. `pdf`) |
+| `{{RandFilename}}` | Random filename with extension (e.g. `quick_fox.pdf`) |
+
+#### UI & Metadata
+
+| Function | Description |
+|----------|-------------|
+| `{{RandHexColor}}` | Random CSS hex color (e.g. `#3a7fcb`) |
+| `{{RandRGBColor}}` | Random CSS rgb() color (e.g. `rgb(58,127,203)`) |
+| `{{RandHTTPStatus}}` | Random HTTP status code (e.g. `200`, `404`) |
 
 #### Boolean & Collections
 

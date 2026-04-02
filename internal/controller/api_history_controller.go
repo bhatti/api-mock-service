@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/bhatti/api-mock-service/internal/archive"
+	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/pm"
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/types"
@@ -85,7 +86,16 @@ func (ehc *APIHistoryController) postExecHistoryHar(c web.APIContext) (err error
 		return err
 	}
 	scenarios := archive.ConvertHarToScenarios(ehc.config, har)
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 	for _, scenario := range scenarios {
+		// W4: auto-generate type-aware assertions from the response body so that
+		// future contract runs can validate field types without manual configuration.
+		if scenario.Response.Contents != "" && scenario.Response.AssertContentsPattern == "" {
+			if pattern, e := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(
+				scenario.Response.Contents, dataTemplate); e == nil && pattern != "" {
+				scenario.Response.AssertContentsPattern = pattern
+			}
+		}
 		u, err := scenario.GetURL("")
 		if err != nil {
 			return err
@@ -129,7 +139,15 @@ func (ehc *APIHistoryController) postExecHistoryPostman(c web.APIContext) (err e
 		return err
 	}
 	scenarios, vars := pm.ConvertPostmanToScenarios(ehc.config, collection, time.Time{}, time.Time{})
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
 	for _, scenario := range scenarios {
+		// W4: auto-generate type-aware assertions from the response body on import.
+		if scenario.Response.Contents != "" && scenario.Response.AssertContentsPattern == "" {
+			if pattern, e := fuzz.UnmarshalArrayOrObjectAndExtractTypesAndMarshal(
+				scenario.Response.Contents, dataTemplate); e == nil && pattern != "" {
+				scenario.Response.AssertContentsPattern = pattern
+			}
+		}
 		if err = ehc.scenarioRepository.Save(scenario); err != nil {
 			return err
 		}

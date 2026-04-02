@@ -208,9 +208,12 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 		}
 		spec.Authentication[name] = auth
 	}
-	// If the request body is required, assert it is non-empty
+	// If the request body is required, assert it is present.
+	// Note: PropertyLenGE contents N counts top-level keys for object bodies —
+	// not byte length — so it fails for single-key objects like {"ids":[...]}.
+	// HasProperty contents correctly checks that the body is non-nil regardless of type.
 	if api.RequestBodyRequired {
-		spec.Request.Assertions = types.AddAssertion(spec.Request.Assertions, "PropertyLenGE contents 2")
+		spec.Request.Assertions = types.AddAssertion(spec.Request.Assertions, "HasProperty contents")
 	}
 	if res.StatusCode >= 300 {
 		spec.Predicate = "{{NthRequest 2}}"

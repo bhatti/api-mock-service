@@ -3,16 +3,21 @@ package contract
 import (
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
+	"github.com/bhatti/api-mock-service/internal/state"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
 	"github.com/bhatti/api-mock-service/internal/web"
 )
+
+// SessionIDHeader is the HTTP header used to identify a client session for stateful scenarios.
+const SessionIDHeader = "X-Session-ID"
 
 // ConsumerExecutor structure
 type ConsumerExecutor struct {
@@ -20,6 +25,7 @@ type ConsumerExecutor struct {
 	scenarioRepository    repository.APIScenarioRepository
 	fixtureRepository     repository.APIFixtureRepository
 	groupConfigRepository repository.GroupConfigRepository
+	stateStore            state.StateStore
 }
 
 // NewConsumerExecutor instantiates controller for updating api-scenarios
@@ -34,6 +40,7 @@ func NewConsumerExecutor(
 		scenarioRepository:    scenarioRepository,
 		fixtureRepository:     fixtureRepository,
 		groupConfigRepository: groupConfigRepository,
+		stateStore:            state.NewInMemoryStateStore(),
 	}
 }
 
@@ -111,7 +118,51 @@ func (cx *ConsumerExecutor) ExecuteWithKey(
 	}
 
 	respBytes, sharedVariables, err = cx.execute(req, respHeaders, matchedScenario, started)
+	if err == nil {
+		cx.applyStateMachineTransitions(req, matchedScenario, respBytes)
+	}
 	return
+}
+
+// applyStateMachineTransitions advances session state based on the matched scenario's
+// state machine definition. Extracts response values into the session store if ExtractKey is set.
+func (cx *ConsumerExecutor) applyStateMachineTransitions(
+	req *http.Request,
+	scenario *types.APIScenario,
+	respBytes []byte,
+) {
+	if scenario.StateMachine == nil {
+		return
+	}
+	sessionID := req.Header.Get(SessionIDHeader)
+	if sessionID == "" {
+		return
+	}
+	currentState := cx.stateStore.CurrentState(sessionID)
+	for _, t := range scenario.StateMachine.Transitions {
+		methodMatch := t.OnMethod == "" || strings.EqualFold(t.OnMethod, string(scenario.Method))
+		statusMatch := t.OnStatus == 0 || t.OnStatus == scenario.Response.StatusCode
+		stateMatch := t.From == "" || currentState == t.From
+		if methodMatch && statusMatch && stateMatch {
+			if transErr := cx.stateStore.Transition(sessionID, t.From, t.To); transErr != nil {
+				log.WithFields(log.Fields{
+					"Component": "ConsumerExecutor",
+					"Session":   sessionID,
+					"From":      t.From,
+					"To":        t.To,
+					"Error":     transErr,
+				}).Warnf("state transition failed")
+			}
+			if t.ExtractKey != "" {
+				if parsed, jsonErr := fuzz.UnmarshalArrayOrObject(respBytes); jsonErr == nil {
+					val := fuzz.ExtractJSONPath(t.ExtractKey, parsed)
+					keyName := strings.TrimPrefix(t.ExtractKey, "$.")
+					cx.stateStore.Set(sessionID, keyName, val)
+				}
+			}
+			break
+		}
+	}
 }
 
 func (cx *ConsumerExecutor) execute(

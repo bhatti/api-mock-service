@@ -33,6 +33,8 @@ type ProducerExecutor struct {
 	client                web.HTTPClient
 	openAPIDoc            *openapi3.T
 	openAPIRouter         routers.Router
+	// coverageCache stores the last coverage result per group, keyed by group name.
+	coverageCache map[string]*types.CoverageSummary
 }
 
 // WithOpenAPISpec returns a new ProducerExecutor with the OpenAPI document and router attached
@@ -44,6 +46,7 @@ func (px *ProducerExecutor) WithOpenAPISpec(doc *openapi3.T, router routers.Rout
 		client:                px.client,
 		openAPIDoc:            doc,
 		openAPIRouter:         router,
+		coverageCache:         px.coverageCache,
 	}
 	return clone
 }
@@ -57,7 +60,17 @@ func NewProducerExecutor(
 		scenarioRepository:    scenarioRepository,
 		groupConfigRepository: groupConfigRepository,
 		client:                client,
+		coverageCache:         make(map[string]*types.CoverageSummary),
 	}
+}
+
+// LastCoverage returns the coverage summary from the most recent ExecuteByGroup call
+// for the given group. Returns nil if no coverage data is available.
+func (px *ProducerExecutor) LastCoverage(group string) *types.CoverageSummary {
+	if px.coverageCache == nil {
+		return nil
+	}
+	return px.coverageCache[group]
 }
 
 // Execute an API with fuzz data request
@@ -203,6 +216,21 @@ func (px *ProducerExecutor) ExecuteByGroup(
 	sort.Slice(scenarioKeys, func(i, j int) bool {
 		return scenarioKeys[i].Order < scenarioKeys[j].Order
 	})
+
+	// W2: dry-run — list scenarios without executing
+	if contractReq.DryRun {
+		for _, sk := range scenarioKeys {
+			contractResponse.Add(sk.Name+"_dry", map[string]any{
+				"scenario": sk.Name,
+				"method":   sk.Method,
+				"path":     sk.Path,
+				"dry_run":  true,
+			}, nil)
+		}
+		contractResponse.Metrics = map[string]float64{"dry_run": 1}
+		return contractResponse
+	}
+
 	sli := metrics.NewMetrics()
 	for _, scenarioKey := range scenarioKeys {
 		sli.RegisterHistogram(scenarioKey.SafeName())
@@ -246,6 +274,10 @@ func (px *ProducerExecutor) ExecuteByGroup(
 		analyzer := NewOpenAPIContractCoverage(px.openAPIDoc, executedScenarios)
 		report := analyzer.Analyze()
 		contractResponse.Coverage = coverageReportToSummary(report, contractResponse.Results)
+		// Persist into coverage cache for GET /_coverage/:group
+		if px.coverageCache != nil && group != "" {
+			px.coverageCache[group] = contractResponse.Coverage
+		}
 	}
 
 	elapsed := time.Since(started).String()
@@ -395,6 +427,16 @@ func (px *ProducerExecutor) execute(
 		// Create detailed diff report
 		diffReport := createContractDiffReport(scenario, resContents, resHeaders, templateParams)
 
+		// W3: always log actual response body at DEBUG so users can diagnose without --verbose
+		log.WithFields(log.Fields{
+			"Component":      "ProducerExecutor",
+			"URL":            url,
+			"Scenario":       scenario.Name,
+			"ActualBody":     string(resBytes),
+			"ActualStatus":   statusCode,
+			"AssertionError": err,
+		}).Debug("assertion failed — actual response body logged for diagnostics")
+
 		// Add the diff report to the error
 		err = &ContractValidationError{
 			OriginalError: err,
@@ -403,7 +445,7 @@ func (px *ProducerExecutor) execute(
 			URL:           url,
 		}
 
-		// Log the detailed diff for debugging
+		// Log the detailed diff for verbose mode
 		if contractReq.Verbose {
 			log.WithFields(log.Fields{
 				"Component":  "ProducerExecutor",

@@ -134,7 +134,7 @@ response:
      "completed":"(__boolean__(false|true))"}
 ```
 
-### JSONPath Assertions (Plan A)
+### JSONPath Assertions
 
 Use `$.` prefix or dot-path notation to match nested fields:
 
@@ -164,7 +164,7 @@ response:
     - ResponseStatusMatches "(200|201)"     # status code matches regex
 ```
 
-## Body→Template Injection (Plan A)
+## Body→Template Injection
 
 Request body JSON fields are automatically injected as template parameters — no manual configuration needed.
 
@@ -184,7 +184,7 @@ Rules:
 - Path/query params win if there is a key conflict
 - Works in both mock playback and producer contract execution
 
-## OpenAPI Schema Validation (Plan A)
+## OpenAPI Schema Validation
 
 Validate that real API responses conform to the OpenAPI schema — missing required fields and type errors are surfaced automatically.
 
@@ -224,7 +224,7 @@ When a spec is provided, each response is validated via `openapi3filter`. Schema
 
 Unknown routes (not in the spec) are skipped gracefully.
 
-## Field-Level Diagnostics (Plan A)
+## Field-Level Diagnostics
 
 Failed scenarios include a structured `error_details` map in the response alongside the flat `errors` string (which is preserved for backward compatibility):
 
@@ -253,7 +253,7 @@ Failed scenarios include a structured `error_details` map in the response alongs
 }
 ```
 
-## Coverage Reporting (Plan A)
+## Coverage Reporting
 
 Track which OpenAPI paths and methods were exercised during a contract run.
 
@@ -307,7 +307,7 @@ Coverage is returned in the response:
 }
 ```
 
-## Mutation Testing (Plan A)
+## Mutation Testing
 
 Mutation testing checks API robustness by sending systematically corrupted requests and verifying the API rejects them appropriately.
 
@@ -382,9 +382,245 @@ curl -X POST http://localhost:8080/_contracts/order-flow \
 | `base_url` | string | — | Target API base URL |
 | `execution_times` | int | 5 | Number of runs per scenario |
 | `verbose` | bool | false | Log request/response details |
-| `track_coverage` | bool | false | Include coverage report (Plan A) |
-| `run_mutations` | bool | false | Run mutation testing mode (Plan A) |
-| `spec_content` | string | — | Inline OpenAPI YAML/JSON for schema validation (Plan A) |
+| `track_coverage` | bool | false | Include coverage report (requires `spec_content`) |
+| `run_mutations` | bool | false | Run mutation testing mode |
+| `spec_content` | string | — | Inline OpenAPI YAML/JSON for schema validation |
+| `dry_run` | bool | false | List scenarios that would run without executing them |
+
+---
+
+## Stateful Scenario Testing
+
+Test multi-step API workflows where each request depends on the previous response. Use the `state_machine` field in a scenario YAML to define state transitions.
+
+### How it works
+
+1. Include `X-Session-ID` header in each request to track session state
+2. The mock service stores session state in memory
+3. After each response, the state machine transitions to the next state
+4. Optionally extract values from the response body using JSONPath
+
+### Example: CREATE → READ → DELETE
+
+```yaml
+# Step 1: Create order
+name: create-order
+method: POST
+path: /orders
+group: order-workflow
+response:
+  status: 201
+  contents: '{"orderId": "{{uuid}}", "status": "pending"}'
+state_machine:
+  initial_state: ""
+  transitions:
+    - from: ""
+      to: "created"
+      on_method: POST
+      on_status: 201
+      extract_key: "$.orderId"   # saves response orderId into session store
+```
+
+```yaml
+# Step 2: Read order (only matches when session state is "created")
+name: get-order
+method: GET
+path: /orders/:id
+group: order-workflow
+state_machine:
+  initial_state: "created"
+  transitions:
+    - from: "created"
+      to: "viewed"
+      on_method: GET
+      on_status: 200
+```
+
+### Session Header
+
+All requests must include the session identifier:
+
+```
+X-Session-ID: my-unique-session-123
+```
+
+Values extracted via `extract_key` are stored in the session under the field name derived from the JSONPath. For example, `extract_key: "$.orderId"` stores the value under the key `orderId`, which becomes available as `{{.orderId}}` in subsequent scenario response templates within the same session. If the JSONPath does not match (field absent from response), the extraction is silently skipped.
+
+---
+
+## Spec Version Diff / Breaking Change Detection
+
+Compare two OpenAPI specs to identify breaking changes before deploying. Use this in CI to prevent accidental client-breaking API changes.
+
+### HTTP Endpoint
+
+```bash
+POST /_oapi/diff
+Content-Type: application/json
+
+{
+  "base": "<base spec YAML or JSON>",
+  "head": "<head spec YAML or JSON>"
+}
+```
+
+Returns HTTP **409 Conflict** when breaking changes are detected (CI-friendly exit signal).
+
+Response:
+```json
+{
+  "breakingChanges": [
+    {
+      "path": "/users",
+      "method": "GET",
+      "field": "id",
+      "changeType": "type-change",
+      "before": "integer",
+      "after": "string",
+      "severity": "breaking"
+    }
+  ],
+  "nonBreakingChanges": [...],
+  "addedPaths": ["/products"],
+  "removedPaths": []
+}
+```
+
+### Breaking Change Rules
+
+| Change | Severity |
+|--------|----------|
+| Removed path or method | **Breaking** |
+| Existing optional param promoted to required | **Breaking** |
+| New required request parameter | **Breaking** |
+| Field type change | **Breaking** |
+| Response field removed | **Breaking** |
+| Format change on existing field | **Breaking** |
+| Enum value removed (narrowed) | **Breaking** |
+| Added path or method | Non-breaking |
+| New optional parameter | Non-breaking |
+| Response field added | Non-breaking |
+| Enum value added (widened) | Non-breaking |
+
+### CLI Command
+
+```bash
+api-mock-service compare-specs \
+  --base v1.yaml \
+  --head v2.yaml \
+  --fail-on-breaking   # exit code 2 when breaking changes found (CI gating)
+  --json               # JSON output instead of table
+```
+
+### CI Integration
+
+```yaml
+# GitHub Actions example
+- name: Check for breaking API changes
+  run: |
+    api-mock-service compare-specs \
+      --base api/v1.yaml \
+      --head api/v2.yaml \
+      --fail-on-breaking
+```
+
+---
+
+## Fuzz Shrinking
+
+When a mutation test finds a failing input, shrinking reduces it to the minimal payload that still triggers the failure. This saves debugging time — instead of a 20-field payload where 1 field is the culprit, you get the exact minimal reproducing case.
+
+### Enable via CLI
+
+```bash
+api-mock-service producer-contract \
+  --group my-service \
+  --base_url https://api.example.com \
+  --mutations \
+  --shrink   # enable post-failure shrinking
+```
+
+### Output Example
+
+```
+SHRINK ANALYSIS
+Shrinking POST /orders-201 ...
+  ✓ reduced in 18 attempts
+  Minimal body: {"price":-9223372036854775808}
+```
+
+### Strategies
+
+Shrinking tries four strategies in order:
+1. **Field removal** — removes fields one-by-one; keeps removal if it still fails (delta debugging)
+2. **String shortening** — binary search to find minimal length that triggers failure
+3. **Array shrinking** — removes array elements one-by-one
+4. **Numeric reduction** — exponential backoff from boundary values (MaxInt → 0)
+
+---
+
+## Dry Run Mode
+
+List scenarios that would be executed without making any API calls:
+
+```bash
+api-mock-service producer-contract \
+  --group my-service \
+  --base_url https://api.example.com \
+  --dry-run
+```
+
+Or via HTTP:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/my-service \
+  -d '{"base_url": "https://api.example.com", "dry_run": true}'
+```
+
+---
+
+## Coverage Endpoint
+
+After running producer contracts with `track_coverage: true`, retrieve the coverage report any time:
+
+```bash
+GET /_coverage/:group
+```
+
+```bash
+curl http://localhost:8080/_coverage/my-service
+```
+
+Returns the last coverage summary for the group, or a 200 with an informational message if no coverage data is available yet.
+
+## HAR / Postman Import with Auto-Assertions
+
+When you import traffic from a HAR file or Postman collection, response bodies are **automatically analyzed to generate `assert_contents_pattern` assertions** — no manual work required.
+
+```bash
+# Import from HAR (Chrome DevTools, proxy recording, etc.)
+curl -X POST http://localhost:8080/_history/har \
+  --data-binary @recording.har
+
+# Import from Postman collection
+curl -X POST http://localhost:8080/_history/postman \
+  -H "Content-Type: */*" \
+  --data-binary @collection.json
+```
+
+Given a recorded response body `{"id":42,"email":"user@test.com","active":true}`, the import creates:
+
+```yaml
+response:
+  assert_contents_pattern: >
+    {"id": "__number__\\d+",
+     "email": "__string__\\S+",
+     "active": "__boolean__(true|false)"}
+```
+
+These auto-generated assertions become the baseline for future contract runs — any API change that alters the response shape is caught immediately. See [Fuzz & Property Testing](fuzz-property-testing.md#har--postman-import-with-auto-assertions) for more detail.
+
+---
 
 ## Related Docs
 

@@ -76,9 +76,11 @@ api-mock-service producer-contract [flags]
 | `--times` | int | `10` | no | Number of execution iterations per scenario |
 | `--verbose` | bool | `false` | no | Log request/response bodies |
 | `--dataDir` | string | — | no | Data directory (overrides default) |
-| `--spec` | string | — | no | **[Plan A]** Path to OpenAPI spec file for response schema validation |
-| `--track-coverage` | bool | `false` | no | **[Plan A]** Include OpenAPI coverage report in output (requires `--spec`) |
-| `--mutations` | bool | `false` | no | **[Plan A]** Run mutation testing instead of normal contract execution (requires `--group`) |
+| `--spec` | string | — | no | Path to OpenAPI spec file for response schema validation |
+| `--track-coverage` | bool | `false` | no | Include OpenAPI coverage report in output (requires `--spec`) |
+| `--mutations` | bool | `false` | no | Run mutation testing instead of normal contract execution (requires `--group`) |
+| `--dry-run` | bool | `false` | no | List scenarios that would run without executing them |
+| `--shrink` | bool | `false` | no | Shrink failing mutation payloads to minimal reproducing inputs |
 
 ### Examples
 
@@ -186,6 +188,82 @@ TOTAL 10  Passed: 9  Failed: 1  Mismatched: 0
 ```
 
 Colors: green = PASS, red = FAIL, yellow = warning. Disabled automatically in non-TTY environments (CI, pipes).
+
+---
+
+#### Dry run (list scenarios without executing)
+
+```bash
+api-mock-service producer-contract \
+  --group my-api \
+  --base_url https://api.example.com \
+  --dry-run
+```
+
+#### Shrink failing mutation inputs
+
+```bash
+api-mock-service producer-contract \
+  --group my-api \
+  --base_url https://api.example.com \
+  --mutations \
+  --shrink
+```
+
+When a mutation test fails, `--shrink` runs delta debugging to find the minimal payload that still triggers the failure.
+
+---
+
+## `api-mock-service compare-specs` — Spec Version Diff
+
+Compares two OpenAPI specs and reports breaking and non-breaking changes. Returns exit code 2 when breaking changes are found (for CI gating).
+
+```bash
+api-mock-service compare-specs \
+  --base v1.yaml \
+  --head v2.yaml \
+  --fail-on-breaking
+```
+
+### Flags
+
+| Flag | Type | Default | Required | Description |
+|------|------|---------|----------|-------------|
+| `--base` | string | — | yes | Path to base (old) OpenAPI spec (YAML or JSON) |
+| `--head` | string | — | yes | Path to head (new) OpenAPI spec to compare against base |
+| `--fail-on-breaking` | bool | `false` | no | Exit with code 2 when breaking changes are detected |
+| `--json` | bool | `false` | no | Output report as JSON instead of human-readable table |
+
+### Example output
+
+```
+SPEC DIFF REPORT
+──────────────────────────────────────────────────────────────
+
+Removed paths (BREAKING):
+  - /users/batch
+
+Breaking changes:
+  ✗ [GET /users] type-change: id integer → string
+  ✗ [POST /orders] new-required-param: "currency" is now required
+
+Non-breaking changes:
+  ~ [GET /products] added-path
+──────────────────────────────────────────────────────────────
+breaking=2 non-breaking=1 added-paths=1 removed-paths=1
+```
+
+### CI Integration
+
+```yaml
+# GitHub Actions
+- name: Detect breaking API changes
+  run: |
+    api-mock-service compare-specs \
+      --base main/openapi.yaml \
+      --head pr/openapi.yaml \
+      --fail-on-breaking
+```
 
 ---
 

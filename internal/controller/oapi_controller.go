@@ -3,9 +3,11 @@ package controller
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
+	"github.com/bhatti/api-mock-service/internal/speccompare"
 	"github.com/bhatti/api-mock-service/internal/utils"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -45,6 +47,8 @@ func NewOAPIController(
 	webserver.GET("/_oapi/history/:name", ctrl.getOpenAPISpecsByHistory)
 	webserver.GET("/_oapi/:method/:name/:path", ctrl.getOpenAPISpecsByScenario)
 	webserver.POST("/_oapi", ctrl.postMockOAPIScenario)
+	// Item 9: spec diff endpoint
+	webserver.POST("/_oapi/diff", ctrl.postOAPIDiff)
 	return ctrl
 }
 
@@ -242,6 +246,55 @@ type getOpenAPISpecsByScenarioParams struct {
 type apiOapiSpecIResponseBody struct {
 	// in:body
 	Body []byte
+}
+
+// postOAPIDiff handler
+// swagger:route POST /_oapi/diff open-api postOAPIDiff
+// Compares two OpenAPI specs and returns breaking + non-breaking changes.
+// Request body: {"base": "<spec YAML/JSON>", "head": "<spec YAML/JSON>"}
+// responses:
+//
+//	200: oapiDiffResponse
+func (moc *OAPIController) postOAPIDiff(c web.APIContext) error {
+	body, _, err := utils.ReadAll(c.Request().Body)
+	if err != nil {
+		return err
+	}
+	var req struct {
+		Base string `json:"base"`
+		Head string `json:"head"`
+	}
+	if err = json.Unmarshal(body, &req); err != nil {
+		return fmt.Errorf("request body must be JSON with 'base' and 'head' fields: %w", err)
+	}
+	if req.Base == "" || req.Head == "" {
+		return fmt.Errorf("both 'base' and 'head' spec fields are required")
+	}
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 1)
+	_, _, baseDoc, err := oapi.Parse(context.Background(), moc.config, []byte(req.Base), dataTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse base spec: %w", err)
+	}
+	_, _, headDoc, err := oapi.Parse(context.Background(), moc.config, []byte(req.Head), dataTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse head spec: %w", err)
+	}
+	report := speccompare.Diff(baseDoc, headDoc)
+	statusCode := http.StatusOK
+	if report.HasBreakingChanges() {
+		statusCode = http.StatusConflict // 409 signals breaking changes to CI scripts
+	}
+	log.WithFields(log.Fields{
+		"Component": "OAPIController",
+		"Summary":   report.Summary(),
+	}).Infof("spec diff completed")
+	return c.JSON(statusCode, report)
+}
+
+// swagger:response oapiDiffResponse
+type oapiDiffResponseBody struct {
+	// in:body
+	Body speccompare.SpecDiffReport
 }
 
 func (moc *OAPIController) getScenario(keyData *types.APIKeyData, raw bool) (scenario *types.APIScenario, err error) {

@@ -2,6 +2,10 @@ package fuzz
 
 import (
 	"bufio"
+	"crypto/md5"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/fuzz/lorem"
 	"github.com/lucasjones/reggen"
@@ -3336,6 +3340,193 @@ func SeededAirportByRegion(seed int64, region string) Airport {
 	}
 
 	return filtered[int(seed)%len(filtered)]
+}
+
+// RandIPv6 generates a random IPv6 address.
+func RandIPv6() string {
+	groups := make([]string, 8)
+	for i := range groups {
+		groups[i] = fmt.Sprintf("%04x", rand.Intn(0xffff+1))
+	}
+	return strings.Join(groups, ":")
+}
+
+// RandMACAddress generates a random locally-administered unicast MAC address.
+func RandMACAddress() string {
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
+		rand.Intn(256)&0xfe|0x02,
+		rand.Intn(256), rand.Intn(256),
+		rand.Intn(256), rand.Intn(256), rand.Intn(256))
+}
+
+// RandHexColor generates a random CSS hex color code (e.g. #3a7fcb).
+func RandHexColor() string {
+	return fmt.Sprintf("#%06x", rand.Intn(0xffffff+1))
+}
+
+// RandRGBColor generates a random CSS rgb() color string.
+func RandRGBColor() string {
+	return fmt.Sprintf("rgb(%d,%d,%d)", rand.Intn(256), rand.Intn(256), rand.Intn(256))
+}
+
+var currencyCodes = []string{
+	"USD", "EUR", "GBP", "JPY", "CNY", "INR", "CAD", "AUD", "CHF", "KRW",
+	"BRL", "MXN", "SGD", "HKD", "NOK", "SEK", "DKK", "NZD", "ZAR", "RUB",
+	"TRY", "SAR", "AED", "PLN", "THB", "IDR", "HUF", "CZK", "ILS", "CLP",
+}
+
+// RandCurrencyCode returns a random ISO 4217 currency code.
+func RandCurrencyCode() string {
+	return currencyCodes[rand.Intn(len(currencyCodes))]
+}
+
+// SeededCurrencyCode returns a deterministic currency code based on seed.
+func SeededCurrencyCode(seed int64) string {
+	return currencyCodes[int(seed)%len(currencyCodes)]
+}
+
+// RandSemver generates a random semantic version string (e.g. 3.14.159).
+func RandSemver() string {
+	return fmt.Sprintf("%d.%d.%d", rand.Intn(10), rand.Intn(100), rand.Intn(1000))
+}
+
+// RandBase64 returns a random base64-encoded string (16 random bytes).
+func RandBase64() string {
+	b := make([]byte, 16)
+	for i := range b {
+		b[i] = byte(rand.Intn(256))
+	}
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+// RandSHA256 returns a random SHA-256 hex digest.
+func RandSHA256() string {
+	h := sha256.Sum256([]byte(UUID()))
+	return hex.EncodeToString(h[:])
+}
+
+// RandMD5 returns a random MD5 hex digest.
+func RandMD5() string {
+	h := md5.Sum([]byte(UUID()))
+	return hex.EncodeToString(h[:])
+}
+
+// RandLatitude returns a random latitude value between -90 and 90.
+func RandLatitude() float64 {
+	return (rand.Float64() * 180.0) - 90.0
+}
+
+// RandLongitude returns a random longitude value between -180 and 180.
+func RandLongitude() float64 {
+	return (rand.Float64() * 360.0) - 180.0
+}
+
+var timezones = []string{
+	"America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+	"America/Phoenix", "America/Anchorage", "Pacific/Honolulu",
+	"America/Toronto", "America/Vancouver", "America/Sao_Paulo", "America/Mexico_City",
+	"America/Buenos_Aires", "America/Lima", "America/Bogota",
+	"Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Rome", "Europe/Madrid",
+	"Europe/Amsterdam", "Europe/Stockholm", "Europe/Moscow", "Europe/Warsaw",
+	"Europe/Zurich", "Europe/Dublin", "Europe/Helsinki", "Europe/Athens",
+	"Asia/Tokyo", "Asia/Shanghai", "Asia/Singapore", "Asia/Dubai", "Asia/Kolkata",
+	"Asia/Seoul", "Asia/Bangkok", "Asia/Hong_Kong", "Asia/Jakarta", "Asia/Karachi",
+	"Asia/Tehran", "Asia/Riyadh", "Asia/Taipei", "Asia/Manila",
+	"Australia/Sydney", "Australia/Melbourne", "Australia/Brisbane", "Pacific/Auckland",
+	"Africa/Cairo", "Africa/Lagos", "Africa/Johannesburg", "Africa/Nairobi",
+	"UTC",
+}
+
+// RandTimezone returns a random IANA timezone identifier.
+func RandTimezone() string {
+	return timezones[rand.Intn(len(timezones))]
+}
+
+// SeededTimezone returns a deterministic IANA timezone based on seed.
+func SeededTimezone(seed int64) string {
+	return timezones[int(seed)%len(timezones)]
+}
+
+var mimeTypes = []string{
+	"application/json", "application/xml", "application/pdf",
+	"application/zip", "application/octet-stream", "application/x-www-form-urlencoded",
+	"text/plain", "text/html", "text/csv", "text/css",
+	"image/jpeg", "image/png", "image/gif", "image/svg+xml", "image/webp",
+	"audio/mpeg", "audio/wav", "video/mp4", "video/webm",
+	"multipart/form-data",
+}
+
+// RandMimeType returns a random MIME type string.
+func RandMimeType() string {
+	return mimeTypes[rand.Intn(len(mimeTypes))]
+}
+
+// RandPort returns a random unprivileged port number (1024–65535).
+func RandPort() int {
+	return RandIntMinMax(1024, 65535)
+}
+
+// RandUnixTimestamp returns the current Unix epoch timestamp.
+func RandUnixTimestamp() int64 {
+	return time.Now().Unix()
+}
+
+// RandFutureDate returns an ISO 8601 date 1–365 days in the future.
+func RandFutureDate() string {
+	days := time.Duration(RandIntMinMax(1, 365)) * 24 * time.Hour
+	return time.Now().Add(days).Format("2006-01-02")
+}
+
+// RandPastDate returns an ISO 8601 date 1–365 days in the past.
+func RandPastDate() string {
+	days := time.Duration(RandIntMinMax(1, 365)) * 24 * time.Hour
+	return time.Now().Add(-days).Format("2006-01-02")
+}
+
+// RandUsername generates a random lowercase username (first name + digits).
+func RandUsername() string {
+	return strings.ToLower(RandFirstName()) + strconv.Itoa(RandIntMinMax(1, 9999))
+}
+
+const passwordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+
+// RandPassword generates a random strong password (12–16 characters).
+func RandPassword() string {
+	length := RandIntMinMax(12, 16)
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = passwordChars[rand.Intn(len(passwordChars))]
+	}
+	return string(b)
+}
+
+// RandSlug generates a URL-friendly slug (two lowercase words joined by a hyphen).
+func RandSlug() string {
+	return strings.ToLower(RandWord(4, 8)) + "-" + strings.ToLower(RandWord(4, 8))
+}
+
+var httpStatuses = []int{200, 201, 204, 301, 302, 400, 401, 403, 404, 409, 422, 429, 500, 503}
+
+// RandHTTPStatus returns a random commonly-used HTTP status code.
+func RandHTTPStatus() int {
+	return httpStatuses[rand.Intn(len(httpStatuses))]
+}
+
+var fileExtensions = []string{
+	"pdf", "jpg", "jpeg", "png", "gif", "svg", "webp",
+	"mp4", "mp3", "wav", "avi", "mov",
+	"doc", "docx", "xls", "xlsx", "ppt", "pptx",
+	"csv", "txt", "json", "xml", "yaml", "zip", "tar", "gz",
+}
+
+// RandFileExtension returns a random file extension (without dot).
+func RandFileExtension() string {
+	return fileExtensions[rand.Intn(len(fileExtensions))]
+}
+
+// RandFilename generates a random filename with a random extension.
+func RandFilename() string {
+	return strings.ToLower(RandTriString("_")) + "." + RandFileExtension()
 }
 
 // PRIVATE FUNCTIONS
