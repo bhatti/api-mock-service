@@ -388,6 +388,81 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"EnumInt": func(vals ...any) int64 {
 			return EnumInt(vals...)
 		},
+		"RandIPv6": func() string {
+			return RandIPv6()
+		},
+		"RandMACAddress": func() string {
+			return RandMACAddress()
+		},
+		"RandHexColor": func() string {
+			return RandHexColor()
+		},
+		"RandRGBColor": func() string {
+			return RandRGBColor()
+		},
+		"RandCurrencyCode": func() string {
+			return RandCurrencyCode()
+		},
+		"SeededCurrencyCode": func(seed any) string {
+			return SeededCurrencyCode(toInt64(seed))
+		},
+		"RandSemver": func() string {
+			return RandSemver()
+		},
+		"RandBase64": func() string {
+			return RandBase64()
+		},
+		"RandSHA256": func() string {
+			return RandSHA256()
+		},
+		"RandMD5": func() string {
+			return RandMD5()
+		},
+		"RandLatitude": func() float64 {
+			return RandLatitude()
+		},
+		"RandLongitude": func() float64 {
+			return RandLongitude()
+		},
+		"RandTimezone": func() string {
+			return RandTimezone()
+		},
+		"SeededTimezone": func(seed any) string {
+			return SeededTimezone(toInt64(seed))
+		},
+		"RandMimeType": func() string {
+			return RandMimeType()
+		},
+		"RandPort": func() int {
+			return RandPort()
+		},
+		"RandUnixTimestamp": func() int64 {
+			return RandUnixTimestamp()
+		},
+		"RandFutureDate": func() string {
+			return RandFutureDate()
+		},
+		"RandPastDate": func() string {
+			return RandPastDate()
+		},
+		"RandUsername": func() string {
+			return RandUsername()
+		},
+		"RandPassword": func() string {
+			return RandPassword()
+		},
+		"RandSlug": func() string {
+			return RandSlug()
+		},
+		"RandHTTPStatus": func() int {
+			return RandHTTPStatus()
+		},
+		"RandFileExtension": func() string {
+			return RandFileExtension()
+		},
+		"RandFilename": func() string {
+			return RandFilename()
+		},
 	}
 }
 

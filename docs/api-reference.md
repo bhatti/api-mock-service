@@ -25,6 +25,7 @@ Any HTTP method — GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS — on any path
 | `X-Mock-Scenario: <name>` | Select specific scenario by name |
 | `X-Mock-Response-Status: 503` | Override response status code |
 | `X-Mock-Wait-Before-Reply: 2s` | Inject artificial delay |
+| `X-Session-ID: <id>` | Session identifier for stateful workflows — enables state machine transitions across requests (see [Contract Testing](contract-testing.md#stateful-workflows)) |
 
 **Response headers (always present):**
 
@@ -208,6 +209,7 @@ All contract endpoints accept a `ProducerContractRequest` body:
 | `track_coverage` | bool | false | Include coverage report in response |
 | `run_mutations` | bool | false | Run in mutation mode |
 | `spec_content` | string | — | Inline OpenAPI YAML/JSON for schema validation |
+| `dry_run` | bool | false | List scenarios that would run without executing them |
 
 **Response format:**
 
@@ -306,6 +308,79 @@ See [Fuzz & Property Testing](fuzz-property-testing.md) for details.
 
 ---
 
+### `GET /_coverage/:group`
+
+Returns the last coverage summary from the most recent `ExecuteByGroup` run for the group. Requires that the run used `track_coverage: true` with a spec.
+
+**Example:**
+```bash
+curl http://localhost:8080/_coverage/my-api
+```
+
+**Response (coverage available):**
+```json
+{
+  "totalPaths": 8,
+  "coveredPaths": 7,
+  "coveragePercentage": 87.5,
+  "uncoveredPaths": ["DELETE /users/:id"],
+  "methodCoverage": {"GET": 100.0, "POST": 75.0}
+}
+```
+
+**Response (no data yet):**
+```json
+{
+  "group": "my-api",
+  "message": "no coverage data available — run producer-contract with track_coverage:true and spec_content first"
+}
+```
+
+---
+
+### `POST /_oapi/diff`
+
+Compare two OpenAPI specs and report breaking and non-breaking changes. Returns **409 Conflict** when breaking changes are detected (CI-friendly).
+
+**Request body:**
+```json
+{
+  "base": "<OpenAPI YAML or JSON string>",
+  "head": "<OpenAPI YAML or JSON string>"
+}
+```
+
+**Example:**
+```bash
+curl -X POST http://localhost:8080/_oapi/diff \
+  -H "Content-Type: application/json" \
+  -d "{\"base\": $(cat v1.yaml | jq -Rs .), \"head\": $(cat v2.yaml | jq -Rs .)}"
+```
+
+**Response (200 OK — no breaking changes):**
+```json
+{
+  "breakingChanges": [],
+  "nonBreakingChanges": [{"path": "/products", "changeType": "added-path", "severity": "non-breaking"}],
+  "addedPaths": ["/products"],
+  "removedPaths": []
+}
+```
+
+**Response (409 Conflict — breaking changes detected):**
+```json
+{
+  "breakingChanges": [
+    {"path": "/users", "method": "GET", "field": "id", "changeType": "type-change", "before": "integer", "after": "string", "severity": "breaking"}
+  ],
+  "nonBreakingChanges": [],
+  "addedPaths": [],
+  "removedPaths": ["/orders/batch"]
+}
+```
+
+---
+
 ## History
 
 ### `POST /_history/:method/:name/:path`
@@ -328,7 +403,7 @@ Download execution history as HAR format.
 
 ### `POST /_history/har`
 
-Import scenarios from a HAR file.
+Import scenarios from a HAR file. Response bodies are automatically analyzed to generate type-aware `assert_contents_pattern` assertions — no manual configuration required.
 
 **Example:**
 ```bash
@@ -346,7 +421,7 @@ Download execution history as Postman Collection format.
 
 ### `POST /_history/postman`
 
-Import scenarios from a Postman Collection.
+Import scenarios from a Postman Collection. Response bodies are automatically analyzed to generate type-aware `assert_contents_pattern` assertions — no manual configuration required.
 
 **Example:**
 ```bash

@@ -32,6 +32,8 @@ func NewProducerContractController(
 	webserver.POST("/_contracts/history", ctrl.postProducerContractHistoryByGroup)
 	webserver.POST("/_contracts/mutations/:group", ctrl.postProducerContractMutationsByGroup)
 	webserver.POST("/_contracts/:method/:name/:path", ctrl.postProducerContractScenarioByPath)
+	// W1: coverage endpoint
+	webserver.GET("/_coverage/:group", ctrl.getCoverageByGroup)
 	return ctrl
 }
 
@@ -179,6 +181,28 @@ type postProducerContractHistoryParams struct {
 type apiScenarioContractResponseBody struct {
 	// in:body
 	Body types.ProducerContractResponse
+}
+
+// getCoverageByGroup handler
+// swagger:route GET /_coverage/{group} producer-contract getCoverageByGroup
+// Returns the OpenAPI coverage summary from the most recent contract run for a group.
+// Requires that the last run used --track-coverage / track_coverage:true with a spec.
+// responses:
+//
+//	200: coverageByGroupResponse
+func (mcc *ProducerContractController) getCoverageByGroup(c web.APIContext) error {
+	group := c.Param("group")
+	if group == "" {
+		return fmt.Errorf("scenario group not specified")
+	}
+	coverage := mcc.executor.LastCoverage(group)
+	if coverage == nil {
+		return c.JSON(http.StatusOK, map[string]any{
+			"group":   group,
+			"message": "no coverage data available — run producer-contract with track_coverage:true and spec_content first",
+		})
+	}
+	return c.JSON(http.StatusOK, coverage)
 }
 
 // specAwareExecutor returns a spec-enhanced copy of the executor when SpecContent is provided

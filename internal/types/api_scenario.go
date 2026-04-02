@@ -476,6 +476,33 @@ func (v *APIVariables) Validate() error {
 	return nil
 }
 
+// StateTransition defines a single edge in a scenario state machine.
+type StateTransition struct {
+	// From is the required current state for this transition to fire.
+	From string `yaml:"from" json:"from"`
+	// To is the state to move to after the transition.
+	To string `yaml:"to" json:"to"`
+	// OnMethod restricts the transition to a specific HTTP method (empty = any).
+	OnMethod string `yaml:"on_method,omitempty" json:"on_method,omitempty"`
+	// OnStatus restricts the transition to a specific response status code (0 = any).
+	OnStatus int `yaml:"on_status,omitempty" json:"on_status,omitempty"`
+	// ExtractKey is a JSONPath expression whose value is stored in session data
+	// under the key name (e.g. "$.id" stores the id field under "id").
+	ExtractKey string `yaml:"extract_key,omitempty" json:"extract_key,omitempty"`
+}
+
+// ScenarioStateMachine wires a scenario into a session-scoped state machine.
+// Scenarios that have a StateMachine are only matched when the session's
+// current state equals one of the defined "from" states (or when the session
+// has no state yet and InitialState is set).
+type ScenarioStateMachine struct {
+	// InitialState is the state the session must be in (or start from) for this
+	// scenario to be a candidate. Empty means the scenario is stateless.
+	InitialState string `yaml:"initial_state" json:"initial_state"`
+	// Transitions defines the state changes to apply after a successful response.
+	Transitions []StateTransition `yaml:"transitions" json:"transitions"`
+}
+
 // APIScenario defines mock scenario for APIs
 type APIScenario struct {
 	// Method for HTTP API
@@ -506,6 +533,9 @@ type APIScenario struct {
 	Request APIRequest `yaml:"request" json:"request"`
 	// Response for the API
 	Response APIResponse `yaml:"response" json:"response"`
+	// StateMachine optionally wires the scenario into a session-scoped state machine.
+	// Scenarios without a StateMachine behave identically to before (backward compatible).
+	StateMachine *ScenarioStateMachine `yaml:"state_machine,omitempty" json:"state_machine,omitempty"`
 	// WaitMillisBeforeReply for response
 	WaitBeforeReply time.Duration `yaml:"wait_before_reply" json:"wait_before_reply"`
 	// StartTime of request

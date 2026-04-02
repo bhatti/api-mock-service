@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -240,6 +242,153 @@ func Test_ShouldGenerateSentence(t *testing.T) {
 
 func Test_ShouldGenerateParagraph(t *testing.T) {
 	require.True(t, RandParagraph(1, 10) != "")
+}
+
+func Test_ShouldGetRandIPv6(t *testing.T) {
+	ip := RandIPv6()
+	require.True(t, ip != "")
+	// IPv6 has 7 colons separating 8 groups
+	require.Equal(t, 7, strings.Count(ip, ":"))
+}
+
+func Test_ShouldGetRandMACAddress(t *testing.T) {
+	mac := RandMACAddress()
+	require.True(t, mac != "")
+	require.Equal(t, 5, strings.Count(mac, ":"))
+}
+
+func Test_ShouldGetRandHexColor(t *testing.T) {
+	color := RandHexColor()
+	require.True(t, strings.HasPrefix(color, "#"))
+	require.Equal(t, 7, len(color))
+}
+
+func Test_ShouldGetRandRGBColor(t *testing.T) {
+	color := RandRGBColor()
+	require.True(t, strings.HasPrefix(color, "rgb("))
+	require.True(t, strings.HasSuffix(color, ")"))
+}
+
+func Test_ShouldGetRandCurrencyCode(t *testing.T) {
+	code := RandCurrencyCode()
+	require.True(t, len(code) == 3)
+}
+
+func Test_ShouldGetSeededCurrencyCode(t *testing.T) {
+	a := SeededCurrencyCode(42)
+	b := SeededCurrencyCode(42)
+	require.Equal(t, a, b)
+}
+
+func Test_ShouldGetRandSemver(t *testing.T) {
+	v := RandSemver()
+	require.Equal(t, 2, strings.Count(v, "."))
+}
+
+func Test_ShouldGetRandBase64(t *testing.T) {
+	s := RandBase64()
+	require.True(t, len(s) > 0)
+	// base64 of 16 bytes is 24 chars
+	require.Equal(t, 24, len(s))
+}
+
+func Test_ShouldGetRandSHA256(t *testing.T) {
+	h := RandSHA256()
+	require.Equal(t, 64, len(h))
+}
+
+func Test_ShouldGetRandMD5(t *testing.T) {
+	h := RandMD5()
+	require.Equal(t, 32, len(h))
+}
+
+func Test_ShouldGetRandLatitude(t *testing.T) {
+	lat := RandLatitude()
+	require.True(t, lat >= -90.0 && lat <= 90.0)
+}
+
+func Test_ShouldGetRandLongitude(t *testing.T) {
+	lon := RandLongitude()
+	require.True(t, lon >= -180.0 && lon <= 180.0)
+}
+
+func Test_ShouldGetRandTimezone(t *testing.T) {
+	tz := RandTimezone()
+	require.True(t, tz != "")
+	require.True(t, strings.Contains(tz, "/") || tz == "UTC")
+}
+
+func Test_ShouldGetSeededTimezone(t *testing.T) {
+	a := SeededTimezone(7)
+	b := SeededTimezone(7)
+	require.Equal(t, a, b)
+}
+
+func Test_ShouldGetRandMimeType(t *testing.T) {
+	mt := RandMimeType()
+	require.True(t, strings.Contains(mt, "/"))
+}
+
+func Test_ShouldGetRandPort(t *testing.T) {
+	p := RandPort()
+	require.True(t, p >= 1024 && p <= 65535)
+}
+
+func Test_ShouldGetRandUnixTimestamp(t *testing.T) {
+	ts := RandUnixTimestamp()
+	require.True(t, ts > 0)
+}
+
+func Test_ShouldGetRandFutureDate(t *testing.T) {
+	d := RandFutureDate()
+	require.Equal(t, 10, len(d)) // YYYY-MM-DD
+	t1, err := time.Parse("2006-01-02", d)
+	require.NoError(t, err)
+	require.True(t, t1.After(time.Now()))
+}
+
+func Test_ShouldGetRandPastDate(t *testing.T) {
+	d := RandPastDate()
+	require.Equal(t, 10, len(d))
+	t1, err := time.Parse("2006-01-02", d)
+	require.NoError(t, err)
+	require.True(t, t1.Before(time.Now()))
+}
+
+func Test_ShouldGetRandUsername(t *testing.T) {
+	u := RandUsername()
+	require.True(t, u != "")
+	// should be lowercase only
+	require.Equal(t, u, strings.ToLower(u))
+}
+
+func Test_ShouldGetRandPassword(t *testing.T) {
+	p := RandPassword()
+	require.True(t, len(p) >= 12 && len(p) <= 16)
+}
+
+func Test_ShouldGetRandSlug(t *testing.T) {
+	s := RandSlug()
+	require.True(t, strings.Contains(s, "-"))
+	require.Equal(t, s, strings.ToLower(s))
+}
+
+func Test_ShouldGetRandHTTPStatus(t *testing.T) {
+	code := RandHTTPStatus()
+	valid := map[int]bool{200: true, 201: true, 204: true, 301: true, 302: true,
+		400: true, 401: true, 403: true, 404: true, 409: true, 422: true, 429: true, 500: true, 503: true}
+	require.True(t, valid[code])
+}
+
+func Test_ShouldGetRandFileExtension(t *testing.T) {
+	ext := RandFileExtension()
+	require.True(t, ext != "")
+	require.False(t, strings.HasPrefix(ext, "."))
+}
+
+func Test_ShouldGetRandFilename(t *testing.T) {
+	name := RandFilename()
+	require.True(t, strings.Contains(name, "."))
 }
 
 func countSpaces(str string) int {

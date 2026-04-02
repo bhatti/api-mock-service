@@ -1014,6 +1014,102 @@ func Test_ShouldConvertToInt(t *testing.T) {
 	require.Equal(t, 10, toInt(uint(10)))
 }
 
+func Test_NewTemplateFunctions_NetworkAndCrypto(t *testing.T) {
+	tpls := []struct {
+		name string
+		tmpl string
+	}{
+		{"RandIPv6", `{{RandIPv6}}`},
+		{"RandMACAddress", `{{RandMACAddress}}`},
+		{"RandSHA256", `{{RandSHA256}}`},
+		{"RandMD5", `{{RandMD5}}`},
+		{"RandBase64", `{{RandBase64}}`},
+		{"RandPort", `{{RandPort}}`},
+		{"RandUnixTimestamp", `{{RandUnixTimestamp}}`},
+	}
+	for _, tt := range tpls {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := ParseTemplate("", []byte(tt.tmpl), map[string]any{})
+			require.NoError(t, err)
+			require.NotEmpty(t, string(out))
+		})
+	}
+}
+
+func Test_NewTemplateFunctions_GeoAndProfile(t *testing.T) {
+	tpls := []struct {
+		name string
+		tmpl string
+	}{
+		{"RandLatitude", `{{RandLatitude}}`},
+		{"RandLongitude", `{{RandLongitude}}`},
+		{"RandTimezone", `{{RandTimezone}}`},
+		{"RandCurrencyCode", `{{RandCurrencyCode}}`},
+		{"RandSemver", `{{RandSemver}}`},
+		{"RandUsername", `{{RandUsername}}`},
+		{"RandPassword", `{{RandPassword}}`},
+		{"RandSlug", `{{RandSlug}}`},
+		{"RandMimeType", `{{RandMimeType}}`},
+		{"RandHexColor", `{{RandHexColor}}`},
+		{"RandRGBColor", `{{RandRGBColor}}`},
+	}
+	for _, tt := range tpls {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := ParseTemplate("", []byte(tt.tmpl), map[string]any{})
+			require.NoError(t, err)
+			require.NotEmpty(t, string(out))
+		})
+	}
+}
+
+func Test_NewTemplateFunctions_FileAndDates(t *testing.T) {
+	tpls := []struct {
+		name string
+		tmpl string
+	}{
+		{"RandFutureDate", `{{RandFutureDate}}`},
+		{"RandPastDate", `{{RandPastDate}}`},
+		{"RandFileExtension", `{{RandFileExtension}}`},
+		{"RandFilename", `{{RandFilename}}`},
+		{"RandHTTPStatus", `{{RandHTTPStatus}}`},
+	}
+	for _, tt := range tpls {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := ParseTemplate("", []byte(tt.tmpl), map[string]any{})
+			require.NoError(t, err)
+			require.NotEmpty(t, string(out))
+		})
+	}
+}
+
+func Test_NewTemplateFunctions_InResponseBody(t *testing.T) {
+	// verify new functions compose correctly in a JSON response template
+	body := []byte(`{
+		"ip6": "{{RandIPv6}}",
+		"mac": "{{RandMACAddress}}",
+		"color": "{{RandHexColor}}",
+		"currency": "{{RandCurrencyCode}}",
+		"version": "{{RandSemver}}",
+		"hash": "{{RandSHA256}}",
+		"lat": {{RandLatitude}},
+		"lon": {{RandLongitude}},
+		"tz": "{{RandTimezone}}",
+		"username": "{{RandUsername}}",
+		"slug": "{{RandSlug}}",
+		"mime": "{{RandMimeType}}",
+		"file": "{{RandFilename}}",
+		"expires": "{{RandFutureDate}}",
+		"created": "{{RandPastDate}}"
+	}`)
+	out, err := ParseTemplate("", body, map[string]any{})
+	require.NoError(t, err)
+	var obj map[string]any
+	require.NoError(t, json.Unmarshal(out, &obj))
+	require.NotEmpty(t, obj["ip6"])
+	require.NotEmpty(t, obj["currency"])
+	require.NotEmpty(t, obj["hash"])
+}
+
 func Test_ShouldConvertToFloat64(t *testing.T) {
 	var f32 float32 = 10
 	var f64 float64 = 10

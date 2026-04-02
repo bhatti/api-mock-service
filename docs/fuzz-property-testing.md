@@ -57,7 +57,7 @@ assert_contents_pattern: >
    "completed":"(__boolean__(false|true))"}
 ```
 
-### JSONPath Assertions (Plan A)
+### JSONPath Assertions
 
 Nested fields can be asserted using `$.` prefix or dot-path notation:
 
@@ -134,7 +134,7 @@ curl -X POST http://localhost:8080/_contracts/ecommerce \
   -d '{"base_url": "https://api.example.com", "execution_times": 20}'
 ```
 
-## Mutation Testing (Plan A)
+## Mutation Testing
 
 Mutation testing goes further than property testing: it deliberately corrupts requests and verifies the API *rejects* them. A good API should return `4xx` for malformed input; an API that accepts every mutation has dangerous gaps in input validation.
 
@@ -247,6 +247,121 @@ A robust API should return `400` or `422` for all of these. If the API returns `
   "mismatched": 0
 }
 ```
+
+## Fuzz Shrinking
+
+When a mutation test finds a failure, the failing payload may be large — dozens of fields mutated at once. Shrinking reduces that payload to the **minimal input that still triggers the failure**, making it much easier to understand what the API is actually rejecting (or accepting when it shouldn't).
+
+```bash
+api-mock-service producer-contract \
+  --group payments \
+  --base_url https://api.example.com \
+  --mutations \
+  --shrink
+```
+
+Example output:
+```
+SHRINK ANALYSIS
+──────────────────────────────────────────────────────────────
+Shrinking POST /payments-sqli-amount_0 ...
+  Original body:  {"amount":"' OR 1=1; --","currency":"USD","customerId":"cust-99"}
+  ✓ Reduced in 14 attempts
+  Minimal body:   {"amount":"' OR 1=1; --"}
+──────────────────────────────────────────────────────────────
+```
+
+**What this tells you:** The API accepts SQL injection in `amount` regardless of what other fields are present. The minimal reproducer `{"amount":"' OR 1=1; --"}` is the exact payload to include in a bug report or security finding.
+
+### Shrinking Strategies
+
+Four strategies run in sequence, each trying to remove or simplify inputs while the failure persists:
+
+| Strategy | What it does |
+|----------|-------------|
+| **Field removal** | Removes one field at a time (delta debugging). Keeps the removal if the failure still occurs. |
+| **String shortening** | Binary-searches the length of a string payload (`len/2` each step) to find the minimum length that still fails. |
+| **Array shrinking** | Removes array elements one at a time until further removal stops triggering the failure. |
+| **Numeric reduction** | For large boundary values (e.g. `MaxInt32`), halves the magnitude until the failure no longer reproduces. |
+
+The result is the smallest combination of inputs that still triggers the bug — ready to paste into a ticket.
+
+### When to Use Shrinking
+
+- After `--mutations` finds a failure and the payload is large
+- When debugging which field combination causes unexpected behavior
+- For security testing: isolate exactly which field accepts an injection payload
+
+Shrinking adds latency proportional to the number of fields and the severity of the failure — each attempt requires one real HTTP call. Use it selectively for failures you want to investigate deeply.
+
+---
+
+## HAR / Postman Import with Auto-Assertions
+
+Importing real traffic generates scenarios automatically. Response bodies are analyzed to generate type-aware `assert_contents_pattern` assertions — no manual configuration required.
+
+### Import from HAR (browser/proxy recording)
+
+Export a HAR file from Chrome DevTools (Network → right-click → Save all as HAR) or any proxy:
+
+```bash
+curl -X POST http://localhost:8080/_history/har \
+  --data-binary @my-recording.har
+```
+
+For each recorded response, the service:
+1. Parses the response body
+2. Infers field types (`string`, `number`, `boolean`, array length)
+3. Generates `assert_contents_pattern` regex entries automatically
+
+A response body like:
+```json
+{"id": 42, "email": "user@example.com", "active": true, "tags": ["a","b"]}
+```
+
+Generates assertions like:
+```yaml
+assert_contents_pattern: >
+  {"id": "__number__\\d+",
+   "email": "__string__\\S+",
+   "active": "__boolean__(true|false)",
+   "tags": "(__array__2)"}
+```
+
+These assertions become the baseline for producer contract testing — any future API response that deviates from the recorded shape will fail.
+
+### Import from Postman Collection
+
+```bash
+curl -X POST http://localhost:8080/_history/postman \
+  -H "Content-Type: */*" \
+  --data-binary @collection.json
+```
+
+Same auto-assertion generation applies. Each request/response pair in the collection becomes a scenario.
+
+### Workflow: Record → Auto-Assert → Contract Test
+
+```bash
+# 1. Record real traffic via proxy
+export http_proxy="http://localhost:8081"
+curl https://api.example.com/users/42
+curl -X POST https://api.example.com/users -d '{"name":"Alice","email":"alice@example.com"}'
+
+# 2. Download as HAR and re-import with auto-assertions
+curl -X GET http://localhost:8080/_history/har -o recorded.har
+curl -X POST http://localhost:8080/_history/har --data-binary @recorded.har
+
+# 3. Run contract tests against the real API
+api-mock-service producer-contract \
+  --group users \
+  --base_url https://api.example.com \
+  --times 5
+```
+
+The imported scenarios will validate that the real API continues to match the shape of its own past responses.
+
+---
 
 ## Fuzz Data Functions in Templates
 

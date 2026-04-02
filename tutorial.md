@@ -344,13 +344,13 @@ Both get tested. Neither gets silently skipped.
 Every uploaded spec is immediately explorable via the built-in Swagger UI:
 
 ```
-http://localhost:8080/swagger-ui/
+http://localhost:8080/_ui
 ```
 
 ```mermaid
 flowchart LR
     Dev["Developer"]:::blue
-    UI["Swagger UI\nlocalhost:8080/swagger-ui/"]:::green
+    UI["Swagger UI\nlocalhost:8080/_ui"]:::green
     Mock["Mock Service\nlocalhost:8080"]:::blue
     Store[("Scenarios\n(YAML)")]:::storage
 
@@ -747,7 +747,7 @@ curl -H "Content-Type: application/yaml" \
 
 ### Browse the Swagger UI
 ```
-http://localhost:8080/swagger-ui/
+http://localhost:8080/_ui
 ```
 
 ### Run contract tests
@@ -787,11 +787,427 @@ curl -X PUT http://localhost:8080/_groups/my-group/config \
 
 ## What's Next
 
-The patterns in this guide — record, mock, contract, mutate — cover the vast majority of API reliability problems teams hit in practice. But the framework is designed to grow:
+The patterns in this guide — record, mock, contract, mutate — cover the vast majority of API reliability problems teams hit in practice. Here are a few advanced features for complex scenarios.
 
-- **Stateful workflows** (CREATE → READ → DELETE sequences with session-scoped state)
-- **Spec diff / breaking change detection** (compare v1 vs v2 OpenAPI, fail CI on breaking changes)
-- **Fuzz shrinking** (when a mutation fails, automatically bisect to the minimal reproducing payload)
+---
+
+## Advanced: OpenAPI Discriminator and Polymorphic APIs
+
+When your OpenAPI spec uses `oneOf` or `anyOf` for polymorphic responses, api-mock-service generates **one scenario per variant** rather than silently using only the first branch.
+
+Given this spec fragment:
+```yaml
+paths:
+  /animals:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Cat'
+                - $ref: '#/components/schemas/Dog'
+              discriminator:
+                propertyName: petType
+                mapping:
+                  cat: '#/components/schemas/Cat'
+                  dog: '#/components/schemas/Dog'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Cat'
+                  - $ref: '#/components/schemas/Dog'
+```
+
+After `POST /_oapi`, two scenarios are generated:
+- `POST-animals-cat-201` — response body uses Cat schema fields, `petType: "cat"` is set automatically
+- `POST-animals-dog-201` — response body uses Dog schema fields, `petType: "dog"` is set automatically
+
+```bash
+# Upload spec
+curl -X POST -H "Content-Type: application/yaml" \
+  --data-binary @animals.yaml \
+  http://localhost:8080/_oapi
+
+# List generated scenarios
+curl http://localhost:8080/_scenarios | jq 'keys'
+# ["POST|/animals|animals-cat-201", "POST|/animals|animals-dog-201"]
+
+# Play back the cat variant
+curl -H "X-Mock-Scenario: animals-cat-201" \
+  -X POST http://localhost:8080/animals \
+  -d '{"petType":"cat","name":"Whiskers"}'
+# {"petType":"cat","name":"__string__\\w+","indoor":true}
+
+# Play back the dog variant
+curl -H "X-Mock-Scenario: animals-dog-201" \
+  -X POST http://localhost:8080/animals \
+  -d '{"petType":"dog","name":"Rex"}'
+# {"petType":"dog","name":"__string__\\w+","breed":"Labrador"}
+```
+
+Without a discriminator, variants are auto-named `variant0`, `variant1`, etc. Existing APIs without `oneOf`/`anyOf` are unaffected.
+
+---
+
+## Advanced: Body→Template Injection (Zero Config)
+
+Request body fields are **automatically injected as template variables** in the response. No configuration needed.
+
+```yaml
+# Scenario: echo order details from request into response
+name: create-order
+method: POST
+path: /orders
+group: orders
+request:
+  contents: >
+    {"customerId":"{{RandStringMinMax 6 12}}",
+     "amount": {{RandIntMinMax 1 10000}},
+     "currency": "USD"}
+response:
+  status: 201
+  contents: >
+    {"orderId": "{{uuid}}",
+     "customerId": "{{.customerId}}",
+     "total": {{.amount}},
+     "currency": "{{.currency}}",
+     "status": "pending"}
+```
+
+When a POST request arrives with `{"customerId":"cust-42","amount":150,"currency":"EUR"}`, the response reflects those values:
+```json
+{"orderId": "3f4a7b8c-...","customerId": "cust-42","total": 150,"currency": "EUR","status": "pending"}
+```
+
+**Rules:**
+- Top-level string, number, and boolean fields are injected automatically
+- Path params and query params take priority if they share a name with a body field
+- Nested objects are available as the parent key (e.g. `{{.address}}` → full sub-object)
+- Works with any content type that parses as JSON
+
+This pattern is useful for stateful-looking responses without requiring a real database.
+
+---
+
+## Advanced: JSONPath Assertions
+
+Use JSONPath keys in `assert_contents_pattern` to assert on nested fields, array elements, and deep paths — no flat-structure limitation.
+
+```yaml
+response:
+  assert_contents_pattern: >
+    {"$.user.email": "__string__\\S+@\\S+\\.\\S+",
+     "$.order.items[0].price": "__number__[0-9]+\\.?[0-9]*",
+     "$.order.status": "(pending|confirmed|shipped)",
+     "$.metadata.tags": "(__array__3)"}
+```
+
+| Syntax | What it matches |
+|--------|----------------|
+| `$.user.email` | Nested field `user.email` |
+| `$.items[0].name` | First element of array `items`, field `name` |
+| `$.a.b.c` | Deeply nested path |
+
+JSONPath keys and flat keys can be mixed in the same pattern:
+```yaml
+assert_contents_pattern: >
+  {"id": "__number__\\d+",
+   "$.address.city": "__string__\\w+",
+   "$.address.zip": "__string__\\d{5}"}
+```
+
+Flat keys (`id`) use the existing field lookup; JSONPath keys (`$.address.city`) traverse the response tree. Both styles work in the same scenario.
+
+---
+
+## Advanced: Field-Level Failure Diagnostics
+
+When a contract test fails, the `error_details` field in the response pinpoints exactly what was wrong — no log trawling required.
+
+```bash
+curl -X POST http://localhost:8080/_contracts/orders \
+  -d '{"base_url": "https://api.example.com", "execution_times": 1}' \
+  | jq '.error_details'
+```
+
+```json
+{
+  "create-order_0": {
+    "summary": "assertion failed",
+    "scenario": "create-order",
+    "url": "https://api.example.com/orders",
+    "statusCode": 200,
+    "expectedStatusCode": 201,
+    "missingFields": ["orderId"],
+    "valueMismatches": {
+      "status": {"expected": "pending", "actual": "processing"}
+    },
+    "headerMismatches": {
+      "Content-Type": {"expected": "application/json", "actual": "text/plain"}
+    },
+    "schemaViolations": [
+      {"field": "amount", "message": "value must be a number"}
+    ]
+  }
+}
+```
+
+**How to read this:**
+- `missingFields` — fields present in `assert_contents_pattern` but absent from the real response
+- `valueMismatches` — fields present but with wrong values (shows expected vs. actual)
+- `headerMismatches` — same for response headers
+- `schemaViolations` — fields that violate the OpenAPI schema (requires `spec_content`)
+
+The `Errors` map (legacy) still contains the summary string for backward compatibility. `error_details` contains the structured breakdown.
+
+---
+
+## Advanced: Dry Run for CI Planning
+
+Use `--dry-run` to see which scenarios would execute before running a full contract suite:
+
+```bash
+api-mock-service producer-contract \
+  --group payments \
+  --base_url https://api.example.com \
+  --dry-run
+```
+
+Output:
+```
+DRY RUN — no requests will be sent
+──────────────────────────────────────────────────────────────
+SCENARIO                              METHOD  PATH
+──────────────────────────────────────────────────────────────
+create-payment-201                    POST    /payments
+get-payment-200                       GET     /payments/:id
+refund-payment-200                    POST    /payments/:id/refund
+cancel-payment-200                    DELETE  /payments/:id
+──────────────────────────────────────────────────────────────
+4 scenarios would run
+```
+
+Useful in CI pipelines to validate that the expected scenarios are present before running the real suite:
+
+```yaml
+# GitHub Actions
+- name: Validate scenario coverage
+  run: |
+    api-mock-service producer-contract \
+      --group payments \
+      --base_url https://api.example.com \
+      --dry-run
+    # Fails if no scenarios exist for the group
+
+- name: Run contract suite
+  run: |
+    api-mock-service producer-contract \
+      --group payments \
+      --base_url https://api.example.com \
+      --spec openapi.yaml \
+      --track-coverage \
+      --times 5
+```
+
+---
+
+## Advanced: HAR / Postman Import with Auto-Generated Assertions
+
+You don't need to write scenario YAML by hand. Import a HAR file (exported from Chrome DevTools or any proxy) and get scenarios with assertions generated automatically:
+
+```bash
+# Export HAR from Chrome DevTools → Network → right-click → Save all as HAR
+curl -X POST http://localhost:8080/_history/har \
+  --data-binary @my-recording.har
+```
+
+For a recorded response like:
+```json
+{"id": 42, "name": "Alice", "email": "alice@example.com", "active": true, "score": 98.5}
+```
+
+The import generates:
+```yaml
+response:
+  assert_contents_pattern: >
+    {"id": "__number__\\d+",
+     "name": "__string__\\S+",
+     "email": "__string__\\S+",
+     "active": "__boolean__(true|false)",
+     "score": "__number__[0-9]+\\.?[0-9]*"}
+```
+
+Same for Postman collections:
+```bash
+curl -X POST http://localhost:8080/_history/postman \
+  -H "Content-Type: */*" \
+  --data-binary @collection.json
+```
+
+These auto-generated assertions become the baseline. Run contract tests against the real API and any response shape deviation is caught immediately — no manual assertion writing required.
+
+---
+
+## Advanced: Stateful API Workflows
+
+Some API tests need to express sequences like CREATE → READ → DELETE where each step depends on the previous. Add a `state_machine` block to your scenario YAML:
+
+```yaml
+# POST /orders — creates order, stores orderId, transitions to "created"
+name: create-order
+method: POST
+path: /orders
+group: order-flow
+response:
+  status: 201
+  contents: '{"orderId":"{{uuid}}","status":"pending"}'
+state_machine:
+  transitions:
+    - from: ""
+      to: created
+      on_method: POST
+      on_status: 201
+      extract_key: "$.orderId"   # saves response field into session store
+```
+
+```yaml
+# GET /orders/:id — only matches when session is in "created" state
+name: get-order
+method: GET
+path: /orders/:id
+group: order-flow
+state_machine:
+  initial_state: created
+  transitions:
+    - from: created
+      to: viewed
+      on_method: GET
+      on_status: 200
+```
+
+Send `X-Session-ID: my-session` with every request and the mock service tracks state per session — completely in-memory, zero config.
+
+### End-to-End Walkthrough: ORDER CREATE → READ → DELETE
+
+**Step 1: Upload the three scenario files**
+
+```bash
+# create-order.yaml
+curl -X POST -H "Content-Type: application/yaml" \
+  --data-binary @create-order.yaml \
+  http://localhost:8080/_scenarios
+
+# get-order.yaml
+curl -X POST -H "Content-Type: application/yaml" \
+  --data-binary @get-order.yaml \
+  http://localhost:8080/_scenarios
+
+# delete-order.yaml (transitions to "deleted", terminal state)
+cat > delete-order.yaml <<'EOF'
+name: delete-order
+method: DELETE
+path: /orders/:id
+group: order-flow
+state_machine:
+  initial_state: viewed
+  transitions:
+    - from: viewed
+      to: deleted
+      on_method: DELETE
+      on_status: 204
+response:
+  status: 204
+  contents: ""
+EOF
+curl -X POST -H "Content-Type: application/yaml" \
+  --data-binary @delete-order.yaml \
+  http://localhost:8080/_scenarios
+```
+
+**Step 2: Run the full workflow with one session ID**
+
+```bash
+SESSION="order-session-$(date +%s)"
+
+# CREATE — transitions from "" → created, extracts orderId
+curl -s -X POST http://localhost:8080/orders \
+  -H "X-Session-ID: $SESSION" \
+  -H "Content-Type: application/json" \
+  -d '{"customerId":"cust-42","amount":150}' | jq .
+# {"orderId":"abc-123","status":"pending"}
+
+# READ — only matches when session state is "created"
+curl -s http://localhost:8080/orders/abc-123 \
+  -H "X-Session-ID: $SESSION" | jq .
+# {"orderId":"abc-123","status":"pending"}
+
+# DELETE — only matches when session state is "viewed"
+curl -s -X DELETE http://localhost:8080/orders/abc-123 \
+  -H "X-Session-ID: $SESSION"
+# 204 No Content
+
+# Attempting GET again now fails — state is "deleted"
+curl -s http://localhost:8080/orders/abc-123 \
+  -H "X-Session-ID: $SESSION"
+# 404 — no matching scenario for state "deleted"
+```
+
+Each step in the workflow is enforced by the state machine. A different session ID (`SESSION2`) gets its own independent state — parallel tests don't interfere.
+
+---
+
+## Advanced: Spec Diff — Break Nothing in CI
+
+When your API evolves, compare old and new OpenAPI specs before merging:
+
+```bash
+api-mock-service compare-specs \
+  --base api/v1.yaml \
+  --head api/v2.yaml \
+  --fail-on-breaking   # exit 2 if breaking changes found
+```
+
+Or via the HTTP endpoint:
+
+```bash
+curl -X POST http://localhost:8080/_oapi/diff \
+  -H "Content-Type: application/json" \
+  -d '{"base": "...", "head": "..."}'
+# Returns 409 Conflict when breaking changes detected
+```
+
+Breaking changes detected: removed paths/methods, required params added, type changes, enum narrowed, response fields removed.
+
+---
+
+## Advanced: Fuzz Shrinking
+
+When mutation testing finds a failure, `--shrink` reduces the payload to the minimal reproducer:
+
+```bash
+api-mock-service producer-contract \
+  --group payments \
+  --base_url https://api.example.com \
+  --mutations \
+  --shrink
+```
+
+Output:
+```
+SHRINK ANALYSIS
+Shrinking POST /payments-201 ...
+  ✓ reduced in 14 attempts
+  Minimal body: {"amount":-9223372036854775808}
+```
+
+Four strategies run in sequence: field removal (delta debugging), string shortening (binary search), array element removal, numeric exponential backoff. The result is the smallest input that still triggers the failure.
+
+---
 
 The source is open. The issues are tracked. Contributions welcome.
 

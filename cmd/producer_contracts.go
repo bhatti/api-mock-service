@@ -10,6 +10,7 @@ import (
 	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
 	"github.com/bhatti/api-mock-service/internal/oapi"
+	"github.com/bhatti/api-mock-service/internal/shrink"
 	"github.com/bhatti/api-mock-service/internal/types"
 	"github.com/bhatti/api-mock-service/internal/web"
 
@@ -24,6 +25,8 @@ var verbose bool
 var specFile string
 var trackCoverage bool
 var runMutations bool
+var dryRun bool
+var runShrink bool
 
 // producerContractCmd represents the contract command
 var producerContractCmd = &cobra.Command{
@@ -47,6 +50,8 @@ var producerContractCmd = &cobra.Command{
 			"SpecFile":     specFile,
 			"Mutations":    runMutations,
 			"Coverage":     trackCoverage,
+			"DryRun":       dryRun,
+			"Shrink":       runShrink,
 		}).Debugf("executing producer contracts...")
 
 		serverConfig, err := types.NewConfiguration(
@@ -69,6 +74,7 @@ var producerContractCmd = &cobra.Command{
 		contractReq := types.NewProducerContractRequest(baseURL, executionTimes, 0)
 		contractReq.Verbose = verbose
 		contractReq.TrackCoverage = trackCoverage
+		contractReq.DryRun = dryRun
 
 		executor := contract.NewProducerExecutor(
 			scenarioRepo,
@@ -126,6 +132,37 @@ var producerContractCmd = &cobra.Command{
 			printCoverageReport(contractRes.Coverage)
 		}
 
+		// If shrinking is requested, find the minimal failing payload for each failure.
+		if runShrink && len(contractRes.Errors) > 0 && group != "" {
+			fmt.Printf("\n%s\n", colorize("SHRINK ANALYSIS", ansiBold))
+			detector := contract.NewProducerExecutorFailureDetector(executor, baseURL, dataTemplate, contractReq)
+			scenarioKeys := scenarioRepo.LookupAllByGroup(group)
+			for _, sk := range scenarioKeys {
+				if _, isFailed := contractRes.Errors[sk.Name+"_0"]; !isFailed {
+					// Check without index suffix too
+					if _, isFailed2 := contractRes.Errors[sk.Name]; !isFailed2 {
+						continue
+					}
+				}
+				scenario, lookupErr := scenarioRepo.Lookup(sk, contractReq.Overrides())
+				if lookupErr != nil {
+					continue
+				}
+				fmt.Printf("Shrinking %s ...\n", sk.Name)
+				shrinkResult, shrinkErr := shrink.Shrink(context.Background(), detector, scenario, shrink.ShrinkOptions{})
+				if shrinkErr != nil {
+					fmt.Printf("  error: %s\n", shrinkErr)
+					continue
+				}
+				if shrinkResult.Reduced {
+					fmt.Printf("  %s reduced in %d attempts\n", colorize("✓", ansiGreen), shrinkResult.Attempts)
+					fmt.Printf("  Minimal body: %s\n", shrinkResult.Minimal.Request.Contents)
+				} else {
+					fmt.Printf("  %s no reduction possible (%d attempts)\n", colorize("~", ansiYellow), shrinkResult.Attempts)
+				}
+			}
+		}
+
 		log.WithFields(log.Fields{
 			"Errors":     len(contractRes.Errors),
 			"Succeeded":  contractRes.Succeeded,
@@ -148,6 +185,8 @@ func init() {
 	producerContractCmd.Flags().StringVar(&specFile, "spec", "", "path to OpenAPI spec file (YAML/JSON) for response schema validation")
 	producerContractCmd.Flags().BoolVar(&trackCoverage, "track-coverage", false, "include OpenAPI coverage report in output (requires --spec)")
 	producerContractCmd.Flags().BoolVar(&runMutations, "mutations", false, "run mutation testing instead of normal contract execution")
+	producerContractCmd.Flags().BoolVar(&dryRun, "dry-run", false, "list scenarios that would run without executing them")
+	producerContractCmd.Flags().BoolVar(&runShrink, "shrink", false, "shrink failing mutation payloads to minimal reproducing inputs (requires failures)")
 }
 
 // isTTY returns true when stdout is a terminal (ANSI colors are safe to use).

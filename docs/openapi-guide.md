@@ -74,9 +74,9 @@ response:
      "auth_token":"(__string__\\w+)"}
 ```
 
-## Discriminator / oneOf / anyOf Support (Plan A)
+## Discriminator / oneOf / anyOf Support
 
-Before Plan A, the parser always used the first `oneOf`/`anyOf` branch, silently ignoring all other variants. Now it generates **one scenario per variant**, so every branch is tested.
+The parser generates **one scenario per variant**, so every branch is tested — no variant is silently ignored.
 
 ### Without a Discriminator
 
@@ -109,6 +109,96 @@ Generates:
 - `CreateAnimal-dog-201` — scenario with `petType: "dog"` + Dog fields
 
 The discriminator field is automatically set to the correct value in the response template.
+
+### Complete Example
+
+Upload this spec:
+
+```yaml
+openapi: "3.0.0"
+info:
+  title: Pet Store
+  version: "1.0"
+paths:
+  /animals:
+    post:
+      operationId: CreateAnimal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Cat'
+                - $ref: '#/components/schemas/Dog'
+              discriminator:
+                propertyName: petType
+                mapping:
+                  cat: '#/components/schemas/Cat'
+                  dog: '#/components/schemas/Dog'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/Cat'
+                  - $ref: '#/components/schemas/Dog'
+                discriminator:
+                  propertyName: petType
+                  mapping:
+                    cat: '#/components/schemas/Cat'
+                    dog: '#/components/schemas/Dog'
+components:
+  schemas:
+    Cat:
+      type: object
+      required: [petType, name, indoor]
+      properties:
+        petType: {type: string}
+        name:    {type: string}
+        indoor:  {type: boolean}
+    Dog:
+      type: object
+      required: [petType, name, breed]
+      properties:
+        petType: {type: string}
+        name:    {type: string}
+        breed:   {type: string}
+```
+
+```bash
+curl -X POST -H "Content-Type: application/yaml" \
+  --data-binary @animals.yaml \
+  http://localhost:8080/_oapi
+# {"scenarios": 2, ...}
+```
+
+Two scenarios are created:
+
+```bash
+# Play back the Cat variant
+curl -H "X-Mock-Scenario: CreateAnimal-cat-201" \
+  -X POST http://localhost:8080/animals \
+  -d '{"petType":"cat","name":"Whiskers"}'
+# {"petType":"cat","name":"Mittens","indoor":true}
+
+# Play back the Dog variant
+curl -H "X-Mock-Scenario: CreateAnimal-dog-201" \
+  -X POST http://localhost:8080/animals \
+  -d '{"petType":"dog","name":"Rex"}'
+# {"petType":"dog","name":"Buddy","breed":"Labrador"}
+```
+
+Run contract tests against a real server — both variants are tested automatically:
+
+```bash
+api-mock-service producer-contract \
+  --group CreateAnimal \
+  --base_url https://api.petstore.example.com \
+  --spec animals.yaml \
+  --times 3
+```
 
 ### Backward Compatibility
 
@@ -159,7 +249,7 @@ docker run -p 8080:8080 \
   swaggerapi/swagger-ui
 ```
 
-## Using the Spec for Contract Validation (Plan A)
+## Using the Spec for Contract Validation
 
 Providing a spec at contract test time enables response schema validation: each real API response is checked against the OpenAPI schema using `openapi3filter`. Schema violations surface as structured errors, not just "assertion failed".
 

@@ -21,6 +21,41 @@ import (
 
 var baseURL = "https://mocksite.local"
 
+func Test_ProducerExecutor_DryRunByGroup(t *testing.T) {
+	config := types.BuildTestConfig()
+	// GIVEN scenario repository
+	scenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+
+	// AND a scenario saved in the repository
+	scenario, err := saveTestScenario("../../fixtures/get_todo.yaml", scenarioRepository)
+	require.NoError(t, err)
+
+	// AND a dry-run request
+	dataTemplate := fuzz.NewDataTemplateRequest(false, 1, 2)
+	contractReq := types.NewProducerContractRequest("https://jsonplaceholder.typicode.com", 1, 0)
+	contractReq.DryRun = true
+
+	// WHEN executing by group in dry-run mode
+	executor := NewProducerExecutor(scenarioRepository, groupConfigRepository, web.NewHTTPClient(config, web.NewAuthAdapter(config)))
+	res := executor.ExecuteByGroup(context.Background(), &http.Request{}, scenario.Group, dataTemplate, contractReq)
+
+	// THEN results are returned without actual HTTP calls
+	require.NotNil(t, res)
+	require.Equal(t, 0, len(res.Errors), fmt.Sprintf("unexpected errors: %v", res.Errors))
+	require.NotEmpty(t, res.Results, "dry-run should list scenarios")
+	// Each result should have dry_run=true
+	for _, v := range res.Results {
+		if m, ok := v.(map[string]any); ok {
+			require.Equal(t, true, m["dry_run"], "dry_run flag missing in result")
+		}
+	}
+	// Metrics should indicate dry_run mode
+	require.Equal(t, float64(1), res.Metrics["dry_run"])
+}
+
 func Test_ShouldNotExecuteNonexistentScenario(t *testing.T) {
 	// GIVEN scenario repository
 	config := types.BuildTestConfig()
@@ -1246,7 +1281,7 @@ func Test_ShouldExecuteTransferAPISuiteAsProducer(t *testing.T) {
 		// Find auth scenario
 		var authScenario *types.APIScenario
 		for _, s := range scenarios {
-			if strings.Contains(s.Path, "/auth/token") && s.Method == types.Post {
+			if strings.Contains(s.Path, "/auth/token") && s.Method == types.Post && s.Response.StatusCode == 200 {
 				authScenario = s
 				break
 			}
@@ -1683,7 +1718,7 @@ func Test_ShouldExecuteTransferAPISuiteAsProducer(t *testing.T) {
 		t.Log("Step 1: Authenticate and get token")
 		var authScenario *types.APIScenario
 		for _, s := range scenarios {
-			if strings.Contains(s.Path, "/auth/token") && s.Method == types.Post {
+			if strings.Contains(s.Path, "/auth/token") && s.Method == types.Post && s.Response.StatusCode == 200 {
 				authScenario = s
 				break
 			}

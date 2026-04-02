@@ -21,6 +21,8 @@ type ProducerContractRequest struct {
 	// SpecContent optional OpenAPI spec (YAML or JSON) used for response schema validation.
 	// When set, responses are validated against the spec in addition to scenario assertions.
 	SpecContent string `yaml:"spec_content" json:"spec_content,omitempty"`
+	// DryRun lists the scenarios that would run without actually executing them.
+	DryRun bool `yaml:"dry_run" json:"dry_run"`
 	// Headers overrides
 	Headers http.Header `yaml:"-" json:"-"`
 	// Params local overrides
