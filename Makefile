@@ -3,8 +3,11 @@ GOTEST=$(GOCMD) test
 GOVET=$(GOCMD) vet
 BINARY_NAME=api-mock-service
 BRANCH=$(shell git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+VERSION_MAJOR?=0
+VERSION_MINOR?=1
+VERSION_PATCH?=$(shell git rev-list --count HEAD 2>/dev/null || echo 0)
+VERSION?=$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 COMMIT?=$(shell git describe --always --long --dirty)
-VERSION?=$(shell git describe --always --long --dirty)
 DATE?=$(shell date -u '+%Y-%m-%dT%H:%M:%S')
 SERVICE_PORT?=3000
 TEST_RACE_PROCESS=-race
@@ -82,5 +85,38 @@ test-race:
 vendor:
 	$(GOCMD) mod vendor
 
-.PHONY: vendor build test
+tag-release: build
+	@echo "╔══════════════════════════════════════════════════════════╗"
+	@echo "║  API Mock Service Release Tagging                       ║"
+	@echo "╚══════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "  Version : v$(VERSION)"
+	@echo "  Commit  : $(COMMIT)"
+	@echo "  Date    : $(DATE)"
+	@echo ""
+	@echo "Run these git commands to complete the release:"
+	@echo ""
+	@echo "  git add -A"
+	@echo "  git commit -m \"chore: release v$(VERSION)\""
+	@echo "  git tag -a v$(VERSION) -m \"Release v$(VERSION)\""
+	@echo "  git push && git push --tags"
+	@echo ""
+
+bump-patch:
+	@$(MAKE) tag-release
+
+bump-minor:
+	@NEW_MINOR=$$(($(VERSION_MINOR) + 1)); \
+	sed -i.bak "s/^VERSION_MINOR?=.*/VERSION_MINOR?=$$NEW_MINOR/" Makefile && rm -f Makefile.bak; \
+	echo "Bumped VERSION_MINOR to $$NEW_MINOR in Makefile"
+	@$(MAKE) tag-release
+
+bump-major:
+	@NEW_MAJOR=$$(($(VERSION_MAJOR) + 1)); \
+	sed -i.bak "s/^VERSION_MAJOR?=.*/VERSION_MAJOR?=$$NEW_MAJOR/" Makefile && rm -f Makefile.bak; \
+	sed -i.bak 's/^VERSION_MINOR?=.*/VERSION_MINOR?=0/' Makefile && rm -f Makefile.bak; \
+	echo "Bumped VERSION_MAJOR to $$NEW_MAJOR, reset VERSION_MINOR to 0 in Makefile"
+	@$(MAKE) tag-release
+
+.PHONY: vendor build test tag-release bump-patch bump-minor bump-major
 
