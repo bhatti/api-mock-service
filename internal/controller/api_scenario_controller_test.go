@@ -99,10 +99,16 @@ func Test_ShouldGetScenarioGroups(t *testing.T) {
 	require.NoError(t, err)
 	oapiRepository, err := repository.NewFileOAPIRepository(config)
 	require.NoError(t, err)
+
+	// Ensure at least one scenario exists so groups are non-empty
+	require.NoError(t, mockScenarioRepository.Save(&types.APIScenario{
+		Method: types.Get, Name: "groups-test", Path: "/groups-test", Group: "groups-test-group",
+		Response: types.APIResponse{StatusCode: 200},
+	}))
+
 	webServer := web.NewStubWebServer()
 	ctrl := NewAPIScenarioController(mockScenarioRepository, oapiRepository, webServer)
 	data := []byte("test data")
-	require.NoError(t, err)
 	reader := io.NopCloser(bytes.NewReader(data))
 	u, err := url.Parse("http://localhost:8080?a=1&b=abc")
 	require.NoError(t, err)

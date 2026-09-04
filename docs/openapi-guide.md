@@ -331,9 +331,65 @@ HTTP response:
 curl http://localhost:8080/_oapi
 ```
 
+## Auto-Discovered Request Chains
+
+When you upload an OpenAPI spec, api-mock-service automatically discovers data-flow dependencies between operations. If `POST /pets` returns an `id` and `GET /pets/{petId}` needs that `id`, the system links them so `POST` runs before `GET` during contract testing.
+
+### How It Works
+
+The dependency graph builder:
+1. Extracts **producer fields** from each operation's response schemas
+2. Extracts **consumer fields** from each operation's path parameters, query parameters, and request body
+3. Matches producers to consumers using confidence-weighted name matching
+4. Topologically sorts operations so producers execute before consumers
+
+### Name Matching Confidence
+
+| Match Type | Confidence | Example |
+|-----------|-----------|---------|
+| Exact (after normalizing case/separators) | 1.0 | Response `userId` → request `user_id` |
+| Singular/plural | 0.9 | Response `user` → request `users` |
+| ID pattern + same resource path | 0.8 | Response `id` from `POST /pets` → `{petId}` in `GET /pets/{petId}` |
+| Generic ID | 0.7 | Response `id` → request field containing `id` |
+
+### Example
+
+Given this spec:
+
+```yaml
+paths:
+  /pets:
+    post:
+      operationId: createPet
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                properties:
+                  id: {type: string}
+                  name: {type: string}
+  /pets/{petId}:
+    get:
+      operationId: getPet
+      parameters:
+        - name: petId
+          in: path
+```
+
+The system discovers: `createPet` → `getPet` (via `id` → `petId`, confidence 0.8).
+
+During mutation testing, `createPet` runs first, and its `id` value is available to `getPet`.
+
+### Cycle Handling
+
+If operations form a cycle (A → B → A), the system breaks cycles by moving unreachable nodes into a final execution group, ensuring all operations still run.
+
+---
+
 ## Related Docs
 
-- [Contract Testing](contract-testing.md) — schema validation, coverage, mutations
+- [Contract Testing](contract-testing.md) — schema validation, coverage, mutations, dependency discovery
 - [CLI Reference](cli-reference.md) — `--spec` and `--track-coverage` flags
 - [API Reference](api-reference.md) — `/_oapi` endpoint details
-- [Fuzz & Property Testing](fuzz-property-testing.md) — mutation strategies
+- [Fuzz & Property Testing](fuzz-property-testing.md) — mutation strategies, injection detection

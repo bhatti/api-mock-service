@@ -213,17 +213,29 @@ Both test that the API handles extreme inputs without panicking.
 
 #### Security Injection Mutations
 
-Each string field gets injected with security payloads to verify the API sanitizes input:
+Each string field gets injected with **grammar-based randomized payloads** across 8 vulnerability classes. Unlike fixed payload lists, each run generates diverse variants — evading pattern-matching WAFs and exercising more attack surface:
 
-| Category | Payloads |
-|----------|---------|
-| SQL injection | `' OR 1=1; --`, `1; DROP TABLE users; --` |
-| Path traversal | `../../etc/passwd` |
-| LDAP injection | `*(|(uid=*))` |
-| Command injection | `; cat /etc/passwd`, `\| whoami` |
-| SSRF | `http://169.254.169.254/latest/meta-data/` |
-| XXE | `<?xml version='1.0'?><!DOCTYPE x [<!ENTITY xxe SYSTEM 'file:///etc/passwd'>]>` |
-| XSS | `<script>alert(1)</script>` |
+| Generator | Vulnerability Class | Example Variants |
+|-----------|-------------------|-----------------|
+| `RandSQLi` | SQL injection | Boolean-based, time-based, UNION, error-based with random table/column names |
+| `RandXSS` | Cross-site scripting | Tag/event combos, encoded payloads, DOM-based vectors |
+| `RandPathTraversal` | Path traversal | Variable depth, URL-encoded, double-encoded, OS-specific paths |
+| `RandSSTI` | Server-side template injection | Jinja2, Freemarker, Twig, ERB syntaxes |
+| `RandCmdInjection` | OS command injection | Pipe, semicolon, backtick, `$()`, `&&` variants |
+| `RandNoSQLi` | NoSQL injection | MongoDB `$gt`/`$ne` operators, JSON injection |
+| `RandLDAPi` | LDAP injection | Wildcard, OR/AND injection variants |
+| `RandXXE` | XML external entity | File read, SSRF, parameter entity |
+
+Each generator follows the `Rand*`/`SeededRand*` pair pattern for reproducibility:
+
+```yaml
+# Use in scenario templates:
+request:
+  contents: >
+    {"username": "{{RandSQLi}}",
+     "search": "{{RandXSS}}",
+     "file": "{{RandPathTraversal}}"}
+```
 
 A robust API should return `400` or `422` for all of these. If the API returns `200` with the injection payload reflected in the response, the mutation test fails — surfacing a real security gap.
 
@@ -378,10 +390,152 @@ request:
      "createdAt": "{{Time}}"}
 ```
 
+## Injection Detection
+
+When mutation testing sends security payloads, api-mock-service now **analyzes every response** for evidence that the injection succeeded. This completes the fuzz loop: generate payloads → send → detect vulnerabilities.
+
+### What Gets Detected
+
+| Category | Detection Method | CWE |
+|----------|-----------------|-----|
+| SQL injection | Error signatures (MySQL, PostgreSQL, SQLite, MSSQL, Oracle) | CWE-89 |
+| NoSQL injection | MongoDB/CouchDB/Cassandra error signatures | CWE-943 |
+| LDAP injection | javax.naming/LDAPException signatures | CWE-90 |
+| Reflected XSS | Payload appears unescaped in response body | CWE-79 |
+| Reflected SSTI | Template syntax reflected back | CWE-1336 |
+| Command injection | Command output reflected in response | CWE-78 |
+| Information disclosure | Stack traces, file paths, server version strings | CWE-200 |
+| Unhandled input | Unexpected 500 after injection payload | CWE-20 |
+
+Each finding includes the exact payload, field, endpoint, CWE classification, and matched evidence.
+
+### Blind Injection Detection (Timing-Based)
+
+For attacks that produce no visible error (blind SQL injection, blind SSRF), the detector compares response times against a baseline. If a payload containing timing keywords (`SLEEP`, `WAITFOR`, `pg_sleep`, `BENCHMARK`) causes a response time significantly above baseline, it's flagged as a potential blind injection:
+
+```json
+{
+  "type": "blind-timing",
+  "severity": "critical",
+  "evidence": "elapsed 15000ms vs baseline 2000ms (7.5x)",
+  "cwe": "CWE-89",
+  "payload": "' OR SLEEP(5)--",
+  "field": "username",
+  "endpoint": "POST /login"
+}
+```
+
+Configure sensitivity with `timing_threshold_multiplier` (default 3.0):
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com", "timing_threshold_multiplier": 5.0}'
+```
+
+### Injection Findings in Mutation Results
+
+Findings appear in the mutation response under `error_details[].injectionFindings`:
+
+```json
+{
+  "error_details": {
+    "create-user-sec-sqli-name_0": {
+      "summary": "1 injection finding(s) for create-user-sec-sqli-name",
+      "injectionFindings": [
+        {
+          "type": "sqli-error-mysql",
+          "severity": "critical",
+          "evidence": "You have an error in your SQL syntax",
+          "pattern": "(?i)you have an error in your sql syntax",
+          "payload": "' UNION SELECT table_name FROM information_schema.tables--",
+          "field": "name",
+          "endpoint": "POST /users",
+          "cwe": "CWE-89"
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Sequence-Level Mutations
+
+While per-field mutations test individual input validation, **sequence mutations** test operation ordering and idempotency. Real bugs often emerge from unexpected sequences: DELETE before a resource exists, duplicate POST creating conflicts, PUT with stale data.
+
+### Strategies
+
+| Strategy | What It Tests | Example |
+|----------|--------------|---------|
+| **Reversed** | Order dependency — do later steps fail without earlier ones? | DELETE → GET → POST (instead of POST → GET → DELETE) |
+| **Skip step** | Missing prerequisites — does step 3 work if step 2 is skipped? | POST → DELETE (skipping GET) |
+| **Duplicate step** | Idempotency — does repeating a step cause errors or inconsistency? | POST → POST → GET (POST duplicated) |
+| **Method swap** | HTTP method confusion — does PUT behave differently from PATCH? | PUT swapped to PATCH, GET swapped to DELETE |
+
+---
+
+## Failure Deduplication
+
+Mutation testing can produce hundreds of failures from the same root cause. Failure deduplication clusters them by `(statusCode, errorCategory, endpoint, responseHash)`, reducing noise 10-50x.
+
+```json
+{
+  "failureClusters": [
+    {
+      "key": {
+        "statusCode": 500,
+        "errorCategory": "injection",
+        "endpoint": "POST /users",
+        "responseHash": "a3f2c1..."
+      },
+      "count": 24,
+      "representative": "create-user-sec-sqli-name_0",
+      "affectedMutations": ["create-user-sec-sqli-name_0", "create-user-sec-sqli-email_0", "..."],
+      "severity": "critical"
+    }
+  ]
+}
+```
+
+Instead of reviewing 24 individual failures, you review 1 cluster with its representative mutation.
+
+---
+
+## Security Summary
+
+All injection findings from a mutation run are aggregated into an OWASP-classified security summary:
+
+```json
+{
+  "securitySummary": {
+    "totalFindings": 12,
+    "bySeverity": {"critical": 5, "high": 4, "medium": 2, "info": 1},
+    "byCategory": {"CWE-89": 5, "CWE-79": 4, "CWE-20": 2, "CWE-200": 1},
+    "topFindings": [...],
+    "owaspMapping": {
+      "CWE-89": "WSTG-INPV-05",
+      "CWE-79": "WSTG-INPV-01",
+      "CWE-78": "WSTG-INPV-12",
+      "CWE-22": "WSTG-ATHZ-01",
+      "CWE-90": "WSTG-INPV-06",
+      "CWE-611": "WSTG-INPV-07",
+      "CWE-1336": "WSTG-INPV-18",
+      "CWE-943": "WSTG-INPV-05"
+    },
+    "passedChecks": ["path-traversal", "xxe", "ldapi"]
+  }
+}
+```
+
+`passedChecks` lists vulnerability classes where no findings were detected — confirming the API handles those injection types safely.
+
+---
+
 ## Related Docs
 
-- [Contract Testing](contract-testing.md) — running mutations via CLI and HTTP, coverage reports
+- [Contract Testing](contract-testing.md) — running mutations via CLI and HTTP, coverage reports, CI/CD integration
 - [Mock Guide](mock-guide.md) — template functions reference
-- [OpenAPI Guide](openapi-guide.md) — auto-generating property assertions from specs
-- [API Reference](api-reference.md) — mutations endpoint details
+- [OpenAPI Guide](openapi-guide.md) — auto-generating property assertions from specs, auto-discovered request chains
+- [API Reference](api-reference.md) — mutations endpoint details, report export endpoints
 - [CLI Reference](cli-reference.md) — `--mutations` and related flags

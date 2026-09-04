@@ -179,9 +179,11 @@ status_code: {{EnumInt 200 400}}
 | `{{RandFloatMinMax 0.0 100.0}}` | Random float in range |
 | `{{RandIntMax 1000}}` | Random int 0–max |
 | `{{RandFloatMax 100.0}}` | Random float 0–max |
-| `{{SeededRandom 42}}` | Deterministic random (same seed = same value) |
 | `{{RandIntArrayMinMax 1 10}}` | JSON array of random ints |
 | `{{Add 1 2}}` | Arithmetic addition |
+| `{{Int "42"}}` | Convert string to int |
+| `{{Float "3.14"}}` | Convert string to float |
+| `{{Nth 7 3}}` | Modulo: `7 % 3` (useful for cycling) |
 | `{{EnumInt 10 20 30}}` | Pick random value from list |
 
 #### Strings & Text
@@ -212,9 +214,12 @@ status_code: {{EnumInt 200 400}}
 | `{{RandFirstName}}` | Random first name |
 | `{{RandLastName}}` | Random last name |
 | `{{SeededName 0}}` | Deterministic full name |
+| `{{SeededFirstName 0}}` | Deterministic first name |
+| `{{SeededLastName 0}}` | Deterministic last name |
 | `{{RandUsername}}` | Random lowercase username (e.g. `alice3742`) |
-| `{{RandPassword}}` | Random strong password (12–16 chars) |
+| `{{RandPassword 12 true true true}}` | Random password (length, upper, digits, special) |
 | `{{RandSlug}}` | Random URL slug (e.g. `quick-brown`) |
+| `{{RandLocale}}` | Random locale (e.g. `en_US`, `fr_FR`) |
 
 #### Location
 
@@ -227,7 +232,18 @@ status_code: {{EnumInt 200 400}}
 | `{{RandUSState}}` | Random US state name |
 | `{{RandUSStateAbbr}}` | Random US state abbreviation |
 | `{{RandUSPostal}}` | Random US ZIP code |
+| `{{SeededUSPostal 0}}` | Deterministic US ZIP code |
+| `{{RandZip}}` | Random ZIP code (alias) |
 | `{{RandAddress}}` | Random street address |
+| `{{SeededAddress 0}}` | Deterministic street address |
+| `{{SeededCountry 0}}` | Deterministic country name |
+| `{{SeededCountryCode 0}}` | Deterministic country code |
+| `{{SeededUSState 0}}` | Deterministic US state |
+| `{{SeededUSStateAbbr 0}}` | Deterministic US state abbreviation |
+| `{{RandAirport}}` | Random IATA airport code (e.g. `JFK`) |
+| `{{SeededAirport 0}}` | Deterministic airport code |
+| `{{RandFlightNumber}}` | Random flight number (e.g. `UA1234`) |
+| `{{SeededFlightNumber 0}}` | Deterministic flight number |
 | `{{RandLatitude}}` | Random latitude (−90 to 90) |
 | `{{RandLongitude}}` | Random longitude (−180 to 180) |
 | `{{RandTimezone}}` | Random IANA timezone (e.g. `America/New_York`) |
@@ -257,9 +273,14 @@ status_code: {{EnumInt 200 400}}
 | `{{RandCurrencyCode}}` | Random ISO 4217 currency code (e.g. `USD`, `EUR`) |
 | `{{SeededCurrencyCode 0}}` | Deterministic currency code |
 | `{{RandCreditCard}}` | Random credit card number |
+| `{{SeededCreditCard 0}}` | Deterministic credit card number |
 | `{{RandItin}}` | Random ITIN |
 | `{{RandEin}}` | Random EIN |
 | `{{RandSsn}}` | Random SSN |
+| `{{RandSSN}}` | Random SSN (alias) |
+| `{{SeededSSN 0}}` | Deterministic SSN |
+| `{{RandISBN10}}` | Random ISBN-10 |
+| `{{RandISBN13}}` | Random ISBN-13 |
 
 #### Date/Time
 
@@ -268,6 +289,7 @@ status_code: {{EnumInt 200 400}}
 | `{{Time}}` | Current datetime (ISO 8601) |
 | `{{Date}}` | Current date (`YYYY-MM-DD`) |
 | `{{TimeFormat "3:04PM"}}` | Current time in custom Go format |
+| `{{ISODatetime}}` | Current datetime in ISO 8601 (alias of `Time`) |
 | `{{RandFutureDate}}` | Random ISO 8601 date 1–365 days in the future |
 | `{{RandPastDate}}` | Random ISO 8601 date 1–365 days in the past |
 | `{{RandUnixTimestamp}}` | Current Unix epoch timestamp |
@@ -316,6 +338,65 @@ status_code: {{EnumInt 200 400}}
 {{if LT .MyVar 10}}
 ```
 
+#### Loop & Utility
+
+| Function | Description |
+|----------|-------------|
+| `{{Iterate N}}` | Generate a range `[0, 1, ..., N-1]` for use with `range` |
+| `{{LastIter $i $total}}` | True if `$i` is the last iteration (for comma-separated lists) |
+| `{{Unescape "html &amp; text"}}` | Unescape HTML entities in a string |
+| `{{Body}}` | Raw request body as string |
+| `{{Data "key"}}` | Access shared data store by key |
+
+#### Request Body Injection
+
+Template parameters are automatically extracted from the JSON request body. If the request sends `{"name": "Alice", "age": 30}`, you can reference `{{.name}}` and `{{.age}}` in the response template:
+
+```yaml
+response:
+  contents: '{"greeting": "Hello, {{.name}}!", "birth_year": {{Add (Int (Date | printf "%s" | slice 0 4)) (Int (printf "%d" (Sub 0 .age)))}}}'
+```
+
+Path parameters (`:id`, `:topic`) and query parameters (`?page=2`) are also available as `{{.id}}`, `{{.topic}}`, `{{.page}}`.
+
+#### Assertion Functions
+
+Use in the `assertions` field to validate responses during contract testing:
+
+| Function | Description |
+|----------|-------------|
+| `PropertyEquals contents.field value` | Exact match on a response field |
+| `PropertyContains contents.field substring` | Substring match on a response field |
+| `PropertyMatches contents.field regex` | Regex match on a response field |
+| `HasProperty contents.field` | Assert field exists in response |
+| `NumPropertyEQ contents.amount 100` | Numeric equality |
+| `NumPropertyGE contents.amount 0` | Numeric greater-or-equal |
+| `NumPropertyLE contents.amount 1000` | Numeric less-or-equal |
+| `PropertyLenEQ contents.items 5` | Assert array/string length equals N |
+| `PropertyLenGE contents.items 1` | Assert array/string length >= N |
+| `PropertyLenLE contents.items 100` | Assert array/string length <= N |
+| `ResponseStatusMatches 2\d\d` | Assert HTTP status matches regex |
+| `ResponseTimeMillisLE 500` | Assert response time <= N ms |
+| `StatusInRange 200 299` | Assert HTTP status in range |
+
+Example:
+```yaml
+response:
+  assertions:
+    - PropertyContains contents.email @
+    - NumPropertyGE contents.balance 0
+    - PropertyLenGE contents.items 1
+    - ResponseTimeMillisLE 2000
+    - HasProperty contents.id
+```
+
+#### XML Assertions
+
+| Function | Description |
+|----------|-------------|
+| `XmlHasElement xpath` | Assert XML element exists at XPath |
+| `JsonHasProperty path` | Assert JSON property exists at path |
+
 #### File Fixtures
 
 | Function | Description |
@@ -325,6 +406,25 @@ status_code: {{EnumInt 200 400}}
 | `{{FileProperty "props.yaml" "token"}}` | Value from YAML fixture |
 | `{{JSONFileProperty "props.yaml" "amount"}}` | JSON value from fixture |
 | `{{YAMLFileProperty "props.yaml" "key"}}` | YAML value from fixture |
+
+#### Security Injection Generators
+
+These generate randomized security payloads for use in custom test scenarios. Each has a seeded variant for reproducibility.
+
+| Function | Vulnerability Class |
+|----------|-------------------|
+| `{{RandSQLi}}` / `{{SeededSQLi 0}}` | SQL injection (boolean, time-based, UNION, error-based) |
+| `{{RandXSS}}` / `{{SeededXSS 0}}` | Cross-site scripting (reflected, DOM, event handler) |
+| `{{RandPathTraversal}}` / `{{SeededPathTraversal 0}}` | Path traversal (encoded, double-encoded) |
+| `{{RandSSTI}}` / `{{SeededSSTI 0}}` | Server-side template injection |
+| `{{RandCmdInjection}}` / `{{SeededCmdInjection 0}}` | OS command injection |
+| `{{RandNoSQLi}}` / `{{SeededNoSQLi 0}}` | NoSQL injection (MongoDB operators) |
+| `{{RandLDAPi}}` / `{{SeededLDAPi 0}}` | LDAP injection |
+| `{{RandXXE}}` / `{{SeededXXE 0}}` | XML external entity |
+
+See [Fuzz & Property Testing — Security Payload Generators](fuzz-property-testing.md) for grammar details and usage examples.
+
+---
 
 ## Test Fixtures
 
@@ -477,8 +577,9 @@ curl -H "Content-Type: application/yaml" \
 
 ## Related Docs
 
-- [API Reference](api-reference.md) — all HTTP endpoints
-- [Contract Testing](contract-testing.md) — producer/consumer contracts
-- [Fuzz & Property Testing](fuzz-property-testing.md) — mutation strategies
-- [OpenAPI Guide](openapi-guide.md) — spec import and schema validation
+- [API Reference](api-reference.md) — all HTTP endpoints, report export
+- [Contract Testing](contract-testing.md) — producer/consumer contracts, security findings, CI/CD integration
+- [Fuzz & Property Testing](fuzz-property-testing.md) — mutation strategies, injection detection, security summary
+- [OpenAPI Guide](openapi-guide.md) — spec import, schema validation, auto-discovered chains
+- [How-To Guide](how-to-guide.md) — 33 cookbook recipes
 - [CLI Reference](cli-reference.md) — command-line usage

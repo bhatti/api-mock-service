@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"github.com/bhatti/api-mock-service/internal/contract"
 	"github.com/bhatti/api-mock-service/internal/fuzz"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bhatti/api-mock-service/internal/repository"
@@ -392,4 +394,122 @@ func saveTestScenario(name string, repo repository.APIScenarioRepository) (*type
 		return nil, err
 	}
 	return &scenario, nil
+}
+
+func newReportTestController(t *testing.T) (*ProducerContractController, *contract.ProducerExecutor) {
+	config := types.BuildTestConfig()
+	mockScenarioRepository, err := repository.NewFileAPIScenarioRepository(config)
+	require.NoError(t, err)
+	groupConfigRepository, err := repository.NewFileGroupConfigRepository(config)
+	require.NoError(t, err)
+	client := web.NewStubHTTPClient()
+	executor := contract.NewProducerExecutor(mockScenarioRepository, groupConfigRepository, client)
+	webServer := web.NewStubWebServer()
+	ctrl := NewProducerContractController(executor, webServer)
+	return ctrl, executor
+}
+
+func Test_ShouldReturnJUnitXML_WithReport(t *testing.T) {
+	ctrl, executor := newReportTestController(t)
+	report := &types.ProducerContractResponse{
+		Results:   map[string]any{"POST /users": ""},
+		Errors:    map[string]string{"DELETE /users": "not found"},
+		Succeeded: 1,
+		Failed:    1,
+	}
+	executor.SetLastReport("test-group", report)
+
+	ctx := web.NewStubContext(&http.Request{})
+	ctx.Params["group"] = "test-group"
+
+	err := ctrl.getReportJUnit(ctx)
+	require.NoError(t, err)
+
+	raw, ok := ctx.Result.([]byte)
+	require.True(t, ok)
+	require.True(t, strings.Contains(string(raw), "<?xml"))
+	require.True(t, strings.Contains(string(raw), "test-group"))
+
+	var testsuites struct {
+		XMLName xml.Name `xml:"testsuites"`
+	}
+	require.NoError(t, xml.Unmarshal(raw, &testsuites))
+}
+
+func Test_ShouldReturnJUnitXML_NoReport(t *testing.T) {
+	ctrl, _ := newReportTestController(t)
+
+	ctx := web.NewStubContext(&http.Request{})
+	ctx.Params["group"] = "missing-group"
+
+	err := ctrl.getReportJUnit(ctx)
+	require.NoError(t, err)
+
+	m, ok := ctx.Result.(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "missing-group", m["group"])
+	require.Contains(t, m["message"], "no report data")
+}
+
+func Test_ShouldReturnJUnitXML_EmptyGroup(t *testing.T) {
+	ctrl, _ := newReportTestController(t)
+	ctx := web.NewStubContext(&http.Request{})
+	err := ctrl.getReportJUnit(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "group not specified")
+}
+
+func Test_ShouldReturnJSONSummary_WithReport(t *testing.T) {
+	ctrl, executor := newReportTestController(t)
+	report := &types.ProducerContractResponse{
+		Results:   map[string]any{"GET /items": ""},
+		Errors:    map[string]string{},
+		Succeeded: 1,
+		Failed:    0,
+		SecuritySummary: &types.SecuritySummary{
+			TotalFindings: 3,
+			BySeverity:    map[string]int{"high": 2, "medium": 1},
+			ByCategory:    map[string]int{"CWE-89": 2, "CWE-79": 1},
+			PassedChecks:  []string{"ssti", "xxe"},
+		},
+	}
+	executor.SetLastReport("summary-group", report)
+
+	ctx := web.NewStubContext(&http.Request{})
+	ctx.Params["group"] = "summary-group"
+
+	err := ctrl.getReportSummary(ctx)
+	require.NoError(t, err)
+
+	raw, ok := ctx.Result.([]byte)
+	require.True(t, ok)
+
+	var parsed map[string]any
+	require.NoError(t, json.Unmarshal(raw, &parsed))
+	require.Equal(t, "summary-group", parsed["group"])
+	require.Equal(t, float64(1), parsed["succeeded"])
+	require.Equal(t, float64(0), parsed["failed"])
+	require.NotNil(t, parsed["securitySummary"])
+}
+
+func Test_ShouldReturnJSONSummary_NoReport(t *testing.T) {
+	ctrl, _ := newReportTestController(t)
+
+	ctx := web.NewStubContext(&http.Request{})
+	ctx.Params["group"] = "empty-group"
+
+	err := ctrl.getReportSummary(ctx)
+	require.NoError(t, err)
+
+	m, ok := ctx.Result.(map[string]any)
+	require.True(t, ok)
+	require.Contains(t, m["message"], "no report data")
+}
+
+func Test_ShouldReturnJSONSummary_EmptyGroup(t *testing.T) {
+	ctrl, _ := newReportTestController(t)
+	ctx := web.NewStubContext(&http.Request{})
+	err := ctrl.getReportSummary(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "group not specified")
 }

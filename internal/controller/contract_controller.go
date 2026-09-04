@@ -34,6 +34,8 @@ func NewProducerContractController(
 	webserver.POST("/_contracts/:method/:name/:path", ctrl.postProducerContractScenarioByPath)
 	// W1: coverage endpoint
 	webserver.GET("/_coverage/:group", ctrl.getCoverageByGroup)
+	webserver.GET("/_reports/:group/junit", ctrl.getReportJUnit)
+	webserver.GET("/_reports/:group/summary", ctrl.getReportSummary)
 	return ctrl
 }
 
@@ -183,6 +185,50 @@ type apiScenarioContractResponseBody struct {
 	Body types.ProducerContractResponse
 }
 
+// The params for coverage endpoint
+// swagger:parameters getCoverageByGroup
+type getCoverageByGroupParams struct {
+	// in:path
+	Group string `json:"group"`
+}
+
+// Coverage summary response
+// swagger:response coverageByGroupResponse
+type coverageByGroupResponseBody struct {
+	// in:body
+	Body map[string]any
+}
+
+// The params for report endpoints
+// swagger:parameters getReportJUnit getReportSummary
+type getReportParams struct {
+	// in:path
+	Group string `json:"group"`
+}
+
+// JUnit XML response
+// swagger:response junitXMLResponse
+type junitXMLResponseBody struct {
+	// in:body
+	Body string
+}
+
+// JSON summary response
+// swagger:response jsonSummaryResponse
+type jsonSummaryResponseBody struct {
+	// in:body
+	Body map[string]any
+}
+
+// The params for mutations by group
+// swagger:parameters postProducerContractMutationsByGroup
+type postProducerContractMutationsByGroupParams struct {
+	// in:path
+	Group string `json:"group"`
+	// in:body
+	Body types.ProducerContractRequest
+}
+
 // getCoverageByGroup handler
 // swagger:route GET /_coverage/{group} producer-contract getCoverageByGroup
 // Returns the OpenAPI coverage summary from the most recent contract run for a group.
@@ -203,6 +249,58 @@ func (mcc *ProducerContractController) getCoverageByGroup(c web.APIContext) erro
 		})
 	}
 	return c.JSON(http.StatusOK, coverage)
+}
+
+// getReportJUnit handler
+// swagger:route GET /_reports/{group}/junit producer-contract getReportJUnit
+// Returns JUnit XML from the most recent mutation test run for a group.
+// responses:
+//
+//	200: junitXMLResponse
+func (mcc *ProducerContractController) getReportJUnit(c web.APIContext) error {
+	group := c.Param("group")
+	if group == "" {
+		return fmt.Errorf("scenario group not specified")
+	}
+	report := mcc.executor.LastReport(group)
+	if report == nil {
+		return c.JSON(http.StatusOK, map[string]any{
+			"group":   group,
+			"message": "no report data available — run mutation tests first via POST /_contracts/mutations/:group",
+		})
+	}
+	exporter := &contract.ReportExporter{}
+	xmlBytes, err := exporter.ExportJUnitXML(group, report)
+	if err != nil {
+		return err
+	}
+	return c.Blob(http.StatusOK, "application/xml", xmlBytes)
+}
+
+// getReportSummary handler
+// swagger:route GET /_reports/{group}/summary producer-contract getReportSummary
+// Returns a JSON summary from the most recent mutation test run for a group.
+// responses:
+//
+//	200: jsonSummaryResponse
+func (mcc *ProducerContractController) getReportSummary(c web.APIContext) error {
+	group := c.Param("group")
+	if group == "" {
+		return fmt.Errorf("scenario group not specified")
+	}
+	report := mcc.executor.LastReport(group)
+	if report == nil {
+		return c.JSON(http.StatusOK, map[string]any{
+			"group":   group,
+			"message": "no report data available — run mutation tests first via POST /_contracts/mutations/:group",
+		})
+	}
+	exporter := &contract.ReportExporter{}
+	jsonBytes, err := exporter.ExportJSONSummary(group, report)
+	if err != nil {
+		return err
+	}
+	return c.Blob(http.StatusOK, "application/json", jsonBytes)
 }
 
 // specAwareExecutor returns a spec-enhanced copy of the executor when SpecContent is provided

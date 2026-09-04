@@ -65,7 +65,7 @@ curl -H "Content-Type: application/yaml" \
 
 ### `GET /_scenarios`
 
-List all stored scenarios (summary).
+List all stored scenarios (summary, keyed by path).
 
 **Response:** `200 OK`
 ```json
@@ -95,6 +95,32 @@ curl http://localhost:8080/_scenarios/GET/my-scenario/v1/orders/:id
 
 ---
 
+### `GET /_scenarios/groups`
+
+List all scenario group names.
+
+**Response:** `200 OK` — JSON array of group names.
+
+**Example:**
+```bash
+curl http://localhost:8080/_scenarios/groups
+```
+
+---
+
+### `GET /_scenarios/:method/names/:path`
+
+List scenario names for a given method and path.
+
+**Example:**
+```bash
+curl http://localhost:8080/_scenarios/GET/names/v1/orders/:id
+```
+
+**Response:** `200 OK` — JSON array of scenario names.
+
+---
+
 ### `DELETE /_scenarios/:method/:name/:path`
 
 Delete a specific scenario.
@@ -119,6 +145,29 @@ List all scenario groups.
 ### `GET /_groups/:group`
 
 Get all scenarios in a group.
+
+---
+
+### `GET /_groups/:group/config`
+
+Get the current configuration (variables, chaos settings) for a group.
+
+**Example:**
+```bash
+curl http://localhost:8080/_groups/my-service/config
+```
+
+**Response:** `200 OK`
+```json
+{
+  "variables": {"env": "staging"},
+  "chaos_enabled": false,
+  "mean_time_between_failure": 5,
+  "mean_time_between_additional_latency": 4,
+  "max_additional_latency_secs": 2.5,
+  "http_errors": [400, 500, 503]
+}
+```
 
 ---
 
@@ -182,7 +231,40 @@ curl -H "Content-Type: application/yaml" \
 
 ### `GET /_oapi`
 
-Download the most recently uploaded spec.
+Download all uploaded specs (or the most recently uploaded spec when no group specified).
+
+---
+
+### `GET /_oapi/:group`
+
+Download OpenAPI specs for a specific group.
+
+**Example:**
+```bash
+curl http://localhost:8080/_oapi/my-api
+```
+
+---
+
+### `GET /_oapi/history/:name`
+
+Download an OpenAPI spec by execution history name.
+
+**Example:**
+```bash
+curl http://localhost:8080/_oapi/history/petstore
+```
+
+---
+
+### `GET /_oapi/:method/:name/:path`
+
+Download the OpenAPI spec generated for a specific scenario.
+
+**Example:**
+```bash
+curl http://localhost:8080/_oapi/GET/get-user/users/:id
+```
 
 ---
 
@@ -210,6 +292,8 @@ All contract endpoints accept a `ProducerContractRequest` body:
 | `run_mutations` | bool | false | Run in mutation mode |
 | `spec_content` | string | — | Inline OpenAPI YAML/JSON for schema validation |
 | `dry_run` | bool | false | List scenarios that would run without executing them |
+| `timing_threshold_multiplier` | float64 | 3.0 | Multiplier over baseline response time to flag blind injection (e.g., 3.0 means 3× slower triggers a finding) |
+| `mutation_rounds` | int | 1 | Number of complete mutation rounds to run (higher = more payload diversity) |
 
 **Response format:**
 
@@ -302,7 +386,30 @@ curl -X POST http://localhost:8080/_contracts/mutations/my-api \
   -d '{"base_url": "https://api.example.com", "execution_times": 1}'
 ```
 
-Mutation strategies: null fields, combinatorial pairs, format boundary (date/uuid/email/uri), boundary values (min+max), security injection (SQLi/path traversal/LDAP/XXE/SSRF/command injection).
+Mutation strategies: null fields, combinatorial pairs, format boundary (date/uuid/email/uri), boundary values (min+max), security injection (8 grammar-based generators), missing fields, malformed data. Plus 4 sequence-level strategies for groups with 2+ scenarios.
+
+**Mutation response** includes additional fields beyond the standard contract response:
+
+```json
+{
+  "succeeded": 42,
+  "failed": 8,
+  "securitySummary": {
+    "totalFindings": 5,
+    "bySeverity": {"critical": 2, "high": 2, "info": 1},
+    "byCategory": {"CWE-89": 2, "CWE-79": 2, "CWE-200": 1},
+    "passedChecks": ["ssti", "cmd-injection", "nosqli", "ldapi", "xxe", "path-traversal"]
+  },
+  "failureClusters": [
+    {
+      "key": {"statusCode": 500, "errorCategory": "injection", "endpoint": "POST /users"},
+      "count": 3,
+      "representative": "create-user-sec-sqli-name_0",
+      "severity": "critical"
+    }
+  ]
+}
+```
 
 See [Fuzz & Property Testing](fuzz-property-testing.md) for details.
 
@@ -334,6 +441,82 @@ curl http://localhost:8080/_coverage/my-api
   "group": "my-api",
   "message": "no coverage data available — run producer-contract with track_coverage:true and spec_content first"
 }
+```
+
+---
+
+### `GET /_reports/:group/junit`
+
+Export the last mutation test results for a group as JUnit XML. Designed for CI/CD pipeline integration (GitHub Actions, Jenkins, GitLab CI).
+
+**Example:**
+```bash
+curl http://localhost:8080/_reports/my-api/junit -o results.xml
+```
+
+**Response:** `200 OK` with `Content-Type: application/xml`
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="my-api" tests="50" failures="8" time="12.34">
+    <properties>
+      <property name="coverage" value="87.5"/>
+      <property name="injectionFindings" value="5"/>
+      <property name="failureClusters" value="3"/>
+    </properties>
+    <testcase name="get-user_0" time="0.23"/>
+    <testcase name="create-user-sec-sqli-name_0" time="0.45">
+      <failure message="status 500 didn't match expected value 201">...</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
+```
+
+**Response (no prior run):**
+```json
+{"group": "my-api", "message": "no report data available — run mutations first"}
+```
+
+---
+
+### `GET /_reports/:group/summary`
+
+Export the last mutation test results as a JSON summary with security findings and failure clusters.
+
+**Example:**
+```bash
+curl http://localhost:8080/_reports/my-api/summary
+```
+
+**Response:** `200 OK`
+```json
+{
+  "group": "my-api",
+  "succeeded": 42,
+  "failed": 8,
+  "total": 50,
+  "passRate": 84.0,
+  "securitySummary": {
+    "totalFindings": 5,
+    "bySeverity": {"critical": 2, "high": 2, "info": 1},
+    "byCategory": {"CWE-89": 2, "CWE-79": 2, "CWE-200": 1},
+    "passedChecks": ["ssti", "cmd-injection", "nosqli", "ldapi", "xxe", "path-traversal"]
+  },
+  "failureClusters": [
+    {
+      "key": {"statusCode": 500, "errorCategory": "injection", "endpoint": "POST /users"},
+      "count": 3,
+      "representative": "create-user-sec-sqli-name_0",
+      "severity": "critical"
+    }
+  ]
+}
+```
+
+**Response (no prior run):**
+```json
+{"group": "my-api", "message": "no report data available — run mutations first"}
 ```
 
 ---
@@ -395,6 +578,19 @@ List execution history.
 
 ---
 
+### `GET /_history/names`
+
+List all execution history names (unique scenario names from recorded executions).
+
+**Example:**
+```bash
+curl http://localhost:8080/_history/names
+```
+
+**Response:** `200 OK` — JSON array of history entry names.
+
+---
+
 ### `GET /_history/har`
 
 Download execution history as HAR format.
@@ -434,9 +630,33 @@ curl -X POST http://localhost:8080/_history/postman \
 
 ## Fixtures
 
+### `GET /_fixtures/:method/fixtures/:path`
+
+List fixture names for a given method and path.
+
+**Example:**
+```bash
+curl http://localhost:8080/_fixtures/GET/fixtures/devices
+```
+
+**Response:** `200 OK` — JSON array of fixture names.
+
+---
+
 ### `GET /_fixtures/:method/:name/:path`
 
-Retrieve a fixture file.
+Retrieve a fixture file by method, name, and path.
+
+---
+
+### `DELETE /_fixtures/:method/:name/:path`
+
+Delete a fixture file.
+
+**Example:**
+```bash
+curl -X DELETE http://localhost:8080/_fixtures/GET/lines.txt/devices
+```
 
 ---
 
@@ -517,6 +737,7 @@ You may need to disable TLS verification (`curl -k`) or import `ca_cert.pem` for
 ## Related Docs
 
 - [Mock Guide](mock-guide.md) — recording, playback, templates
-- [Contract Testing](contract-testing.md) — contract execution and options
-- [OpenAPI Guide](openapi-guide.md) — spec upload and schema validation
+- [Contract Testing](contract-testing.md) — contract execution, security findings, CI/CD integration
+- [OpenAPI Guide](openapi-guide.md) — spec upload, schema validation, auto-discovered chains
+- [Fuzz & Property Testing](fuzz-property-testing.md) — injection detection, mutation strategies, failure dedup
 - [CLI Reference](cli-reference.md) — command-line interface

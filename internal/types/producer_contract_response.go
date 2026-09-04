@@ -2,15 +2,17 @@ package types
 
 // ProducerContractResponse for returning summary of producer based test results
 type ProducerContractResponse struct {
-	Results      map[string]any                       `yaml:"results" json:"results"`
-	Errors       map[string]string                    `yaml:"errors" json:"errors"`
-	ErrorDetails map[string]*ContractValidationDetail `json:"error_details,omitempty"`
-	Metrics      map[string]float64                   `yaml:"metrics" json:"metrics"`
-	URLs         map[string]int                       `yaml:"urls" json:"urls"`
-	Succeeded    int                                  `yaml:"succeeded" json:"succeeded"`
-	Mismatched   int                                  `yaml:"mismatched" json:"mismatched"`
-	Failed       int                                  `yaml:"failed" json:"failed"`
-	Coverage     *CoverageSummary                     `json:"coverage,omitempty"`
+	Results         map[string]any                       `yaml:"results" json:"results"`
+	Errors          map[string]string                    `yaml:"errors" json:"errors"`
+	ErrorDetails    map[string]*ContractValidationDetail `json:"error_details,omitempty"`
+	Metrics         map[string]float64                   `yaml:"metrics" json:"metrics"`
+	URLs            map[string]int                       `yaml:"urls" json:"urls"`
+	Succeeded       int                                  `yaml:"succeeded" json:"succeeded"`
+	Mismatched      int                                  `yaml:"mismatched" json:"mismatched"`
+	Failed          int                                  `yaml:"failed" json:"failed"`
+	Coverage        *CoverageSummary                     `json:"coverage,omitempty"`
+	FailureClusters []FailureCluster `json:"failureClusters,omitempty"`
+	SecuritySummary *SecuritySummary `json:"securitySummary,omitempty"`
 }
 
 // NewProducerContractResponse constructor

@@ -48,7 +48,13 @@ api-mock-service producer-contract \
 - **Template-driven mock responses** — 60+ built-in functions (UUID, RandEmail, RandRegex, SeededName, …)
 - **OpenAPI 3.x import** — upload a spec and get instant mock scenarios + discriminator/oneOf/anyOf variant expansion
 - **Producer contract testing** — drive real APIs with fuzz data, validate response shapes and OpenAPI schema
-- **Mutation testing** — null fields, boundary values, format violations, security injection (SQLi/XXE/SSRF/…)
+- **Mutation testing** — null fields, boundary values, format violations, grammar-based security injection (8 vulnerability classes)
+- **Injection detection** — scan responses for SQL/NoSQL/LDAP/XSS/SSTI error signatures, reflected payloads, and timing-based blind injection
+- **Security summary** — OWASP/CWE-classified findings with severity breakdown and passed-checks confirmation
+- **Sequence-level mutations** — reversed ordering, skip step, duplicate step, method swap to test operation dependencies
+- **Auto-discovered request chains** — automatically link POST→GET→PUT→DELETE from OpenAPI response/request field matching
+- **Failure deduplication** — cluster hundreds of mutation failures by (status, category, endpoint, response hash)
+- **JUnit XML + JSON export** — `/_reports/:group/junit` and `/_reports/:group/summary` for CI/CD integration
 - **Fuzz shrinking** — reduce a failing mutation payload to the minimal reproducing input (delta debugging)
 - **Coverage reporting** — which OpenAPI paths were exercised, which were missed
 - **Spec diff** — compare two OpenAPI specs for breaking changes; CI-friendly exit code 2
@@ -86,13 +92,14 @@ flowchart LR
 
 | Guide | Description |
 |-------|-------------|
-| [**How-To Guide**](docs/how-to-guide.md) | **25 cookbook recipes** — each section solves one concrete problem via API + CLI |
+| [**How-To Guide**](docs/how-to-guide.md) | **33 cookbook recipes** — each section solves one concrete problem via API + CLI |
 | [Mock Guide](docs/mock-guide.md) | Recording, playback, templates, fixtures, chaos testing |
 | [Contract Testing](docs/contract-testing.md) | Consumer + producer contracts, JSONPath assertions, schema validation, mutations, coverage |
-| [Fuzz & Property Testing](docs/fuzz-property-testing.md) | Property-based testing, mutation strategies, security injection, fuzz shrinking |
+| [Fuzz & Property Testing](docs/fuzz-property-testing.md) | Property-based testing, mutation strategies, injection detection, security summary, fuzz shrinking |
 | [OpenAPI Guide](docs/openapi-guide.md) | Spec upload, discriminator support, Swagger UI, coverage |
 | [API Reference](docs/api-reference.md) | All HTTP endpoints with examples |
 | [CLI Reference](docs/cli-reference.md) | All commands and flags |
+| [**Examples**](docs/examples.md) | Runnable examples of all security testing, injection detection, and CI/CD capabilities |
 
 ---
 

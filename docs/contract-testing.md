@@ -324,15 +324,45 @@ api-mock-service producer-contract \
 
 ```bash
 curl -X POST http://localhost:8080/_contracts/mutations/my-api \
-  -d '{"base_url": "https://api.example.com", "execution_times": 1}'
+  -H "Content-Type: application/json" \
+  -d '{"base_url": "https://api.example.com", "mutation_rounds": 3, "timing_threshold_multiplier": 3.0}'
 ```
 
-Mutation variants generated per scenario:
-- **Null mutations** — each field set to `null` (expects 422)
-- **Combinatorial** — pairs of (field[i] boundary + field[j] null), capped at 10
-- **Format boundary** — invalid dates, UUIDs, emails, URIs
-- **Boundary values** — MinInt32 + empty string, MaxInt32 + 255-char string (both min and max)
-- **Security injection** — SQLi, path traversal, LDAP injection, command injection, SSRF, XXE
+### Per-Scenario Mutation Strategies (7 types)
+
+| Strategy | What it does | Expected status |
+|----------|-------------|-----------------|
+| **Null fields** | Each field set to `null` one at a time | 422 |
+| **Combinatorial** | Pairs of (field[i] boundary + field[j] null), capped at 10 | 422 |
+| **Format boundary** | Invalid dates, UUIDs, emails, URIs | 400/422 |
+| **Boundary values** | MinInt32 + empty string, MaxInt32 + 255-char string | 400/422 |
+| **Security injection** | Grammar-based payloads across 8 vulnerability classes (SQLi, XSS, path traversal, SSTI, cmd injection, NoSQL, LDAP, XXE) | 400 |
+| **Missing fields** | Remove optional fields to test incomplete requests | 400/422 |
+| **Malformed data** | Overflow strings (10,000 chars), special characters (Unicode, null bytes, control chars) | 400/422 |
+
+Security injection payloads are generated from grammars with randomized variants — each `mutation_rounds` cycle produces different payloads, increasing coverage. Set `mutation_rounds: 3` or higher for thorough security testing.
+
+### Sequence-Level Mutation Strategies (4 types)
+
+When a group has multiple scenarios, these strategies test operation ordering:
+
+| Strategy | What it does |
+|----------|-------------|
+| **Reversed** | Execute scenarios in reverse order |
+| **Skip step** | Remove each scenario one at a time |
+| **Duplicate step** | Repeat each scenario (tests idempotency) |
+| **Method swap** | PUT↔PATCH, GET→DELETE |
+
+### Response Analysis
+
+After each mutation, responses are automatically analyzed for:
+- **Database error signatures** (MySQL, PostgreSQL, SQLite, MSSQL, Oracle, MongoDB, LDAP)
+- **Reflected payloads** (XSS, SSTI reflected back unescaped)
+- **Blind injection** (response time > `timing_threshold_multiplier` × baseline with timing payload)
+- **Information disclosure** (stack traces, file paths, version strings)
+- **Unexpected 500** (unhandled input vs. proper 400/422 rejection)
+
+Findings are classified by CWE and aggregated into a `securitySummary`. Failures are deduplicated and clustered by (status code, error category, endpoint, response hash).
 
 For detail on mutation strategies, see [Fuzz & Property Testing](fuzz-property-testing.md).
 
@@ -386,6 +416,10 @@ curl -X POST http://localhost:8080/_contracts/order-flow \
 | `run_mutations` | bool | false | Run mutation testing mode |
 | `spec_content` | string | — | Inline OpenAPI YAML/JSON for schema validation |
 | `dry_run` | bool | false | List scenarios that would run without executing them |
+| `match_response_code` | int | 0 | Override expected status code for all scenarios (0 = use scenario default) |
+| `record_results` | bool | false | Store contract validation results in history |
+| `timing_threshold_multiplier` | float64 | 3.0 | Multiplier over baseline response time to flag blind injection (e.g., 3.0 = 3x slower triggers finding) |
+| `mutation_rounds` | int | 1 | Number of complete mutation rounds (higher = more payload diversity) |
 
 ---
 
@@ -622,10 +656,161 @@ These auto-generated assertions become the baseline for future contract runs —
 
 ---
 
+## Security Findings in Mutation Results
+
+Mutation testing automatically scans API responses for injection vulnerabilities. When a security payload (SQLi, XSS, SSTI, etc.) triggers an error signature or is reflected back unescaped, an `InjectionFinding` is attached to the mutation result.
+
+Findings appear in `error_details[key].injectionFindings` and are aggregated into a top-level `securitySummary` with OWASP classification. See [Fuzz & Property Testing — Injection Detection](fuzz-property-testing.md#injection-detection) for the full detection catalog.
+
+### Example: Security-Aware Mutation Run
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com", "timing_threshold_multiplier": 3.0}'
+```
+
+Response includes:
+```json
+{
+  "succeeded": 42,
+  "failed": 8,
+  "securitySummary": {
+    "totalFindings": 5,
+    "bySeverity": {"critical": 2, "high": 2, "info": 1},
+    "byCategory": {"CWE-89": 2, "CWE-79": 2, "CWE-200": 1},
+    "passedChecks": ["ssti", "cmd-injection", "nosqli", "ldapi", "xxe", "path-traversal"]
+  },
+  "failureClusters": [
+    {
+      "key": {"statusCode": 500, "errorCategory": "injection", "endpoint": "POST /users"},
+      "count": 3,
+      "representative": "create-user-sec-sqli-name_0",
+      "severity": "critical"
+    }
+  ]
+}
+```
+
+---
+
+## Automatic Dependency Discovery
+
+When you upload an OpenAPI spec, api-mock-service can automatically discover data-flow dependencies between operations. For example, `POST /pets` produces an `id` that `GET /pets/{petId}` consumes.
+
+The dependency graph uses confidence-weighted name matching:
+
+| Match Type | Confidence | Example |
+|-----------|-----------|---------|
+| Exact (after normalizing case/separators) | 1.0 | Response `userId` → request `user_id` |
+| Singular/plural | 0.9 | Response `user` → request `users` |
+| ID pattern + same resource path | 0.8 | Response `id` from `POST /pets` → `{petId}` in `GET /pets/{petId}` |
+| Generic ID | 0.7 | Response `id` → request field containing `id` |
+
+Operations are topologically sorted so producers execute before consumers.
+
+---
+
+## Testing Operation Ordering (Sequence Mutations)
+
+Sequence-level mutations test whether your API correctly handles unexpected operation orderings:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com"}'
+```
+
+Four strategies are applied to each scenario group:
+
+- **Reversed**: Execute scenarios in reverse order (tests order dependency)
+- **Skip step**: Remove each scenario one at a time (tests missing prerequisites)
+- **Duplicate step**: Repeat each scenario (tests idempotency)
+- **Method swap**: Alternate HTTP methods — PUT↔PATCH, GET→DELETE (tests method confusion)
+
+---
+
+## CI/CD Integration
+
+Export mutation test results in JUnit XML or JSON format for integration with CI/CD pipelines.
+
+### JUnit XML Report
+
+```bash
+# Run mutations first
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com"}'
+
+# Then fetch JUnit XML
+curl http://localhost:8080/_reports/my-api/junit -o results.xml
+```
+
+The JUnit XML includes:
+- Test suite = scenario group
+- Test case = individual scenario execution
+- Failure = contract validation error with diff report
+- Properties = coverage %, injection finding count, failure cluster count
+
+### JSON Summary Report
+
+```bash
+curl http://localhost:8080/_reports/my-api/summary
+```
+
+Returns:
+```json
+{
+  "group": "my-api",
+  "succeeded": 42,
+  "failed": 8,
+  "total": 50,
+  "passRate": 84.0,
+  "securitySummary": {"totalFindings": 5},
+  "failureClusters": [{"count": 3}],
+  "topErrors": ["status 500 didn't match expected value 200"]
+}
+```
+
+### GitHub Actions Example
+
+```yaml
+- name: Run mutation tests
+  run: |
+    curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+      -d '{"base_url": "http://localhost:3000"}'
+    curl http://localhost:8080/_reports/my-api/junit -o test-results.xml
+
+- name: Publish test results
+  uses: dorny/test-reporter@v1
+  with:
+    name: API Mutation Tests
+    path: test-results.xml
+    reporter: java-junit
+```
+
+---
+
+## OWASP Classification
+
+All injection findings are classified with CWE identifiers and mapped to OWASP Web Security Testing Guide (WSTG) test IDs:
+
+| CWE | OWASP Test ID | Category |
+|-----|---------------|----------|
+| CWE-89 | WSTG-INPV-05 | SQL Injection |
+| CWE-79 | WSTG-INPV-01 | Cross-Site Scripting |
+| CWE-78 | WSTG-INPV-12 | Command Injection |
+| CWE-22 | WSTG-ATHZ-01 | Path Traversal |
+| CWE-90 | WSTG-INPV-06 | LDAP Injection |
+| CWE-611 | WSTG-INPV-07 | XML External Entity |
+| CWE-1336 | WSTG-INPV-18 | Server-Side Template Injection |
+| CWE-943 | WSTG-INPV-05 | NoSQL Injection |
+
+The `securitySummary.passedChecks` field lists vulnerability classes where no findings were detected — confirming your API handles those attack vectors safely.
+
+---
+
 ## Related Docs
 
-- [API Reference](api-reference.md) — HTTP endpoint details
+- [API Reference](api-reference.md) — HTTP endpoint details, report export endpoints
 - [CLI Reference](cli-reference.md) — all command flags
-- [Fuzz & Property Testing](fuzz-property-testing.md) — mutation strategies in depth
-- [OpenAPI Guide](openapi-guide.md) — spec import and discriminator support
+- [Fuzz & Property Testing](fuzz-property-testing.md) — mutation strategies, injection detection, failure dedup
+- [OpenAPI Guide](openapi-guide.md) — spec import, discriminator support, auto-discovered chains
 - [Mock Guide](mock-guide.md) — recording and playback

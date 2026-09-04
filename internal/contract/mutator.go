@@ -318,7 +318,25 @@ func (m *ContractMutator) createFormatSpecificBoundaryMutations() {
 	}
 }
 
-// createSecurityInjectionMutations generates security-relevant payloads for each string field.
+// injectionGenerator pairs a class name with its generator function.
+type injectionGenerator struct {
+	name    string
+	genFunc func(seed ...int64) string
+}
+
+var injectionGenerators = []injectionGenerator{
+	{"sqli", fuzz.RandSQLi},
+	{"xss", fuzz.RandXSS},
+	{"path-traversal", fuzz.RandPathTraversal},
+	{"ssti", fuzz.RandSSTI},
+	{"cmd-inject", fuzz.RandCmdInjection},
+	{"nosqli", fuzz.RandNoSQLi},
+	{"ldap-inject", fuzz.RandLDAPi},
+	{"xxe", fuzz.RandXXE},
+}
+
+// createSecurityInjectionMutations generates grammar-based randomized security
+// payloads for each string field across all vulnerability classes.
 func (m *ContractMutator) createSecurityInjectionMutations() {
 	if m.scenario.Request.Contents == "" {
 		return
@@ -327,27 +345,16 @@ func (m *ContractMutator) createSecurityInjectionMutations() {
 	if err := json.Unmarshal([]byte(m.scenario.Request.Contents), &requestBody); err != nil {
 		return
 	}
-	payloads := []struct {
-		name    string
-		payload string
-	}{
-		{"sqli-or", "' OR 1=1; --"},
-		{"sqli-drop", "1; DROP TABLE users; --"},
-		{"path-traversal", "../../etc/passwd"},
-		{"ldap-inject", "*(|(uid=*))"},
-		{"cmd-inject", "; cat /etc/passwd"},
-		{"ssrf", "http://169.254.169.254/latest/meta-data/"},
-	}
 	for field, val := range requestBody {
 		if _, ok := val.(string); !ok {
 			continue
 		}
-		for _, p := range payloads {
+		for _, gen := range injectionGenerators {
 			clone := deepCloneMap(requestBody)
-			clone[field] = p.payload
+			clone[field] = gen.genFunc()
 			if newBody, err := json.Marshal(clone); err == nil {
 				s := *m.scenario
-				s.Name = s.Name + "-sec-" + p.name + "-" + field
+				s.Name = s.Name + "-sec-" + gen.name + "-" + field
 				s.Request.Contents = string(newBody)
 				s.Response.StatusCode = 400
 				m.mutations = append(m.mutations, &s)

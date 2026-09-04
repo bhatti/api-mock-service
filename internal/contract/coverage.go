@@ -61,14 +61,15 @@ type OpenAPISchemaViolation struct {
 
 // ContractDiffReport diff reporting structure and helper functions
 type ContractDiffReport struct {
-	ExpectedFields   map[string]interface{}   `json:"expectedFields"`
-	ActualFields     map[string]interface{}   `json:"actualFields"`
-	MissingFields    []string                 `json:"missingFields"`
-	ExtraFields      []string                 `json:"extraFields"`
-	TypeMismatches   map[string]string        `json:"typeMismatches"`
-	ValueMismatches  map[string]ValueMismatch `json:"valueMismatches"`
-	HeaderMismatches map[string]ValueMismatch `json:"headerMismatches"`
-	SchemaViolations []OpenAPISchemaViolation `json:"schemaViolations,omitempty"`
+	ExpectedFields    map[string]interface{}   `json:"expectedFields"`
+	ActualFields      map[string]interface{}   `json:"actualFields"`
+	MissingFields     []string                 `json:"missingFields"`
+	ExtraFields       []string                 `json:"extraFields"`
+	TypeMismatches    map[string]string        `json:"typeMismatches"`
+	ValueMismatches   map[string]ValueMismatch `json:"valueMismatches"`
+	HeaderMismatches  map[string]ValueMismatch `json:"headerMismatches"`
+	SchemaViolations  []OpenAPISchemaViolation `json:"schemaViolations,omitempty"`
+	InjectionFindings []types.InjectionFinding  `json:"injectionFindings,omitempty"`
 }
 
 type ValueMismatch struct {

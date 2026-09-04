@@ -23,6 +23,14 @@ type ProducerContractRequest struct {
 	SpecContent string `yaml:"spec_content" json:"spec_content,omitempty"`
 	// DryRun lists the scenarios that would run without actually executing them.
 	DryRun bool `yaml:"dry_run" json:"dry_run"`
+	// TimingThresholdMultiplier controls when timing-based blind injection is
+	// flagged. A response is suspicious when elapsed > baseline * multiplier.
+	// Defaults to 3.0 when zero.
+	TimingThresholdMultiplier float64 `yaml:"timing_threshold_multiplier" json:"timing_threshold_multiplier,omitempty"`
+	// MutationRounds controls how many independent rounds of mutation payloads
+	// are generated per scenario. Each round produces fresh randomized payloads.
+	// Defaults to 1 when zero.
+	MutationRounds int `yaml:"mutation_rounds" json:"mutation_rounds,omitempty"`
 	// Headers overrides
 	Headers http.Header `yaml:"-" json:"-"`
 	// Params local overrides

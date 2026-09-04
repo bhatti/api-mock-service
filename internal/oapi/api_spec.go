@@ -28,6 +28,7 @@ type APISpec struct {
 	SecuritySchemes     openapi3.SecuritySchemes
 	Request             Request
 	Response            Response
+	DependencyOrder     int
 }
 
 // ParseAPISpec converts open-api operation to API specs
@@ -188,6 +189,7 @@ func (api *APISpec) BuildMockScenario(dataTemplate fuzz.DataTemplateRequest) (*t
 		Path:            api.Path,
 		Group:           types.NormalizeGroup(api.Title, api.Path),
 		Tags:            tags,
+		Order:           api.DependencyOrder,
 		Request:         req,
 		Response:        res,
 		WaitBeforeReply: 0,

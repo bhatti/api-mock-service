@@ -65,6 +65,12 @@ func Parse(ctx context.Context, config *types.Configuration, data []byte,
 			specs = append(specs, spec)
 		}
 	}
+	// Auto-discover operation dependencies and assign execution order.
+	if len(specs) > 1 {
+		edges, _ := BuildDependencyGraph(specs)
+		ApplyDependencies(specs, edges)
+	}
+
 	for _, ref := range doc.Components.SecuritySchemes {
 		for _, spec := range specs {
 			prop := Property{

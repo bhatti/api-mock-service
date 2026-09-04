@@ -36,26 +36,28 @@ ifeq ($(EXPORT_RESULT), true)
 endif
 
 
+SWAGGER=$(shell go env GOPATH)/bin/swagger
+
 # npm install -g swagger-markdown
 check-swagger:
-	which swagger || (GO111MODULE=off go get -u github.com/go-swagger/go-swagger/cmd/swagger)
+	@test -x $(SWAGGER) || go install github.com/go-swagger/go-swagger/cmd/swagger@latest
 
 swagger: check-swagger
-	GO111MODULE=on go mod vendor  && swagger generate spec -o ./docs/swagger.yaml
-	swagger-markdown -i docs/swagger.yaml
+	GO111MODULE=on go mod vendor && $(SWAGGER) generate spec -o ./docs/swagger.yaml && $(SWAGGER) generate spec -o ./docs/swagger.json
+	which swagger-markdown > /dev/null 2>&1 && swagger-markdown -i docs/swagger.yaml || true
 
 serve-swagger: swagger
-	swagger serve -F=swagger docs/swagger.yaml
+	$(SWAGGER) serve -F=swagger docs/swagger.yaml
 
 docker-build:
 	docker build --rm --tag $(BINARY_NAME) .
 
 docker-release:
-	docker tag $(BINARY_NAME) $(DOCKER_REGISTRY)$(BINARY_NAME):latest
-	docker tag $(BINARY_NAME) $(DOCKER_REGISTRY)$(BINARY_NAME):$(VERSION)
+	docker tag $(BINARY_NAME) plexobject/$(DOCKER_REGISTRY)$(BINARY_NAME):latest
+	#docker tag $(BINARY_NAME) plexobject/$(DOCKER_REGISTRY)$(BINARY_NAME):$(VERSION)
 	# Push the docker images
-	docker push $(DOCKER_REGISTRY)$(BINARY_NAME):latest
-	docker push $(DOCKER_REGISTRY)$(BINARY_NAME):$(VERSION)
+	docker push plexobject/$(DOCKER_REGISTRY)$(BINARY_NAME):latest
+	#docker push plexobject/$(DOCKER_REGISTRY)$(BINARY_NAME):$(VERSION)
 
 lint: 
 	golangci-lint run --enable-all
@@ -71,7 +73,11 @@ ifeq ($(EXPORT_RESULT), true)
 	GO111MODULE=off go get -u github.com/jstemmer/go-junit-report
 	$(eval OUTPUT_OPTIONS = | tee /dev/tty | go-junit-report -set-exit-code > junit-report.xml)
 endif
-	$(GOTEST) -v $(TEST_RACE_PROCESS) ./... $(OUTPUT_OPTIONS)
+	@rm -rf mock_tests/api_contracts/2 mock_tests/api_contracts/v1 mock_tests/api_contracts/v2 mock_tests/api_contracts/v3
+	$(GOTEST) -count=1 ./... $(OUTPUT_OPTIONS)
+
+test-race:
+	$(GOTEST) -v -race -count=1 ./...
 
 vendor:
 	$(GOCMD) mod vendor

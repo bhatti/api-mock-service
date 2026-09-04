@@ -1,8 +1,1021 @@
 {
+  "swagger": "2.0",
+  "paths": {
+    "/_contracts/history/{group}": {
+      "post": {
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Invokes service api-contract using executed history of consumer contracts.",
+        "operationId": "postProducerContractHistoryByGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ProducerContractRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioContractResponse"
+          }
+        }
+      }
+    },
+    "/_contracts/mutations/{group}": {
+      "post": {
+        "description": "Mutations include: null fields, boundary values, format violations (date/uuid/email), security payloads.",
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Generates and executes mutation variants for all scenarios in a group to test API robustness.",
+        "operationId": "postProducerContractMutationsByGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ProducerContractRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioContractResponse"
+          }
+        }
+      }
+    },
+    "/_contracts/{group}": {
+      "post": {
+        "description": "Optionally accepts spec_content (OpenAPI YAML/JSON) in the request body for response schema validation.\nSet track_coverage:true to include a coverage report in the response.",
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Invokes service api-contract by group of api contracts.",
+        "operationId": "postProducerContractGroupScenario",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ProducerContractRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioContractResponse"
+          }
+        }
+      }
+    },
+    "/_contracts/{method}/{name}/{path}": {
+      "post": {
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Invokes service api-contract by method, contracts-name and path.",
+        "operationId": "postProducerContractScenarioByPath",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/ProducerContractRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioContractResponse"
+          }
+        }
+      }
+    },
+    "/_coverage/{group}": {
+      "get": {
+        "description": "Requires that the last run used --track-coverage / track_coverage:true with a spec.",
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Returns the OpenAPI coverage summary from the most recent contract run for a group.",
+        "operationId": "getCoverageByGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/coverageByGroupResponse"
+          }
+        }
+      }
+    },
+    "/_fixtures/{method}/fixtures/{path}": {
+      "get": {
+        "tags": [
+          "api-test-fixtures"
+        ],
+        "summary": "Finds api test-fixture names for given method and path.",
+        "operationId": "getAPITestFixtureNames",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiFixtureNamesResponse"
+          }
+        }
+      }
+    },
+    "/_fixtures/{method}/{name}/{path}": {
+      "get": {
+        "tags": [
+          "api-test-fixtures"
+        ],
+        "summary": "Finds an existing api-test-fixtures based on name and path.",
+        "operationId": "getAPITestFixture",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiFixtureResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-test-fixtures"
+        ],
+        "summary": "Creates new api-test-fixtures based on request body.",
+        "operationId": "postAPITestFixture",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiFixtureResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api-test-fixtures"
+        ],
+        "summary": "Deletes an existing api-test-fixtures based on name and path.",
+        "operationId": "deleteAPITestFixture",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/emptyResponse"
+          }
+        }
+      }
+    },
+    "/_groups/{group}/config": {
+      "get": {
+        "description": "Returns group config",
+        "tags": [
+          "group-config"
+        ],
+        "operationId": "getGroupConfig",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/groupConfigResponse"
+          }
+        }
+      },
+      "put": {
+        "description": "Saves group config",
+        "tags": [
+          "group-config"
+        ],
+        "operationId": "putGroupConfig",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/GroupConfig"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/putGroupConfigResponse"
+          }
+        }
+      }
+    },
+    "/_history": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches history of api scenarios by name or group.",
+        "operationId": "getExecHistory",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/getExecHistoryResponse"
+          }
+        }
+      }
+    },
+    "/_history/har": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches execution history in the format of HTTP HAR.",
+        "operationId": "getExecHistoryHar",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/execHistoryHarResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Uploads HAR contents and generates scenario and history.",
+        "operationId": "postExecHistoryHar",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Har"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/postExecHistoryHarResponse"
+          }
+        }
+      }
+    },
+    "/_history/names": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches history of api scenarios by group.",
+        "operationId": "getExecHistoryNames",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/execHistoryNamesResponse"
+          }
+        }
+      }
+    },
+    "/_history/postman": {
+      "get": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Fetches execution history in the format of HTTP HAR.",
+        "operationId": "getExecHistoryPostman",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Page",
+            "name": "page",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/execHistoryPostmanResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-history"
+        ],
+        "summary": "Uploads HAR contents and generates scenario and history.",
+        "operationId": "postExecHistoryPostman",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/PostmanCollection"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/postExecHistoryPostmanResponse"
+          }
+        }
+      }
+    },
+    "/_oapi": {
+      "post": {
+        "tags": [
+          "open-api"
+        ],
+        "summary": "Creates new api scenarios based on Open API v3 uploaded by user.",
+        "operationId": "postMockOAPIScenario",
+        "parameters": [
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioOAPIResponse"
+          }
+        }
+      }
+    },
+    "/_oapi/diff": {
+      "post": {
+        "description": "Request body: {\"base\": \"\u003cspec YAML/JSON\u003e\", \"head\": \"\u003cspec YAML/JSON\u003e\"}",
+        "tags": [
+          "open-api"
+        ],
+        "summary": "Compares two OpenAPI specs and returns breaking + non-breaking changes.",
+        "operationId": "postOAPIDiff",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/oapiDiffResponse"
+          }
+        }
+      }
+    },
+    "/_oapi/history/{name}": {
+      "get": {
+        "tags": [
+          "open-api"
+        ],
+        "summary": "Generates OpenAPI specs based on name of API scenario from execution history.",
+        "operationId": "getOpenAPISpecsByHistory",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "Name of open-api spec",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiOapiSpecIResponse"
+          }
+        }
+      }
+    },
+    "/_oapi/{group}": {
+      "get": {
+        "tags": [
+          "open-api"
+        ],
+        "summary": "Generates OpenAPI specs by group of API scenarios.",
+        "operationId": "getOpenAPISpecsByGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiOapiSpecIResponse"
+          }
+        }
+      }
+    },
+    "/_oapi/{method}/{name}/{path}": {
+      "get": {
+        "tags": [
+          "open-api"
+        ],
+        "summary": "Generates OpenAPI specs for the API scenario by method, name and path.",
+        "operationId": "getOpenAPISpecsByScenario",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiOapiSpecIResponse"
+          }
+        }
+      }
+    },
+    "/_proxy": {
+      "get": {
+        "tags": [
+          "api-proxy"
+        ],
+        "summary": "Records scenario for the API GET request.",
+        "operationId": "getAPIProxy"
+      },
+      "put": {
+        "tags": [
+          "api-proxy"
+        ],
+        "summary": "Records scenario for the API PUT request.",
+        "operationId": "putAPIProxy"
+      },
+      "post": {
+        "tags": [
+          "api-proxy"
+        ],
+        "summary": "Records scenario for the API POST request.",
+        "operationId": "postAPIProxy"
+      },
+      "delete": {
+        "tags": [
+          "api-proxy"
+        ],
+        "summary": "Records scenario for the API DELETE request.",
+        "operationId": "deleteAPIProxy"
+      }
+    },
+    "/_reports/{group}/junit": {
+      "get": {
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Returns JUnit XML from the most recent mutation test run for a group.",
+        "operationId": "getReportJUnit",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/junitXMLResponse"
+          }
+        }
+      }
+    },
+    "/_reports/{group}/summary": {
+      "get": {
+        "tags": [
+          "producer-contract"
+        ],
+        "summary": "Returns a JSON summary from the most recent mutation test run for a group.",
+        "operationId": "getReportSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Group",
+            "name": "group",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/jsonSummaryResponse"
+          }
+        }
+      }
+    },
+    "/_scenarios": {
+      "get": {
+        "tags": [
+          "api-scenarios"
+        ],
+        "summary": "List paths of all scenarios with group if available.",
+        "operationId": "listMockScenario",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioPathsResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-scenarios"
+        ],
+        "summary": "Creates new api scenario based on request body.",
+        "operationId": "postMockScenario",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/APIScenario"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiScenarioResponse"
+          }
+        }
+      }
+    },
+    "/_scenarios/groups": {
+      "get": {
+        "tags": [
+          "api-scenarios"
+        ],
+        "summary": "Finds api scenario groups.",
+        "operationId": "getAPIGroups",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiGroupsResponse"
+          }
+        }
+      }
+    },
+    "/_scenarios/{method}/names/{path}": {
+      "get": {
+        "tags": [
+          "api-scenarios"
+        ],
+        "summary": "Finds api scenario names by method and path.",
+        "operationId": "getAPIScenarioNames",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/apiNamesResponse"
+          }
+        }
+      }
+    },
+    "/_scenarios/{method}/{name}/{path}": {
+      "get": {
+        "tags": [
+          "api-scenarios"
+        ],
+        "summary": "Deletes an existing api scenario based on id.",
+        "operationId": "getAPIScenario",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/emptyResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "api-scenarios"
+        ],
+        "summary": "Deletes an existing api scenario based on id.",
+        "operationId": "getAPIScenario",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Method",
+            "name": "method",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/emptyResponse"
+          }
+        }
+      }
+    },
+    "/{path}": {
+      "get": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on GET request.",
+        "operationId": "getRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on PUT request.",
+        "operationId": "putRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on POST request.",
+        "operationId": "postRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on DELETE request.",
+        "operationId": "deleteRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "options": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on OPTIONS request.",
+        "operationId": "optionsRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "head": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on HEAD request.",
+        "operationId": "headRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "consumer-contract"
+        ],
+        "summary": "Play API scenario for previously defined API contract based on PATCH request.",
+        "operationId": "patchRoot",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Path",
+            "name": "path",
+            "in": "path",
+            "required": true
+          }
+        ]
+      }
+    }
+  },
   "definitions": {
     "APIAuthorization": {
       "description": "APIAuthorization defines mock auth parameters",
+      "type": "object",
       "properties": {
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
         "format": {
           "type": "string",
           "x-go-name": "Format"
@@ -19,6 +1032,13 @@
           "type": "string",
           "x-go-name": "Scheme"
         },
+        "scopes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Scopes"
+        },
         "type": {
           "type": "string",
           "x-go-name": "Type"
@@ -28,21 +1048,21 @@
           "x-go-name": "URL"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "APIKeyData": {
       "description": "APIKeyData defines keys of api scenario for in-memory store",
+      "type": "object",
       "properties": {
         "LastUsageTime": {
           "description": "LastUsageTime of key data",
-          "format": "int64",
-          "type": "integer"
+          "type": "integer",
+          "format": "int64"
         },
         "RequestCount": {
           "description": "RequestCount for the API",
-          "format": "uint64",
-          "type": "integer"
+          "type": "integer",
+          "format": "uint64"
         },
         "assert_contents_pattern": {
           "description": "AssertContentsPattern for request optionally",
@@ -50,27 +1070,27 @@
           "x-go-name": "AssertContentsPattern"
         },
         "assert_headers_pattern": {
+          "description": "AssertHeadersPattern for api response",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertHeadersPattern for api response",
-          "type": "object",
           "x-go-name": "AssertHeadersPattern"
         },
         "assert_post_params_pattern": {
+          "description": "AssertPostParamsPattern for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertPostParamsPattern for the API",
-          "type": "object",
           "x-go-name": "AssertPostParamsPattern"
         },
         "assert_query_params_pattern": {
+          "description": "AssertQueryParamsPattern for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertQueryParamsPattern for the API",
-          "type": "object",
           "x-go-name": "AssertQueryParamsPattern"
         },
         "group": {
@@ -88,8 +1108,8 @@
         },
         "order": {
           "description": "Order of scenario",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Order"
         },
         "path": {
@@ -102,20 +1122,23 @@
           "type": "string",
           "x-go-name": "Predicate"
         },
+        "response": {
+          "$ref": "#/definitions/APIResponseKey"
+        },
         "tags": {
           "description": "Tags of scenario",
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Tags"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "APIRequest": {
       "description": "APIRequest defines mock request for APIs",
+      "type": "object",
       "properties": {
         "assert_contents_pattern": {
           "description": "AssertContentsPattern for request optionally",
@@ -123,35 +1146,35 @@
           "x-go-name": "AssertContentsPattern"
         },
         "assert_headers_pattern": {
+          "description": "AssertHeadersPattern for mock response",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertHeadersPattern for mock response",
-          "type": "object",
           "x-go-name": "AssertHeadersPattern"
         },
         "assert_post_params_pattern": {
+          "description": "AssertPostParamsPattern for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertPostParamsPattern for the API",
-          "type": "object",
           "x-go-name": "AssertPostParamsPattern"
         },
         "assert_query_params_pattern": {
+          "description": "AssertQueryParamsPattern for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertQueryParamsPattern for the API",
-          "type": "object",
           "x-go-name": "AssertQueryParamsPattern"
         },
         "assertions": {
           "description": "Assertions for validating response",
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Assertions"
         },
         "contents": {
@@ -159,17 +1182,22 @@
           "type": "string",
           "x-go-name": "Contents"
         },
+        "description": {
+          "description": "Description for response optionally",
+          "type": "string",
+          "x-go-name": "Description"
+        },
         "example_contents": {
           "description": "ExampleContents sample for request optionally",
           "type": "string",
           "x-go-name": "ExampleContents"
         },
         "headers": {
+          "description": "Headers for mock request",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Headers for mock response",
-          "type": "object",
           "x-go-name": "Headers"
         },
         "http_version": {
@@ -178,63 +1206,71 @@
           "x-go-name": "HTTPVersion"
         },
         "path_params": {
+          "description": "PathParams for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "PathParams for the API",
-          "type": "object",
           "x-go-name": "PathParams"
         },
         "post_params": {
+          "description": "PostParams for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "PostParams for the API",
-          "type": "object",
           "x-go-name": "PostParams"
         },
         "query_params": {
+          "description": "QueryParams for the API",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "QueryParams for the API",
-          "type": "object",
           "x-go-name": "QueryParams"
         },
         "variables": {
+          "description": "Variables to set for templates",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Variables to set for templates",
-          "type": "object",
           "x-go-name": "Variables"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "APIResponse": {
       "description": "APIResponse defines mock response for APIs",
+      "type": "object",
       "properties": {
+        "add_shared_variables": {
+          "description": "AddSharedVariables to set shared variables from response",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "AddSharedVariables"
+        },
         "assert_contents_pattern": {
           "description": "AssertContentsPattern for request optionally",
           "type": "string",
           "x-go-name": "AssertContentsPattern"
         },
         "assert_headers_pattern": {
+          "description": "AssertHeadersPattern for mock response",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "AssertHeadersPattern for mock response",
-          "type": "object",
           "x-go-name": "AssertHeadersPattern"
         },
         "assertions": {
           "description": "Assertions for validating response",
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Assertions"
         },
         "contents": {
@@ -247,62 +1283,63 @@
           "type": "string",
           "x-go-name": "ContentsFile"
         },
+        "delete_shared_variables": {
+          "description": "DeleteSharedVariables to reset shared variables",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "DeleteSharedVariables"
+        },
+        "description": {
+          "description": "Description for response optionally",
+          "type": "string",
+          "x-go-name": "Description"
+        },
         "example_contents": {
           "description": "ExampleContents sample for response optionally",
           "type": "string",
           "x-go-name": "ExampleContents"
         },
         "headers": {
-          "additionalProperties": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "description": "Headers for mock response",
-          "type": "object",
-          "x-go-name": "Headers"
+          "$ref": "#/definitions/Header"
         },
         "http_version": {
           "description": "HTTPVersion version of http",
           "type": "string",
           "x-go-name": "HTTPVersion"
         },
-        "add_shared_variables": {
-          "description": "AddSharedVariables to set shared variables from response",
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "x-go-name": "AddSharedVariables"
-        },
         "status_code": {
           "description": "StatusCode for response",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "StatusCode"
-        },
-        "delete_shared_variables": {
-          "description": "DeleteSharedVariables to reset shared variables",
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "x-go-name": "DeleteSharedVariables"
         }
       },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
+    "APIResponseKey": {
       "type": "object",
+      "properties": {
+        "status_code": {
+          "description": "StatusCode for response",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StatusCode"
+        }
+      },
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "APIScenario": {
       "description": "APIScenario defines mock scenario for APIs",
+      "type": "object",
       "properties": {
         "authentication": {
+          "description": "Authentication for the API",
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/APIAuthorization"
           },
-          "description": "Authentication for the API",
-          "type": "object",
           "x-go-name": "Authentication"
         },
         "base_url": {
@@ -317,8 +1354,8 @@
         },
         "end_time": {
           "description": "EndTime of request",
-          "format": "date-time",
           "type": "string",
+          "format": "date-time",
           "x-go-name": "EndTime"
         },
         "group": {
@@ -334,10 +1371,15 @@
           "type": "string",
           "x-go-name": "Name"
         },
+        "next_request": {
+          "description": "Load next request before executing current scenario",
+          "type": "string",
+          "x-go-name": "NextRequest"
+        },
         "order": {
           "description": "Order of scenario",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Order"
         },
         "path": {
@@ -346,7 +1388,7 @@
           "x-go-name": "Path"
         },
         "predicate": {
-          "description": "Predicate for the request",
+          "description": "Predicate for the  scenario",
           "type": "string",
           "x-go-name": "Predicate"
         },
@@ -358,23 +1400,30 @@
         },
         "start_time": {
           "description": "StartTime of request",
-          "format": "date-time",
           "type": "string",
+          "format": "date-time",
           "x-go-name": "StartTime"
+        },
+        "state_machine": {
+          "$ref": "#/definitions/ScenarioStateMachine"
         },
         "tags": {
           "description": "Tags of scenario",
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Tags"
+        },
+        "variables_file": {
+          "description": "Variables File for the scenario",
+          "type": "string",
+          "x-go-name": "VariablesFile"
         },
         "wait_before_reply": {
           "$ref": "#/definitions/Duration"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "AuthType": {
@@ -382,14 +1431,223 @@
       "type": "string",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
+    "ChangeType": {
+      "type": "string",
+      "title": "ChangeType classifies the kind of spec change.",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/speccompare"
+    },
+    "ContractValidationDetail": {
+      "description": "Returned in ProducerContractResponse.ErrorDetails alongside the existing flat Errors map.",
+      "type": "object",
+      "title": "ContractValidationDetail gives field-level diagnostics for a failed contract test.",
+      "properties": {
+        "expectedStatusCode": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ExpectedStatusCode"
+        },
+        "extraFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "ExtraFields"
+        },
+        "headerMismatches": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ValueMismatch"
+          },
+          "x-go-name": "HeaderMismatches"
+        },
+        "injectionFindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InjectionFinding"
+          },
+          "x-go-name": "InjectionFindings"
+        },
+        "missingFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "MissingFields"
+        },
+        "scenario": {
+          "type": "string",
+          "x-go-name": "Scenario"
+        },
+        "schemaViolations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SchemaViolation"
+          },
+          "x-go-name": "SchemaViolations"
+        },
+        "statusCode": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StatusCode"
+        },
+        "summary": {
+          "type": "string",
+          "x-go-name": "Summary"
+        },
+        "typeMismatches": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "TypeMismatches"
+        },
+        "url": {
+          "type": "string",
+          "x-go-name": "URL"
+        },
+        "valueMismatches": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ValueMismatch"
+          },
+          "x-go-name": "ValueMismatches"
+        }
+      },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
+    "CoverageSummary": {
+      "description": "Populated when TrackCoverage=true and an OpenAPI spec is attached.",
+      "type": "object",
+      "title": "CoverageSummary is a serializable (no openapi3 dep) summary of contract coverage.",
+      "properties": {
+        "coveragePercentage": {
+          "type": "number",
+          "format": "double",
+          "x-go-name": "Coverage"
+        },
+        "coveredPaths": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "CoveredPaths"
+        },
+        "fieldCoverageByScenario": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          },
+          "x-go-name": "FieldCoverageByScenario"
+        },
+        "methodCoverage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          },
+          "x-go-name": "MethodCoverage"
+        },
+        "pathCoverage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          },
+          "x-go-name": "PathCoverage"
+        },
+        "statusCodeCoverage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "x-go-name": "StatusCodes"
+        },
+        "tagCoverage": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          },
+          "x-go-name": "TagCoverage"
+        },
+        "totalPaths": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "TotalPaths"
+        },
+        "uncoveredPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "UncoveredPaths"
+        }
+      },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
     "Duration": {
       "description": "A Duration represents the elapsed time between two instants\nas an int64 nanosecond count. The representation limits the\nlargest representable duration to approximately 290 years.",
-      "format": "int64",
       "type": "integer",
+      "format": "int64",
       "x-go-package": "time"
+    },
+    "FailureCluster": {
+      "type": "object",
+      "title": "FailureCluster groups duplicate failures by root cause.",
+      "properties": {
+        "affectedMutations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "AffectedMutations"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Count"
+        },
+        "key": {
+          "$ref": "#/definitions/FailureClusterKey"
+        },
+        "representative": {
+          "type": "string",
+          "x-go-name": "Representative"
+        },
+        "severity": {
+          "type": "string",
+          "x-go-name": "Severity"
+        }
+      },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
+    "FailureClusterKey": {
+      "type": "object",
+      "title": "FailureClusterKey identifies a unique class of failure for deduplication.",
+      "properties": {
+        "endpoint": {
+          "type": "string",
+          "x-go-name": "Endpoint"
+        },
+        "errorCategory": {
+          "type": "string",
+          "x-go-name": "ErrorCategory"
+        },
+        "responseHash": {
+          "type": "string",
+          "x-go-name": "ResponseHash"
+        },
+        "statusCode": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "StatusCode"
+        }
+      },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "GroupConfig": {
       "description": "GroupConfig for group configuration",
+      "type": "object",
       "properties": {
         "chaos_enabled": {
           "description": "ChaosEnabled to enable faults and delays",
@@ -398,55 +1656,55 @@
         },
         "http_errors": {
           "description": "HTTPErrors to return for failure",
-          "items": {
-            "format": "int64",
-            "type": "integer"
-          },
           "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
           "x-go-name": "HTTPErrors"
         },
         "max_additional_latency_secs": {
           "description": "MaxAdditionalLatency for max delay",
-          "format": "double",
           "type": "number",
+          "format": "double",
           "x-go-name": "MaxAdditionalLatencySecs"
         },
         "mean_time_between_additional_latency": {
           "description": "MeanTimeBetweenAdditionalLatency for adding delay",
-          "format": "double",
           "type": "number",
+          "format": "double",
           "x-go-name": "MeanTimeBetweenAdditionalLatency"
         },
         "mean_time_between_failure": {
           "description": "MeanTimeBetweenFailure for failure",
-          "format": "double",
           "type": "number",
+          "format": "double",
           "x-go-name": "MeanTimeBetweenFailure"
         },
         "variables": {
+          "description": "Variables to set for templates",
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Variables to set for templates",
-          "type": "object",
           "x-go-name": "Variables"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "Har": {
       "description": "Har is a container type for deserialization",
+      "type": "object",
       "properties": {
         "log": {
           "$ref": "#/definitions/HarLog"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarBrowser": {
       "description": "HarBrowser that created the log",
+      "type": "object",
       "properties": {
         "comment": {
           "description": "Optional. A comment provided by the user or the browser.",
@@ -464,10 +1722,11 @@
           "x-go-name": "Version"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarCache": {
+      "type": "object",
+      "title": "HarCache contains info about a request coming from browser cache.",
       "properties": {
         "afterRequest": {
           "$ref": "#/definitions/HarCacheObject"
@@ -481,12 +1740,11 @@
           "x-go-name": "Comment"
         }
       },
-      "title": "HarCache contains info about a request coming from browser cache.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarCacheObject": {
       "description": "HarCacheObject is used by both beforeRequest and afterRequest",
+      "type": "object",
       "properties": {
         "comment": {
           "description": "optional (new in 1.2) A comment provided by the user or the application.",
@@ -505,8 +1763,8 @@
         },
         "hitCount": {
           "description": "The number of times the cache entry has been opened.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "HitCount"
         },
         "lastAccess": {
@@ -515,10 +1773,11 @@
           "x-go-name": "LastAccess"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarCookie": {
+      "type": "object",
+      "title": "HarCookie contains list of all cookies (used in \u003crequest\u003e and \u003cresponse\u003e objects).",
       "properties": {
         "comment": {
           "description": "optional (new in 1.2) A comment provided by the user or the application.",
@@ -561,12 +1820,11 @@
           "x-go-name": "Value"
         }
       },
-      "title": "HarCookie contains list of all cookies (used in <request> and <response> objects).",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarCreator": {
       "description": "HarCreator contains information about the log creator application",
+      "type": "object",
       "properties": {
         "comment": {
           "description": "Optional. A comment provided by the user or the application.",
@@ -584,11 +1842,12 @@
           "x-go-name": "Version"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarEntry": {
       "description": "Leave out this field if the application does not support grouping by pages.",
+      "type": "object",
+      "title": "HarEntry is a unique, optional Reference to the parent page.",
       "properties": {
         "cache": {
           "$ref": "#/definitions/HarCache"
@@ -628,8 +1887,8 @@
         },
         "time": {
           "description": "Total elapsed time of the request in milliseconds. This is the sum of all\ntimings available in the timings object (i.e. not including -1 values) .",
-          "format": "float",
           "type": "number",
+          "format": "float",
           "x-go-name": "Time"
         },
         "title": {
@@ -637,11 +1896,11 @@
           "x-go-name": "Title"
         }
       },
-      "title": "HarEntry is a unique, optional Reference to the parent page.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarLog": {
+      "type": "object",
+      "title": "HarLog represents the root of the exported data. This object MUST be present and its name MUST be \"log\".",
       "properties": {
         "browser": {
           "$ref": "#/definitions/HarBrowser"
@@ -656,18 +1915,18 @@
         },
         "entries": {
           "description": "Required. An array of objects of type entry, each representing one\nexported (tracked) HTTP request.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/HarEntry"
           },
-          "type": "array",
           "x-go-name": "Entries"
         },
         "pages": {
           "description": "Optional. An array of objects of type page, each representing one exported\n(tracked) page. Leave out this field if the application does not support\ngrouping by pages.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/HarPage"
           },
-          "type": "array",
           "x-go-name": "Pages"
         },
         "version": {
@@ -676,12 +1935,12 @@
           "x-go-name": "Version"
         }
       },
-      "title": "HarLog represents the root of the exported data. This object MUST be present and its name MUST be \"log\".",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarPage": {
-      "description": "In case when an HTTP trace tool isn't able to group requests by a page,\nthe <pages> object is empty and individual requests doesn't have a parent page.",
+      "description": "In case when an HTTP trace tool isn't able to group requests by a page,\nthe \u003cpages\u003e object is empty and individual requests doesn't have a parent page.",
+      "type": "object",
+      "title": "HarPage object for every exported web page and one \u003centry\u003e object for every HTTP request.",
       "properties": {
         "comment": {
           "description": "(new in 1.2) A comment provided by the user or the application.",
@@ -707,11 +1966,11 @@
           "x-go-name": "Title"
         }
       },
-      "title": "HarPage object for every exported web page and one <entry> object for every HTTP request.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarPostData": {
+      "type": "object",
+      "title": "HarPostData describes posted data, if any (embedded in \u003crequest\u003e object).",
       "properties": {
         "comment": {
           "description": "optional (new in 1.2) A comment provided by the user or the\napplication.",
@@ -725,10 +1984,10 @@
         },
         "params": {
           "description": "List of posted parameters (in case of URL encoded parameters).",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/HarPostParam"
           },
-          "type": "array",
           "x-go-name": "Params"
         },
         "text": {
@@ -737,11 +1996,11 @@
           "x-go-name": "Text"
         }
       },
-      "title": "HarPostData describes posted data, if any (embedded in <request> object).",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarPostParam": {
+      "type": "object",
+      "title": "HarPostParam is a list of posted parameters, if any (embedded in \u003cpostData\u003e object).",
       "properties": {
         "comment": {
           "description": "optional (new in 1.2) A comment provided by the user or the application.",
@@ -769,16 +2028,16 @@
           "x-go-name": "Value"
         }
       },
-      "title": "HarPostParam is a list of posted parameters, if any (embedded in <postData> object).",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarRequest": {
+      "type": "object",
+      "title": "HarRequest contains detailed info about performed request.",
       "properties": {
         "bodySize": {
           "description": "Size of the request body (POST data payload) in bytes. Set to -1 if the\ninfo is not available.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "BodySize"
         },
         "comment": {
@@ -788,24 +2047,24 @@
         },
         "cookies": {
           "description": "List of cookie objects.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/HarCookie"
           },
-          "type": "array",
           "x-go-name": "Cookies"
         },
         "headerSize": {
           "description": "Total number of bytes from the start of the HTTP request message until\n(and including) the double CRLF before the body. Set to -1 if the info\nis not available.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "HeaderSize"
         },
         "headers": {
           "description": "List of header objects.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/NVP"
           },
-          "type": "array",
           "x-go-name": "Headers"
         },
         "httpVersion": {
@@ -823,10 +2082,10 @@
         },
         "queryString": {
           "description": "List of query parameter objects.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/NVP"
           },
-          "type": "array",
           "x-go-name": "QueryString"
         },
         "url": {
@@ -835,16 +2094,16 @@
           "x-go-name": "URL"
         }
       },
-      "title": "HarRequest contains detailed info about performed request.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarResponse": {
+      "type": "object",
+      "title": "HarResponse contains detailed info about the response.",
       "properties": {
         "bodySize": {
           "description": "Size of the received response body in bytes. Set to zero in case of\nresponses coming from the cache (304). Set to -1 if the info is not\navailable.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "BodySize"
         },
         "comment": {
@@ -857,24 +2116,24 @@
         },
         "cookies": {
           "description": "List of cookie objects.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/HarCookie"
           },
-          "type": "array",
           "x-go-name": "Cookies"
         },
         "headers": {
           "description": "List of header objects.",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/NVP"
           },
-          "type": "array",
           "x-go-name": "Headers"
         },
         "headersSize": {
           "description": "Total number of bytes from the start of the HTTP response message until\n(and including) the double CRLF before the body. Set to -1 if the info is\nnot available.\nThe size of received response-headers is computed only from headers that\nare really received from the server. Additional headers appended by the\nbrowser are not included in this number, but they appear in the list of\nheader objects.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "HeadersSize"
         },
         "httpVersion": {
@@ -889,8 +2148,8 @@
         },
         "status": {
           "description": "HarResponse status.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Status"
         },
         "statusText": {
@@ -899,11 +2158,11 @@
           "x-go-name": "StatusText"
         }
       },
-      "title": "HarResponse contains detailed info about the response.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "HarResponseContent": {
+      "type": "object",
+      "title": "HarResponseContent describes details about response content (embedded in \u003cresponse\u003e object).",
       "properties": {
         "_file": {
           "description": "optional (community enhancement) A path to an attached file containing this content\nused by Playwright",
@@ -917,12 +2176,12 @@
         },
         "compression": {
           "description": "optional Number of bytes saved. Leave out this field if the information\nis not available.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Compression"
         },
         "encoding": {
-          "description": "optional (new in 1.2) Encoding used for response text field e.g\n\"base64\". Leave out this field if the text field is HTTP decoded\n(decompressed & unchunked), than trans-coded from its original character\nset into UTF-8.",
+          "description": "optional (new in 1.2) Encoding used for response text field e.g\n\"base64\". Leave out this field if the text field is HTTP decoded\n(decompressed \u0026 unchunked), than trans-coded from its original character\nset into UTF-8.",
           "type": "string",
           "x-go-name": "Encoding"
         },
@@ -933,8 +2192,8 @@
         },
         "size": {
           "description": "Length of the returned content in bytes. Should be equal to\nresponse.bodySize if there is no compression and bigger when the content\nhas been compressed.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Size"
         },
         "text": {
@@ -943,14 +2202,63 @@
           "x-go-name": "Text"
         }
       },
-      "title": "HarResponseContent describes details about response content (embedded in <response> object).",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
+    },
+    "Header": {
+      "description": "The keys should be in canonical form, as returned by\n[CanonicalHeaderKey].",
       "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "title": "A Header represents the key-value pairs in an HTTP header.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "net/http"
+    },
+    "InjectionFinding": {
+      "type": "object",
+      "title": "InjectionFinding represents a detected vulnerability in an API response.",
+      "properties": {
+        "cwe": {
+          "type": "string",
+          "x-go-name": "CWE"
+        },
+        "endpoint": {
+          "type": "string",
+          "x-go-name": "Endpoint"
+        },
+        "evidence": {
+          "type": "string",
+          "x-go-name": "Evidence"
+        },
+        "field": {
+          "type": "string",
+          "x-go-name": "Field"
+        },
+        "pattern": {
+          "type": "string",
+          "x-go-name": "Pattern"
+        },
+        "payload": {
+          "type": "string",
+          "x-go-name": "Payload"
+        },
+        "severity": {
+          "type": "string",
+          "x-go-name": "Severity"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "ListenType": {
-      "title": "ListenType defines the kind of script attached to an event.",
       "type": "string",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "title": "ListenType defines the kind of script attached to an event.",
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "MethodType": {
       "description": "MethodType for HTTP",
@@ -959,6 +2267,7 @@
     },
     "NVP": {
       "description": "NVP is simply a name/value pair with a comment",
+      "type": "object",
       "properties": {
         "comment": {
           "type": "string",
@@ -973,11 +2282,12 @@
           "x-go-name": "Value"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "PageTiming": {
       "description": "All times are specified in milliseconds. If a time info is not available appropriate field is set to -1.",
+      "type": "object",
+      "title": "PageTiming describes timings for various events (states) fired during the page load.",
       "properties": {
         "comment": {
           "description": "(new in 1.2) A comment provided by the user or the application.",
@@ -986,27 +2296,27 @@
         },
         "onContentLoad": {
           "description": "HarResponseContent of the page loaded. Number of milliseconds since page load started\n(page.startedDateTime). Use -1 if the timing does not apply to the current\nrequest.\nDepending on the browser, onContentLoad property represents DOMContentLoad\nevent or document.readyState == interactive.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "OnContentLoad"
         },
         "onLoad": {
           "description": "HarPage is loaded (onLoad event fired). Number of milliseconds since page\nload started (page.startedDateTime). Use -1 if the timing does not apply\nto the current request.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "OnLoad"
         }
       },
-      "title": "PageTiming describes timings for various events (states) fired during the page load.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "PageTimings": {
       "description": "All times are specified in milliseconds.",
+      "type": "object",
+      "title": "PageTimings describes various phases within request-response round trip.",
       "properties": {
         "blocked": {
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Blocked"
         },
         "comment": {
@@ -1016,127 +2326,127 @@
         },
         "connect": {
           "description": "optional - DNS resolution time. The time required to resolve a host name.\nUse -1 if the timing does not apply to the current request.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Connect"
         },
         "dns": {
           "description": "optional - Time spent in a queue waiting for a network connection. Use -1\nif the timing does not apply to the current request.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "DNS"
         },
         "receive": {
           "description": "Waiting for a response from the server.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Receive"
         },
         "send": {
           "description": "optional - Time required to create TCP connection. Use -1 if the timing\ndoes not apply to the current request.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Send"
         },
         "ssl": {
           "description": "Time required to read entire response from the server (or cache).",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Ssl"
         },
         "wait": {
           "description": "Time required to send HTTP request to the server.",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Wait"
         }
       },
-      "title": "PageTimings describes various phases within request-response round trip.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/archive"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/archive"
     },
     "PostmanAuth": {
+      "type": "object",
+      "title": "PostmanAuth contains the authentication method used and its associated parameters.",
       "properties": {
         "apikey": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "APIKey"
         },
         "awsv4": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "AWSV4"
         },
         "basic": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "Basic"
         },
         "bearer": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "Bearer"
         },
         "digest": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "Digest"
         },
         "hawk": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "Hawk"
         },
         "noauth": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "NoAuth"
         },
         "ntlm": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "NTLM"
         },
         "oauth1": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "OAuth1"
         },
         "oauth2": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanAuthParam"
           },
-          "type": "array",
           "x-go-name": "OAuth2"
         },
         "type": {
           "$ref": "#/definitions/AuthType"
         }
       },
-      "title": "PostmanAuth contains the authentication method used and its associated parameters.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanAuthParam": {
       "description": "For example \"username\" and \"password\" are set as auth attributes for Basic Authentication method.",
+      "type": "object",
+      "title": "PostmanAuthParam represents an attribute for any authentication method provided by Postman.",
       "properties": {
         "key": {
           "type": "string",
@@ -1147,49 +2457,48 @@
           "x-go-name": "Type"
         },
         "value": {
-          "type": "object",
           "x-go-name": "Value"
         }
       },
-      "title": "PostmanAuthParam represents an attribute for any authentication method provided by Postman.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanCollection": {
+      "type": "object",
+      "title": "PostmanCollection represents a Postman PostmanCollection.",
       "properties": {
         "auth": {
           "$ref": "#/definitions/PostmanAuth"
         },
         "event": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanEvent"
           },
-          "type": "array",
           "x-go-name": "Events"
         },
         "info": {
           "$ref": "#/definitions/PostmanInfo"
         },
         "item": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanItems"
           },
-          "type": "array",
           "x-go-name": "Items"
         },
         "variable": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanVariable"
           },
-          "type": "array",
           "x-go-name": "Variables"
         }
       },
-      "title": "PostmanCollection represents a Postman PostmanCollection.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanCollectionDescription": {
+      "type": "object",
+      "title": "PostmanCollectionDescription contains collection description.",
       "properties": {
         "content": {
           "type": "string",
@@ -1204,12 +2513,11 @@
           "x-go-name": "Version"
         }
       },
-      "title": "PostmanCollectionDescription contains collection description.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanCookie": {
       "description": "PostmanCookie represents a cookie that follows the Google Chrome format (https://developer.chrome.com/extensions/cookies)",
+      "type": "object",
       "properties": {
         "domain": {
           "type": "string",
@@ -1220,7 +2528,6 @@
           "x-go-name": "Expires"
         },
         "extensions": {
-          "type": "object",
           "x-go-name": "Extensions"
         },
         "hostOnly": {
@@ -1256,10 +2563,11 @@
           "x-go-name": "Value"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanEvent": {
+      "type": "object",
+      "title": "An PostmanEvent defines a script associated with an associated event name.",
       "properties": {
         "disabled": {
           "type": "boolean",
@@ -1276,11 +2584,11 @@
           "$ref": "#/definitions/PostmanScript"
         }
       },
-      "title": "An PostmanEvent defines a script associated with an associated event name.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanHeader": {
+      "type": "object",
+      "title": "PostmanHeader represents an HTTP PostmanHeader.",
       "properties": {
         "description": {
           "type": "string",
@@ -1299,24 +2607,24 @@
           "x-go-name": "Value"
         }
       },
-      "title": "PostmanHeader represents an HTTP PostmanHeader.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanHeaderList": {
+      "type": "object",
+      "title": "PostmanHeaderList contains a list of headers.",
       "properties": {
         "Headers": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanHeader"
-          },
-          "type": "array"
+          }
         }
       },
-      "title": "PostmanHeaderList contains a list of headers.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanInfo": {
+      "type": "object",
+      "title": "PostmanInfo stores data about the collection.",
       "properties": {
         "description": {
           "$ref": "#/definitions/PostmanCollectionDescription"
@@ -1334,12 +2642,12 @@
           "x-go-name": "Version"
         }
       },
-      "title": "PostmanInfo stores data about the collection.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanItems": {
       "description": "It can either be a request (PostmanItem) or a folder (PostmanItemGroup).",
+      "type": "object",
+      "title": "PostmanItems are the basic unit for a Postman collection.",
       "properties": {
         "auth": {
           "$ref": "#/definitions/PostmanAuth"
@@ -1349,10 +2657,10 @@
           "x-go-name": "Description"
         },
         "event": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanEvent"
           },
-          "type": "array",
           "x-go-name": "Events"
         },
         "id": {
@@ -1362,10 +2670,10 @@
         },
         "item": {
           "description": "Fields specific to PostmanItemGroup",
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanItems"
           },
-          "type": "array",
           "x-go-name": "Items"
         },
         "name": {
@@ -1374,33 +2682,31 @@
           "x-go-name": "Name"
         },
         "protocolProfileBehavior": {
-          "type": "object",
           "x-go-name": "ProtocolProfileBehavior"
         },
         "request": {
           "$ref": "#/definitions/PostmanRequest"
         },
         "response": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanResponse"
           },
-          "type": "array",
           "x-go-name": "Responses"
         },
         "variable": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanVariable"
           },
-          "type": "array",
           "x-go-name": "Variables"
         }
       },
-      "title": "PostmanItems are the basic unit for a Postman collection.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanQueryParam": {
       "description": "PostmanQueryParam param for query",
+      "type": "object",
       "properties": {
         "description": {
           "type": "string",
@@ -1415,10 +2721,11 @@
           "x-go-name": "Value"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanRequest": {
+      "type": "object",
+      "title": "A PostmanRequest represents an HTTP request.",
       "properties": {
         "auth": {
           "$ref": "#/definitions/PostmanAuth"
@@ -1427,51 +2734,45 @@
           "$ref": "#/definitions/PostmanRequestBody"
         },
         "certificate": {
-          "type": "object",
           "x-go-name": "Certificate"
         },
         "description": {
-          "type": "object",
           "x-go-name": "Description"
         },
         "header": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanHeader"
           },
-          "type": "array",
           "x-go-name": "Header"
         },
         "method": {
           "$ref": "#/definitions/MethodType"
         },
         "proxy": {
-          "type": "object",
           "x-go-name": "Proxy"
         },
         "url": {
           "$ref": "#/definitions/PostmanURL"
         }
       },
-      "title": "A PostmanRequest represents an HTTP request.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanRequestBody": {
+      "type": "object",
+      "title": "PostmanRequestBody represents the data usually contained in the request body.",
       "properties": {
         "disabled": {
           "type": "boolean",
           "x-go-name": "Disabled"
         },
         "file": {
-          "type": "object",
           "x-go-name": "File"
         },
         "formdata": {
-          "type": "object",
           "x-go-name": "FormData"
         },
         "graphql": {
-          "type": "object",
           "x-go-name": "GraphQL"
         },
         "mode": {
@@ -1486,36 +2787,35 @@
           "x-go-name": "Raw"
         },
         "urlencoded": {
-          "type": "object",
           "x-go-name": "URLEncoded"
         }
       },
-      "title": "PostmanRequestBody represents the data usually contained in the request body.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanRequestBodyOptions": {
+      "type": "object",
+      "title": "PostmanRequestBodyOptions holds body options.",
       "properties": {
         "raw": {
           "$ref": "#/definitions/PostmanRequestBodyOptionsRaw"
         }
       },
-      "title": "PostmanRequestBodyOptions holds body options.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanRequestBodyOptionsRaw": {
       "description": "PostmanRequestBodyOptionsRaw represents the acutal language to use in postman. (See possible options in the cost above)",
+      "type": "object",
       "properties": {
         "language": {
           "type": "string",
           "x-go-name": "Language"
         }
       },
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanResponse": {
+      "type": "object",
+      "title": "A PostmanResponse represents an HTTP response.",
       "properties": {
         "_postman_previewlanguage": {
           "type": "string",
@@ -1526,15 +2826,15 @@
           "x-go-name": "Body"
         },
         "code": {
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Code"
         },
         "cookie": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanCookie"
           },
-          "type": "array",
           "x-go-name": "Cookies"
         },
         "header": {
@@ -1552,7 +2852,6 @@
           "$ref": "#/definitions/PostmanRequest"
         },
         "responseTime": {
-          "type": "object",
           "x-go-name": "ResponseTime"
         },
         "status": {
@@ -1560,21 +2859,20 @@
           "x-go-name": "Status"
         },
         "timings": {
-          "type": "object",
           "x-go-name": "Timings"
         }
       },
-      "title": "A PostmanResponse represents an HTTP response.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanScript": {
+      "type": "object",
+      "title": "A PostmanScript is a snippet of Javascript code that can be used to to perform setup or teardown operations on a particular response.",
       "properties": {
         "exec": {
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Exec"
         },
         "id": {
@@ -1593,29 +2891,29 @@
           "x-go-name": "Type"
         }
       },
-      "title": "A PostmanScript is a snippet of Javascript code that can be used to to perform setup or teardown operations on a particular response.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanURL": {
       "description": "Raw contains the complete PostmanURL.",
+      "type": "object",
+      "title": "PostmanURL is a struct that contains an PostmanURL in a \"broken-down way\".",
       "properties": {
         "hash": {
           "type": "string",
           "x-go-name": "Hash"
         },
         "host": {
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Host"
         },
         "path": {
+          "type": "array",
           "items": {
             "type": "string"
           },
-          "type": "array",
           "x-go-name": "Path"
         },
         "port": {
@@ -1627,10 +2925,10 @@
           "x-go-name": "Protocol"
         },
         "query": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanQueryParam"
           },
-          "type": "array",
           "x-go-name": "Query"
         },
         "raw": {
@@ -1638,18 +2936,18 @@
           "x-go-name": "Raw"
         },
         "variable": {
+          "type": "array",
           "items": {
             "$ref": "#/definitions/PostmanVariable"
           },
-          "type": "array",
           "x-go-name": "Variables"
         }
       },
-      "title": "PostmanURL is a struct that contains an PostmanURL in a \"broken-down way\".",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "PostmanVariable": {
+      "type": "object",
+      "title": "A PostmanVariable allows you to store and reuse values in your requests and scripts.",
       "properties": {
         "description": {
           "type": "string",
@@ -1684,23 +2982,65 @@
           "x-go-name": "Value"
         }
       },
-      "title": "A PostmanVariable allows you to store and reuse values in your requests and scripts.",
-      "type": "object",
-      "x-go-package": "github.com/bhatti/api-mock-service/internal/types/pm"
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/pm"
     },
     "ProducerContractRequest": {
       "description": "ProducerContractRequest for generating fuzz-data requests to an API implementation for producer based contract testing",
+      "type": "object",
       "properties": {
         "base_url": {
           "description": "BaseURL of remote server",
           "type": "string",
           "x-go-name": "BaseURL"
         },
+        "dry_run": {
+          "description": "DryRun lists the scenarios that would run without actually executing them.",
+          "type": "boolean",
+          "x-go-name": "DryRun"
+        },
         "execution_times": {
           "description": "ExecutionTimes for contract testing",
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "ExecutionTimes"
+        },
+        "match_response_code": {
+          "description": "MatchResponseCode for contract testing",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "MatchResponseCode"
+        },
+        "mutation_rounds": {
+          "description": "MutationRounds controls how many independent rounds of mutation payloads\nare generated per scenario. Each round produces fresh randomized payloads.\nDefaults to 1 when zero.",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "MutationRounds"
+        },
+        "record_results": {
+          "description": "RecordResults determines if contract validation results should be stored",
+          "type": "boolean",
+          "x-go-name": "RecordResults"
+        },
+        "run_mutations": {
+          "description": "RunMutations generates and executes mutation variants to test robustness",
+          "type": "boolean",
+          "x-go-name": "RunMutations"
+        },
+        "spec_content": {
+          "description": "SpecContent optional OpenAPI spec (YAML or JSON) used for response schema validation.\nWhen set, responses are validated against the spec in addition to scenario assertions.",
+          "type": "string",
+          "x-go-name": "SpecContent"
+        },
+        "timing_threshold_multiplier": {
+          "description": "TimingThresholdMultiplier controls when timing-based blind injection is\nflagged. A response is suspicious when elapsed \u003e baseline * multiplier.\nDefaults to 3.0 when zero.",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "TimingThresholdMultiplier"
+        },
+        "track_coverage": {
+          "description": "Track coverage — requires an OpenAPI spec to be provided",
+          "type": "boolean",
+          "x-go-name": "TrackCoverage"
         },
         "verbose": {
           "description": "Verbose setting",
@@ -1708,993 +3048,329 @@
           "x-go-name": "Verbose"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
     "ProducerContractResponse": {
       "description": "ProducerContractResponse for returning summary of producer based test results",
+      "type": "object",
       "properties": {
+        "coverage": {
+          "$ref": "#/definitions/CoverageSummary"
+        },
+        "error_details": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ContractValidationDetail"
+          },
+          "x-go-name": "ErrorDetails"
+        },
         "errors": {
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "type": "object",
           "x-go-name": "Errors"
         },
         "failed": {
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Failed"
         },
-        "metrics": {
-          "additionalProperties": {
-            "format": "double",
-            "type": "number"
+        "failureClusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureCluster"
           },
+          "x-go-name": "FailureClusters"
+        },
+        "metrics": {
           "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "format": "double"
+          },
           "x-go-name": "Metrics"
         },
+        "mismatched": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Mismatched"
+        },
         "results": {
-          "additionalProperties": {
-            "type": "string"
-          },
           "type": "object",
+          "additionalProperties": {},
           "x-go-name": "Results"
         },
+        "securitySummary": {
+          "$ref": "#/definitions/SecuritySummary"
+        },
         "succeeded": {
-          "format": "int64",
           "type": "integer",
+          "format": "int64",
           "x-go-name": "Succeeded"
         },
         "urls": {
-          "additionalProperties": {
-            "format": "int64",
-            "type": "integer"
-          },
           "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          },
           "x-go-name": "URLs"
         }
       },
-      "type": "object",
       "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
-    }
-  },
-  "paths": {
-    "/_contracts/{group}": {
-      "post": {
-        "operationId": "postProducerContractGroupScenario",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Group"
-          },
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/ProducerContractRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiScenarioContractResponse"
-          }
-        },
-        "summary": "Invokes service api-contract by group of api contracts.",
-        "tags": [
-          "producer-contract"
-        ]
-      }
     },
-    "/_contracts/{method}/{name}/{path}": {
-      "post": {
-        "operationId": "postProducerContractScenarioByPath",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          },
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/ProducerContractRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiScenarioContractResponse"
-          }
+    "ScenarioStateMachine": {
+      "description": "Scenarios that have a StateMachine are only matched when the session's\ncurrent state equals one of the defined \"from\" states (or when the session\nhas no state yet and InitialState is set).",
+      "type": "object",
+      "title": "ScenarioStateMachine wires a scenario into a session-scoped state machine.",
+      "properties": {
+        "initial_state": {
+          "description": "InitialState is the state the session must be in (or start from) for this\nscenario to be a candidate. Empty means the scenario is stateless.",
+          "type": "string",
+          "x-go-name": "InitialState"
         },
-        "summary": "Invokes service api-contract by method, contracts-name and path.",
-        "tags": [
-          "producer-contract"
-        ]
-      }
-    },
-    "/_contracts/history/{group}": {
-      "post": {
-        "operationId": "postProducerContractHistoryByGroup",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Group"
+        "transitions": {
+          "description": "Transitions defines the state changes to apply after a successful response.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StateTransition"
           },
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/ProducerContractRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiScenarioContractResponse"
-          }
-        },
-        "summary": "Invokes service api-contract using executed history of consumer contracts.",
-        "tags": [
-          "producer-contract"
-        ]
-      }
-    },
-    "/_fixtures/{method}/{name}/{path}": {
-      "delete": {
-        "operationId": "deleteAPITestFixture",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/emptyResponse"
-          }
-        },
-        "summary": "Deletes an existing api-test-fixtures based on name and path.",
-        "tags": [
-          "api-test-fixtures"
-        ]
+          "x-go-name": "Transitions"
+        }
       },
-      "get": {
-        "operationId": "getAPITestFixture",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiFixtureResponse"
-          }
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
+    },
+    "SchemaViolation": {
+      "type": "object",
+      "title": "SchemaViolation represents a single OpenAPI schema violation.",
+      "properties": {
+        "field": {
+          "type": "string",
+          "x-go-name": "Field"
         },
-        "summary": "Finds an existing api-test-fixtures based on name and path.",
-        "tags": [
-          "api-test-fixtures"
-        ]
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        },
+        "value": {
+          "x-go-name": "Value"
+        }
       },
-      "post": {
-        "operationId": "postAPITestFixture",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          },
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "items": {
-                "format": "uint8",
-                "type": "integer"
-              },
-              "type": "array"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiFixtureResponse"
-          }
-        },
-        "summary": "Creates new api-test-fixtures based on request body.",
-        "tags": [
-          "api-test-fixtures"
-        ]
-      }
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
-    "/_fixtures/{method}/fixtures/{path}": {
-      "get": {
-        "operationId": "getAPITestFixtureNames",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
+    "SecuritySummary": {
+      "type": "object",
+      "title": "SecuritySummary aggregates injection findings with OWASP classification.",
+      "properties": {
+        "byCategory": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
           },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiFixtureNamesResponse"
-          }
+          "x-go-name": "ByCategory"
         },
-        "summary": "Finds api test-fixture names for given method and path.",
-        "tags": [
-          "api-test-fixtures"
-        ]
-      }
-    },
-    "/_groups/{group}/config": {
-      "get": {
-        "description": "Returns group config",
-        "operationId": "getGroupConfig",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Group"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/groupConfigResponse"
-          }
+        "bySeverity": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "x-go-name": "BySeverity"
         },
-        "tags": [
-          "group-config"
-        ]
+        "owaspMapping": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "OWASPMapping"
+        },
+        "passedChecks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "PassedChecks"
+        },
+        "topFindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InjectionFinding"
+          },
+          "x-go-name": "TopFindings"
+        },
+        "totalFindings": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "TotalFindings"
+        }
       },
-      "put": {
-        "description": "Saves group config",
-        "operationId": "putGroupConfig",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Group"
-          },
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/GroupConfig"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/putGroupConfigResponse"
-          }
-        },
-        "tags": [
-          "group-config"
-        ]
-      }
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
-    "/_history": {
-      "get": {
-        "operationId": "getExecHistory",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "name",
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "query",
-            "name": "group",
-            "type": "string",
-            "x-go-name": "Group"
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "type": "string",
-            "x-go-name": "Page"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/getExecHistoryResponse"
-          }
+    "SpecChange": {
+      "type": "object",
+      "title": "SpecChange describes a single change between base and head specs.",
+      "properties": {
+        "after": {
+          "type": "string",
+          "x-go-name": "After"
         },
-        "summary": "Fetches history of api scenarios by name or group.",
-        "tags": [
-          "api-history"
-        ]
-      }
-    },
-    "/_history/har": {
-      "get": {
-        "operationId": "getExecHistoryHar",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "name",
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "query",
-            "name": "group",
-            "type": "string",
-            "x-go-name": "Group"
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "type": "string",
-            "x-go-name": "Page"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/execHistoryHarResponse"
-          }
+        "before": {
+          "type": "string",
+          "x-go-name": "Before"
         },
-        "summary": "Fetches execution history in the format of HTTP HAR.",
-        "tags": [
-          "api-history"
-        ]
+        "changeType": {
+          "$ref": "#/definitions/ChangeType"
+        },
+        "field": {
+          "type": "string",
+          "x-go-name": "Field"
+        },
+        "method": {
+          "type": "string",
+          "x-go-name": "Method"
+        },
+        "path": {
+          "type": "string",
+          "x-go-name": "Path"
+        },
+        "severity": {
+          "description": "Severity: \"breaking\" | \"non-breaking\" | \"informational\"",
+          "type": "string",
+          "x-go-name": "Severity"
+        }
       },
-      "post": {
-        "operationId": "postExecHistoryHar",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/Har"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/postExecHistoryHarResponse"
-          }
-        },
-        "summary": "Uploads HAR contents and generates scenario and history.",
-        "tags": [
-          "api-history"
-        ]
-      }
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/speccompare"
     },
-    "/_history/names": {
-      "get": {
-        "operationId": "getExecHistoryNames",
-        "responses": {
-          "200": {
-            "$ref": "#/responses/execHistoryNamesResponse"
-          }
+    "SpecDiffReport": {
+      "type": "object",
+      "title": "SpecDiffReport is the result of comparing two specs.",
+      "properties": {
+        "addedPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "AddedPaths"
         },
-        "summary": "Fetches history of api scenarios by group.",
-        "tags": [
-          "api-history"
-        ]
-      }
+        "breakingChanges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SpecChange"
+          },
+          "x-go-name": "BreakingChanges"
+        },
+        "nonBreakingChanges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SpecChange"
+          },
+          "x-go-name": "NonBreakingChanges"
+        },
+        "removedPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "RemovedPaths"
+        }
+      },
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/speccompare"
     },
-    "/_history/postman": {
-      "get": {
-        "operationId": "getExecHistoryPostman",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "name",
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "query",
-            "name": "group",
-            "type": "string",
-            "x-go-name": "Group"
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "type": "string",
-            "x-go-name": "Page"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/execHistoryPostmanResponse"
-          }
+    "StateTransition": {
+      "type": "object",
+      "title": "StateTransition defines a single edge in a scenario state machine.",
+      "properties": {
+        "extract_key": {
+          "description": "ExtractKey is a JSONPath expression whose value is stored in session data\nunder the key name (e.g. \"$.id\" stores the id field under \"id\").",
+          "type": "string",
+          "x-go-name": "ExtractKey"
         },
-        "summary": "Fetches execution history in the format of HTTP HAR.",
-        "tags": [
-          "api-history"
-        ]
+        "from": {
+          "description": "From is the required current state for this transition to fire.",
+          "type": "string",
+          "x-go-name": "From"
+        },
+        "on_method": {
+          "description": "OnMethod restricts the transition to a specific HTTP method (empty = any).",
+          "type": "string",
+          "x-go-name": "OnMethod"
+        },
+        "on_status": {
+          "description": "OnStatus restricts the transition to a specific response status code (0 = any).",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "OnStatus"
+        },
+        "to": {
+          "description": "To is the state to move to after the transition.",
+          "type": "string",
+          "x-go-name": "To"
+        }
       },
-      "post": {
-        "operationId": "postExecHistoryPostman",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/PostmanCollection"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/postExecHistoryPostmanResponse"
-          }
-        },
-        "summary": "Uploads HAR contents and generates scenario and history.",
-        "tags": [
-          "api-history"
-        ]
-      }
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     },
-    "/_oapi": {
-      "post": {
-        "operationId": "postMockOAPIScenario",
-        "parameters": [
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "items": {
-                "format": "uint8",
-                "type": "integer"
-              },
-              "type": "array"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiScenarioOAPIResponse"
-          }
+    "ValueMismatch": {
+      "type": "object",
+      "title": "ValueMismatch holds expected vs actual values for a single field.",
+      "properties": {
+        "actual": {
+          "x-go-name": "Actual"
         },
-        "summary": "Creates new api scenarios based on Open API v3 uploaded by user.",
-        "tags": [
-          "open-api"
-        ]
-      }
-    },
-    "/_oapi/{group}": {
-      "get": {
-        "operationId": "getOpenAPISpecsByGroup",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Group"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiOapiSpecIResponse"
-          }
-        },
-        "summary": "Generates OpenAPI specs by group of API scenarios.",
-        "tags": [
-          "open-api"
-        ]
-      }
-    },
-    "/_oapi/{method}/{name}/{path}": {
-      "get": {
-        "operationId": "getOpenAPISpecsByScenario",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiOapiSpecIResponse"
-          }
-        },
-        "summary": "Generates OpenAPI specs for the API scenario by method, name and path.",
-        "tags": [
-          "open-api"
-        ]
-      }
-    },
-    "/_oapi/history/{name}": {
-      "get": {
-        "operationId": "getOpenAPISpecsByHistory",
-        "parameters": [
-          {
-            "description": "Name of open-api spec",
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiOapiSpecIResponse"
-          }
-        },
-        "summary": "Generates OpenAPI specs based on name of API scenario from execution history.",
-        "tags": [
-          "open-api"
-        ]
-      }
-    },
-    "/_proxy": {
-      "delete": {
-        "operationId": "deleteAPIProxy",
-        "summary": "Records scenario for the API DELETE request.",
-        "tags": [
-          "api-proxy"
-        ]
+        "expected": {
+          "x-go-name": "Expected"
+        }
       },
-      "get": {
-        "operationId": "getAPIProxy",
-        "summary": "Records scenario for the API GET request.",
-        "tags": [
-          "api-proxy"
-        ]
-      },
-      "post": {
-        "operationId": "postAPIProxy",
-        "summary": "Records scenario for the API POST request.",
-        "tags": [
-          "api-proxy"
-        ]
-      },
-      "put": {
-        "operationId": "putAPIProxy",
-        "summary": "Records scenario for the API PUT request.",
-        "tags": [
-          "api-proxy"
-        ]
-      }
-    },
-    "/_scenarios": {
-      "get": {
-        "operationId": "listMockScenario",
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiScenarioPathsResponse"
-          }
-        },
-        "summary": "List paths of all scenarios with group if available.",
-        "tags": [
-          "api-scenarios"
-        ]
-      },
-      "post": {
-        "operationId": "postMockScenario",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          },
-          {
-            "in": "body",
-            "name": "Body",
-            "schema": {
-              "$ref": "#/definitions/APIScenario"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiScenarioResponse"
-          }
-        },
-        "summary": "Creates new api scenario based on request body.",
-        "tags": [
-          "api-scenarios"
-        ]
-      }
-    },
-    "/_scenarios/{method}/{name}/{path}": {
-      "delete": {
-        "operationId": "getAPIScenario",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/emptyResponse"
-          }
-        },
-        "summary": "Deletes an existing api scenario based on id.",
-        "tags": [
-          "api-scenarios"
-        ]
-      },
-      "get": {
-        "operationId": "getAPIScenario",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "name",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Name"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/emptyResponse"
-          }
-        },
-        "summary": "Deletes an existing api scenario based on id.",
-        "tags": [
-          "api-scenarios"
-        ]
-      }
-    },
-    "/_scenarios/{method}/names/{path}": {
-      "get": {
-        "operationId": "getAPIScenarioNames",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "method",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Method"
-          },
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiNamesResponse"
-          }
-        },
-        "summary": "Finds api scenario names by method and path.",
-        "tags": [
-          "api-scenarios"
-        ]
-      }
-    },
-    "/_scenarios/groups": {
-      "get": {
-        "operationId": "getAPIGroups",
-        "responses": {
-          "200": {
-            "$ref": "#/responses/apiGroupsResponse"
-          }
-        },
-        "summary": "Finds api scenario groups.",
-        "tags": [
-          "api-scenarios"
-        ]
-      }
-    },
-    "/{path}": {
-      "delete": {
-        "operationId": "deleteRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on DELETE request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      },
-      "get": {
-        "operationId": "getRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on GET request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      },
-      "head": {
-        "operationId": "headRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on HEAD request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      },
-      "options": {
-        "operationId": "optionsRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on OPTIONS request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      },
-      "patch": {
-        "operationId": "patchRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on PATCH request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      },
-      "post": {
-        "operationId": "postRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on POST request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      },
-      "put": {
-        "operationId": "putRoot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "path",
-            "required": true,
-            "type": "string",
-            "x-go-name": "Path"
-          }
-        ],
-        "summary": "Play API scenario for previously defined API contract based on PUT request.",
-        "tags": [
-          "consumer-contract"
-        ]
-      }
+      "x-go-package": "github.com/bhatti/api-mock-service/internal/types"
     }
   },
   "responses": {
     "apiFixtureNamesResponse": {
       "description": "APIFixture names",
       "schema": {
+        "type": "array",
         "items": {
           "type": "string"
-        },
-        "type": "array"
+        }
       }
     },
     "apiFixtureResponse": {
       "description": "APIFixture body for update",
       "schema": {
+        "type": "array",
         "items": {
-          "format": "uint8",
-          "type": "integer"
-        },
-        "type": "array"
+          "type": "integer",
+          "format": "uint8"
+        }
       }
     },
     "apiGroupsResponse": {
       "description": "APIScenario groups",
       "schema": {
+        "type": "array",
         "items": {
           "type": "string"
-        },
-        "type": "array"
+        }
       }
     },
     "apiNamesResponse": {
       "description": "APIScenario names",
       "schema": {
+        "type": "array",
         "items": {
           "type": "string"
-        },
-        "type": "array"
+        }
       }
     },
     "apiOapiSpecIResponse": {
       "description": "APIScenario body for update",
       "schema": {
+        "type": "array",
         "items": {
-          "format": "uint8",
-          "type": "integer"
-        },
-        "type": "array"
+          "type": "integer",
+          "format": "uint8"
+        }
       }
     },
     "apiScenarioContractResponse": {
@@ -2706,19 +3382,19 @@
     "apiScenarioOAPIResponse": {
       "description": "APIScenario body for update",
       "schema": {
+        "type": "array",
         "items": {
           "$ref": "#/definitions/APIKeyData"
-        },
-        "type": "array"
+        }
       }
     },
     "apiScenarioPathsResponse": {
       "description": "APIScenario summary and paths",
       "schema": {
+        "type": "object",
         "additionalProperties": {
           "$ref": "#/definitions/APIKeyData"
-        },
-        "type": "object"
+        }
       }
     },
     "apiScenarioResponse": {
@@ -2727,37 +3403,44 @@
         "$ref": "#/definitions/APIScenario"
       }
     },
+    "coverageByGroupResponse": {
+      "description": "Coverage summary response",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    },
     "emptyResponse": {
-      "description": ""
+      "description": "Empty response"
     },
     "execHistoryHarResponse": {
-      "description": "",
+      "description": "ExecHistory history in the format of HAR format",
       "schema": {
         "$ref": "#/definitions/Har"
       }
     },
     "execHistoryNamesResponse": {
-      "description": "",
+      "description": "response for history of scenario names",
       "schema": {
+        "type": "array",
         "items": {
           "type": "string"
-        },
-        "type": "array"
+        }
       }
     },
     "execHistoryPostmanResponse": {
-      "description": "",
+      "description": "ExecHistory history in the format of HAR format",
       "schema": {
         "$ref": "#/definitions/PostmanCollection"
       }
     },
     "getExecHistoryResponse": {
-      "description": "",
+      "description": "response for history of scenario history",
       "schema": {
+        "type": "array",
         "items": {
           "$ref": "#/definitions/APIScenario"
-        },
-        "type": "array"
+        }
       }
     },
     "groupConfigResponse": {
@@ -2766,15 +3449,37 @@
         "$ref": "#/definitions/GroupConfig"
       }
     },
+    "jsonSummaryResponse": {
+      "description": "JSON summary response",
+      "schema": {
+        "type": "object",
+        "additionalProperties": {}
+      }
+    },
+    "junitXMLResponse": {
+      "description": "JUnit XML response",
+      "schema": {
+        "type": "string"
+      }
+    },
+    "oapiDiffResponse": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/SpecDiffReport"
+      }
+    },
     "postExecHistoryHarResponse": {
-      "description": ""
+      "description": "response for uploading HAR",
+      "schema": {
+        "type": "integer",
+        "format": "int64"
+      }
     },
     "postExecHistoryPostmanResponse": {
-      "description": ""
+      "description": "response for uploading pm"
     },
     "putGroupConfigResponse": {
       "description": "APIScenario body for updating group-config"
     }
-  },
-  "swagger": "2.0"
+  }
 }

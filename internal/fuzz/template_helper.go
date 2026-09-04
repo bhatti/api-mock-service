@@ -463,6 +463,55 @@ func TemplateFuncs(dir string, data any) template.FuncMap {
 		"RandFilename": func() string {
 			return RandFilename()
 		},
+		// Security payload generators
+		"RandSQLi": func() string {
+			return RandSQLi()
+		},
+		"SeededSQLi": func(seed any) string {
+			return SeededRandSQLi(toInt64(seed))
+		},
+		"RandXSS": func() string {
+			return RandXSS()
+		},
+		"SeededXSS": func(seed any) string {
+			return SeededRandXSS(toInt64(seed))
+		},
+		"RandPathTraversal": func() string {
+			return RandPathTraversal()
+		},
+		"SeededPathTraversal": func(seed any) string {
+			return SeededRandPathTraversal(toInt64(seed))
+		},
+		"RandSSTI": func() string {
+			return RandSSTI()
+		},
+		"SeededSSTI": func(seed any) string {
+			return SeededRandSSTI(toInt64(seed))
+		},
+		"RandCmdInjection": func() string {
+			return RandCmdInjection()
+		},
+		"SeededCmdInjection": func(seed any) string {
+			return SeededRandCmdInjection(toInt64(seed))
+		},
+		"RandNoSQLi": func() string {
+			return RandNoSQLi()
+		},
+		"SeededNoSQLi": func(seed any) string {
+			return SeededRandNoSQLi(toInt64(seed))
+		},
+		"RandLDAPi": func() string {
+			return RandLDAPi()
+		},
+		"SeededLDAPi": func(seed any) string {
+			return SeededRandLDAPi(toInt64(seed))
+		},
+		"RandXXE": func() string {
+			return RandXXE()
+		},
+		"SeededXXE": func(seed any) string {
+			return SeededRandXXE(toInt64(seed))
+		},
 	}
 }
 

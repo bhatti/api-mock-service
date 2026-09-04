@@ -31,6 +31,14 @@ Each section solves one concrete problem. Copy the relevant snippet and adapt it
 23. [Serve static files and binary fixtures](#23-serve-static-files-and-binary-fixtures)
 24. [Share variables across all scenarios in a group](#24-share-variables-across-all-scenarios-in-a-group)
 25. [Use deterministic / seeded test data](#25-use-deterministic--seeded-test-data)
+26. [Generate randomized security payloads for custom scenarios](#26-generate-randomized-security-payloads-for-custom-scenarios)
+27. [Detect injection vulnerabilities in your API](#27-detect-injection-vulnerabilities-in-your-api)
+28. [Auto-generate multi-step test flows from OpenAPI spec](#28-auto-generate-multi-step-test-flows-from-openapi-spec)
+29. [Detect blind injection with timing analysis](#29-detect-blind-injection-with-timing-analysis)
+30. [Test API idempotency and ordering assumptions](#30-test-api-idempotency-and-ordering-assumptions)
+31. [Export contract test results to JUnit XML for CI](#31-export-contract-test-results-to-junit-xml-for-ci)
+32. [Get an OWASP-classified security report](#32-get-an-owasp-classified-security-report)
+33. [Run multiple mutation rounds for better coverage](#33-run-multiple-mutation-rounds-for-better-coverage)
 
 ---
 
@@ -1218,13 +1226,229 @@ curl http://localhost:8080/users/1
 
 ---
 
+## 26. Generate Randomized Security Payloads for Custom Scenarios
+
+**Problem:** I want to use grammar-based injection payloads in my own scenarios.
+
+Use the built-in fuzz template functions in your YAML scenario templates:
+
+```yaml
+name: security-test-login
+method: POST
+path: /login
+request:
+  content_type: application/json
+  contents: |
+    {"username": "{{RandSQLi}}", "password": "{{RandXSS}}"}
+response:
+  status_code: 400
+```
+
+All 8 injection generators are available as template functions:
+
+| Function | What it generates |
+|----------|------------------|
+| `{{RandSQLi}}` | SQL injection (boolean, time-based, UNION, error-based) |
+| `{{RandXSS}}` | Cross-site scripting (reflected, DOM, event handler) |
+| `{{RandPathTraversal}}` | Path traversal (encoded, double-encoded, OS-specific) |
+| `{{RandSSTI}}` | Server-side template injection (Jinja2, Freemarker, Twig) |
+| `{{RandCmdInjection}}` | OS command injection (pipe, semicolon, backtick) |
+| `{{RandNoSQLi}}` | NoSQL injection (MongoDB `$gt`, `$ne`, JSON) |
+| `{{RandLDAPi}}` | LDAP injection (wildcard, OR, AND) |
+| `{{RandXXE}}` | XML external entity (file read, SSRF, parameter entity) |
+
+Each also has a seeded variant for reproducibility: `{{SeededRandSQLi 42}}`.
+
+→ [Fuzz & Property Testing — Security Payload Generators](fuzz-property-testing.md)
+
+---
+
+## 27. Detect Injection Vulnerabilities in Your API
+
+**Problem:** I want to know if my API is vulnerable to SQL injection, XSS, or other injection attacks.
+
+Run mutation testing — injection detection runs automatically:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -H "Content-Type: application/json" \
+  -d '{"base_url": "https://api.example.com"}'
+```
+
+The response includes a `securitySummary` with all findings classified by CWE:
+
+```bash
+# Extract just the security summary
+curl -s -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com"}' | jq '.securitySummary'
+```
+
+Findings are detected when:
+- Response contains database error signatures (MySQL, PostgreSQL, SQLite, MSSQL, Oracle)
+- Injected payload is reflected back unescaped (XSS, SSTI)
+- Unexpected 500 status after injection (unhandled input)
+- Response leaks stack traces, file paths, or version strings
+
+→ [Contract Testing — Security Findings](contract-testing.md#security-findings-in-mutation-results)
+
+---
+
+## 28. Auto-Generate Multi-Step Test Flows from OpenAPI Spec
+
+**Problem:** I want the system to automatically figure out that `POST /pets` should run before `GET /pets/{id}`.
+
+Upload your OpenAPI spec — dependency discovery happens automatically:
+
+```bash
+curl -H "Content-Type: application/yaml" \
+  --data-binary @petstore.yaml \
+  http://localhost:8080/_oapi
+```
+
+The system matches response fields (like `id` from `POST /pets`) to request parameters (like `{petId}` in `GET /pets/{petId}`) and orders operations so producers run before consumers.
+
+Then run contract tests — operations execute in dependency order:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/petstore \
+  -d '{"base_url": "https://api.example.com"}'
+```
+
+→ [OpenAPI Guide — Auto-Discovered Request Chains](openapi-guide.md#auto-discovered-request-chains)
+
+---
+
+## 29. Detect Blind Injection with Timing Analysis
+
+**Problem:** Some injection attacks don't produce visible errors — they just slow the response down.
+
+Enable timing-based detection by setting the threshold multiplier:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -H "Content-Type: application/json" \
+  -d '{"base_url": "https://api.example.com", "timing_threshold_multiplier": 3.0}'
+```
+
+If a response with a timing payload (e.g., `SLEEP`, `WAITFOR`, `pg_sleep`) takes 3× longer than the baseline, it's flagged as a blind injection finding with `CWE-89` and `critical` severity.
+
+The baseline is automatically measured from the first (clean) execution of each scenario.
+
+→ [Fuzz & Property Testing — Blind Injection Detection](fuzz-property-testing.md#blind-injection-detection)
+
+---
+
+## 30. Test API Idempotency and Ordering Assumptions
+
+**Problem:** I want to test whether my API handles unexpected operation orderings — like DELETE before CREATE.
+
+Sequence-level mutations run automatically during mutation testing when a group has multiple scenarios:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com"}'
+```
+
+Four strategies are applied:
+- **Reversed**: all scenarios in reverse order
+- **Skip step**: each scenario removed one at a time
+- **Duplicate step**: each scenario repeated (idempotency test)
+- **Method swap**: PUT↔PATCH, GET→DELETE
+
+→ [Contract Testing — Testing Operation Ordering](contract-testing.md#testing-operation-ordering-sequence-mutations)
+
+---
+
+## 31. Export Contract Test Results to JUnit XML for CI
+
+**Problem:** I want to import mutation test results into GitHub Actions / Jenkins / GitLab CI.
+
+Run mutations, then fetch the JUnit XML report:
+
+```bash
+# Run mutations
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -d '{"base_url": "https://api.example.com"}'
+
+# Export JUnit XML
+curl http://localhost:8080/_reports/my-api/junit -o results.xml
+
+# Export JSON summary
+curl http://localhost:8080/_reports/my-api/summary -o summary.json
+```
+
+GitHub Actions example:
+```yaml
+- name: API mutation tests
+  run: |
+    curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+      -d '{"base_url": "http://localhost:3000"}'
+    curl http://localhost:8080/_reports/my-api/junit -o test-results.xml
+
+- name: Publish results
+  uses: dorny/test-reporter@v1
+  with:
+    name: API Mutation Tests
+    path: test-results.xml
+    reporter: java-junit
+```
+
+→ [Contract Testing — CI/CD Integration](contract-testing.md#cicd-integration) | [API Reference — Report Endpoints](api-reference.md#get-_reportsgroupjunit)
+
+---
+
+## 32. Get an OWASP-Classified Security Report
+
+**Problem:** I need a security summary with CWE/OWASP classification for compliance.
+
+After running mutations, fetch the JSON summary:
+
+```bash
+curl -s http://localhost:8080/_reports/my-api/summary | jq '.securitySummary'
+```
+
+Output includes:
+```json
+{
+  "totalFindings": 5,
+  "bySeverity": {"critical": 2, "high": 2, "info": 1},
+  "byCategory": {"CWE-89": 2, "CWE-79": 2, "CWE-200": 1},
+  "owaspMapping": {"CWE-89": "WSTG-INPV-05", "CWE-79": "WSTG-INPV-01"},
+  "passedChecks": ["ssti", "cmd-injection", "nosqli", "ldapi", "xxe", "path-traversal"]
+}
+```
+
+The `passedChecks` field confirms which vulnerability classes your API handles safely.
+
+→ [Contract Testing — OWASP Classification](contract-testing.md#owasp-classification)
+
+---
+
+## 33. Run Multiple Mutation Rounds for Better Coverage
+
+**Problem:** A single mutation round might miss variants. I want more diverse payloads.
+
+Set `mutation_rounds` to run multiple complete passes with different random payloads each time:
+
+```bash
+curl -X POST http://localhost:8080/_contracts/mutations/my-api \
+  -H "Content-Type: application/json" \
+  -d '{"base_url": "https://api.example.com", "mutation_rounds": 3}'
+```
+
+Each round generates fresh randomized payloads from the grammar-based generators, increasing the chance of finding edge cases that a single round misses. Findings are deduplicated and clustered across all rounds.
+
+→ [Fuzz & Property Testing](fuzz-property-testing.md) | [API Reference](api-reference.md)
+
+---
+
 ## Related Docs
 
 | Guide | What it covers |
 |-------|----------------|
 | [Mock Guide](mock-guide.md) | Recording, playback, templates, fixtures, chaos |
-| [Contract Testing](contract-testing.md) | Consumer + producer contracts, JSONPath, schema validation, stateful workflows, mutations, coverage, spec diff |
-| [Fuzz & Property Testing](fuzz-property-testing.md) | Mutation strategies, security injection, shrinking, HAR/Postman import |
-| [OpenAPI Guide](openapi-guide.md) | Spec upload, discriminator/oneOf/anyOf, Swagger UI, coverage |
-| [API Reference](api-reference.md) | Every HTTP endpoint with request/response shapes |
+| [Contract Testing](contract-testing.md) | Consumer + producer contracts, JSONPath, schema validation, stateful workflows, mutations, coverage, spec diff, security findings, CI/CD integration |
+| [Fuzz & Property Testing](fuzz-property-testing.md) | Mutation strategies, security injection, injection detection, failure dedup, shrinking, HAR/Postman import |
+| [OpenAPI Guide](openapi-guide.md) | Spec upload, discriminator/oneOf/anyOf, Swagger UI, coverage, auto-discovered request chains |
+| [API Reference](api-reference.md) | Every HTTP endpoint with request/response shapes, report export |
 | [CLI Reference](cli-reference.md) | Every command and flag |

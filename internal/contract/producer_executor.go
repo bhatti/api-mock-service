@@ -34,7 +34,10 @@ type ProducerExecutor struct {
 	openAPIDoc            *openapi3.T
 	openAPIRouter         routers.Router
 	// coverageCache stores the last coverage result per group, keyed by group name.
-	coverageCache map[string]*types.CoverageSummary
+	coverageCache     map[string]*types.CoverageSummary
+	reportCache       map[string]*types.ProducerContractResponse
+	injectionDetector *InjectionDetector
+	baselineCache     map[string]int64
 }
 
 // WithOpenAPISpec returns a new ProducerExecutor with the OpenAPI document and router attached
@@ -47,6 +50,9 @@ func (px *ProducerExecutor) WithOpenAPISpec(doc *openapi3.T, router routers.Rout
 		openAPIDoc:            doc,
 		openAPIRouter:         router,
 		coverageCache:         px.coverageCache,
+		reportCache:           px.reportCache,
+		injectionDetector:     px.injectionDetector,
+		baselineCache:         px.baselineCache,
 	}
 	return clone
 }
@@ -61,6 +67,9 @@ func NewProducerExecutor(
 		groupConfigRepository: groupConfigRepository,
 		client:                client,
 		coverageCache:         make(map[string]*types.CoverageSummary),
+		reportCache:           make(map[string]*types.ProducerContractResponse),
+		injectionDetector:     NewInjectionDetector(),
+		baselineCache:         make(map[string]int64),
 	}
 }
 
@@ -71,6 +80,23 @@ func (px *ProducerExecutor) LastCoverage(group string) *types.CoverageSummary {
 		return nil
 	}
 	return px.coverageCache[group]
+}
+
+// LastReport returns the ProducerContractResponse from the most recent mutation run
+// for the given group. Returns nil if no report is available.
+func (px *ProducerExecutor) LastReport(group string) *types.ProducerContractResponse {
+	if px.reportCache == nil {
+		return nil
+	}
+	return px.reportCache[group]
+}
+
+// SetLastReport stores a report in the cache (used for testing).
+func (px *ProducerExecutor) SetLastReport(group string, report *types.ProducerContractResponse) {
+	if px.reportCache == nil {
+		px.reportCache = make(map[string]*types.ProducerContractResponse)
+	}
+	px.reportCache[group] = report
 }
 
 // Execute an API with fuzz data request
@@ -113,7 +139,7 @@ func (px *ProducerExecutor) Execute(
 			//return contractResponse
 		}
 		url := scenario.BuildURL(contractReq.BaseURL)
-		resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+		resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli, 0, 0)
 		contractResponse.Add(scenario.Name, resContents, err)
 		if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
 			contractResponse.SetErrorDetail(scenario.Name, buildContractValidationDetail(cve))
@@ -171,7 +197,7 @@ func (px *ProducerExecutor) ExecuteByHistory(
 					sli.RegisterHistogram(scenario.SafeName())
 				}
 				url := scenario.BuildURL(contractReq.BaseURL)
-				resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+				resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli, 0, 0)
 				key := fmt.Sprintf("%s_%d", scenario.Name, i)
 				contractResponse.Add(key, resContents, err)
 				if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
@@ -258,7 +284,7 @@ func (px *ProducerExecutor) ExecuteByGroup(
 				//return contractResponse
 			}
 			url := scenario.BuildURL(contractReq.BaseURL)
-			resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli)
+			resContents, err := px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli, 0, 0)
 			key := fmt.Sprintf("%s_%d", scenarioKey.Name, i)
 			contractResponse.Add(key, resContents, err)
 			if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
@@ -294,7 +320,10 @@ func (px *ProducerExecutor) ExecuteByGroup(
 	return contractResponse
 }
 
-// execute an API with fuzz data request
+// execute an API with fuzz data request.
+// baselineMs is the response-time baseline for timing-based blind injection
+// detection (0 disables). thresholdMult overrides the default 3.0 multiplier
+// when > 0.
 func (px *ProducerExecutor) execute(
 	ctx context.Context,
 	req *http.Request,
@@ -304,6 +333,8 @@ func (px *ProducerExecutor) execute(
 	contractRes *types.ProducerContractResponse,
 	dataTemplate fuzz.DataTemplateRequest,
 	sli *metrics.Metrics,
+	baselineMs int64,
+	thresholdMult float64,
 ) (res any, err error) {
 	if req == nil {
 		return nil, fmt.Errorf("http request is not specified")
@@ -373,6 +404,16 @@ func (px *ProducerExecutor) execute(
 	var resBytes []byte
 	if resBytes, resBody, err = utils.ReadAll(resBody); err != nil {
 		return nil, fmt.Errorf("failed to read response body for %s due to %w", scenario.Name, err)
+	}
+
+	// Run injection detection on the raw response if a detector is configured.
+	var injectionFindings []types.InjectionFinding
+	if px.injectionDetector != nil && scenario.Request.Contents != "" {
+		endpoint := string(scenario.Method) + " " + scenario.Path
+		injectionFindings = px.injectionDetector.AnalyzeWithTiming(
+			scenario.Request.Contents, scenario.Name, endpoint,
+			string(resBytes), statusCode, elapsed, baselineMs, thresholdMult,
+		)
 	}
 
 	fields := log.Fields{
@@ -533,6 +574,21 @@ func (px *ProducerExecutor) execute(
 			contractRes.Results[scenario.Name+"_coverage"] = coverage
 		}
 	}
+	if len(injectionFindings) > 0 {
+		if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+			cve.DiffReport.InjectionFindings = append(cve.DiffReport.InjectionFindings, injectionFindings...)
+		} else if err == nil {
+			diffReport := createContractDiffReport(scenario, resContents, resHeaders, templateParams)
+			diffReport.InjectionFindings = injectionFindings
+			err = &ContractValidationError{
+				OriginalError: fmt.Errorf("%d injection finding(s) for %s", len(injectionFindings), scenario.Name),
+				DiffReport:    diffReport,
+				Scenario:      scenario.Name,
+				URL:           url,
+			}
+		}
+	}
+
 	return resContents, err
 }
 
@@ -866,6 +922,7 @@ func buildContractValidationDetail(cve *ContractValidationError) *types.Contract
 			Value:   sv.Value,
 		})
 	}
+	detail.InjectionFindings = r.InjectionFindings
 	return detail
 }
 
@@ -933,6 +990,15 @@ func (px *ProducerExecutor) ExecuteMutationsByGroup(
 		"Scenarios": len(scenarioKeys),
 	}).Infof("execute-mutations-by-group BEGIN")
 
+	mutationRounds := contractReq.MutationRounds
+	if mutationRounds <= 0 {
+		mutationRounds = 1
+	}
+	thresholdMult := contractReq.TimingThresholdMultiplier
+
+	// Phase 1: run each scenario once unmutated to establish response-time baselines.
+	baselineMs := make(map[string]int64)
+	var allScenarios []*types.APIScenario
 	for _, scenarioKey := range scenarioKeys {
 		scenario, err := px.scenarioRepository.Lookup(scenarioKey, contractReq.Overrides())
 		if err != nil {
@@ -944,26 +1010,72 @@ func (px *ProducerExecutor) ExecuteMutationsByGroup(
 			continue
 		}
 		sli.RegisterHistogram(scenario.SafeName())
+		allScenarios = append(allScenarios, scenario)
 
-		mutator := NewContractMutator(scenario)
-		mutations := mutator.GenerateMutations()
-		log.WithFields(log.Fields{
-			"Scenario":  scenario.Name,
-			"Mutations": len(mutations),
-		}).Debugf("generated mutations")
+		baselineStart := time.Now().UnixMilli()
+		url := scenario.BuildURL(contractReq.BaseURL)
+		_, _ = px.execute(ctx, req, url, scenario, contractReq, contractResponse, dataTemplate, sli, 0, 0)
+		baselineMs[scenario.SafeName()] = time.Now().UnixMilli() - baselineStart
+	}
 
-		for i, mutatedScenario := range mutations {
-			url := mutatedScenario.BuildURL(contractReq.BaseURL)
-			resContents, err := px.execute(ctx, req, url, mutatedScenario, contractReq, contractResponse, dataTemplate, sli)
-			key := fmt.Sprintf("%s_%d", mutatedScenario.Name, i)
-			contractResponse.Add(key, resContents, err)
-			if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
-				contractResponse.SetErrorDetail(key, buildContractValidationDetail(cve))
+	// Phase 2: generate and execute mutations for each scenario.
+	for _, scenario := range allScenarios {
+		bl := baselineMs[scenario.SafeName()]
+		for round := 0; round < mutationRounds; round++ {
+			mutator := NewContractMutator(scenario)
+			mutations := mutator.GenerateMutations()
+			log.WithFields(log.Fields{
+				"Scenario":  scenario.Name,
+				"Mutations": len(mutations),
+				"Round":     round,
+			}).Debugf("generated mutations")
+
+			for i, mutatedScenario := range mutations {
+				url := mutatedScenario.BuildURL(contractReq.BaseURL)
+				resContents, err := px.execute(ctx, req, url, mutatedScenario, contractReq, contractResponse, dataTemplate, sli, bl, thresholdMult)
+				key := fmt.Sprintf("%s_%d_%d", mutatedScenario.Name, round, i)
+				contractResponse.Add(key, resContents, err)
+				if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+					contractResponse.SetErrorDetail(key, buildContractValidationDetail(cve))
+				}
+			}
+		}
+	}
+
+	// Phase 3: generate and execute sequence-level mutations across the group.
+	if len(allScenarios) >= 2 {
+		groupMutator := NewGroupMutator(allScenarios)
+		for seqIdx, seqGroup := range groupMutator.GenerateSequenceMutations() {
+			for i, seqScenario := range seqGroup {
+				url := seqScenario.BuildURL(contractReq.BaseURL)
+				bl := baselineMs[seqScenario.SafeName()]
+				resContents, err := px.execute(ctx, req, url, seqScenario, contractReq, contractResponse, dataTemplate, sli, bl, thresholdMult)
+				key := fmt.Sprintf("seq_%d_%d_%s", seqIdx, i, seqScenario.Name)
+				contractResponse.Add(key, resContents, err)
+				if cve, ok := err.(*ContractValidationError); ok && cve.DiffReport != nil {
+					contractResponse.SetErrorDetail(key, buildContractValidationDetail(cve))
+				}
 			}
 		}
 	}
 
 	contractResponse.Metrics = sli.Summary()
+
+	contractResponse.FailureClusters = DeduplicateFailures(contractResponse.Errors, contractResponse.ErrorDetails)
+
+	if px.injectionDetector != nil {
+		var allFindings []types.InjectionFinding
+		for _, detail := range contractResponse.ErrorDetails {
+			if detail != nil {
+				allFindings = append(allFindings, detail.InjectionFindings...)
+			}
+		}
+		if len(allFindings) > 0 {
+			summary := px.injectionDetector.Summarize(allFindings)
+			contractResponse.SecuritySummary = &summary
+		}
+	}
+
 	log.WithFields(log.Fields{
 		"Component": "ProducerExecutor",
 		"Group":     group,
@@ -971,5 +1083,6 @@ func (px *ProducerExecutor) ExecuteMutationsByGroup(
 		"Succeeded": contractResponse.Succeeded,
 		"Failed":    contractResponse.Failed,
 	}).Infof("execute-mutations-by-group COMPLETED")
+	px.reportCache[group] = contractResponse
 	return contractResponse
 }

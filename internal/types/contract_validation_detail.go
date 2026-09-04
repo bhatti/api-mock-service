@@ -14,6 +14,7 @@ type ContractValidationDetail struct {
 	ValueMismatches    map[string]ValueMismatch `json:"valueMismatches,omitempty"`
 	HeaderMismatches   map[string]ValueMismatch `json:"headerMismatches,omitempty"`
 	SchemaViolations   []SchemaViolation        `json:"schemaViolations,omitempty"`
+	InjectionFindings  []InjectionFinding       `json:"injectionFindings,omitempty"`
 }
 
 // ValueMismatch holds expected vs actual values for a single field.
